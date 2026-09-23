@@ -1,0 +1,442 @@
+/* Janitor's signal-field identity. Keep the expressive treatment in the hero. */
+.site-header {
+  height: 84px;
+  background: var(--bg);
+}
+.brand {
+  font-size: 29px;
+  letter-spacing: -1.4px;
+  gap: 10px;
+}
+.brand-symbol {
+  width: 36px;
+  height: 42px;
+}
+.brand-symbol img {
+  width: 44px;
+  height: 44px;
+  transform: none;
+  mix-blend-mode: lighten;
+}
+.brand-period {
+  display: none;
+}
+.desktop-nav a.active:after {
+  bottom: -32px;
+}
+.button {
+  border-radius: 3px;
+  gap: 24px;
+}
+.button-primary {
+  box-shadow: inset 0 1px 0 #e8fff180;
+}
+.section-kicker {
+  color: var(--accent);
+}
+.identity-hero {
+  position: relative;
+  overflow: clip;
+  isolation: isolate;
+}
+.hero-film {
+  position: absolute;
+  inset: 0 0 71px;
+  z-index: -1;
+  pointer-events: none;
+}
+.hero-film:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--bg) 0%,
+    #080c0ced 29%,
+    #080c0c40 55%,
+    transparent 73%
+  );
+}
+.hero-film video,
+.hero-poster {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.hero-film video {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.hero-film video[data-ready="true"] {
+  opacity: 1;
+}
+.hero-composition {
+  min-height: 685px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-block: 80px 94px;
+}
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  width: 58%;
+}
+.hero-announcement {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.hero-announcement > span:last-child {
+  color: var(--accent);
+  margin-left: 6px;
+}
+.identity-hero h1 {
+  font-size: clamp(64px, 6.6vw, 96px);
+  line-height: 1.01;
+  letter-spacing: -0.065em;
+  font-weight: 500;
+  margin: 29px 0 27px;
+}
+.identity-hero .hero-description {
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 410px;
+  color: var(--muted);
+}
+.identity-hero .hero-actions {
+  margin-top: 29px;
+}
+.identity-hero .hero-footnote {
+  color: var(--dim);
+  gap: 13px;
+  font-size: 10px;
+  margin: 27px 0 0;
+}
+.hero-film-note {
+  position: absolute;
+  right: 0;
+  bottom: 31px;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+.film-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dim);
+  font: 10px var(--mono);
+}
+.motion-toggle {
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 3px;
+  padding: 9px 12px;
+  font: 10px var(--mono);
+  min-height: 36px;
+}
+.motion-toggle:hover {
+  border-color: var(--muted);
+}
+.motion-toggle:disabled {
+  cursor: default;
+  opacity: 0.8;
+}
+.hero-index {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.hero-index a {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  min-height: 70px;
+  padding: 18px 24px;
+  font-size: 12px;
+}
+.hero-index a:first-child {
+  padding-left: 0;
+}
+.hero-index a + a {
+  border-left: 1px solid var(--line);
+}
+.hero-index a > span:last-child {
+  margin-left: auto;
+  color: var(--dim);
+}
+.hero-index a:hover > span:last-child {
+  color: var(--accent);
+}
+.index-number {
+  font: 10px var(--mono);
+  color: var(--dim);
+}
+.platform-strip {
+  padding-block: 30px;
+  border-bottom: 0;
+}
+.jev-section {
+  padding-top: 76px;
+}
+.jev-terminal {
+  background: linear-gradient(145deg, #14221b, #0d1412 70%);
+  border-color: #314637;
+  border-radius: 6px;
+  box-shadow: 0 18px 70px #0002;
+}
+.terminal-caption {
+  color: var(--accent);
+}
+.actors-section {
+  border-top: 1px solid var(--line);
+}
+.feature-state {
+  border-color: #365343;
+  color: var(--accent);
+  background: #16291d;
+}
+.actor-console,
+.playground,
+.code-window {
+  box-shadow: 0 14px 50px #0002;
+}
+.analytics-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  padding-block: 90px;
+  border-bottom: 1px solid var(--line);
+}
+.analytics-section h2 {
+  font-size: clamp(32px, 3.4vw, 46px);
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -1.8px;
+  margin: 18px 0;
+}
+.analytics-section p {
+  color: var(--muted);
+  line-height: 1.75;
+  font-size: 15px;
+  max-width: 470px;
+}
+.analytics-routing {
+  align-self: center;
+  font-family: var(--mono);
+  border: 1px solid var(--line);
+  padding: 25px 28px;
+  background: var(--surface-soft);
+}
+.analytics-routing header {
+  color: var(--dim);
+  font-size: 10px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+}
+.analytics-account {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 0;
+  font-size: 14px;
+}
+.analytics-account span {
+  color: var(--accent);
+  font-size: 10px;
+}
+.analytics-actors {
+  list-style: none;
+  padding: 0 0 0 20px;
+  border-left: 1px solid #45634f;
+  margin: 0 0 26px 6px;
+}
+.analytics-actors li {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  font-size: 12px;
+}
+.analytics-actors span {
+  color: var(--dim);
+  font-size: 10px;
+}
+.analytics-destinations {
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  font-size: 11px;
+  align-items: center;
+}
+.analytics-destinations span {
+  color: var(--dim);
+  margin-right: auto;
+}
+.analytics-destinations a {
+  color: var(--accent);
+  padding: 7px;
+  background: #1b2b21;
+}
+.analytics-routing > p {
+  font-size: 10px;
+  margin-bottom: 0;
+  color: var(--dim);
+}
+.site-footer {
+  background: #070a09;
+}
+.footer-brand .brand-symbol img {
+  mix-blend-mode: lighten;
+}
+.docs-page .brand-symbol img {
+  mix-blend-mode: lighten;
+}
+@media (min-width: 1650px) {
+  .hero-composition {
+    min-height: 765px;
+  }
+  .identity-hero h1 {
+    font-size: 102px;
+  }
+}
+@media (max-width: 1000px) {
+  .hero-composition {
+    min-height: 670px;
+  }
+  .hero-copy {
+    width: 65%;
+  }
+  .hero-film {
+    left: -140px;
+    right: -220px;
+    opacity: 0.8;
+  }
+  .hero-film:after {
+    background: linear-gradient(
+      90deg,
+      var(--bg) 0%,
+      #080c0cf2 32%,
+      #080c0c70 64%,
+      transparent
+    );
+  }
+  .hero-film-note {
+    gap: 12px;
+  }
+  .analytics-section {
+    gap: 35px;
+  }
+}
+@media (max-width: 700px) {
+  .site-header {
+    height: 76px;
+  }
+  .identity-hero {
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-composition {
+    display: contents;
+  }
+  .hero-copy {
+    width: auto;
+    margin: 0 24px;
+    padding-top: 47px;
+    order: 0;
+  }
+  .identity-hero h1 {
+    font-size: clamp(62px, 13.5vw, 85px);
+    margin: 26px 0 22px;
+  }
+  .hero-announcement {
+    font-size: 9px;
+    gap: 7px;
+  }
+  .identity-hero .hero-description {
+    font-size: 15px;
+    max-width: 410px;
+  }
+  .identity-hero .hero-actions {
+    gap: 10px;
+  }
+  .identity-hero .hero-actions .button {
+    font-size: 12px;
+    padding: 13px 15px;
+    gap: 16px;
+  }
+  .identity-hero .hero-footnote {
+    font-size: 9px;
+    gap: 11px;
+  }
+  .hero-film {
+    order: 1;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 330px;
+    z-index: 0;
+    opacity: 1;
+    margin-top: 6px;
+  }
+  .hero-film video,
+  .hero-poster {
+    object-position: 100% center;
+  }
+  .hero-film:after {
+    background: linear-gradient(
+      var(--bg),
+      transparent 15%,
+      transparent 85%,
+      var(--bg)
+    );
+  }
+  .hero-film-note {
+    order: 2;
+    position: static;
+    justify-content: space-between;
+    padding: 0 24px 23px;
+  }
+  .film-label {
+    font-size: 9px;
+  }
+  .hero-index {
+    order: 3;
+    grid-template-columns: 1fr;
+  }
+  .hero-index a {
+    min-height: 55px;
+    padding: 14px 0;
+  }
+  .hero-index a + a {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .hero-index .index-number {
+    min-width: 40px;
+  }
+  .jev-section {
+    padding-top: 50px;
+  }
+  .analytics-section {
+    grid-template-columns: 1fr;
+    padding-block: 55px;
+    gap: 24px;
+  }
+  .analytics-routing {
+    padding: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-film video {
+    display: none;
+  }
+}

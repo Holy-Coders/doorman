@@ -1,0 +1,4 @@
+.tesseract-work/*.schema.json
+.tesseract-work/project.json
+.tesseract-work/logo-concept.png
+Previews/field.png

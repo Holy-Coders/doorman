@@ -140,6 +140,11 @@ test("every internal navigation link and asset on the landing page resolves", as
     "/robots.txt",
     "/janitor-logo.png",
     "/social.png",
+    "/janitor-mark.webp",
+    "/favicon.png",
+    "/media/continuity-poster.webp",
+    "/media/continuity.webm",
+    "/media/continuity.mp4",
   ])
     expect((await request.get(path)).status(), path).toBe(200);
 });
@@ -185,17 +190,34 @@ test("motion can be paused and follows reduced-motion preference without disabli
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
-  const trace = page.locator(".trace-light");
-  await expect(trace).toHaveCSS("animation-play-state", "running");
+  const film = page.locator("[data-hero-video]");
+  await expect(film).toHaveAttribute("data-ready", "true");
+  await expect
+    .poll(() => film.evaluate((el) => !(el as HTMLVideoElement).paused))
+    .toBe(true);
+  const start = await film.evaluate(
+    (el) => (el as HTMLVideoElement).currentTime,
+  );
+  await expect
+    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).currentTime))
+    .toBeGreaterThan(start);
+
   await page.getByRole("button", { name: "Pause motion", exact: true }).click();
-  await expect(trace).toHaveCSS("animation-play-state", "paused");
+  await expect
+    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).paused))
+    .toBe(true);
   await page.getByRole("button", { name: "Play motion", exact: true }).click();
-  await expect(trace).toHaveCSS("animation-play-state", "running");
+  await expect
+    .poll(() => film.evaluate((el) => !(el as HTMLVideoElement).paused))
+    .toBe(true);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(
     page.getByRole("button", { name: "Reduced motion", exact: true }),
   ).toBeDisabled();
-  await expect(trace).toHaveCSS("animation-name", "none");
+  await expect(film).toBeHidden();
+  await expect
+    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).paused))
+    .toBe(true);
   await page
     .getByRole("button", { name: "Your AI assistant", exact: false })
     .click();
@@ -211,4 +233,92 @@ test("motion can be paused and follows reduced-motion preference without disabli
           .filter((animation) => animation.playState === "running").length,
     );
   expect(running).toBe(0);
+});
+
+for (const mode of ["reduced motion", "save data"] as const) {
+  test(`${mode} uses the poster without downloading video`, async ({
+    page,
+  }) => {
+    if (mode === "reduced motion")
+      await page.emulateMedia({ reducedMotion: "reduce" });
+    else {
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+      await page.addInitScript(() =>
+        Object.defineProperty(navigator, "connection", {
+          value: Object.assign(new EventTarget(), { saveData: true }),
+          configurable: true,
+        }),
+      );
+    }
+    const videoRequests: string[] = [];
+    page.on("request", (req) => {
+      if (/continuity\.(webm|mp4)/.test(req.url()))
+        videoRequests.push(req.url());
+    });
+    await page.goto("/");
+    await expect(page.locator(".hero-poster")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Know who’s behind the request." }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: "Browser continuity" }).hover();
+    expect(videoRequests).toEqual([]);
+    await expect(page.locator("[data-hero-video]")).not.toHaveAttribute(
+      "data-loaded",
+      "true",
+    );
+    if (mode === "save data") {
+      await page
+        .getByRole("button", { name: "Play motion", exact: true })
+        .click();
+      await expect(page.locator("[data-hero-video]")).toHaveAttribute(
+        "data-ready",
+        "true",
+      );
+      expect(videoRequests.length).toBeGreaterThan(0);
+    }
+  });
+}
+
+test("video pauses offscreen and the site survives unavailable media", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const film = page.locator("[data-hero-video]");
+  await expect(film).toHaveAttribute("data-ready", "true");
+  await page.locator(".site-footer").scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).paused))
+    .toBe(true);
+  await page.locator(".site-header").scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => film.evaluate((el) => !(el as HTMLVideoElement).paused))
+    .toBe(true);
+  await page.route(/continuity\.(webm|mp4)/, (route) => route.abort());
+  await page.reload();
+  await expect(page.locator(".hero-poster")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Start building", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Search documentation", exact: true })
+    .click();
+  await expect(page.getByRole("searchbox")).toBeVisible();
+});
+
+test("the hero stays readable without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  const videos: string[] = [];
+  page.on("request", (req) => {
+    if (/continuity\.(webm|mp4)/.test(req.url())) videos.push(req.url());
+  });
+  await page.goto("http://127.0.0.1:4357/");
+  await expect(
+    page.getByRole("heading", { name: "Know who’s behind the request." }),
+  ).toBeVisible();
+  await expect(page.locator(".hero-poster")).toBeVisible();
+  expect(videos).toEqual([]);
+  await expect(page.locator("[data-motion-toggle]")).toBeHidden();
+  await context.close();
 });

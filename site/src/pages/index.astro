@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import Hero from "../components/Hero.astro";
 import CodeTabs from "../components/CodeTabs.astro";
 import ActorLab from "../components/ActorLab.astro";
 import Playground from "../components/Playground.astro";
@@ -8,193 +9,7 @@ import { REPO } from "../content";
 
 <Base>
   <main id="main">
-    <section class="hero container">
-      <div class="hero-copy">
-        <a class="release-pill" href={REPO + "/releases"}>
-          <span class="version-dot"></span>Meet Janitor{" "}
-          <span class="pill-version">v0.6 preview</span>
-          <span aria-hidden="true">↗</span>
-        </a>
-        <h1>
-          Identity context.
-          <br />
-          For the
-          <br class="desktop-break" /> agentic era.
-        </h1>
-        <p class="hero-description">
-          Know the browser. Connect the verified account. Let Jev score
-          continuity and risk—while your application decides what happens next.
-        </p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="/docs/getting-started/">
-            Start building <span aria-hidden="true">↗</span>
-          </a>
-          <a class="button button-subtle" href="#actor-lab">
-            Try the actor lab <span aria-hidden="true">↓</span>
-          </a>
-        </div>
-        <div class="hero-footnote">
-          <span>TypeScript</span>
-          <span class="small-cross">+</span>
-          <span>MIT licensed</span>
-          <span class="small-cross">+</span>
-          <span>Your database</span>
-        </div>
-      </div>
-      <div
-        class="hero-visual"
-        data-motion-scene
-        aria-label="Illustration: changing browser observations converge on one stable visitor identity"
-      >
-        <div class="visual-top">
-          <span class="mono">observation_history</span>
-          <span class="signal-status">
-            <span></span>Continuity, over time
-          </span>
-        </div>
-        <svg
-          class="history-art"
-          viewBox="0 0 560 415"
-          fill="none"
-          aria-hidden="true"
-        >
-          <defs>
-            <pattern
-              id="dots"
-              width="22"
-              height="22"
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx="1" cy="1" r=".75" fill="#536078" opacity=".35" />
-            </pattern>
-            <linearGradient
-              id="trace"
-              x1="70"
-              y1="100"
-              x2="430"
-              y2="230"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stop-color="#63708e" />
-              <stop offset="1" stop-color="#b8b4ff" />
-            </linearGradient>
-          </defs>
-          <rect width="560" height="415" fill="url(#dots)" />
-          <path
-            d="M89 91C224 91 215 211 353 211M89 210H353M89 331C224 331 215 211 353 211"
-            stroke="url(#trace)"
-            stroke-width="1.4"
-          />
-          <path
-            d="M89 91C224 91 215 211 353 211M89 210H353M89 331C224 331 215 211 353 211"
-            stroke="#e4e2ff"
-            stroke-width="2.5"
-            stroke-dasharray="4 360"
-            class="trace-light"
-          />
-          <circle
-            cx="353"
-            cy="211"
-            r="90"
-            stroke="#b8b4ff"
-            stroke-opacity=".12"
-            class="history-orbit"
-            stroke-dasharray="3 6"
-          />
-          <circle
-            cx="353"
-            cy="211"
-            r="68"
-            fill="#171d2b"
-            stroke="#b8b4ff"
-            stroke-opacity=".35"
-          />
-          <circle cx="353" cy="211" r="52" fill="#25283f" stroke="#b8b4ff" />
-          <image
-            href="/janitor-logo.png"
-            x="288"
-            y="141"
-            width="140"
-            height="140"
-          />
-          <circle
-            cx="89"
-            cy="91"
-            r="6"
-            fill="#10131e"
-            stroke="#b8b4ff"
-            stroke-width="2"
-          />
-          <circle
-            cx="89"
-            cy="210"
-            r="6"
-            fill="#10131e"
-            stroke="#b8b4ff"
-            stroke-width="2"
-          />
-          <circle cx="89" cy="331" r="6" fill="#f3ab92" />
-          <g
-            fill="#a3aec4"
-            font-family="IBM Plex Mono,monospace"
-            font-size="11"
-          >
-            <text x="61" y="65">
-              First visit
-            </text>
-            <text x="61" y="185">
-              Browser update
-            </text>
-            <text x="61" y="305">
-              Cookie removed
-            </text>
-          </g>
-          <g
-            fill="#717e9a"
-            font-family="IBM Plex Mono,monospace"
-            font-size="10"
-          >
-            <text x="108" y="109">
-              Chrome 130
-            </text>
-            <text x="108" y="231">
-              Chrome 131
-            </text>
-            <text x="108" y="351">
-              Same environment
-            </text>
-          </g>
-          <rect
-            x="286"
-            y="317"
-            width="151"
-            height="31"
-            rx="15.5"
-            fill="#25283f"
-            stroke="#555773"
-          />
-          <circle cx="305" cy="332.5" r="3" fill="#c5c2ff" />
-          <text
-            x="317"
-            y="337"
-            fill="#d7d4ff"
-            font-family="IBM Plex Mono,monospace"
-            font-size="10"
-          >
-            One stable visitor
-          </text>
-        </svg>
-        <div class="visual-bottom">
-          <span class="mono">
-            <span class="code-key">visitorId</span>:{" "}
-            <span class="code-string">"vis_7a92…"</span>
-          </span>
-          <button class="motion-toggle" data-motion-toggle aria-pressed="false">
-            Play motion
-          </button>
-        </div>
-      </div>
-    </section>
+    <Hero />
     <div class="platform-strip container">
       <span>Fits where you build.</span>
       <div>
@@ -341,6 +156,57 @@ import { REPO } from "../content";
     <div class="container">
       <ActorLab />
     </div>
+    <section
+      class="analytics-section container"
+      aria-labelledby="analytics-title"
+    >
+      <div>
+        <span class="section-kicker">Context your analytics can use</span>
+        <h2 id="analytics-title">
+          Better context.
+          <br />
+          Better questions.
+        </h2>
+        <p>
+          Keep people, agents, and accounts distinct in PostHog and Mixpanel.
+          Connect an anonymous journey at login. Reset cleanly when someone else
+          takes over.
+        </p>
+        <p>
+          Ask how many verified people and agents were active in an account,
+          while confidence and risk stay on your server.
+        </p>
+        <a class="text-link" href="/docs/analytics/">
+          Explore the analytics integration ↗
+        </a>
+      </div>
+      <div
+        class="analytics-routing"
+        aria-label="Illustrative account with two verified people and one delegated agent"
+      >
+        <header>Example · verified account activity</header>
+        <div class="analytics-account">
+          account / studio <span>3 distinct actors</span>
+        </div>
+        <ul class="analytics-actors">
+          <li>
+            Alex <span>Person</span>
+          </li>
+          <li>
+            Sam <span>Person</span>
+          </li>
+          <li>
+            Alex’s assistant <span>Delegated agent</span>
+          </li>
+        </ul>
+        <div class="analytics-destinations">
+          <span>Send context to</span>
+          <a href="/docs/analytics/#posthog-sql-recipes">PostHog ↗</a>
+          <a href="/docs/analytics/#mixpanel-report-setup">Mixpanel ↗</a>
+        </div>
+        <p>Verified by your app. Never inferred from a shared browser.</p>
+      </div>
+    </section>
     <section class="intro-section container">
       <div>
         <span class="section-kicker">Built for ordinary change</span>

@@ -3,6 +3,7 @@ import Logo from "../components/Logo.astro";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource/ibm-plex-mono/400.css";
 import "../styles/global.css";
+import "../styles/brand.css";
 import { REPO } from "../content";
 interface Props {
   title?: string;
@@ -10,7 +11,7 @@ interface Props {
   docs?: boolean;
 }
 const {
-  title = "Janitor — Identity context for the agentic era.",
+  title = "Janitor — Identity context for humans and agents.",
   description = "First-party browser identity, verified account links, and Jev-powered risk scoring. A small TypeScript library for identity context in the agentic era.",
   docs = false,
 } = Astro.props;
@@ -25,8 +26,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/janitor-logo.png" type="image/png" />
-    <meta name="theme-color" content="#10131e" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <meta name="theme-color" content="#080c0c" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
