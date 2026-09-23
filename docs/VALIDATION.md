@@ -91,6 +91,6 @@ The [Elixir guide](../packages/elixir/README.md) explains its Postgres test setu
 
 ## What is published
 
-The public source, documentation site and [v0.8.1 GitHub archives](https://github.com/Holy-Coders/doorman/releases/tag/v0.8.1) are available. This patch includes the live Cloudflare response-envelope fix. All seven patch archives passed isolated npm, pnpm and Bun installation/import checks, including a completed-envelope evaluation; the native Hex-format archive also builds. npm publication requires release-account verification, and Hex publication requires an authenticated account; neither registry is claimed as published. Use the [documented GitHub installation paths](LANGUAGES.md).
+Doorman v0.12.0 is published as eight `@aarondovturkel/doorman-*` packages on npm and [`doorman_identity`](https://hex.pm/packages/doorman_identity) on Hex, with [HexDocs](https://hexdocs.pm/doorman_identity/0.12.0/). The repository is [Holy-Coders/doorman](https://github.com/Holy-Coders/doorman).
 
-Installing the library does not create a hosted identity endpoint or configure your analytics project. Those run in your application. Live provider ingestion, real-user risk calibration and your production capacity need verification in that environment.
+A clean consumer installed all eight packages from npm and imported all 21 public ESM entrypoints. A separate clean Mix project fetched v0.12.0 from Hex, compiled it, loaded `Doorman`, and verified the packaged browser bundle. The release also passed 411 TypeScript tests, 17 site browser tests, strict typechecking and lint. These packaging and behavior checks do not improve or validate the experimental model's accuracy. Follow the [installation instructions](LANGUAGES.md).

@@ -7,7 +7,8 @@
 - Separate Jev identity evidence from automation/risk evidence and account for the two provider calls in shared budgets.
 - Add bounded Node HTTP admission before request-body allocation and verify recovery from 200,000-connection bursts. Most burst requests receive controlled overload responses.
 - Include adjustable scoring, aggregate detection signals, operator attribution and opt-in classifier experiments. Public-data results continue to show accuracy limitations; the rename does not establish new detection accuracy.
-- Package documentation, licenses, migrations and the bundled Phoenix browser client for registry installation.
+- Publish all eight JavaScript packages to npm and the native Elixir package with HexDocs to Hex. Verify fresh registry installs.
+- Redesign the public website with cream and black surfaces, a selectable pixel-doorway animation, new light/dark Doorman logos and updated documentation.
 
 ### Operator attribution pilot
 
