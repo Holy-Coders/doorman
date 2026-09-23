@@ -43,12 +43,22 @@ for (const backend of ["postgres", "d1"] as const) {
         learning,
       };
       return backend === "postgres"
-        ? createNodeVisitor({ db: pg, evaluator: false, ...options })
-        : createCloudflareVisitor({ db, ...options });
+        ? createNodeVisitor({
+            exposeClientScores: true,
+            db: pg,
+            evaluator: false,
+            ...options,
+          })
+        : createCloudflareVisitor({ exposeClientScores: true, db, ...options });
     };
     beforeAll(async () => {
       const schemas = await Promise.all(
-        ["0001_visitors", "0002_identity", "0003_learning"].map((name) =>
+        [
+          "0001_visitors",
+          "0002_identity",
+          "0003_learning",
+          "0004_candidate_lookup",
+        ].map((name) =>
           readFile(
             new URL(
               `../packages/storage/${backend}/migrations/${name}.sql`,

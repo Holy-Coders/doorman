@@ -4,7 +4,7 @@ const examples = [
   {
     name: "Browser",
     file: "client.ts",
-    code: `import { createVisitorClient } from "@janitor/browser";\n\nconst visitor = createVisitorClient({\n  endpoint: "/api/visitor",\n});\n\nconst identity = await visitor.identify();\n\n// Your application decides what happens next.\nif (identity.risk.automation > 0.85) {\n  showCaptcha();\n}`,
+    code: `import { createVisitorClient } from "@janitor/browser";\n\nconst visitor = createVisitorClient({\n  endpoint: "/api/visitor",\n});\n\nconst identity = await visitor.identify();\n\n// { visitorId, isReturning }\n// Scores stay on your server.\n// Use visitor.assess(request) in your server route.`,
   },
   {
     name: "Cloudflare",

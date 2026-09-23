@@ -5,7 +5,16 @@ defmodule Janitor.Migration do
     prefix = prefix!(opts)
     Ecto.Migration.execute(~s(CREATE SCHEMA IF NOT EXISTS "#{prefix}"))
 
-    for name <- ~w(0001_visitors 0002_identity 0003_learning) do
+    apply_sql(prefix, ~w(0001_visitors 0002_identity 0003_learning 0004_candidate_lookup))
+  end
+
+  @doc "Add selective lookup indexes to an existing Janitor installation."
+  def upgrade_lookup(opts \\ []) do
+    apply_sql(prefix!(opts), ~w(0004_candidate_lookup))
+  end
+
+  defp apply_sql(prefix, names) do
+    for name <- names do
       sql = File.read!(Application.app_dir(:janitor, "priv/migrations/#{name}.sql"))
 
       sql =

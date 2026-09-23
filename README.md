@@ -14,16 +14,17 @@ import { createVisitorClient } from "@janitor/browser";
 const visitor = createVisitorClient({ endpoint: "/api/visitor" });
 const identity = await visitor.identify();
 
-// Your application owns the decision and the CAPTCHA integration.
-if (identity.risk.automation > 0.85) {
-  showCaptcha();
-}
+// { visitorId: "vis_…", isReturning: true }
+// Scores stay on your server by default.
 
 // Remove event listeners when a component unmounts or collection stops.
 visitor.destroy();
 ```
 
+Use the server adapter's `assess(request)` to obtain the full result privately. Return its `response` to the browser; use its `identity` in your server policy. Janitor never decides to block or show a CAPTCHA. See [private scores and action security](docs/SECURITY.md).
+
 ```ts
+// Server-side result, not the default browser response.
 type VisitorIdentity = {
   visitorId: string; // Opaque, random vis_… ID; never a fingerprint hash.
   confidence: number;
@@ -49,7 +50,7 @@ Applications can opt in to collecting short anonymous sessions that a later veri
 
 ```elixir
 # mix.exs — public Git preview, not yet on Hex
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.5.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.6.0", sparse: "packages/elixir"}
 ```
 
 ```elixir
@@ -72,7 +73,7 @@ export default {
 };
 ```
 
-Uses D1 and `typesafe/jev` through the Workers AI binding. No separate TypeSafe key. Apply the [D1 migration](packages/storage/d1/migrations/0001_visitors.sql) first.
+Uses D1 and `typesafe/jev` through the Workers AI binding. No separate TypeSafe key. Apply the [D1 migrations](packages/storage/d1/migrations) through `0004_candidate_lookup.sql` first.
 
 ## Vercel / Next.js
 
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
 }
 ```
 
-Any compatible Postgres pool works. Isolate each application in its own database or schema/search_path; sharing these tables shares the identity namespace. The adapter does not create or close database connections. Use your database's pooled connection URL and connection limits for serverless execution. Apply the [Postgres migration](packages/storage/postgres/migrations/0001_visitors.sql) first.
+Any compatible Postgres pool works. Isolate each application in its own database or schema/search_path; sharing these tables shares the identity namespace. The adapter does not create or close database connections. Use your database's pooled connection URL and connection limits for serverless execution. Apply the [Postgres migrations](packages/storage/postgres/migrations) through `0004_candidate_lookup.sql` first.
 
 ## Node
 
@@ -126,12 +127,12 @@ pnpm test
 pnpm lint
 ```
 
-Download the prebuilt [v0.5.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.5.0) to try the packages outside the monorepo:
+Download the prebuilt [v0.6.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.6.0) to try the packages outside the monorepo:
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.5.0/janitor-0.5.0.tar.gz -o janitor-0.5.0.tar.gz
-tar -xzf janitor-0.5.0.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.6.0/janitor-0.6.0.tar.gz -o janitor-0.6.0.tar.gz
+tar -xzf janitor-0.6.0.tar.gz
 pnpm install # or npm install / bun install
 ```
 
@@ -145,6 +146,12 @@ pnpm test:e2e
 ```
 
 It runs the real browser client through Fastify and embedded Postgres, verifies the HttpOnly cookie, clears cookies, resizes the viewport, and restores the original visitor using deterministic fallback. No external AI calls occur in tests.
+
+## Scale and the full journey
+
+For millions of visitors, use the existing **Postgres** backend in your own infrastructure. Candidate lookup searches a bounded pool through selective indexes, ranks it, loads ten candidate histories in one database round trip, and evaluates at most three with Jev. Ten is the final comparison shortlist, not the total database search population. Saturated, ambiguous buckets abstain. See [scale benchmarks and migration](docs/SCALING.md).
+
+The [research review](docs/RESEARCH.md) compares published spoofing/history studies and documented Cloudflare, Fingerprint, Sift, Auth0 and Segment approaches. Verified accounts, browser continuity, actor delegation and action risk remain distinct. Anonymous cross-device accuracy is unproven.
 
 ## Small architecture
 
@@ -187,11 +194,12 @@ const visitor = createNodeVisitor({
     /* Counts/scores/timing only; send to your own telemetry. */
   },
 });
-await visitor.cleanup(); // Run from an existing maintenance task; no scheduler included.
+const progress = await visitor.cleanup({ batchSize: 100 });
+// Persist progress?.nextVisitorId for the next maintenance batch.
 await visitor.deleteVisitor(visitorId); // Server-side: authorize this operation yourself.
 ```
 
-`cleanup()` removes expired observations, repairs count limits, and removes expired visitors with no observations. Retention is also enforced on reads, so expired history cannot restore an ID while awaiting cleanup. Each save prunes that visitor's history. Postgres insertion and pruning are separate committed statements; interrupted pruning is repaired by cleanup or a later save. D1 batches insertion and pruning atomically. Concurrent cookieless first requests can create separate IDs; in-flight calls on a single browser client are coalesced, while no cross-tab lock or queue is used.
+`cleanup()` removes a bounded page of expired observations, repairs count limits for a page of visitor IDs, and removes a page of expired visitors with no observations. Continue with `nextVisitorId` and run expiry batches while `hasMoreExpired` is true; see [maintenance](docs/SCALING.md). Retention is also enforced on reads, so expired history cannot restore an ID while awaiting cleanup. Each save prunes that visitor's history. Postgres insertion and pruning are separate committed statements; interrupted pruning is repaired by cleanup or a later save. D1 batches insertion and pruning atomically. Concurrent cookieless first requests can create separate IDs; in-flight calls on a single browser client are coalesced, while no cross-tab lock or queue is used.
 
 Cookies default to `HttpOnly; Secure; SameSite=Lax; Path=/` and are host-only. Use HTTPS in production. Chromium accepts Secure cookies on localhost; if a local browser does not, explicitly configure `environment: 'development', cookie: { secure: false }`. This exception is rejected outside loopback and in production mode. Adapters default to production mode.
 

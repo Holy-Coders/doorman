@@ -1,12 +1,12 @@
 # Installation and other languages
 
-Janitor v0.5 is a public developer preview. JavaScript archives and the native Elixir package are available from GitHub. **The `@janitor/*` packages are not published to npm, and `janitor` is not published to Hex.** The commands below install real release artifacts rather than relying on nonexistent registry packages.
+Janitor v0.6 is a public developer preview. JavaScript archives and the native Elixir package are available from GitHub. **The `@janitor/*` packages are not published to npm, and `janitor` is not published to Hex.** The commands below install real release artifacts rather than relying on nonexistent registry packages.
 
 ## npm, Bun or pnpm
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.5.0/janitor-0.5.0.tar.gz -o janitor.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.6.0/janitor-0.6.0.tar.gz -o janitor.tar.gz
 tar -xzf janitor.tar.gz
 # Choose your package manager:
 npm install
@@ -21,7 +21,7 @@ Use Node 22.12+ for Node/Next.js examples. Bun can install and import the same W
 ## Elixir / Mix / Phoenix
 
 ```elixir
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.5.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.6.0", sparse: "packages/elixir"}
 ```
 
 ```sh

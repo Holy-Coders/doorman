@@ -6,7 +6,7 @@ This is a developer preview. Install the public Git tag; it is **not published t
 
 ```elixir
 # mix.exs
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.5.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.6.0", sparse: "packages/elixir"}
 ```
 
 Then `mix deps.get`. Requires Elixir 1.17+, Ecto SQL 3.14+, PostgreSQL and Plug. Tested with Elixir 1.20.2 / OTP 29 and Postgres 17. Existing apps should resolve their own compatible dependency lockfile. For this checkout, use `{:janitor, path: "../../packages/elixir"}` instead.
@@ -61,6 +61,12 @@ end
 Use `actor_id: person["id"]` only when your authentication establishes this actor; for a separately authenticated agent or family member, supply their distinct actor and a verified delegation. Never accept user, actor, consent or scope claims from the measurement JSON. Janitor returns evidence; your controller owns access decisions.
 
 The adapter enforces POST, same-origin requests, JSON, a 16 KiB payload limit and bounded strings/arrays. Keep Phoenix CSRF protection enabled. If `Plug.Parsers` runs earlier, configure its `length` and `read_timeout` too: Janitor cannot undo an allocation an earlier parser made. Filter `signals`, `behavior`, `token` and identity keys from Phoenix logs. Native SQL queries use `log: false`; do not add a query-parameter logger for these tables.
+
+## Private scores and existing installations
+
+The browser receives only `visitorId` and `isReturning` by default. Full evidence remains in `conn.assigns.janitor_identity` and the result of server-side `Janitor.identify`. `expose_client_scores: true` explicitly publishes it; leave this off for fraud integrations. Never authorize an account from a visitor ID. See [server policy and encrypted receipts](../../docs/SECURITY.md).
+
+Fresh `Janitor.Migration.up()` includes selective lookup indexes. Existing installations need a new Ecto migration whose `up` calls `Janitor.Migration.upgrade_lookup()`. On a large live database build the three indexes concurrently outside a transaction first; see [migration instructions](../../docs/SCALING.md). `Janitor.cleanup(config, batch_size: 100, after_visitor_id: cursor)` now returns `%{next_visitor_id: ..., has_more_expired: ...}`; advance the cursor and process further expiry batches through existing maintenance.
 
 ## Browser and LiveView
 

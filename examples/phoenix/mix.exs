@@ -4,7 +4,7 @@ defmodule JanitorExample.MixProject do
   def project,
     do: [
       app: :janitor_example,
-      version: "0.5.0",
+      version: "0.6.0",
       elixir: "~> 1.17",
       deps: deps(),
       aliases: [setup: ["deps.get", "ecto.create", "ecto.migrate"]]

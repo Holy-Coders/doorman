@@ -1,5 +1,7 @@
 # Identify users and send analytics
 
+Risk/confidence exports should run on your **server**. Browser analytics SDK payloads are visible to users and attackers even when the UI hides them. Use the private result from `visitor.assess()` / `Janitor.identify`; the default browser response contains no scores. See [score confidentiality](SECURITY.md).
+
 Janitor already has a server-side account update API. Browser `visitor.identify()` measures a browser; `identities.updateSubject()` creates or updates the verified person/agent. Profile updates to analytics are explicit, separate calls. All work independently of the optional learning collector.
 
 ```ts

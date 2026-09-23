@@ -20,7 +20,15 @@ defmodule JanitorTest do
   defp config(extra \\ []),
     do:
       Janitor.new(
-        Keyword.merge([repo: Janitor.TestRepo, prefix: "janitor_test", environment: :test], extra)
+        Keyword.merge(
+          [
+            repo: Janitor.TestRepo,
+            prefix: "janitor_test",
+            environment: :test,
+            expose_client_scores: true
+          ],
+          extra
+        )
       )
 
   defp req(signals \\ @signals, cookie \\ "", extra \\ %{}),
@@ -255,7 +263,7 @@ defmodule JanitorTest do
     end
 
     assert Learning.reports(c) == []
-    assert :ok == Janitor.cleanup(c)
+    assert %{has_more_expired: false} = Janitor.cleanup(c)
   end
 
   test "shadow predictions stay private and are removed from predictor evidence" do
@@ -404,5 +412,77 @@ defmodule JanitorTest do
     c = config(on_metrics: fn _ -> throw(:failed_logger) end)
     assert Janitor.handle(req(), c).status == 200
     refute Map.has_key?(body(Janitor.handle(req(@signals, "", %{"debug" => true}), c)), "debug")
+  end
+
+  test "default response hides scores and debug but retains private server evidence" do
+    c =
+      config(
+        expose_client_scores: false,
+        debug: true,
+        evaluator: fn _ -> %{"sameVisitor" => 0, "automation" => 0.93, "suspicious" => 0.1} end
+      )
+
+    conn = Janitor.handle(req(@signals, "", %{"debug" => true}), c)
+    assert Enum.sort(Map.keys(body(conn))) == ["isReturning", "visitorId"]
+    assert conn.assigns.janitor_identity["risk"]["automation"] == 0.93
+    assert is_map(conn.assigns.janitor_identity["debug"])
+    assert Janitor.handle(req(@signals, "", %{"exposeClientScores" => true}), c).status == 400
+  end
+
+  test "indexed retrieval finds older history through a crowded coarse bucket", %{c: c} do
+    {:ok, target} = Janitor.identify(c, %{"signals" => @signals})
+
+    Janitor.Storage.query(c, "UPDATE janitor_test.observations SET seen_at = $1", [
+      Janitor.now() - 86_400_000
+    ])
+
+    decoy =
+      @signals
+      |> Map.put("screen", %{"width" => 1920, "height" => 1080})
+      |> Map.put("hardware", %{
+        "hardwareConcurrency" => 4,
+        "deviceMemory" => 4,
+        "maxTouchPoints" => 0
+      })
+      |> Map.put("languages", ["fr"])
+
+    for _ <- 1..110 do
+      id = Janitor.Storage.create(c)
+      Janitor.Storage.save(c, id, Observation.normalize(decoy))
+    end
+
+    for raw <- [
+          @signals,
+          Map.delete(@signals, "graphics"),
+          Map.put(@signals, "timezone", "Europe/London")
+        ] do
+      [best | _] = Janitor.Storage.candidates(c, Observation.normalize(raw))
+      assert best["visitor_id"] == target["visitorId"]
+      refute best["lookup_saturated"]
+    end
+
+    histories = Janitor.Storage.histories(c, [target["visitorId"]])
+    assert length(histories[target["visitorId"]]) == 1
+    {:ok, restored} = Janitor.identify(c, %{"signals" => @signals})
+    assert restored["visitorId"] == target["visitorId"]
+  end
+
+  test "crowded indistinguishable profiles cannot be restored by a confident evaluator", %{c: c} do
+    for _ <- 1..102 do
+      id = Janitor.Storage.create(c)
+      Janitor.Storage.save(c, id, Observation.normalize(@signals))
+    end
+
+    candidates = Janitor.Storage.candidates(c, Observation.normalize(@signals))
+    assert length(candidates) == 10
+    assert Enum.all?(candidates, & &1["lookup_saturated"])
+
+    {:ok, result} =
+      Janitor.identify(
+        %{c | evaluator: fn _ -> %{"sameVisitor" => 1, "automation" => 0, "suspicious" => 0} end},
+        %{"signals" => @signals}
+      )
+
+    refute result["isReturning"]
   end
 end

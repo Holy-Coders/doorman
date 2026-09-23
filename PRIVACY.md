@@ -104,3 +104,7 @@ Each implementer stores this data on its own server/database; Holy Coders receiv
 Analytics bridges export only browser ID, continuity, risk status/scores and actor/delegation categories through explicitly configured PostHog, Mixpanel or Segment integrations. Profile updates separately export only name, email and plan explicitly passed by the implementer with their verified analytics account ID. These are intentional third-party transfers to the implementer's chosen analytics provider, not a shared Janitor identity graph. No full fingerprint or shadow prediction is exported.
 
 Signed receipts contain compact browser/risk results, operation ID, action category, audience, expiry and nonce. They omit observations, debug payloads, identity keys and raw account IDs. JWTs are signed, not encrypted; keep them out of URLs and logs. Learning exports are sensitive pseudonymous datasets: manage their retention/deletion lineage wherever copied, including outside Janitor.
+
+## Score disclosure
+
+HTTP responses omit risk, confidence, account attribution and diagnostics by default. These stay on the implementer's server. Applications can explicitly expose the full result, and should document that choice. Optional result receipts encrypt evidence rather than exposing readable JWT claims. Analytics containing private risk scores should be sent server-to-server. See [security configuration](docs/SECURITY.md).

@@ -94,7 +94,9 @@ for (const width of [390, 1440]) {
       "/docs/languages/",
       "/docs/trust/",
       "/docs/evaluation/",
-
+      "/docs/security/",
+      "/docs/scaling/",
+      "/docs/research/",
       "/docs/matching/",
       "/docs/evaluators/",
       "/docs/storage/",

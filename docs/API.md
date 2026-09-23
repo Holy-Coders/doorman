@@ -4,7 +4,7 @@
 
 ```ts
 createVisitorClient(options?: { endpoint?: string; debug?: boolean; behavior?: "counts" | "extended"; enabled?: boolean; headers?: () => Record<string, string> }): {
-  identify(): Promise<VisitorIdentity>;
+  identify(): Promise<VisitorClientIdentity>;
   setEnabled(enabled: boolean): void;
   reset(): void;
   destroy(): void;
@@ -27,6 +27,10 @@ interface VisitorStorage {
     visitorId: string,
     limit: number,
   ): Promise<NormalizedObservation[]>;
+  getRecentObservationsBatch?(
+    visitorIds: string[],
+    limit: number,
+  ): Promise<Record<string, NormalizedObservation[]>>;
   createVisitor(): Promise<string>;
   saveObservation(
     visitorId: string,
@@ -43,7 +47,7 @@ interface VisitorEvaluator {
 }
 ```
 
-`VisitorCandidate` is `{ visitorId: string; lastSeenAt: number }`, with epoch milliseconds. `NormalizedObservation` is the optional browser observation plus optional normalized `browser` family and optional aggregate `behavior`. Complete signal and result types are in [types.ts](../packages/core/src/types.ts).
+`VisitorCandidate` is `{ visitorId: string; lastSeenAt: number; lookupSaturated?: boolean }`, with epoch milliseconds. `NormalizedObservation` is the optional browser observation plus optional normalized `browser` family and optional aggregate `behavior`. Complete signal and result types are in [types.ts](../packages/core/src/types.ts).
 
 ```ts
 const engine = createVisitorEngine({
@@ -68,7 +72,8 @@ All return this lifecycle/HTTP surface (the optional `identities` directory meth
 ```ts
 {
   handle(request: Request, context?: { authenticatedSubject?: string; verified?: VerifiedIdentityContext; learningConsent?: boolean }): Promise<Response>;
-  cleanup(): Promise<void>;
+  assess(request: Request, context?: VisitorRequestContext): Promise<{ response: Response; identity?: VisitorIdentity }>;
+  cleanup(options?: { batchSize?: number; afterVisitorId?: string }): Promise<{ nextVisitorId?: string; hasMoreExpired: boolean } | void>;
   deleteVisitor(visitorId: string): Promise<void>;
   learning?: { reports(limit?: number): Promise<LearningReport[]>; deleteSession(id: string): Promise<void> };
 }
@@ -76,7 +81,9 @@ All return this lifecycle/HTTP surface (the optional `identities` directory meth
 
 Node/Vercel accept `{ db, evaluator?: { apiKey, model?, timeoutMs? } | VisitorEvaluator | false, ...options }`. Cloudflare accepts `{ db, ai?, ...options }`. Omitting an evaluator/AI binding is deterministic-only. No adapter automatically performs cleanup or blocks based on risk.
 
-Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10, 1–100 accepted), `evaluatorTimeoutMs` (1200), `restoreThreshold` (0.90, 0.8–1 accepted), `cookie: { name?, maxAgeDays?, secure? }`, `maxBodyBytes` (16384, up to 65536), `requestTimeoutMs` (5000, 100–30000; HTTP 408 on deadline), `endpointPath` (`/api/visitor`), `environment` (`production`), `debug` (false), and `onMetrics` (none). Limits are validated when the adapter is constructed. Example-only port/database/key variables are handled by examples, never by core.
+`handle()` returns only `visitorId` and `isReturning` by default. `assess()` additionally returns full private server evidence and no identity on HTTP errors. Explicit `exposeClientScores: true` restores the full public response. Browser result score fields are optional. See [security boundaries](SECURITY.md).
+
+Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10, 1–100 accepted), `evaluatorTimeoutMs` (1200), `restoreThreshold` (0.90, 0.8–1 accepted), `cookie: { name?, maxAgeDays?, secure? }`, `maxBodyBytes` (16384, up to 65536), `requestTimeoutMs` (5000, 100–30000; HTTP 408 on deadline), `endpointPath` (`/api/visitor`), `environment` (`production`), `debug` (false), `exposeClientScores` (false), and `onMetrics` (none). Limits are validated when the adapter is constructed. Example-only port/database/key variables are handled by examples, never by core.
 
 `createVisitorHandler` from `@janitor/adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
 
@@ -158,7 +165,7 @@ identities.assess({ subjectId, actorId?, delegationId?, audience?, requiredScope
 
 All methods are asynchronous and server-only. The application verifies credentials/key ownership and authorizes management operations. `updateSubject` returns `{ id, kind, updatedAt }`; `findSubject` returns that record or `undefined`. Adding/removing keys and deletion/revocation return no value. `createDelegation` returns `{ id, principalId, actorId, audience, scopes, expiresAt }`. `assess` returns `IdentityAttribution` exported by `@janitor/core`.
 
-`handle(request, { verified: { subjectId, actorId?, delegationId?, audience?, requiredScopes? } })` adds `attribution` to `VisitorIdentity` when the identity directory is configured. Context must come from server-verified authentication; body claims are rejected. Anonymous calls return unknown subject/actor attribution. Directory/database failures return controlled HTTP errors, never manufactured valid grants. `cleanup()` also removes expired grants.
+`handle(request, { verified: { subjectId, actorId?, delegationId?, audience?, requiredScopes? } })` adds server-only `attribution` to `VisitorIdentity` when the identity directory is configured. Context must come from server-verified authentication; body claims are rejected. Anonymous calls return unknown subject/actor attribution. Directory/database failures return controlled HTTP errors, never manufactured valid grants. `cleanup()` also removes expired grants.
 
 Attribution exposes subject status (`verified`/`unknown`), actor kind (`person`/`agent`/`unknown`) with credential basis, and delegation status (`none`/`valid`/`invalid`). Invalid reasons are `missing`, `revoked`, `expired`, `principal`, `actor`, `audience`, or `scope`. A valid grant reports its scopes and expiry; it is not an access decision. Read the full [identity and delegation guide](AGENTIC-IDENTITY.md) before integration.
 

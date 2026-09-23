@@ -5,7 +5,11 @@ import { Miniflare } from "miniflare";
 import { createD1Storage } from "@janitor/storage-d1";
 import type { D1Database } from "@janitor/storage-d1";
 import { createPostgresStorage } from "@janitor/storage-postgres";
-import { DAY_MS, normalizeObservation } from "@janitor/core";
+import {
+  DAY_MS,
+  normalizeObservation,
+  createVisitorEngine,
+} from "@janitor/core";
 import type { ManagedVisitorStorage } from "@janitor/core";
 import { signals } from "./helpers/fixtures.js";
 
@@ -17,9 +21,16 @@ for (const backend of ["postgres", "d1"] as const) {
     let execute: (sql: string) => Promise<unknown>;
     let count: () => Promise<number>;
     beforeAll(async () => {
-      const schema = await readFile(
+      let schema = await readFile(
         new URL(
           `../packages/storage/${backend}/migrations/0001_visitors.sql`,
+          import.meta.url,
+        ),
+        "utf8",
+      );
+      schema += await readFile(
+        new URL(
+          `../packages/storage/${backend}/migrations/0004_candidate_lookup.sql`,
           import.meta.url,
         ),
         "utf8",
@@ -128,6 +139,129 @@ for (const backend of ["postgres", "d1"] as const) {
       ).toEqual([]);
       await storage.cleanup();
       expect(await count()).toBe(0);
+    });
+    it("retrieves an older strong match from a crowded browser bucket across ordinary drift", async () => {
+      const target = await storage.createVisitor();
+      await storage.saveObservation(target, normalizeObservation(signals));
+      await execute(
+        `UPDATE observations SET seen_at = ${Date.now() - 86_400_000} WHERE visitor_id = '${target}'`,
+      );
+      const decoys: string[] = [];
+      for (let i = 0; i < 110; i++) {
+        const id = await storage.createVisitor();
+        decoys.push(id);
+        await storage.saveObservation(
+          id,
+          normalizeObservation({
+            ...signals,
+            screen: { width: 1920, height: 1080 },
+            hardware: {
+              hardwareConcurrency: 4,
+              deviceMemory: 4,
+              maxTouchPoints: 0,
+            },
+            languages: ["fr"],
+          }),
+        );
+      }
+      for (const changed of [
+        signals,
+        { ...signals, timezone: "Europe/London" },
+        { ...signals, graphics: undefined },
+        {
+          ...signals,
+          screen: { width: 900, height: 1440 },
+          viewport: { width: 400, height: 700 },
+        },
+      ]) {
+        const candidates = await storage.findCandidates(
+          normalizeObservation(changed),
+          10,
+        );
+        expect(candidates[0]).toMatchObject({
+          visitorId: target,
+          lookupSaturated: false,
+        });
+      }
+      const candidates = await storage.findCandidates(
+        normalizeObservation(signals),
+        10,
+      );
+      const histories = await storage.getRecentObservationsBatch!(
+        candidates.map((c) => c.visitorId),
+        100,
+      );
+      expect(histories[target]).toEqual(
+        await storage.getRecentObservations(target, 5),
+      );
+      expect(await storage.getRecentObservationsBatch!([], 5)).toEqual({});
+      const result = await createVisitorEngine({ storage }).identify({
+        signals,
+      });
+      expect(result).toMatchObject({ visitorId: target, isReturning: true });
+      for (const id of [target, ...decoys]) await storage.deleteVisitor(id);
+    }, 30_000);
+    it("marks fully crowded matching buckets and abstains even with confident AI", async () => {
+      const ids: string[] = [];
+      for (let i = 0; i < 102; i++) {
+        const id = await storage.createVisitor();
+        ids.push(id);
+        await storage.saveObservation(id, normalizeObservation(signals));
+      }
+      const candidates = await storage.findCandidates(
+        normalizeObservation(signals),
+        10,
+      );
+      expect(candidates).toHaveLength(10);
+      expect(candidates.every((c) => c.lookupSaturated)).toBe(true);
+      const result = await createVisitorEngine({
+        storage,
+        evaluator: {
+          evaluate: async () => ({
+            sameVisitor: 1,
+            automation: 0,
+            suspicious: 0,
+          }),
+        },
+      }).identify({ signals });
+      expect(result.isReturning).toBe(false);
+      for (const id of [...ids, result.visitorId])
+        await storage.deleteVisitor(id);
+    }, 30_000);
+    it("paginates cleanup and repairs only the selected visitor histories", async () => {
+      const ids: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        const id = await storage.createVisitor();
+        ids.push(id);
+        await storage.saveObservation(id, normalizeObservation(signals));
+      }
+      // Simulate interrupted pruning without changing production retention settings.
+      await execute(
+        "INSERT INTO observations (visitor_id,seen_at,signals_json) SELECT visitor_id,seen_at,signals_json FROM observations",
+      );
+      await execute(
+        "INSERT INTO observations (visitor_id,seen_at,signals_json) SELECT visitor_id,seen_at,signals_json FROM observations",
+      );
+      expect(await count()).toBe(16);
+      let page = await storage.cleanup({ batchSize: 1 });
+      expect(page?.nextVisitorId).toBeDefined();
+      expect(await count()).toBe(15);
+      while (page?.nextVisitorId)
+        page = await storage.cleanup({
+          batchSize: 1,
+          afterVisitorId: page.nextVisitorId,
+        });
+      expect(await count()).toBe(12);
+      const expired = Date.now() - 91 * DAY_MS;
+      await execute(`UPDATE observations SET seen_at = ${expired}`);
+      await execute(`UPDATE visitors SET last_seen_at = ${expired}`);
+      page = await storage.cleanup({ batchSize: 2 });
+      expect(page?.hasMoreExpired).toBe(true);
+      expect(await count()).toBe(10);
+      for (let i = 0; i < 10 && page?.hasMoreExpired; i++)
+        page = await storage.cleanup({ batchSize: 2 });
+      expect(await count()).toBe(0);
+      for (const id of ids) await storage.deleteVisitor(id);
     });
     it("rejects observations for nonexistent visitors", async () => {
       await expect(

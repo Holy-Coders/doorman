@@ -35,13 +35,13 @@ A recognized agent is not automatically authorized by a user. Retrieve the indep
 
 ## Short-lived result receipts
 
-Use receipts when a subsequent operation must consume a result computed on your server. They sign selected evidence, not the truth of browser measurements. They omit debug and fingerprint data. Always retain normal authentication and verify that the operation belongs to the authenticated account.
+Use receipts when a subsequent operation must consume a result computed on your server. They encrypt and authenticate selected evidence, not the truth of browser measurements. They omit debug and fingerprint data. Always retain normal authentication and verify that the operation belongs to the authenticated account.
 
 ```ts
 import { createResultReceipts } from "@janitor/adapters/security";
 
 const receipts = createResultReceipts({
-  secret: receiptSecretBytes, // At least 32 cryptographically random bytes, server-only.
+  secret: receiptSecretBytes, // Exactly 32 cryptographically random bytes, server-only.
   issuer: "my-app-production",
 });
 const token = await receipts.issue({
@@ -66,7 +66,7 @@ const evidence = await receipts.verify(token, {
 
 `appConsumeNonce` is application code, not a Janitor API. A Postgres implementation can use `INSERT ... ON CONFLICT DO NOTHING RETURNING nonce` in your operation transaction. Bind `operationId` to the authenticated account, immutable amount/destination/request hash and idempotency state; do not choose it from an unchecked header. A mismatch, expired token, tampering, replay or nonce-store failure returns `undefined`. Only a fully verified receipt invokes nonce consumption. Treat failed downstream operations as a separate idempotency/retry decision. Clean expired nonces with existing maintenance. Never use a per-process Set as production replay protection.
 
-Action categories are supplied by server code and bound to the receipt; they do not alter identity matching or automatically label an action malicious. Current risk questions remain technical browser questions. Keep receipts out of URLs/logs. JWTs are signed, not encrypted. Use distinct keys per environment/purpose; rotation invalidates outstanding receipts, which expire within five minutes. Both holders of an HMAC secret can sign; use an existing asymmetric token service if verifiers must not issue.
+Action categories are supplied by server code and bound to the receipt; they do not alter identity matching or automatically label an action malicious. Current risk questions remain technical browser questions. Keep receipts out of URLs/logs. Receipts use JWE `dir` / `A256GCM` through `jose`, with authenticated encryption and randomized IVs. Browser recipients cannot read the scores. v0.5 signed plaintext receipts are not accepted. Use distinct keys per environment/purpose; rotation invalidates outstanding receipts, which expire within five minutes. Both holders of the symmetric key can issue and decrypt receipts; use an existing asymmetric token service if verifiers must not issue.
 
 ## Explicit cross-device pairing
 

@@ -30,7 +30,12 @@ for (const backend of ["postgres", "d1"] as const) {
       if (backend === "postgres") {
         pg = new PGlite();
         await pg.exec(schemas.join("\n"));
-        visitor = createNodeVisitor({ db: pg, evaluator: false, identity });
+        visitor = createNodeVisitor({
+          exposeClientScores: true,
+          db: pg,
+          evaluator: false,
+          identity,
+        });
         query = async (sql) => (await pg.query(sql)).rows;
       } else {
         mf = new Miniflare({
@@ -45,6 +50,7 @@ for (const backend of ["postgres", "d1"] as const) {
           .filter((s) => s.trim()))
           await db.prepare(statement).run();
         visitor = createCloudflareVisitor({
+          exposeClientScores: true,
           db: db as unknown as D1Database,
           identity,
         });

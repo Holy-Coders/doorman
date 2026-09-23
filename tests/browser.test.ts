@@ -278,3 +278,17 @@ it("discards stale responses after a reset even when transport ignores abort", a
   await expect(pending).rejects.toThrow("reset");
   client.destroy();
 });
+
+it("accepts private-score responses and rejects partially exposed scores", async () => {
+  documentStub();
+  const minimal = { visitorId: identity.visitorId, isReturning: true };
+  const fetch = vi.fn(async () => Response.json(minimal));
+  vi.stubGlobal("fetch", fetch);
+  const visitor = createVisitorClient();
+  expect(await visitor.identify()).toEqual(minimal);
+  fetch.mockImplementation(async () =>
+    Response.json({ ...minimal, confidence: 0.9 }),
+  );
+  await expect(visitor.identify()).rejects.toThrow("Invalid visitor response");
+  visitor.destroy();
+});

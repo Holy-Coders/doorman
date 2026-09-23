@@ -1,5 +1,7 @@
 import {
   boundedLimit,
+  LOOKUP_LIMITS,
+  rankLookupRows,
   createVisitorId,
   DAY_MS,
   retentionOptions,
@@ -21,9 +23,10 @@ export interface D1Statement {
 }
 export interface D1Database {
   prepare(sql: string): D1Statement;
-  batch(statements: D1Statement[]): Promise<{ success: boolean }[]>;
+  batch(
+    statements: D1Statement[],
+  ): Promise<{ success: boolean; results?: Record<string, unknown>[] }[]>;
 }
-const LOOKUP_ROWS_PER_INDEX = 50;
 function assertSuccess(result: { success: boolean }) {
   if (!result.success) throw new Error("D1 operation failed");
 }
@@ -52,34 +55,97 @@ export function createD1Storage(
   return {
     async findCandidates(observation, limit) {
       const values: unknown[] = [];
-      const branches: string[] = [];
-      const add = (where: string, parameters: unknown[]) => {
-        branches.push(
-          `SELECT visitor_id, seen_at FROM (SELECT visitor_id, seen_at FROM observations WHERE ${where} AND seen_at >= ? ORDER BY seen_at DESC LIMIT ${LOOKUP_ROWS_PER_INDEX})`,
-        );
-        values.push(...parameters, cutoff());
+      const bind = (value: unknown) => {
+        values.push(value);
+        return "?";
       };
-      if (observation.platform && observation.browser)
-        add("platform = ? AND browser = ?", [
-          observation.platform,
-          observation.browser,
-        ]);
-      if (observation.graphics?.webglRenderer)
-        add("webgl_renderer = ?", [observation.graphics.webglRenderer]);
-      if (observation.timezone && observation.browser)
-        add("timezone = ? AND browser = ?", [
-          observation.timezone,
-          observation.browser,
-        ]);
+      const branches: string[] = [];
+      const add = (where: string) => {
+        const probe = branches.length;
+        const recent = bind(cutoff());
+        branches.push(
+          `SELECT visitor_id, seen_at, signals_json, ${probe} AS probe FROM (SELECT visitor_id, seen_at, signals_json FROM observations WHERE ${where} AND seen_at >= ${recent} ORDER BY seen_at DESC LIMIT ${LOOKUP_LIMITS.rowsPerProbe + 1})`,
+        );
+      };
+      const { platform, browser, timezone, screen, hardware, graphics } =
+        observation;
+      const base = () =>
+        `platform = ${bind(platform)} AND browser = ${bind(browser)}`;
+      const dimensions = () =>
+        `json_extract(signals_json, '$.screen.width') = ${bind(screen!.width)} AND json_extract(signals_json, '$.screen.height') = ${bind(screen!.height)}`;
+      if (platform && browser) {
+        if (screen?.width && screen.height) {
+          if (hardware?.hardwareConcurrency)
+            add(
+              `${base()} AND ${dimensions()} AND json_extract(signals_json, '$.hardware.hardwareConcurrency') = ${bind(hardware.hardwareConcurrency)}`,
+            );
+          if (timezone)
+            add(
+              `${base()} AND ${dimensions()} AND timezone = ${bind(timezone)}`,
+            );
+        }
+        if (graphics?.webglRenderer && timezone)
+          add(
+            `${base()} AND webgl_renderer = ${bind(graphics.webglRenderer)} AND timezone = ${bind(timezone)}`,
+          );
+        add(base());
+      }
+      if (graphics?.webglRenderer)
+        add(`webgl_renderer = ${bind(graphics.webglRenderer)}`);
+      if (timezone && browser)
+        add(`timezone = ${bind(timezone)} AND browser = ${bind(browser)}`);
       if (!branches.length) return [];
-      const rows = await all<{ visitor_id: string; last_seen_at: number }>(
-        `SELECT visitor_id, MAX(seen_at) AS last_seen_at FROM (${branches.join(" UNION ALL ")}) GROUP BY visitor_id ORDER BY last_seen_at DESC, visitor_id LIMIT ?`,
-        [...values, boundedLimit(limit, 10)],
+      // D1 limits compound SELECT terms. Batch the six independent bounded probes.
+      let offset = 0;
+      const results = await db.batch(
+        branches.map((sql) => {
+          const count = (sql.match(/\?/g) ?? []).length;
+          const params = values.slice(offset, offset + count);
+          offset += count;
+          return db.prepare(sql).bind(...params);
+        }),
       );
-      return rows.map((row) => ({
-        visitorId: row.visitor_id,
-        lastSeenAt: Number(row.last_seen_at),
-      }));
+      results.forEach(assertSuccess);
+      const rows = results.flatMap((result) => result.results ?? []) as {
+        visitor_id: string;
+        seen_at: number;
+        probe: number;
+        signals_json: string;
+      }[];
+      return rankLookupRows(
+        rows.map((row) => ({
+          visitorId: String(row.visitor_id),
+          seenAt: Number(row.seen_at),
+          probe: Number(row.probe),
+          observation: JSON.parse(row.signals_json) as NormalizedObservation,
+        })),
+        observation,
+        boundedLimit(limit, LOOKUP_LIMITS.candidates),
+      );
+    },
+    async getRecentObservationsBatch(visitorIds, limit) {
+      const ids = [...new Set(visitorIds)].slice(0, LOOKUP_LIMITS.candidates);
+      if (!ids.length) return {};
+      const results = await db.batch(
+        ids.map((id) =>
+          db
+            .prepare(
+              "SELECT visitor_id, signals_json FROM observations WHERE visitor_id = ? AND seen_at >= ? ORDER BY seen_at DESC, id DESC LIMIT ?",
+            )
+            .bind(id, cutoff(), boundedLimit(limit, 5)),
+        ),
+      );
+      results.forEach(assertSuccess);
+      const rows = results.flatMap((result) => result.results ?? []) as {
+        visitor_id: string;
+        signals_json: string;
+      }[];
+      const histories: Record<string, NormalizedObservation[]> = {};
+      for (const row of rows)
+        (histories[String(row.visitor_id)] ??= []).push(
+          JSON.parse(row.signals_json) as NormalizedObservation,
+        );
+      return histories;
     },
     async getRecentObservations(visitorId, limit) {
       const rows = await all<{ signals_json: string }>(
@@ -136,21 +202,38 @@ export function createD1Storage(
     async deleteVisitor(visitorId) {
       await run("DELETE FROM visitors WHERE id = ?", [visitorId]);
     },
-    async cleanup() {
-      const results = await db.batch([
-        db.prepare("DELETE FROM observations WHERE seen_at < ?").bind(cutoff()),
-        db
-          .prepare(
-            "DELETE FROM observations WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY visitor_id ORDER BY seen_at DESC, id DESC) AS position FROM observations) WHERE position > ?)",
-          )
-          .bind(retention.maxObservationsPerVisitor),
-        db
-          .prepare(
-            "DELETE FROM visitors WHERE last_seen_at < ? AND NOT EXISTS (SELECT 1 FROM observations WHERE visitor_id = visitors.id)",
-          )
-          .bind(cutoff()),
-      ]);
-      results.forEach(assertSuccess);
+    async cleanup(options = {}) {
+      const size = boundedLimit(options.batchSize ?? 100, 1000);
+      const recent = cutoff();
+      // Expiration and count repair are separately bounded. The keyset cursor avoids
+      // rescanning every visitor or sorting the entire observation table.
+      const expired = await all(
+        "DELETE FROM observations WHERE id IN (SELECT id FROM observations WHERE seen_at < ? ORDER BY seen_at LIMIT ?) RETURNING id",
+        [recent, size],
+      );
+      const visitors = await all<{ id: string }>(
+        "SELECT id FROM visitors WHERE id > ? ORDER BY id LIMIT ?",
+        [options.afterVisitorId ?? "", size + 1],
+      );
+      const ids = visitors.slice(0, size).map((row) => String(row.id));
+      if (ids.length) {
+        // One JSON parameter avoids D1's 100 bound-parameter limit.
+        await run(
+          `DELETE FROM observations WHERE id IN (
+          SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY visitor_id ORDER BY seen_at DESC, id DESC) AS position
+          FROM observations WHERE visitor_id IN (SELECT value FROM json_each(?))) WHERE position > ?)`,
+          [JSON.stringify(ids), retention.maxObservationsPerVisitor],
+        );
+      }
+      const removed = await all(
+        `DELETE FROM visitors WHERE id IN (SELECT value FROM json_each(?)) AND last_seen_at < ?
+        AND NOT EXISTS (SELECT 1 FROM observations WHERE visitor_id = visitors.id) RETURNING id`,
+        [JSON.stringify(ids), recent],
+      );
+      return {
+        nextVisitorId: visitors.length > size ? ids.at(-1) : undefined,
+        hasMoreExpired: expired.length === size || removed.length === size,
+      };
     },
   };
 }

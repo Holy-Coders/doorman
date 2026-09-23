@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Janitor first-party browser protocol",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Self-hosted by each implementer. Measurements never establish authenticated account claims."
   },
   "paths": {
@@ -21,7 +21,7 @@
         },
         "responses": {
           "200": {
-            "description": "Identity and risk evidence",
+            "description": "Browser continuity only by default; full scores require explicit server opt-in",
             "headers": {
               "Set-Cookie": {
                 "description": "First-party HttpOnly identity cookie; optional separate learning cookie.",
@@ -33,7 +33,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VisitorIdentity"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/VisitorClientIdentity"
+                    },
+                    {
+                      "$ref": "#/components/schemas/VisitorIdentity"
+                    }
+                  ]
                 }
               }
             }
@@ -461,6 +468,23 @@
           "debug": {
             "type": "object",
             "description": "Explicitly enabled non-production debug only."
+          }
+        }
+      },
+      "VisitorClientIdentity": {
+        "type": "object",
+        "required": [
+          "visitorId",
+          "isReturning"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "visitorId": {
+            "type": "string",
+            "pattern": "^vis_[a-f0-9]{48}$"
+          },
+          "isReturning": {
+            "type": "boolean"
           }
         }
       }

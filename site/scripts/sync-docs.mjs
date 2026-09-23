@@ -6,6 +6,25 @@ const output = resolve(root, "site/src/generated");
 mkdirSync(output, { recursive: true });
 const entries = [
   [
+    "security",
+    "Private scores & security",
+    "Private server evidence, encrypted receipts and action boundaries.",
+    "docs/SECURITY.md",
+  ],
+  [
+    "scaling",
+    "Scale & Postgres",
+    "Selective indexes, bounded maintenance and measured query scale.",
+    "docs/SCALING.md",
+  ],
+  [
+    "research",
+    "Research & full-funnel identity",
+    "Studies, major platforms, spoofing and cross-device priorities.",
+    "docs/RESEARCH.md",
+  ],
+
+  [
     "elixir",
     "Elixir & Phoenix",
     "Native Ecto identity, verified users, PostHog and Mixpanel.",

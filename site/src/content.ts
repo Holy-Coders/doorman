@@ -93,6 +93,28 @@ export const sections = [
     title: "Under the hood",
     pages: [
       {
+        slug: "security",
+        title: "Private scores & security",
+        description:
+          "Private server evidence, encrypted receipts and action boundaries.",
+        source: "docs/SECURITY.md",
+      },
+      {
+        slug: "scaling",
+        title: "Scale & Postgres",
+        description:
+          "Selective indexes, bounded maintenance and measured query scale.",
+        source: "docs/SCALING.md",
+      },
+      {
+        slug: "research",
+        title: "Research & full-funnel identity",
+        description:
+          "Studies, major platforms, spoofing and cross-device priorities.",
+        source: "docs/RESEARCH.md",
+      },
+
+      {
         slug: "learning",
         title: "Opt-in learning",
         description: "Verified login feedback and private shadow experiments.",

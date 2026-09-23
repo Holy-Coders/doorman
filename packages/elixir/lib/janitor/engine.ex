@@ -18,11 +18,12 @@ defmodule Janitor.Engine do
         {context.visitor_id, 1, true, score, 0, evaluation, not is_nil(evaluation), latency}
       else
         candidates = Storage.candidates(c, current)
+        histories = Storage.histories(c, Enum.map(candidates, & &1["visitor_id"]))
 
         ranked =
           candidates
           |> Enum.map(fn candidate ->
-            history = Storage.history(c, candidate["visitor_id"])
+            history = Map.get(histories, candidate["visitor_id"], [])
 
             best =
               history
@@ -38,6 +39,7 @@ defmodule Janitor.Engine do
 
             %{
               id: candidate["visitor_id"],
+              lookup_saturated: candidate["lookup_saturated"],
               seen: candidate["last_seen_at"],
               history: history,
               score: if(best, do: best.score, else: 0),
@@ -75,11 +77,11 @@ defmodule Janitor.Engine do
             Enum.max(
               [0] ++
                 Enum.map(Enum.drop(evaluated, 1), & &1.confidence) ++
-                Enum.map(Enum.drop(ranked, @evaluation_limit), & &1.score)
+                Enum.map(Enum.reject(ranked, &(&1.id == best.id)), & &1.score)
             )
 
           restore =
-            best.confidence >= c.restore_threshold and
+            not best.lookup_saturated and best.confidence >= c.restore_threshold and
               best.confidence - runner_up >= @ambiguity_margin
 
           {if(restore, do: best.id), if(restore, do: best.confidence, else: 0), restore,

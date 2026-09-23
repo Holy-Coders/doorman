@@ -74,7 +74,12 @@ for (const dir of ["protocol", "packages/elixir/priv"]) {
     JSON.stringify(JEV_QUESTIONS, null, 2) + "\n",
   );
 }
-for (const migration of ["0001_visitors", "0002_identity", "0003_learning"])
+for (const migration of [
+  "0001_visitors",
+  "0002_identity",
+  "0003_learning",
+  "0004_candidate_lookup",
+])
   copyFileSync(
     `packages/storage/postgres/migrations/${migration}.sql`,
     `packages/elixir/priv/migrations/${migration}.sql`,
@@ -114,7 +119,7 @@ writeFileSync(
       openapi: "3.1.0",
       info: {
         title: "Janitor first-party browser protocol",
-        version: "0.5.0",
+        version: "0.6.0",
         description:
           "Self-hosted by each implementer. Measurements never establish authenticated account claims.",
       },
@@ -132,7 +137,8 @@ writeFileSync(
             },
             responses: {
               "200": {
-                description: "Identity and risk evidence",
+                description:
+                  "Browser continuity only by default; full scores require explicit server opt-in",
                 headers: {
                   "Set-Cookie": {
                     description:
@@ -142,7 +148,12 @@ writeFileSync(
                 },
                 content: {
                   "application/json": {
-                    schema: { $ref: "#/components/schemas/VisitorIdentity" },
+                    schema: {
+                      oneOf: [
+                        { $ref: "#/components/schemas/VisitorClientIdentity" },
+                        { $ref: "#/components/schemas/VisitorIdentity" },
+                      ],
+                    },
                   },
                 },
               },
@@ -169,7 +180,19 @@ writeFileSync(
         },
       },
       components: {
-        schemas: { VisitorPayload: schema, VisitorIdentity: identitySchema },
+        schemas: {
+          VisitorPayload: schema,
+          VisitorIdentity: identitySchema,
+          VisitorClientIdentity: {
+            type: "object",
+            required: ["visitorId", "isReturning"],
+            additionalProperties: false,
+            properties: {
+              visitorId: identitySchema.properties.visitorId,
+              isReturning: { type: "boolean" },
+            },
+          },
+        },
       },
     },
     null,

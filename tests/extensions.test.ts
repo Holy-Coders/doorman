@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { SignJWT, generateKeyPair } from "jose";
+import { SignJWT, EncryptJWT, generateKeyPair } from "jose";
 import {
   createResultReceipts,
   verifyAgentCredential,
@@ -29,7 +29,7 @@ const identity: VisitorIdentity = {
   },
 };
 
-it("signs an operation-specific result, excludes debug, rejects replay and tampering", async () => {
+it("encrypts an operation-specific result, excludes debug, rejects replay and tampering", async () => {
   const receipts = createResultReceipts({
     secret: crypto.getRandomValues(new Uint8Array(32)),
     issuer: "app",
@@ -40,6 +40,12 @@ it("signs an operation-specific result, excludes debug, rejects replay and tampe
     operationId: "order-1",
     action: "payment",
   });
+  expect(token.split(".")).toHaveLength(5);
+  const visible = token
+    .split(".")
+    .map((part) => Buffer.from(part, "base64url").toString("utf8"))
+    .join("");
+  expect(visible).not.toMatch(/automation|suspicious|confidence|vis_|private/);
   const consumed = new Set<string>();
   const consumeNonce = vi.fn(async (nonce: string) => {
     if (consumed.has(nonce)) return false;
@@ -78,18 +84,22 @@ it("rejects expired receipts, cross-purpose tokens and nonce storage failures", 
     action: "read" as const,
     consumeNonce: async () => true,
   };
-  const expired = await new SignJWT({
+  const expired = await new EncryptJWT({
     identity,
     operationId: "o",
     action: "read",
   })
-    .setProtectedHeader({ alg: "HS256", typ: "janitor-result+jwt" })
+    .setProtectedHeader({
+      alg: "dir",
+      enc: "A256GCM",
+      typ: "janitor-result+jwe",
+    })
     .setIssuer("app")
     .setAudience("a")
     .setIssuedAt(1)
     .setExpirationTime(2)
     .setJti(crypto.randomUUID())
-    .sign(secret);
+    .encrypt(secret);
   expect(await receipts.verify(expired, expected)).toBeUndefined();
   const token = await receipts.issue({
     identity,
@@ -114,6 +124,40 @@ it("rejects expired receipts, cross-purpose tokens and nonce storage failures", 
       ttlSeconds: 301,
     }),
   ).rejects.toThrow();
+});
+it("rejects unencrypted legacy receipts and a different encryption key", async () => {
+  const secret = crypto.getRandomValues(new Uint8Array(32));
+  const receipts = createResultReceipts({ secret, issuer: "app" });
+  const input = {
+    identity,
+    audience: "a",
+    operationId: "o",
+    action: "read" as const,
+  };
+  const consumeNonce = vi.fn(async () => true);
+  const expected = {
+    audience: "a",
+    operationId: "o",
+    action: "read" as const,
+    consumeNonce,
+  };
+  const legacy = await new SignJWT(input)
+    .setProtectedHeader({ alg: "HS256", typ: "janitor-result+jwt" })
+    .setIssuer("app")
+    .setAudience("a")
+    .setIssuedAt()
+    .setExpirationTime("1m")
+    .setJti(crypto.randomUUID())
+    .sign(secret);
+  expect(await receipts.verify(legacy, expected)).toBeUndefined();
+  const wrong = createResultReceipts({
+    secret: crypto.getRandomValues(new Uint8Array(32)),
+    issuer: "app",
+  });
+  expect(
+    await wrong.verify(await receipts.issue(input), expected),
+  ).toBeUndefined();
+  expect(consumeNonce).not.toHaveBeenCalled();
 });
 it("verifies an issuer credential separately from user delegation", async () => {
   const keys = await generateKeyPair("ES256");

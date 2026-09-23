@@ -46,6 +46,7 @@ for (const backend of ["node", "vercel", "cloudflare"] as const) {
         for (const sql of schema.split(";").filter((sql) => sql.trim()))
           await db.prepare(sql).run();
         handler = createCloudflareVisitor({
+          exposeClientScores: true,
           db: db as unknown as D1Database,
           ai: {
             run: async () => ({
@@ -63,7 +64,11 @@ for (const backend of ["node", "vercel", "cloudflare"] as const) {
         await postgres.exec(schema);
         handler = (
           backend === "node" ? createNodeVisitor : createVercelVisitor
-        )({ db: postgres, evaluator: { evaluate: async () => evaluation } });
+        )({
+          exposeClientScores: true,
+          db: postgres,
+          evaluator: { evaluate: async () => evaluation },
+        });
       }
     }, 30_000);
     afterAll(async () => {
@@ -176,6 +181,7 @@ describe("HTTP boundary", () => {
     ).toThrow("non-production");
     const handler = createVisitorHandler(createMemoryStorage(), undefined, {
       debug: true,
+      exposeClientScores: true,
       environment: "test",
     });
     expect(
@@ -215,6 +221,7 @@ describe("HTTP boundary", () => {
     );
     expect(Object.keys(onMetrics.mock.calls[0]?.[0])).toEqual([
       "candidateCount",
+      "lookupSaturated",
       "deterministicScore",
       "finalConfidence",
       "evaluatorUsed",
@@ -226,7 +233,10 @@ describe("HTTP boundary", () => {
 
 describe("verified cross-device subjects", () => {
   const secret = "a".repeat(64);
-  const options = { subjectLinking: { secret, namespace: "test-app" } };
+  const options = {
+    exposeClientScores: true,
+    subjectLinking: { secret, namespace: "test-app" },
+  };
   it("links a verified account across different browsers without merging visitor IDs or sharing account data with the evaluator", async () => {
     const evaluate = vi.fn(async () => evaluation);
     const handler = createVisitorHandler(
@@ -295,6 +305,7 @@ describe("verified cross-device subjects", () => {
       (
         await (
           await createVisitorHandler(createMemoryStorage(), undefined, {
+            exposeClientScores: true,
             subjectLinking: { secret: key, namespace },
           }).handle(request(), { authenticatedSubject: account })
         ).json()
@@ -377,4 +388,108 @@ it("times out and cancels an unfinished request body without creating a visitor"
   expect(cancel).toHaveBeenCalledOnce();
   expect(storage.rows.size).toBe(0);
   expect(response.headers.get("set-cookie")).toBeNull();
+});
+
+it("keeps scores, linked subjects and debug server-side even when the browser requests diagnostics", async () => {
+  const handler = createVisitorHandler(
+    createMemoryStorage(),
+    { evaluate: async () => evaluation },
+    {
+      environment: "test",
+      debug: true,
+      subjectLinking: { secret: "x".repeat(64), namespace: "test" },
+    },
+  );
+  const { identity, response } = await handler.assess(
+    request({ signals, debug: true }),
+    { authenticatedSubject: "account-private" },
+  );
+  expect(identity).toMatchObject({
+    subjectId: expect.any(String),
+    debug: expect.any(Object),
+  });
+  expect(identity?.risk).toEqual({
+    automation: evaluation.automation,
+    suspicious: evaluation.suspicious,
+  });
+  const body = await response.json();
+  expect(Object.keys(body).sort()).toEqual(["isReturning", "visitorId"]);
+  expect(response.headers.get("cache-control")).toContain("no-store");
+  expect(
+    (await handler.assess(request({ signals, exposeClientScores: true })))
+      .identity,
+  ).toBeUndefined();
+  expect(
+    (await handler.handle(request({ signals }, { "x-expose-scores": "true" })))
+      .status,
+  ).toBe(200);
+});
+
+it("does not cross-contaminate concurrent private assessments or expose failed results", async () => {
+  const handler = createVisitorHandler(createMemoryStorage(), {
+    evaluate: async ({ current }) => ({
+      sameVisitor: 0,
+      automation: current.automation?.webdriver ? 1 : 0,
+      suspicious: 0,
+    }),
+  });
+  const results = await Promise.all(
+    [true, false].map((webdriver) =>
+      handler.assess(request({ signals: { automation: { webdriver } } })),
+    ),
+  );
+  expect(results.map((r) => r.identity?.risk.automation)).toEqual([1, 0]);
+  for (const result of results)
+    expect(Object.keys(await result.response.json()).sort()).toEqual([
+      "isReturning",
+      "visitorId",
+    ]);
+  const invalid = await handler.assess(
+    request({ signals: { platform: "x".repeat(10000) } }),
+  );
+  expect(invalid.response.status).toBe(400);
+  expect(invalid.identity).toBeUndefined();
+});
+
+it("composes Cloudflare AI with Postgres and keeps its result private", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      await readFile(
+        new URL(
+          "../packages/storage/postgres/migrations/0001_visitors.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    const visitor = createCloudflareVisitor({
+      db,
+      ai: {
+        run: async () => ({
+          answers: {
+            sameVisitor: { type: "noul", noul: 0.9 },
+            automation: { type: "noul", noul: 0.93 },
+            suspicious: { type: "noul", noul: 0.2 },
+          },
+        }),
+      },
+    });
+    const first = await visitor.assess(request());
+    expect(first.identity?.risk.automation).toBe(0.93);
+    expect(Object.keys(await first.response.json()).sort()).toEqual([
+      "isReturning",
+      "visitorId",
+    ]);
+    const next = await visitor.assess(
+      request(
+        { signals },
+        { Cookie: first.response.headers.get("set-cookie")!.split(";")[0]! },
+      ),
+    );
+    expect(next.identity?.visitorId).toBe(first.identity?.visitorId);
+    expect(next.identity?.isReturning).toBe(true);
+  } finally {
+    await db.close();
+  }
 });

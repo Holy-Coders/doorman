@@ -10,7 +10,11 @@ import type { JevOptions } from "@janitor/evaluator-jev";
 import { createVisitorHandler } from "../handler.js";
 import type { AdapterOptions } from "../handler.js";
 export { createVisitorHandler } from "../handler.js";
-export type { AdapterOptions } from "../handler.js";
+export type {
+  AdapterOptions,
+  VisitorRequestContext,
+  VisitorAssessment,
+} from "../handler.js";
 export type NodeVisitorOptions = AdapterOptions & {
   db: PostgresDatabase;
   evaluator?: JevOptions | VisitorEvaluator | false;

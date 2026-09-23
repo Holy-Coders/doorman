@@ -3,12 +3,13 @@ import { createExtendedBehavior } from "./behavior.js";
 import type {
   BrowserBehavior,
   BrowserObservation,
-  VisitorIdentity,
+  VisitorClientIdentity,
 } from "@janitor/core";
 export type {
   BrowserBehavior,
   BrowserObservation,
   VisitorIdentity,
+  VisitorClientIdentity,
 } from "@janitor/core";
 
 export function safe<T>(fn: () => T): T | undefined {
@@ -128,7 +129,7 @@ export function createBehaviorTracker(options: { extended?: boolean } = {}) {
     },
   };
 }
-function validIdentity(value: unknown): value is VisitorIdentity {
+function validIdentity(value: unknown): value is VisitorClientIdentity {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   const probability = (n: unknown) =>
@@ -142,11 +143,16 @@ function validIdentity(value: unknown): value is VisitorIdentity {
         /^sub_[a-f0-9]{64}$/.test(v.subjectId))) &&
     (v.attribution === undefined || isIdentityAttribution(v.attribution)) &&
     typeof v.isReturning === "boolean" &&
-    probability(v.confidence) &&
-    ["evaluated", "unavailable", "disabled"].includes(String(v.riskStatus)) &&
-    !!risk &&
-    probability(risk.automation) &&
-    probability(risk.suspicious)
+    ((v.confidence === undefined &&
+      v.risk === undefined &&
+      v.riskStatus === undefined) ||
+      (probability(v.confidence) &&
+        ["evaluated", "unavailable", "disabled"].includes(
+          String(v.riskStatus),
+        ) &&
+        !!risk &&
+        probability(risk.automation) &&
+        probability(risk.suspicious)))
   );
 }
 export function createVisitorClient(
@@ -165,11 +171,11 @@ export function createVisitorClient(
   let enabled = options.enabled !== false;
   let tracker = enabled ? newTracker() : undefined;
   let generation = 0;
-  let pending: Promise<VisitorIdentity> | undefined;
+  let pending: Promise<VisitorClientIdentity> | undefined;
   let destroyed = false;
   let controller: AbortController | undefined;
   return {
-    identify(): Promise<VisitorIdentity> {
+    identify(): Promise<VisitorClientIdentity> {
       if (destroyed)
         return Promise.reject(new Error("Visitor client has been destroyed"));
       if (!enabled)

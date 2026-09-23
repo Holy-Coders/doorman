@@ -6,7 +6,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm build`                  | All seven packages compile to ESM and declarations                                                                                                              |
 | `pnpm typecheck`              | Packages, test sources and all three example applications pass                                                                                                  |
-| `pnpm test`                   | 139 tests pass across eight files                                                                                                                               |
+| `pnpm test`                   | 152 tests pass across eight files                                                                                                                               |
 | `pnpm lint`                   | Passes                                                                                                                                                          |
 | `pnpm test:e2e`               | Chromium browser integration passes                                                                                                                             |
 | Next.js production build      | Passes on Next.js 16.3.6; page and API route produced                                                                                                           |
@@ -16,7 +16,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | All three live local examples | Browser identifies, uses HttpOnly cookie, then restores ID after cookies are cleared                                                                            |
 | Packed installation           | All seven packages install in an isolated consumer with local pnpm overrides; nine factory exports, SSR-safe browser import and both migration exports verified |
 
-Unit/integration coverage: 28 core cases, 9 browser cases, 14 evaluator cases, 21 HTTP/high-level adapter cases, 10 shared SQL storage contract cases, 18 identity directory/delegation cases, and 26 opt-in learning cases across both databases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
+Current unit/integration coverage: 30 core cases, 12 browser cases, 15 evaluator cases, 24 HTTP/high-level adapter cases, 16 shared SQL storage contract cases, 18 identity directory/delegation cases, 28 opt-in learning cases across both databases, and 9 credential/receipt/analytics cases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
 
 Storage contract tests execute real SQL using PGlite (embedded Postgres) and Miniflare D1. Core matching is not mocked. Evaluator network calls are mocked against the current official Jev/Workers AI contracts, including 500/429/529 errors, malformed outputs and timeouts.
 
@@ -40,13 +40,22 @@ pnpm pack:all
 
 Example boot commands and environment variables are in each example's README and the root README.
 
+## v0.6 security and scale validation
+
+- Default HTTP responses contain only `visitorId` and `isReturning`. Regression tests cover private assessments, concurrent request isolation, explicit disclosure, debug gating, malformed browser responses and native Phoenix assigns.
+- Result receipts use authenticated JWE encryption. Tests reject tampering, wrong keys, legacy readable JWTs, expired tokens, action/operation mismatches and replay; plaintext scores do not appear in decoded token segments.
+- Both SQL backends retrieve older strong candidates through crowded coarse buckets, load bounded histories in a batch, and abstain when all matching probes are saturated. The core also abstains when an evaluator tries to erase an identical deterministic competitor.
+- Native Elixir passes 31 tests against Postgres; Phoenix passes its endpoint test. New expression indexes apply on fresh databases and through an idempotent upgrade migration. Cleanup tests exercise bounded pages and expiry.
+- A separate local benchmark completed with 2 million visitors / 2 million observations and again with 2 million visitors / 6 million observations. The latter candidate lookup p95 was 6.46 ms. Its deliberately older target was retrieved in 100/100 probes, but the engine abstained on the selected ambiguous example. This is query-scale evidence, **not identity accuracy or a production throughput SLA**. A 10-million-observation attempt exhausted the Docker disk allocation and is not counted as a pass. See [methodology, raw results and plans](SCALING.md).
+- No production database was migrated. Cloudflare can now compose the same Postgres storage with Workers AI, and the adapter is tested locally with mocked AI. Real inference, network reputation and account-takeover detection remain unmeasured.
+
 ## Public website checks
 
-`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all seventeen primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The site produces eighteen HTML pages, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
+`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all 26 primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The site produces 27 HTML pages including the 404 page, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
 
 ## Controlled browser dataset
 
-The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 139 TypeScript unit/integration and eight browser UI/integration tests; no risk accuracy or Jev inference is claimed.
+The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). These historical measurements are separate from the current unit/integration and browser tests; no risk accuracy or Jev inference is claimed.
 
 ## Identity directory and delegation
 

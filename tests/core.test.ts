@@ -327,3 +327,55 @@ it("distinguishes disabled risk, unavailable risk and an evaluated zero score", 
     });
   }
 });
+
+it("uses bulk histories when storage supports them and respects truncated lookup evidence", async () => {
+  const storage = createMemoryStorage();
+  const first = await createVisitorEngine({ storage }).identify({ signals });
+  const normalized = normalizeObservation(signals);
+  const bulk = vi.fn(async () => ({ [first.visitorId]: [normalized] }));
+  const single = vi.fn(storage.getRecentObservations);
+  const engine = createVisitorEngine({
+    storage: {
+      ...storage,
+      getRecentObservationsBatch: bulk,
+      getRecentObservations: single,
+      findCandidates: async () => [
+        {
+          visitorId: first.visitorId,
+          lastSeenAt: Date.now(),
+          lookupSaturated: true,
+        },
+      ],
+    },
+    evaluator: {
+      evaluate: async () => ({ sameVisitor: 1, automation: 0, suspicious: 0 }),
+    },
+  });
+  expect((await engine.identify({ signals })).isReturning).toBe(false);
+  expect(bulk).toHaveBeenCalledOnce();
+  expect(single).not.toHaveBeenCalled();
+  expect(
+    (await engine.identify({ signals, visitorId: first.visitorId })).visitorId,
+  ).toBe(first.visitorId);
+  expect(single).toHaveBeenCalledOnce();
+});
+
+it("does not let varying evaluator confidence erase an identical deterministic competitor", async () => {
+  const storage = createMemoryStorage();
+  for (let i = 0; i < 2; i++) {
+    const id = await storage.createVisitor();
+    await storage.saveObservation(id, normalizeObservation(signals));
+  }
+  let calls = 0;
+  const engine = createVisitorEngine({
+    storage,
+    evaluator: {
+      evaluate: async () => ({
+        sameVisitor: calls++ === 0 ? 1 : 0,
+        automation: 0,
+        suspicious: 0,
+      }),
+    },
+  });
+  expect((await engine.identify({ signals })).isReturning).toBe(false);
+});

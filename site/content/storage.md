@@ -30,7 +30,7 @@ For Postgres, the examples include an idempotent migration command:
 pnpm migrate
 ```
 
-For an existing application, apply the SQL from the [D1 migration](../../packages/storage/d1/migrations/0001_visitors.sql) or [Postgres migration](../../packages/storage/postgres/migrations/0001_visitors.sql) with your migration runner.
+For an existing application, apply the SQL from the [D1 migration](../../packages/storage/d1/migrations/0001_visitors.sql) or [Postgres migration](../../packages/storage/postgres/migrations/0001_visitors.sql) with your migration runner, then apply `0004_candidate_lookup.sql` for selective lookup indexes.
 
 ## Keep a small history
 
@@ -41,10 +41,11 @@ const visitor = createNodeVisitor({
   maxObservationsPerVisitor: 10,
 });
 
-await visitor.cleanup();
+const page = await visitor.cleanup({ batchSize: 100 });
+// Pass page?.nextVisitorId as afterVisitorId on the next batch.
 ```
 
-Each save prunes that visitor's history. Matching reads only the last five retained observations. Expired history is excluded from matching even before cleanup physically removes it. Run cleanup from your existing maintenance task; Janitor installs no scheduler, worker or queue.
+Each save prunes that visitor's history. Matching reads only the last five retained observations. Expired history is excluded from matching even before cleanup physically removes it. Cleanup is paged; persist its cursor and continue expiration batches while `hasMoreExpired` is true. See [scale and maintenance](../../docs/SCALING.md). Run cleanup from your existing maintenance task; Janitor installs no scheduler, worker or queue.
 
 D1 batches insertion and pruning atomically. Postgres performs separate committed insertion and pruning statements; cleanup or the next save repairs interrupted pruning.
 
@@ -61,7 +62,7 @@ See [Privacy & signals](/docs/privacy/) for the complete erasure procedure and d
 
 ## Optional identity directory
 
-Enable `identity: { secret, namespace }` to add verified subjects, identity-key associations and delegation. Apply the storage package's `0002_identity.sql` migration after `0001_visitors.sql`. Example migration commands apply all three migrations, including the optional learning table.
+Enable `identity: { secret, namespace }` to add verified subjects, identity-key associations and delegation. Apply the storage package's `0002_identity.sql` migration after `0001_visitors.sql`. Example migration commands apply all four migrations, including the optional learning table.
 
 The directory adds three tables: `identity_subjects`, `identity_keys`, and `identity_delegations`. Key digests are unique; references cascade on subject erasure. Grant expiry, principal and actor columns are indexed. Full records use JSONB in Postgres and JSON text in D1.
 

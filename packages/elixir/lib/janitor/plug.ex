@@ -74,7 +74,12 @@ defmodule Janitor.Plug do
             if context[:analytics_consent] == true and is_binary(context[:analytics_id]),
               do: Janitor.Analytics.capture_all(c.analytics, identity, context.analytics_id)
 
-            conn |> assign(:janitor_identity, identity) |> reply(200, identity)
+            public =
+              if c.expose_client_scores,
+                do: identity,
+                else: Map.take(identity, ["visitorId", "isReturning"])
+
+            conn |> assign(:janitor_identity, identity) |> reply(200, public)
 
           {:error, :invalid_payload} ->
             reply(conn, 400, %{"error" => "Invalid visitor payload"})

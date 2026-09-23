@@ -20,3 +20,10 @@ defmodule Janitor.TestMigration do
 end
 
 Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_301, Janitor.TestMigration, log: false)
+
+defmodule Janitor.TestLookupMigration do
+  use Ecto.Migration
+  def up, do: Janitor.Migration.upgrade_lookup(prefix: "janitor_test")
+end
+
+Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_302, Janitor.TestLookupMigration, log: false)

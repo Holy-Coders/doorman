@@ -1,4 +1,10 @@
 import {
+  createPostgresStorage,
+  createPostgresIdentityStorage,
+  createPostgresLearningStorage,
+} from "@janitor/storage-postgres";
+import type { PostgresDatabase } from "@janitor/storage-postgres";
+import {
   createD1Storage,
   createD1IdentityStorage,
   createD1LearningStorage,
@@ -9,7 +15,7 @@ import type { WorkersAI } from "@janitor/evaluator-cloudflare-jev";
 import { createVisitorHandler } from "../handler.js";
 import type { AdapterOptions } from "../handler.js";
 export type CloudflareVisitorOptions = AdapterOptions & {
-  db: D1Database;
+  db: D1Database | PostgresDatabase;
   ai?: WorkersAI;
 };
 export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
@@ -18,11 +24,23 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
         timeoutMs: options.evaluatorTimeoutMs,
       })
     : undefined;
+  const postgres = "query" in options.db ? options.db : undefined;
+  const d1 = postgres ? undefined : (options.db as D1Database);
   return createVisitorHandler(
-    createD1Storage(options.db, options),
+    postgres
+      ? createPostgresStorage(postgres, options)
+      : createD1Storage(d1!, options),
     evaluator,
     options,
-    options.identity ? createD1IdentityStorage(options.db) : undefined,
-    options.learning ? createD1LearningStorage(options.db) : undefined,
+    options.identity
+      ? postgres
+        ? createPostgresIdentityStorage(postgres)
+        : createD1IdentityStorage(d1!)
+      : undefined,
+    options.learning
+      ? postgres
+        ? createPostgresLearningStorage(postgres)
+        : createD1LearningStorage(d1!)
+      : undefined,
   );
 }

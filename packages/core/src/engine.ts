@@ -27,6 +27,7 @@ export const MATCHING_DEFAULTS = {
 } as const;
 export type IdentifyMetrics = {
   candidateCount: number;
+  lookupSaturated: boolean;
   deterministicScore: number;
   finalConfidence: number;
   evaluatorUsed: boolean;
@@ -98,6 +99,7 @@ export function createVisitorEngine(options: EngineOptions) {
     }): Promise<VisitorIdentity> {
       const current = normalizeObservation(input.signals, input.behavior);
       let candidateCount = 0;
+      let lookupSaturated = false;
       let deterministicScore = 0;
       let evaluatorUsed = false;
       let evaluatorLatency = 0;
@@ -158,14 +160,22 @@ export function createVisitorEngine(options: EngineOptions) {
             ).values(),
           ];
           candidateCount = unique.length;
+          const histories = storage.getRecentObservationsBatch
+            ? await storage.getRecentObservationsBatch(
+                unique.map((c) => c.visitorId),
+                MATCHING_DEFAULTS.historyLimit,
+              )
+            : undefined;
           const ranked = (
             await Promise.all(
               unique.map(async (candidate) => {
                 const history = (
-                  await storage.getRecentObservations(
-                    candidate.visitorId,
-                    MATCHING_DEFAULTS.historyLimit,
-                  )
+                  histories
+                    ? (histories[candidate.visitorId] ?? [])
+                    : await storage.getRecentObservations(
+                        candidate.visitorId,
+                        MATCHING_DEFAULTS.historyLimit,
+                      )
                 ).slice(0, MATCHING_DEFAULTS.historyLimit);
                 const best = history
                   .filter((previous) => !hasContradiction(previous, current))
@@ -219,17 +229,19 @@ export function createVisitorEngine(options: EngineOptions) {
               a.visitorId.localeCompare(b.visitorId),
           );
           const best = evaluated[0];
-          // Include unevaluated candidates in the ambiguity check so a tied fourth device is not hidden.
+          // An evaluator cannot erase a deterministic competitor, including an identical profile.
           const runnerUp = Math.max(
             evaluated[1]?.confidence ?? 0,
             ...ranked
-              .slice(MATCHING_DEFAULTS.evaluationLimit)
+              .filter((candidate) => candidate.visitorId !== best?.visitorId)
               .map((candidate) => candidate.score),
           );
           if (best) {
+            lookupSaturated = best.lookupSaturated === true;
             deterministicScore = best.score;
             useRisk(best.result);
             if (
+              !best.lookupSaturated &&
               best.confidence >= threshold &&
               best.confidence - runnerUp >= MATCHING_DEFAULTS.ambiguityMargin
             ) {
@@ -262,11 +274,13 @@ export function createVisitorEngine(options: EngineOptions) {
             deterministicScore,
             evaluatorUsed,
             candidateCount,
+            lookupSaturated,
             collectedSignals: input.signals,
           };
         try {
           options.onMetrics?.({
             candidateCount,
+            lookupSaturated,
             deterministicScore,
             finalConfidence: confidence,
             evaluatorUsed,

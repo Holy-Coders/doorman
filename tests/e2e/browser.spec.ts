@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import type { VisitorIdentity } from "@janitor/core";
+import type { VisitorClientIdentity } from "@janitor/core";
 test("browser → Fastify → Postgres: first visit, cookie continuity, cookie loss and resizing", async ({
   page,
   context,
@@ -14,7 +14,7 @@ test("browser → Fastify → Postgres: first visit, cookie continuity, cookie l
     await page.getByRole("button", { name: "Identify this browser" }).click();
     const result = await response;
     expect(result.status()).toBe(200);
-    return (await result.json()) as VisitorIdentity;
+    return (await result.json()) as VisitorClientIdentity;
   }
   await page.mouse.move(10, 10);
   await page.mouse.move(160, 110, { steps: 6 });
@@ -27,7 +27,7 @@ test("browser → Fastify → Postgres: first visit, cookie continuity, cookie l
   expect(sent.behavior).not.toHaveProperty("clientX");
   expect(sent.behavior).not.toHaveProperty("events");
   expect(first.isReturning).toBe(false);
-  expect(first.risk).toEqual({ automation: 0, suspicious: 0 });
+  expect(Object.keys(first).sort()).toEqual(["isReturning", "visitorId"]);
   const cookie = (await context.cookies()).find(
     (cookie) => cookie.name === "__visitor",
   );
@@ -45,6 +45,7 @@ test("browser → Fastify → Postgres: first visit, cookie continuity, cookie l
     visitorId: first.visitorId,
     isReturning: true,
   });
-  expect(restored.confidence).toBeGreaterThanOrEqual(0.9);
+  expect(restored.confidence).toBeUndefined();
+  expect(restored.risk).toBeUndefined();
   expect(errors).toEqual([]);
 });

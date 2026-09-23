@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from "jose";
+import { EncryptJWT, jwtDecrypt, jwtVerify } from "jose";
 import type { JWTVerifyGetKey } from "jose";
 import { z } from "zod";
 import type { VisitorIdentity } from "@janitor/core";
@@ -29,13 +29,13 @@ export type ConsumeNonce = (
   expiresAt: number,
 ) => Promise<boolean>;
 
-/** Signed evidence for an application-owned operation, not an authentication credential. */
+/** Authenticated, encrypted evidence for an application-owned operation, not an authentication credential. */
 export function createResultReceipts(options: {
   secret: Uint8Array;
   issuer: string;
 }) {
-  if (options.secret.byteLength < 32)
-    throw new Error("Receipt secret needs at least 32 random bytes");
+  if (options.secret.byteLength !== 32)
+    throw new Error("Receipt secret needs exactly 32 random bytes");
   const key = options.secret.slice();
   const issuer = label.parse(options.issuer);
   return {
@@ -61,18 +61,22 @@ export function createResultReceipts(options: {
         risk,
         riskStatus,
       });
-      return new SignJWT({
+      return new EncryptJWT({
         identity,
         operationId: label.parse(input.operationId),
         action: actions.parse(input.action),
       })
-        .setProtectedHeader({ alg: "HS256", typ: "janitor-result+jwt" })
+        .setProtectedHeader({
+          alg: "dir",
+          enc: "A256GCM",
+          typ: "janitor-result+jwe",
+        })
         .setIssuer(issuer)
         .setAudience(label.parse(input.audience))
         .setIssuedAt()
         .setExpirationTime(Math.floor(Date.now() / 1000) + ttl)
         .setJti(crypto.randomUUID())
-        .sign(key);
+        .encrypt(key);
     },
     async verify(
       token: string,
@@ -85,11 +89,12 @@ export function createResultReceipts(options: {
     ) {
       try {
         if (token.length > 8192) return undefined;
-        const { payload } = await jwtVerify(token, key, {
+        const { payload } = await jwtDecrypt(token, key, {
           issuer,
           audience: label.parse(expected.audience),
-          algorithms: ["HS256"],
-          typ: "janitor-result+jwt",
+          keyManagementAlgorithms: ["dir"],
+          contentEncryptionAlgorithms: ["A256GCM"],
+          typ: "janitor-result+jwe",
           maxTokenAge: 300,
           requiredClaims: ["exp", "iat", "jti"],
         });

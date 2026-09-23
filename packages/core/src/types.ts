@@ -56,11 +56,24 @@ export type VisitorIdentity = {
     deterministicScore: number;
     evaluatorUsed: boolean;
     candidateCount: number;
+    lookupSaturated?: boolean;
     collectedSignals: BrowserObservation;
   };
 };
 
-export type VisitorCandidate = { visitorId: string; lastSeenAt: number };
+/** Browser responses omit scores unless the server explicitly exposes them. */
+export type VisitorClientIdentity = Pick<
+  VisitorIdentity,
+  "visitorId" | "isReturning"
+> &
+  Partial<Omit<VisitorIdentity, "visitorId" | "isReturning">>;
+
+export type VisitorCandidate = {
+  visitorId: string;
+  lastSeenAt: number;
+  /** All retrieval buckets containing this visitor were truncated. Never auto-restore. */
+  lookupSaturated?: boolean;
+};
 
 export interface VisitorStorage {
   findCandidates(
@@ -71,6 +84,11 @@ export interface VisitorStorage {
     visitorId: string,
     limit: number,
   ): Promise<NormalizedObservation[]>;
+  /** Optional bounded bulk read; custom storage can retain the single-visitor method. */
+  getRecentObservationsBatch?(
+    visitorIds: string[],
+    limit: number,
+  ): Promise<Record<string, NormalizedObservation[]>>;
   createVisitor(): Promise<string>;
   saveObservation(
     visitorId: string,
@@ -97,7 +115,12 @@ export type RetentionOptions = {
   observationRetentionDays?: number;
   maxObservationsPerVisitor?: number;
 };
+export type CleanupOptions = { batchSize?: number; afterVisitorId?: string };
+export type CleanupProgress = {
+  nextVisitorId?: string;
+  hasMoreExpired: boolean;
+};
 export type ManagedVisitorStorage = VisitorStorage & {
-  cleanup(): Promise<void>;
+  cleanup(options?: CleanupOptions): Promise<CleanupProgress | void>;
   deleteVisitor(visitorId: string): Promise<void>;
 };

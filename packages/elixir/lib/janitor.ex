@@ -15,6 +15,7 @@ defmodule Janitor do
             request_timeout_ms: 5000,
             endpoint_path: "/api/visitor",
             debug: false,
+            expose_client_scores: false,
             identity: nil,
             learning: false,
             analytics: [],
@@ -50,7 +51,7 @@ defmodule Janitor do
            do: raise(ArgumentError, "invalid restore threshold")
 
     unless config.environment in [:production, :development, :test] and is_boolean(config.debug) and
-             is_boolean(config.secure_cookie),
+             is_boolean(config.secure_cookie) and is_boolean(config.expose_client_scores),
            do: raise(ArgumentError, "invalid environment")
 
     if config.environment == :production and (config.debug or not config.secure_cookie),
@@ -96,11 +97,11 @@ defmodule Janitor do
 
   def handle(conn, config, context \\ %{}), do: Janitor.Plug.handle(conn, config, context)
 
-  def cleanup(config) do
-    Janitor.Storage.cleanup(config)
+  def cleanup(config, opts \\ []) do
+    progress = Janitor.Storage.cleanup(config, opts)
     if config.identity, do: Janitor.Identity.cleanup(config)
     if config.learning, do: Janitor.Learning.cleanup(config)
-    :ok
+    progress
   end
 
   def delete_visitor(config, id), do: Janitor.Storage.delete_visitor(config, id)
