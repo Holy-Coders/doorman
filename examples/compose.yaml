@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: visitor
+      POSTGRES_PASSWORD: visitor
+      POSTGRES_DB: visitors
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["visitor-postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U visitor -d visitors"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+volumes:
+  visitor-postgres:

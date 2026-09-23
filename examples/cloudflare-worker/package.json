@@ -1,0 +1,21 @@
+{
+  "name": "@janitor/example-cloudflare",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:browser": "esbuild src/client.ts --bundle --format=esm --outfile=public/visitor.js",
+    "build": "pnpm build:browser && wrangler deploy --dry-run",
+    "dev": "pnpm build:browser && wrangler dev --local",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.browser.json",
+    "dev:ai": "pnpm build:browser && wrangler dev --var JEV_ENABLED:true"
+  },
+  "dependencies": {
+    "@janitor/browser": "workspace:^",
+    "@janitor/adapters": "workspace:^"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260921.1",
+    "esbuild": "^0.28.0",
+    "wrangler": "^4.136.3"
+  }
+}

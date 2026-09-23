@@ -1,0 +1,398 @@
+---
+import Base from "../layouts/Base.astro";
+import CodeTabs from "../components/CodeTabs.astro";
+import Playground from "../components/Playground.astro";
+import { REPO } from "../content";
+---
+
+<Base>
+  <main id="main">
+    <section class="hero container">
+      <div class="hero-copy">
+        <a class="release-pill" href={REPO + "/releases"}>
+          <span class="version-dot"></span>Meet Janitor{" "}
+          <span class="pill-version">v0.1.0</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+        <h1>
+          A little history.
+          <br />A familiar
+          <br class="desktop-break" /> browser.
+        </h1>
+        <p class="hero-description">
+          Durable first-party identity for a browser that changes. Small
+          histories, transparent matching, and optional AI risk signals.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="/docs/getting-started/">
+            Start building <span aria-hidden="true">↗</span>
+          </a>
+          <a class="button button-subtle" href="#playground">
+            Try the identity lab <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+        <div class="hero-footnote">
+          <span>TypeScript</span>
+          <span class="small-cross">+</span>
+          <span>MIT licensed</span>
+          <span class="small-cross">+</span>
+          <span>Your database</span>
+        </div>
+      </div>
+      <div
+        class="hero-visual"
+        aria-label="Illustration: changing browser observations converge on one stable visitor identity"
+      >
+        <div class="visual-top">
+          <span class="mono">observation_history</span>
+          <span class="signal-status">
+            <span></span>Continuity, over time
+          </span>
+        </div>
+        <svg
+          class="history-art"
+          viewBox="0 0 560 415"
+          fill="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <pattern
+              id="dots"
+              width="22"
+              height="22"
+              patternUnits="userSpaceOnUse"
+            >
+              <circle cx="1" cy="1" r=".75" fill="#536078" opacity=".35" />
+            </pattern>
+            <linearGradient
+              id="trace"
+              x1="70"
+              y1="100"
+              x2="430"
+              y2="230"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stop-color="#63708e" />
+              <stop offset="1" stop-color="#b8b4ff" />
+            </linearGradient>
+          </defs>
+          <rect width="560" height="415" fill="url(#dots)" />
+          <path
+            d="M89 91C224 91 215 211 353 211M89 210H353M89 331C224 331 215 211 353 211"
+            stroke="url(#trace)"
+            stroke-width="1.4"
+          />
+          <path
+            d="M89 91C224 91 215 211 353 211M89 210H353M89 331C224 331 215 211 353 211"
+            stroke="#e4e2ff"
+            stroke-width="2.5"
+            stroke-dasharray="4 360"
+            class="trace-light"
+          />
+          <circle
+            cx="353"
+            cy="211"
+            r="90"
+            stroke="#b8b4ff"
+            stroke-opacity=".12"
+            stroke-dasharray="3 6"
+          />
+          <circle
+            cx="353"
+            cy="211"
+            r="68"
+            fill="#171d2b"
+            stroke="#b8b4ff"
+            stroke-opacity=".35"
+          />
+          <circle cx="353" cy="211" r="52" fill="#25283f" stroke="#b8b4ff" />
+          <image
+            href="/janitor-logo.png"
+            x="288"
+            y="141"
+            width="140"
+            height="140"
+          />
+          <circle
+            cx="89"
+            cy="91"
+            r="6"
+            fill="#10131e"
+            stroke="#b8b4ff"
+            stroke-width="2"
+          />
+          <circle
+            cx="89"
+            cy="210"
+            r="6"
+            fill="#10131e"
+            stroke="#b8b4ff"
+            stroke-width="2"
+          />
+          <circle cx="89" cy="331" r="6" fill="#f3ab92" />
+          <g
+            fill="#a3aec4"
+            font-family="IBM Plex Mono,monospace"
+            font-size="11"
+          >
+            <text x="61" y="65">
+              First visit
+            </text>
+            <text x="61" y="185">
+              Browser update
+            </text>
+            <text x="61" y="305">
+              Cookie removed
+            </text>
+          </g>
+          <g
+            fill="#717e9a"
+            font-family="IBM Plex Mono,monospace"
+            font-size="10"
+          >
+            <text x="108" y="109">
+              Chrome 130
+            </text>
+            <text x="108" y="231">
+              Chrome 131
+            </text>
+            <text x="108" y="351">
+              Same environment
+            </text>
+          </g>
+          <rect
+            x="286"
+            y="317"
+            width="151"
+            height="31"
+            rx="15.5"
+            fill="#25283f"
+            stroke="#555773"
+          />
+          <circle cx="305" cy="332.5" r="3" fill="#c5c2ff" />
+          <text
+            x="317"
+            y="337"
+            fill="#d7d4ff"
+            font-family="IBM Plex Mono,monospace"
+            font-size="10"
+          >
+            One stable visitor
+          </text>
+        </svg>
+        <div class="visual-bottom">
+          <span class="mono">
+            <span class="code-key">visitorId</span>:{" "}
+            <span class="code-string">"vis_7a92…"</span>
+          </span>
+          <span>Illustrative history</span>
+        </div>
+      </div>
+    </section>
+    <div class="platform-strip container">
+      <span>Fits where you build.</span>
+      <div>
+        <span class="platform-icon">☁</span> Cloudflare
+      </div>
+      <div>
+        <span class="vercel-symbol" aria-hidden="true"></span> Vercel
+      </div>
+      <div>
+        <span class="node-symbol" aria-hidden="true">
+          ⬡
+        </span>{" "}
+        Node.js
+      </div>
+      <div>
+        <span class="postgres-symbol" aria-hidden="true">
+          ▤
+        </span>{" "}
+        Postgres
+      </div>
+    </div>
+    <section class="intro-section container">
+      <div>
+        <span class="section-kicker">Built for ordinary change</span>
+        <h2>
+          Browsers evolve.
+          <br />
+          Identity should keep up.
+        </h2>
+      </div>
+      <div class="intro-copy">
+        <p>
+          A browser isn’t one immutable fingerprint. It’s a pattern of
+          observations: a familiar device, an updated browser, a different
+          window size.
+        </p>
+        <p>
+          Janitor keeps a stable ID alongside a small history. A first-party
+          cookie handles the usual visit. When it’s gone, bounded similarity
+          matching can recover the connection.
+        </p>
+        <a class="text-link" href="/docs/matching/">
+          Read the matching algorithm <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </section>
+    <div class="container">
+      <Playground />
+    </div>
+    <section class="integration-section container">
+      <div class="integration-copy">
+        <span class="section-kicker">A small API. A useful answer.</span>
+        <h2>
+          Identity and risk.
+          <br />
+          You own the policy.
+        </h2>
+        <p>
+          One call returns a visitor ID, a confidence score, and two narrow risk
+          signals. You decide when to show a CAPTCHA—or do nothing at all.
+        </p>
+        <div class="principle-list">
+          <div>
+            <span>{"{}"}</span>
+            <p>
+              <strong>Your infrastructure</strong>D1 or Postgres. Cloudflare,
+              Vercel, or Node. No separate identity service.
+            </p>
+          </div>
+          <div>
+            <span>ƒ</span>
+            <p>
+              <strong>Optional intelligence</strong>Jev helps evaluate drift and
+              risk. Swap in your own classifier whenever you need.
+            </p>
+          </div>
+          <div>
+            <span>↻</span>
+            <p>
+              <strong>Graceful fallback</strong>If the evaluator is unavailable,
+              deterministic matching continues and risk defaults to zero.
+            </p>
+          </div>
+        </div>
+        <a class="text-link" href="/docs/api/">
+          Explore the API ↗
+        </a>
+      </div>
+      <CodeTabs />
+    </section>
+    <section class="architecture-section container">
+      <div class="architecture-heading">
+        <span class="section-kicker">Understand it in one sitting</span>
+        <h2>
+          Less machinery.
+          <br />
+          More visibility.
+        </h2>
+        <p>
+          No dashboards, accounts, queues, or background workers. Just a few
+          understandable pieces.
+        </p>
+      </div>
+      <div class="pipeline" aria-label="Identity matching pipeline">
+        <div>
+          <span class="pipeline-dot"></span>
+          <strong>Observe</strong>
+          <p>
+            Modest browser signals.
+            <br />
+            Aggregate event counts.
+          </p>
+        </div>
+        <div>
+          <span class="pipeline-dot"></span>
+          <strong>Compare</strong>
+          <p>
+            At most 10 candidates.
+            <br />
+            Transparent feature weights.
+          </p>
+        </div>
+        <div>
+          <span class="pipeline-dot"></span>
+          <strong>Evaluate</strong>
+          <p>
+            Up to 3 candidates.
+            <br />
+            Optional typed judgments.
+          </p>
+        </div>
+        <div>
+          <span class="pipeline-dot"></span>
+          <strong>Remember</strong>
+          <p>
+            A stable, opaque ID.
+            <br />A bounded history.
+          </p>
+        </div>
+      </div>
+      <div class="architecture-bottom">
+        <span>Every weighting constant is in the source.</span>
+        <a href={REPO + "/blob/main/packages/core/src/similarity.ts"}>
+          Inspect the implementation ↗
+        </a>
+      </div>
+    </section>
+    <section class="privacy-section container">
+      <div class="privacy-glyph" aria-hidden="true">
+        <svg width="76" height="86" viewBox="0 0 76 86" fill="none">
+          <path
+            d="M38 5 68 17v25c0 18-16 31-30 39C24 73 8 60 8 42V17L38 5Z"
+            stroke="currentColor"
+            stroke-width="1.4"
+          />
+          <path
+            d="m25 40 10 10 18-21"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+      <div>
+        <span class="section-kicker">Deliberately limited</span>
+        <h2>
+          Recognize a browser.
+          <br />
+          Respect its boundaries.
+        </h2>
+        <p>
+          No raw IP addresses. No keystrokes, mouse coordinates, or form
+          contents. No attempts to unmask signals a browser chooses to hide.
+          History can be deleted, and retention is yours to configure.
+        </p>
+        <a class="text-link" href="/docs/privacy/">
+          See the full signal inventory ↗
+        </a>
+      </div>
+    </section>
+    <section class="closing-section container">
+      <div>
+        <span class="section-kicker">
+          Open source, from the first observation
+        </span>
+        <h2>
+          Make yourself
+          <br />
+          familiar.
+        </h2>
+      </div>
+      <div>
+        <p>
+          Start with the examples. Read the source.
+          <br />
+          Make Janitor fit your application.
+        </p>
+        <a class="button button-primary" href="/docs/getting-started/">
+          Open the quickstart ↗
+        </a>
+        <a class="closing-github" href={REPO}>
+          View on GitHub ↗
+        </a>
+      </div>
+    </section>
+  </main>
+</Base>

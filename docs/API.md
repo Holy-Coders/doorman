@@ -1,0 +1,133 @@
+# Public API and repository map
+
+## Browser
+
+```ts
+createVisitorClient(options?: { endpoint?: string; debug?: boolean }): {
+  identify(): Promise<VisitorIdentity>;
+  destroy(): void;
+};
+```
+
+`endpoint` defaults to `/api/visitor`; cross-origin URLs are rejected. Concurrent calls on one client share a promise. `identify()` sends signals and current aggregate counts using same-origin cookies and a ten-second request timeout. Network, HTTP or invalid response errors reject; collection failures alone do not throw. After `destroy()`, the client cannot identify again. Create a new client on a new mount; do not reuse it after disposal. Collection should start only after the application's required opt-in.
+
+`collectBrowserSignals`, `createBehaviorTracker`, and `safe` are exported for advanced integrations/testing. The normal application API requires only `createVisitorClient`.
+
+## Core
+
+```ts
+interface VisitorStorage {
+  findCandidates(
+    observation: NormalizedObservation,
+    limit: number,
+  ): Promise<VisitorCandidate[]>;
+  getRecentObservations(
+    visitorId: string,
+    limit: number,
+  ): Promise<NormalizedObservation[]>;
+  createVisitor(): Promise<string>;
+  saveObservation(
+    visitorId: string,
+    observation: NormalizedObservation,
+  ): Promise<void>;
+  touchVisitor(visitorId: string): Promise<void>;
+}
+interface VisitorEvaluator {
+  evaluate(input: {
+    history: NormalizedObservation[];
+    current: NormalizedObservation;
+    deterministicSimilarity: number;
+  }): Promise<{ sameVisitor: number; automation: number; suspicious: number }>;
+}
+```
+
+`VisitorCandidate` is `{ visitorId: string; lastSeenAt: number }`, with epoch milliseconds. `NormalizedObservation` is the optional browser observation plus optional normalized `browser` family and optional aggregate `behavior`. Complete signal and result types are in [types.ts](../packages/core/src/types.ts).
+
+```ts
+const engine = createVisitorEngine({
+  storage,
+  evaluator, // Optional; replace with any implementation of the interface above.
+  evaluatorTimeoutMs: 1200,
+  restoreThreshold: 0.9,
+});
+const result = await engine.identify({
+  signals,
+  behavior, // Optional aggregate counts.
+  visitorId, // Optional, extracted from a trusted application cookie boundary.
+});
+```
+
+Core has no HTTP, hosting, database driver or provider imports. Advanced direct callers are responsible for validating untrusted inputs; standard adapters provide validation. `normalizeObservation`, `calculateSimilarity`, named weights/defaults and `VisitorStorageError` are also exported.
+
+## High-level adapters
+
+All return the same shape:
+
+```ts
+{
+  handle(request: Request): Promise<Response>;
+  cleanup(): Promise<void>;
+  deleteVisitor(visitorId: string): Promise<void>;
+}
+```
+
+Node/Vercel accept `{ db, evaluator?: { apiKey, model?, timeoutMs? } | VisitorEvaluator | false, ...options }`. Cloudflare accepts `{ db, ai?, ...options }`. Omitting an evaluator/AI binding is deterministic-only. No adapter automatically performs cleanup or blocks based on risk.
+
+Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10, 1–100 accepted), `evaluatorTimeoutMs` (1200), `restoreThreshold` (0.90, 0.8–1 accepted), `cookie: { name?, maxAgeDays?, secure? }`, `maxBodyBytes` (16384, up to 65536), `endpointPath` (`/api/visitor`), `environment` (`production`), `debug` (false), and `onMetrics` (none). Limits are validated when the adapter is constructed. Example-only port/database/key variables are handled by examples, never by core.
+
+`createVisitorHandler` from `@janitor/adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
+
+## Installation artifacts
+
+```sh
+pnpm pack:all
+# Seven .tgz archives appear in artifacts/.
+```
+
+The output also includes a consumer `package.json` with local dependencies and `pnpm.overrides` for unpublished sibling packages. Copy `artifacts/` outside the workspace and run `pnpm install`, or merge those fields into an existing application and adjust the archive paths. Without the overrides, pnpm may try to resolve unpublished dependencies from npm. Alternatively, publish the packages under your chosen registry/namespaces. Package names in this repository are not claimed to be published on npm. Core and browser have no third-party runtime dependency; Zod is used only by the server adapter's input boundary. SQL drivers are supplied by applications. The examples add their own framework/runtime dependencies.
+
+## Repository layout
+
+```text
+packages/
+  core/src/
+    types.ts              Shared public contracts
+    normalize.ts          Browser/platform/language/screen normalization
+    similarity.ts         All feature weights and contradiction/evidence caps
+    engine.ts             Cookie continuity, candidate ranking, evaluator fallback
+    storage-utils.ts      Secure IDs, retention settings and limits
+    index.ts
+  browser/src/index.ts    Safe collectors, count tracker, browser client
+  adapters/src/
+    node/index.ts         Postgres + direct Jev composition
+    cloudflare/index.ts   D1 + Workers AI composition
+    vercel/index.ts       Thin Node-compatible composition
+    handler.ts            Web HTTP/cookie/security boundary
+    validation.ts         Bounded JSON validation
+  storage/
+    d1/{src/index.ts,migrations/0001_visitors.sql}
+    postgres/{src/index.ts,migrations/0001_visitors.sql}
+  evaluators/
+    jev/src/{index.ts,protocol.ts}
+    cloudflare-jev/src/index.ts
+examples/
+  cloudflare-worker/     Wrangler, local D1, AI binding, static HTML/browser bundle
+  nextjs/                App Router route, client component, Postgres migration
+  node-fastify/          Standard Request/Response bridge, HTML/browser bundle
+  compose.yaml           Local Postgres
+tests/                  Core, browser, storage, evaluator, adapter tests
+  helpers/               In-memory storage and fixtures
+  e2e/                   Chromium → Fastify → embedded Postgres
+site/                   Static documentation site and synthetic playground
+  src/                    Astro pages, components, and client scripts
+  content/                Site-specific guides
+  public/                 Logo and social preview
+scripts/pack.mjs          Installable tarballs in artifacts/
+docs/{API,MATCHING,JEV,VALIDATION}.md
+README.md
+PRIVACY.md
+LICENSE
+.github/workflows/ci.yml
+```
+
+Every package has an ESM export map, strict TypeScript build, version, license, and declaration files. `@janitor/adapters` has three public subpath entrypoints, not three conflicting npm packages. Storage migration files are exported as `@janitor/storage-d1/migrations/0001_visitors.sql` and the corresponding Postgres subpath.

@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+**/dist
+**/.next
+**/.wrangler
+**/public/visitor.js
+**/.astro
+site/src/generated
+site/public/search-index.json
+artifacts

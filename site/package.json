@@ -1,0 +1,24 @@
+{
+  "name": "@janitor/site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/sync-docs.mjs && astro dev --host 127.0.0.1",
+    "build": "node scripts/sync-docs.mjs && astro build",
+    "preview": "astro preview --host 127.0.0.1",
+    "typecheck": "node scripts/sync-docs.mjs && astro check",
+    "deploy": "pnpm build && wrangler deploy"
+  },
+  "dependencies": {
+    "@fontsource-variable/space-grotesk": "^5.2.0",
+    "@fontsource/ibm-plex-mono": "^5.2.0",
+    "@janitor/core": "workspace:^",
+    "astro": "^7.3.4",
+    "cookie": "^2.0.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "~5.9.3",
+    "wrangler": "^4.136.3"
+  }
+}

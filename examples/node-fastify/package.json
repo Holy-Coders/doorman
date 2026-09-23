@@ -1,0 +1,24 @@
+{
+  "name": "@janitor/example-node",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:browser": "esbuild src/client.ts --bundle --format=esm --outfile=public/visitor.js",
+    "build": "pnpm build:browser",
+    "dev": "pnpm build:browser && node --env-file=.env --import tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "migrate": "node --env-file=.env --import tsx scripts/migrate.ts"
+  },
+  "dependencies": {
+    "@janitor/adapters": "workspace:^",
+    "@janitor/browser": "workspace:^",
+    "@janitor/storage-postgres": "workspace:^",
+    "fastify": "^5.12.5",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.0",
+    "tsx": "^4.20.0",
+    "esbuild": "^0.28.0"
+  }
+}

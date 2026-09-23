@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <title>Visitor identity example</title>
+  <style>
+    body {
+      font: 17px system-ui;
+      max-width: 44rem;
+      margin: 4rem auto;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+    button {
+      font: inherit;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+    }
+    pre {
+      overflow: auto;
+      padding: 1rem;
+      background: #f1f3f5;
+      border-radius: 0.5rem;
+    }
+  </style>
+  <h1>First-party visitor identity</h1>
+  <p>
+    This demo counts interaction events while open and sends those totals with
+    browser properties when you select Identify. No keys, coordinates, or form
+    contents are captured. Clearing the cookie may still allow this browser to
+    be recognized from its stored observations.
+  </p>
+  <button type="button">Identify this browser</button>
+  <pre aria-live="polite">No observation sent yet.</pre>
+  <script type="module" src="/visitor.js"></script>
+</html>

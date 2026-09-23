@@ -1,0 +1,113 @@
+---
+import type { GetStaticPaths, MarkdownInstance } from "astro";
+import Base from "../../layouts/Base.astro";
+import { pages, sections, REPO } from "../../content";
+export const getStaticPaths = (async () => {
+  const modules = import.meta.glob<
+    MarkdownInstance<{ title: string; description: string; source: string }>
+  >("../../generated/*.md");
+  return Promise.all(
+    Object.entries(modules).map(async ([file, load]) => ({
+      params: { slug: file.split("/").pop()!.replace(".md", "") },
+      props: { document: await load() },
+    })),
+  );
+}) satisfies GetStaticPaths;
+const { document } = Astro.props;
+const { Content, frontmatter } = document;
+const slug = Astro.params.slug;
+const index = pages.findIndex((page) => page.slug === slug);
+const previous = pages[index - 1];
+const next = pages[index + 1];
+const headings = document
+  .getHeadings()
+  .filter((heading) => heading.depth === 2);
+---
+
+<Base
+  title={frontmatter.title + " — Janitor docs"}
+  description={frontmatter.description}
+  docs
+>
+  <div class="docs-shell">
+    <aside class="docs-sidebar">
+      <a class="docs-home" href="/docs/getting-started/">
+        Documentation <span>v0.1.0</span>
+      </a>
+      {sections.map((section) => (
+        <div class="sidebar-section">
+          <h2>{section.title}</h2>
+          <nav aria-label={section.title}>
+            {section.pages.map((page) => (
+              <a
+                href={"/docs/" + page.slug + "/"}
+                aria-current={page.slug === slug ? "page" : undefined}
+              >
+                {page.title}
+              </a>
+            ))}
+          </nav>
+        </div>
+      ))}
+      <a class="sidebar-source" href={REPO}>
+        Source code ↗
+      </a>
+    </aside>
+    <main id="main" class="docs-main">
+      <details class="docs-mobile-nav">
+        <summary>Browse documentation</summary>
+        <nav>
+          {pages.map((page) => (
+            <a
+              href={"/docs/" + page.slug + "/"}
+              aria-current={page.slug === slug ? "page" : undefined}
+            >
+              {page.title}
+            </a>
+          ))}
+        </nav>
+      </details>
+      <div class="doc-breadcrumb">
+        Documentation<span>/</span>
+        {frontmatter.title}
+      </div>
+      <h1>{frontmatter.title}</h1>
+      <p class="doc-description">{frontmatter.description}</p>
+      <article class="prose">
+        <Content />
+      </article>
+      <div class="doc-edit">
+        <a href={REPO + "/blob/main/" + frontmatter.source}>
+          View this page on GitHub ↗
+        </a>
+      </div>
+      <nav class="doc-pagination" aria-label="Documentation pages">
+        {previous ? (
+          <a href={"/docs/" + previous.slug + "/"}>
+            <span>Previous</span>
+            <strong>← {previous.title}</strong>
+          </a>
+        ) : (
+          <span></span>
+        )}
+        {next && (
+          <a href={"/docs/" + next.slug + "/"}>
+            <span>Next</span>
+            <strong>{next.title} →</strong>
+          </a>
+        )}
+      </nav>
+    </main>
+    <aside class="docs-toc">
+      <span>On this page</span>
+      <nav aria-label="Table of contents">
+        {headings.map((heading) => (
+          <a href={"#" + heading.slug}>{heading.text}</a>
+        ))}
+      </nav>
+      <div class="toc-help">
+        Something unclear?<a href={REPO + "/issues"}>Open an issue ↗</a>
+      </div>
+    </aside>
+  </div>
+</Base>

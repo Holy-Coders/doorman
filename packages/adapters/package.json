@@ -1,0 +1,46 @@
+{
+  "name": "@janitor/adapters",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "src",
+    "migrations"
+  ],
+  "sideEffects": false,
+  "exports": {
+    "./cloudflare": {
+      "types": "./dist/cloudflare/index.d.ts",
+      "import": "./dist/cloudflare/index.js"
+    },
+    "./vercel": {
+      "types": "./dist/vercel/index.d.ts",
+      "import": "./dist/vercel/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@janitor/core": "workspace:^",
+    "@janitor/storage-d1": "workspace:^",
+    "@janitor/storage-postgres": "workspace:^",
+    "@janitor/evaluator-jev": "workspace:^",
+    "@janitor/evaluator-cloudflare-jev": "workspace:^",
+    "zod": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Holy-Coders/janitor.git",
+    "directory": "packages/adapters"
+  },
+  "homepage": "https://janitor.holycoders.io",
+  "bugs": {
+    "url": "https://github.com/Holy-Coders/janitor/issues"
+  }
+}

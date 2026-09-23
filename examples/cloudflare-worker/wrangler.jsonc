@@ -1,0 +1,20 @@
+{
+  "name": "visitor-example",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "d1_databases": [
+    {
+      "binding": "VISITORS",
+      "database_name": "visitor-example",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "../../packages/storage/d1/migrations",
+    },
+  ],
+  "ai": { "binding": "AI" },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+  },
+  "vars": { "JEV_ENABLED": "false" },
+}

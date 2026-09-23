@@ -1,0 +1,26 @@
+{
+  "name": "@janitor/example-nextjs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "migrate": "node --env-file=.env.local --import tsx scripts/migrate.ts"
+  },
+  "dependencies": {
+    "@janitor/adapters": "workspace:^",
+    "@janitor/browser": "workspace:^",
+    "next": "^16.3.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tsx": "^4.20.0"
+  }
+}

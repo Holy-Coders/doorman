@@ -1,0 +1,150 @@
+<section
+  class="lab"
+  id="playground"
+  aria-labelledby="lab-title"
+  data-playground
+>
+  <div class="lab-heading">
+    <div>
+      <span class="section-kicker">The identity lab</span>
+      <h2 id="lab-title">
+        Change a signal.
+        <br />
+        Follow the identity.
+      </h2>
+    </div>
+    <p>
+      Try the real matching engine with a synthetic browser. Everything runs
+      here, in memory.
+    </p>
+  </div>
+  <div class="lab-workspace">
+    <div class="lab-controls">
+      <div class="lab-controls-label">
+        <span class="tiny-icon">⌘</span> Simulated browser
+      </div>
+      <div class="device-label">
+        <svg
+          width="38"
+          height="30"
+          viewBox="0 0 38 30"
+          fill="none"
+          aria-hidden="true"
+        >
+          <rect
+            x="5"
+            y="2"
+            width="28"
+            height="19"
+            rx="3"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M1 25h36M14 21l-2 4m12-4 2 4"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+        </svg>
+        <div>
+          <strong data-device-label>Chrome on macOS</strong>
+          <span data-screen-label>1440 × 900 · 8 cores</span>
+        </div>
+      </div>
+      <div class="scenario-list" role="group" aria-label="Browser scenarios">
+        <button data-scenario="cookie" aria-pressed="true">
+          <span>Return with cookie</span>
+          <span class="scenario-mark" aria-hidden="true">
+            ↻
+          </span>
+        </button>
+        <button data-scenario="clear" aria-pressed="false">
+          <span>Remove the cookie</span>
+          <span class="scenario-mark" aria-hidden="true">
+            ×
+          </span>
+        </button>
+        <button data-scenario="update" aria-pressed="false">
+          <span>Update the browser</span>
+          <span class="scenario-mark" aria-hidden="true">
+            ↑
+          </span>
+        </button>
+        <button data-scenario="resize" aria-pressed="false">
+          <span>Resize the window</span>
+          <span class="scenario-mark" aria-hidden="true">
+            ↔
+          </span>
+        </button>
+        <button data-scenario="timezone" aria-pressed="false">
+          <span>Change the timezone</span>
+          <span class="scenario-mark" aria-hidden="true">
+            ◷
+          </span>
+        </button>
+        <button data-scenario="webgl" aria-pressed="false">
+          <span>Hide WebGL signals</span>
+          <span class="scenario-mark" aria-hidden="true">
+            −
+          </span>
+        </button>
+        <button data-scenario="device" aria-pressed="false">
+          <span>Switch to another device</span>
+          <span class="scenario-mark" aria-hidden="true">
+            ⇄
+          </span>
+        </button>
+      </div>
+      <p class="lab-disclosure">
+        Synthetic signals only.
+        <br />
+        No browser data is collected.
+      </p>
+    </div>
+    <div class="lab-output">
+      <div class="result-heading">
+        <span class="mono">visitor.identify()</span>
+        <span class="result-badge" data-result-badge>
+          Initializing
+        </span>
+      </div>
+      <div class="identity-result">
+        <span class="result-label">Visitor identity</span>
+        <strong data-result-id>vis_…</strong>
+        <p data-result-explanation aria-live="polite">
+          Starting the local matching engine.
+        </p>
+      </div>
+      <div class="confidence-meter">
+        <div>
+          <span>Identity confidence</span>
+          <strong data-confidence-label>—</strong>
+        </div>
+        <div class="meter-track">
+          <span data-confidence-bar></span>
+        </div>
+        <div class="meter-note">
+          <span>0</span>
+          <span>Restore threshold 0.90</span>
+          <span>1</span>
+        </div>
+      </div>
+      <pre
+        class="result-json"
+        aria-label="Identity response"
+      ><code data-result-json>// Run a scenario to inspect the response.</code></pre>
+      <div class="lab-footer">
+        <span>
+          <span class="version-dot"></span>Actual @janitor/core
+        </span>
+        <span>Evaluator disabled · risk defaults to 0</span>
+      </div>
+    </div>
+  </div>
+  <p class="lab-note">
+    Every scenario starts from the same saved history. Only “Return with cookie”
+    retains the simulated cookie. These scores illustrate the algorithm, not
+    measured accuracy. <a href="/docs/matching/">How matching works ↗</a>
+  </p>
+</section>
+<script src="../scripts/playground.ts"></script>

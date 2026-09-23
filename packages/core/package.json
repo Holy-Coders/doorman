@@ -1,0 +1,31 @@
+{
+  "name": "@janitor/core",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "src",
+    "migrations"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Holy-Coders/janitor.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://janitor.holycoders.io",
+  "bugs": {
+    "url": "https://github.com/Holy-Coders/janitor/issues"
+  }
+}

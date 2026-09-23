@@ -1,0 +1,62 @@
+---
+import { Code } from "astro:components";
+const examples = [
+  {
+    name: "Browser",
+    file: "client.ts",
+    code: `import { createVisitorClient } from "@janitor/browser";\n\nconst visitor = createVisitorClient({\n  endpoint: "/api/visitor",\n});\n\nconst identity = await visitor.identify();\n\n// Your application decides what happens next.\nif (identity.risk.automation > 0.85) {\n  showCaptcha();\n}`,
+  },
+  {
+    name: "Cloudflare",
+    file: "worker.ts",
+    code: `import { createCloudflareVisitor }\n  from "@janitor/adapters/cloudflare";\n\nexport default {\n  async fetch(request, env) {\n    const visitor = createCloudflareVisitor({\n      db: env.VISITORS,\n      ai: env.AI,\n    });\n    return visitor.handle(request);\n  },\n};`,
+  },
+  {
+    name: "Next.js",
+    file: "app/api/visitor/route.ts",
+    code: `import { createVercelVisitor }\n  from "@janitor/adapters/vercel";\n\nconst visitor = createVercelVisitor({\n  db, // Your Postgres pool.\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\nexport async function POST(request: Request) {\n  return visitor.handle(request);\n}`,
+  },
+  {
+    name: "Node",
+    file: "server.ts",
+    code: `import { createNodeVisitor }\n  from "@janitor/adapters/node";\n\nconst visitor = createNodeVisitor({\n  db, // Any compatible Postgres pool.\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\n// Standard Web Request / Response.\nconst response = await visitor.handle(request);\n\n// Maintenance runs on your schedule.\nawait visitor.cleanup();`,
+  },
+];
+---
+
+<div class="code-demo" data-code-tabs>
+  <div class="code-tabs" role="tablist" aria-label="Integration examples">
+    {examples.map((example, i) => (
+      <button
+        role="tab"
+        id={"tab-" + i}
+        aria-controls={"code-" + i}
+        aria-selected={i === 0}
+        tabindex={i === 0 ? 0 : -1}
+        data-tab={i}
+      >
+        {example.name}
+      </button>
+    ))}
+  </div>
+  {examples.map((example, i) => (
+    <div
+      role="tabpanel"
+      id={"code-" + i}
+      aria-labelledby={"tab-" + i}
+      hidden={i !== 0}
+      tabindex="0"
+    >
+      <div class="code-file">
+        <span>{example.file}</span>
+        <button data-copy aria-label={"Copy " + example.name + " example"}>
+          Copy code
+        </button>
+      </div>
+      <Code code={example.code} lang="ts" theme="github-dark" />
+    </div>
+  ))}
+  <div class="code-demo-footer">
+    <span class="version-dot"></span>One browser API. Your infrastructure.
+  </div>
+</div>
