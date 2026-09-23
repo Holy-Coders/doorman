@@ -6,6 +6,18 @@ const output = resolve(root, "site/src/generated");
 mkdirSync(output, { recursive: true });
 const entries = [
   [
+    "learning",
+    "Opt-in learning",
+    "Verified login feedback and private shadow experiments.",
+    "docs/LEARNING.md",
+  ],
+  [
+    "review",
+    "Review & comparison",
+    "How Janitor compares with Segment, PostHog, RudderStack and Fingerprint.",
+    "docs/REVIEW.md",
+  ],
+  [
     "agentic-identity",
     "Humans, agents & authority",
     "Verified identity keys, distinct actors, and scoped, revocable delegation.",

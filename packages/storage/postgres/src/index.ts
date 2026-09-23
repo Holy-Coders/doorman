@@ -121,3 +121,5 @@ export function createPostgresStorage(
 }
 
 export * from "./identity.js";
+
+export * from "./learning.js";

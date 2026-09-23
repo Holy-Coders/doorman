@@ -1170,10 +1170,15 @@ p {
 }
 .prose th,
 .prose td {
+  overflow-wrap: normal;
   text-align: left;
   border-bottom: 1px solid var(--line);
   padding: 12px 14px;
   vertical-align: top;
+}
+.prose th:first-child,
+.prose td:first-child {
+  min-width: 9rem;
 }
 .prose th {
   color: var(--text);

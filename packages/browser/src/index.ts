@@ -143,6 +143,7 @@ function validIdentity(value: unknown): value is VisitorIdentity {
     (v.attribution === undefined || isIdentityAttribution(v.attribution)) &&
     typeof v.isReturning === "boolean" &&
     probability(v.confidence) &&
+    ["evaluated", "unavailable", "disabled"].includes(String(v.riskStatus)) &&
     !!risk &&
     probability(risk.automation) &&
     probability(risk.suspicious)

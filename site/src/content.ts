@@ -51,6 +51,18 @@ export const sections = [
     title: "Under the hood",
     pages: [
       {
+        slug: "learning",
+        title: "Opt-in learning",
+        description: "Verified login feedback and private shadow experiments.",
+        source: "docs/LEARNING.md",
+      },
+      {
+        slug: "review",
+        title: "Review & comparison",
+        description: "Segment, PostHog, RudderStack and Fingerprint compared.",
+        source: "docs/REVIEW.md",
+      },
+      {
         slug: "extensions",
         title: "Behavior & cross-device",
         description: "Optional movement summaries and verified account links.",

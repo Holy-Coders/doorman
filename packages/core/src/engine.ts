@@ -102,6 +102,14 @@ export function createVisitorEngine(options: EngineOptions) {
       let evaluatorUsed = false;
       let evaluatorLatency = 0;
       let risk = { automation: 0, suspicious: 0 };
+      let riskStatus: VisitorIdentity["riskStatus"] = evaluator
+        ? "unavailable"
+        : "disabled";
+      const useRisk = (result: Evaluation | undefined) => {
+        if (!result) return;
+        risk = { automation: result.automation, suspicious: result.suspicious };
+        riskStatus = "evaluated";
+      };
       const run = async (data: EvaluationInput) => {
         const started = Date.now();
         const result = await evaluate(data);
@@ -136,11 +144,7 @@ export function createVisitorEngine(options: EngineOptions) {
             current,
             deterministicSimilarity: deterministicScore,
           });
-          if (result)
-            risk = {
-              automation: result.automation,
-              suspicious: result.suspicious,
-            };
+          useRisk(result);
         } else {
           const candidates = (
             await storage.findCandidates(
@@ -224,11 +228,7 @@ export function createVisitorEngine(options: EngineOptions) {
           );
           if (best) {
             deterministicScore = best.score;
-            if (best.result)
-              risk = {
-                automation: best.result.automation,
-                suspicious: best.result.suspicious,
-              };
+            useRisk(best.result);
             if (
               best.confidence >= threshold &&
               best.confidence - runnerUp >= MATCHING_DEFAULTS.ambiguityMargin
@@ -244,11 +244,7 @@ export function createVisitorEngine(options: EngineOptions) {
               current,
               deterministicSimilarity: 0,
             });
-            if (result)
-              risk = {
-                automation: result.automation,
-                suspicious: result.suspicious,
-              };
+            useRisk(result);
           }
         }
         visitorId ??= await storage.createVisitor();
@@ -259,6 +255,7 @@ export function createVisitorEngine(options: EngineOptions) {
           confidence,
           isReturning,
           risk,
+          riskStatus,
         };
         if (options.debug && input.debug)
           identity.debug = {

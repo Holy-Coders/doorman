@@ -61,7 +61,7 @@ See [Privacy & signals](/docs/privacy/) for the complete erasure procedure and d
 
 ## Optional identity directory
 
-Enable `identity: { secret, namespace }` to add verified subjects, identity-key associations and delegation. Apply the storage package's `0002_identity.sql` migration after `0001_visitors.sql`. Example migration commands apply both.
+Enable `identity: { secret, namespace }` to add verified subjects, identity-key associations and delegation. Apply the storage package's `0002_identity.sql` migration after `0001_visitors.sql`. Example migration commands apply all three migrations, including the optional learning table.
 
 The directory adds three tables: `identity_subjects`, `identity_keys`, and `identity_delegations`. Key digests are unique; references cascade on subject erasure. Grant expiry, principal and actor columns are indexed. Full records use JSONB in Postgres and JSON text in D1.
 
@@ -69,3 +69,7 @@ The directory adds three tables: `identity_subjects`, `identity_keys`, and `iden
 - [Postgres identity migration](../../packages/storage/postgres/migrations/0002_identity.sql)
 
 `cleanup()` removes expired grants alongside browser-history maintenance. Subject/key records require explicit removal and should follow the application's account lifecycle. Deleting a subject removes its keys and grants but leaves browser histories independent. See [the identity directory guide](../../docs/AGENTIC-IDENTITY.md).
+
+## Optional learning data
+
+`0003_learning.sql` adds `learning_sessions` with an opaque session ID, application scope, fixed expiry, latest normalized snapshot, verified account label, disputed flag and optional shadow prediction. Foreign keys cascade for both labeled and predicted subjects. Default retention is 30 days, with 20 completed sessions per subject. Feature configuration and per-request collection permission are both required; creating the table alone does not enable collection. See [opt-in learning](../../docs/LEARNING.md).

@@ -359,3 +359,22 @@ it("accepts bounded extended summaries while rejecting trajectories and excessiv
     ).status,
   ).toBe(400);
 });
+
+it("times out and cancels an unfinished request body without creating a visitor", async () => {
+  const cancel = vi.fn();
+  const storage = createMemoryStorage();
+  const stream = new ReadableStream({ cancel });
+  const req = new Request("https://example.com/api/visitor", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: stream,
+    duplex: "half",
+  } as RequestInit);
+  const response = await createVisitorHandler(storage, undefined, {
+    requestTimeoutMs: 100,
+  }).handle(req);
+  expect(response.status).toBe(408);
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(storage.rows.size).toBe(0);
+  expect(response.headers.get("set-cookie")).toBeNull();
+});

@@ -6,7 +6,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm build`                  | All seven packages compile to ESM and declarations                                                                                                              |
 | `pnpm typecheck`              | Packages, test sources and all three example applications pass                                                                                                  |
-| `pnpm test`                   | 98 tests pass across six files                                                                                                                                  |
+| `pnpm test`                   | 126 tests pass across seven files                                                                                                                               |
 | `pnpm lint`                   | Passes                                                                                                                                                          |
 | `pnpm test:e2e`               | Chromium browser integration passes                                                                                                                             |
 | Next.js production build      | Passes on Next.js 16.3.6; page and API route produced                                                                                                           |
@@ -16,7 +16,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | All three live local examples | Browser identifies, uses HttpOnly cookie, then restores ID after cookies are cleared                                                                            |
 | Packed installation           | All seven packages install in an isolated consumer with local pnpm overrides; nine factory exports, SSR-safe browser import and both migration exports verified |
 
-Unit/integration coverage: 27 core cases, 9 browser cases, 14 evaluator cases, 20 HTTP/high-level adapter cases, 10 shared SQL storage contract cases, and 18 identity directory/delegation cases across both databases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
+Unit/integration coverage: 28 core cases, 9 browser cases, 14 evaluator cases, 21 HTTP/high-level adapter cases, 10 shared SQL storage contract cases, 18 identity directory/delegation cases, and 26 opt-in learning cases across both databases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
 
 Storage contract tests execute real SQL using PGlite (embedded Postgres) and Miniflare D1. Core matching is not mocked. Evaluator network calls are mocked against the current official Jev/Workers AI contracts, including 500/429/529 errors, malformed outputs and timeouts.
 
@@ -42,14 +42,20 @@ Example boot commands and environment variables are in each example's README and
 
 ## Public website checks
 
-`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all fifteen primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The site produces sixteen HTML pages, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
+`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all seventeen primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The site produces eighteen HTML pages, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
 
 ## Controlled browser dataset
 
-The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 98 unit/integration and eight browser UI/integration tests; no risk accuracy or Jev inference is claimed.
+The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 126 unit/integration and eight browser UI/integration tests; no risk accuracy or Jev inference is claimed.
 
 ## Identity directory and delegation
 
 The v0.3 preview adds 18 real-SQL cases, executed against both Postgres (PGlite) and D1 (Miniflare). They cover stable principal registration, immutable kinds, hashed key lookup, concurrent cross-account key conflicts, key removal, unknown actor attribution, person and agent delegation, actor/account/audience/scope mismatches, revocation, expiry before cleanup, cascading erasure, management input limits, and client claims rejected at the HTTP boundary. Browser response validation also covers valid and malformed attribution.
 
 These are functional and trust-boundary tests. They do not establish that a credential is being operated by its physical owner, measure account-takeover detection, or benchmark Jev on human/agent attribution. The application supplies verified credentials and enforces access policy.
+
+## Opt-in learning and review fixes
+
+The v0.4 preview adds 26 real-SQL learning cases across D1 and Postgres: explicit configuration and server permission, strict rejection of client consent claims, pre-login snapshots, frozen verified labels, separation from fuzzy browser restoration, unknown/family/agent exclusions, conflicting account confirmations, consent withdrawal, application scopes, shadow-only outputs, cold starts, malformed/unknown predictions, timeouts, bounded retention and cascading erasure. Risk availability and slow-body deadline coverage are included in the core/browser/HTTP cases above.
+
+These tests use synthetic sessions and verified-context fixtures. No anonymous cross-device accuracy, physical-user identity, real bot detection or automatic Jev training has been measured. The [learning guide](LEARNING.md) describes the evaluation still needed; the [review](REVIEW.md) records the remaining gaps and comparison sources.

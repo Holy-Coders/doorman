@@ -294,3 +294,36 @@ it("does not turn zero-valued hidden measurements into matching evidence", () =>
   expect(current.hardware?.maxTouchPoints).toBe(0);
   expect(calculateSimilarity(current, current).score).toBeLessThan(0.5);
 });
+
+it("distinguishes disabled risk, unavailable risk and an evaluated zero score", async () => {
+  for (const [evaluator, riskStatus] of [
+    [undefined, "disabled"],
+    [
+      {
+        evaluate: async () => {
+          throw new Error("500");
+        },
+      },
+      "unavailable",
+    ],
+    [
+      {
+        evaluate: async () => ({
+          sameVisitor: 0,
+          automation: 0,
+          suspicious: 0,
+        }),
+      },
+      "evaluated",
+    ],
+  ] as const) {
+    const result = await createVisitorEngine({
+      storage: createMemoryStorage(),
+      evaluator,
+    }).identify({ signals });
+    expect(result).toMatchObject({
+      riskStatus,
+      risk: { automation: 0, suspicious: 0 },
+    });
+  }
+});

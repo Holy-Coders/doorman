@@ -83,6 +83,8 @@ for (const width of [390, 1440]) {
       "/playground/",
       "/docs/getting-started/",
       "/docs/api/",
+      "/docs/learning/",
+      "/docs/review/",
       "/docs/cloudflare/",
       "/docs/nextjs/",
       "/docs/node/",

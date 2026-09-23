@@ -68,7 +68,11 @@ export class RequestError extends Error {
     super(message);
   }
 }
-export async function readPayload(request: Request, maxBytes: number) {
+export async function readPayload(
+  request: Request,
+  maxBytes: number,
+  timeoutMs: number,
+) {
   const contentLength = request.headers.get("content-length");
   if (
     contentLength &&
@@ -79,9 +83,16 @@ export async function readPayload(request: Request, maxBytes: number) {
   const reader = request.body.getReader();
   let size = 0;
   const chunks: Uint8Array[] = [];
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new RequestError(408, "Request body timed out"));
+      void reader.cancel().catch(() => {});
+    }, timeoutMs);
+  });
   try {
     while (true) {
-      const { value, done } = await reader.read();
+      const { value, done } = await Promise.race([reader.read(), deadline]);
       if (done) break;
       size += value.byteLength;
       if (size > maxBytes) {
@@ -91,6 +102,7 @@ export async function readPayload(request: Request, maxBytes: number) {
       chunks.push(value);
     }
   } finally {
+    clearTimeout(timer);
     reader.releaseLock();
   }
   const bytes = new Uint8Array(size);

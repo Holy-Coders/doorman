@@ -51,6 +51,7 @@ export type VisitorIdentity = {
   confidence: number;
   isReturning: boolean;
   risk: { automation: number; suspicious: number };
+  riskStatus: "evaluated" | "unavailable" | "disabled";
   debug?: {
     deterministicScore: number;
     evaluatorUsed: boolean;

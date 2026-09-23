@@ -12,7 +12,7 @@ import { REPO } from "../content";
       <div class="hero-copy">
         <a class="release-pill" href={REPO + "/releases"}>
           <span class="version-dot"></span>Meet Janitor{" "}
-          <span class="pill-version">v0.3 preview</span>
+          <span class="pill-version">v0.4 preview</span>
           <span aria-hidden="true">↗</span>
         </a>
         <h1>
@@ -312,6 +312,22 @@ import { REPO } from "../content";
           <span class="feature-state">Shipped</span>
         </div>
       </div>
+      <div class="actor-rows">
+        <div>
+          <span class="actor-number">04</span>
+          <div>
+            <h3>Learn from verified outcomes</h3>
+            <p>
+              Opt-in session feedback on your server. Test predictions in shadow
+              mode before considering them for your application.
+            </p>
+            <a class="text-link" href="/docs/learning/">
+              Explore login feedback ↗
+            </a>
+          </div>
+          <span class="feature-state">Opt-in</span>
+        </div>
+      </div>
       <div class="actors-bottom">
         <p>
           Automation can be authorized. A familiar browser can still be
@@ -385,7 +401,8 @@ import { REPO } from "../content";
             <span>↻</span>
             <p>
               <strong>Graceful fallback</strong>If the evaluator is unavailable,
-              deterministic matching continues and risk defaults to zero.
+              deterministic matching continues. Risk defaults to zero with an
+              explicit unavailable status.
             </p>
           </div>
         </div>

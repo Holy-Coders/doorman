@@ -10,6 +10,7 @@ const identity = {
   confidence: 0.95,
   isReturning: true,
   risk: { automation: 0.1, suspicious: 0.1 },
+  riskStatus: "evaluated",
 };
 afterEach(() => vi.unstubAllGlobals());
 function documentStub() {
@@ -98,6 +99,14 @@ describe("browser collection and lifecycle", () => {
     const client = createVisitorClient();
     await expect(client.identify()).rejects.toThrow("Invalid visitor response");
     client.destroy();
+    fetch.mockImplementation(async () =>
+      Response.json({ ...identity, riskStatus: "safe" }),
+    );
+    const invalidStatus = createVisitorClient();
+    await expect(invalidStatus.identify()).rejects.toThrow(
+      "Invalid visitor response",
+    );
+    invalidStatus.destroy();
   });
 });
 

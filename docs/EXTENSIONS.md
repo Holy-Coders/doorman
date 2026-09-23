@@ -57,4 +57,8 @@ The shortened IDs and omitted risk/confidence fields above are illustrative. The
 
 On logout, omit `authenticatedSubject`; the response no longer contains `subjectId`, even when the browser cookie remains. Signing in as a different account returns a different subject. Shared accounts, stolen credentials and account takeovers require the application's own authentication/security controls. A subject label is not an authentication token.
 
-Janitor stores no account graph and needs no new database tables. Your application may store associations using its existing account model and should erase them with that account. Secret/namespace rotation changes all labels. Account-specific generation IDs can invalidate one account's prior derived label. For anonymous cross-device pairing, the application must first verify a pairing flow and pass the resulting stable subject identifier; Janitor does not implement that verification.
+This stateless `subjectLinking` option stores no account graph and needs no new database tables. Your application may store associations using its existing account model and should erase them with that account. Secret/namespace rotation changes all labels. Account-specific generation IDs can invalidate one account's prior derived label. For anonymous cross-device pairing, the application must first verify a pairing flow and pass the resulting stable subject identifier; Janitor does not implement that verification.
+
+## Anonymous sessions and later logins
+
+The optional [learning collector](LEARNING.md) uses the identity directory and a separate short session cookie to label pre-login snapshots from a verified login. It is disabled by default, needs server permission per request, and stores data on the implementer's server. It includes no automatically trained cross-device classifier. Optional predictions run in shadow mode and never become verified account links.

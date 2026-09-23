@@ -18,7 +18,7 @@ An authorized assistant can have high automation and valid delegation. An intrud
 
 ## Configure the identity directory
 
-Apply both `0001_visitors.sql` and `0002_identity.sql` from your storage package. The example migration commands apply both. Add a secret and namespace to any high-level adapter:
+Apply both `0001_visitors.sql` and `0002_identity.sql` from your storage package. The example migration commands also apply `0003_learning.sql`; learning remains disabled unless explicitly configured. Add a secret and namespace to any high-level adapter:
 
 ```ts
 import { createNodeVisitor } from "@janitor/adapters/node";

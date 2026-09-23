@@ -1,8 +1,15 @@
+import { createLearning } from "./learning.js";
 import { createIdentityDirectory } from "./identity.js";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
-import { createVisitorEngine, isVisitorId } from "@janitor/core";
+import {
+  createVisitorEngine,
+  isVisitorId,
+  normalizeObservation,
+} from "@janitor/core";
 import type {
+  LearningStorage,
+  LearningOptions,
   IdentityStorage,
   VerifiedIdentityContext,
   EngineOptions,
@@ -16,21 +23,35 @@ export type AdapterOptions = RetentionOptions &
     environment?: "production" | "development" | "test";
     cookie?: { name?: string; maxAgeDays?: number; secure?: boolean };
     maxBodyBytes?: number;
+    requestTimeoutMs?: number;
     endpointPath?: string;
     subjectLinking?: SubjectLinkingOptions;
     identity?: SubjectLinkingOptions;
+    learning?: false | LearningOptions;
   };
 export function createVisitorHandler(
   storage: ManagedVisitorStorage,
   evaluator: VisitorEvaluator | undefined,
   options: AdapterOptions = {},
   identityStorage?: IdentityStorage,
+  learningStorage?: LearningStorage,
 ) {
   if (options.identity && !identityStorage)
     throw new Error("Identity storage is required");
   const identities =
     options.identity && identityStorage
       ? createIdentityDirectory(identityStorage, options.identity)
+      : undefined;
+  if (
+    options.learning &&
+    (options.learning.enabled !== true || !options.identity || !learningStorage)
+  )
+    throw new Error(
+      "Learning requires explicit enablement, identity configuration and learning storage",
+    );
+  const learner =
+    options.learning && options.identity && learningStorage
+      ? createLearning(learningStorage, options.identity, options.learning)
       : undefined;
   const linkSubject = options.subjectLinking
     ? createSubjectLinker(options.subjectLinking)
@@ -55,6 +76,13 @@ export function createVisitorHandler(
     maxBodyBytes > 65_536
   )
     throw new Error("Invalid body size limit");
+  const requestTimeoutMs = options.requestTimeoutMs ?? 5000;
+  if (
+    !Number.isFinite(requestTimeoutMs) ||
+    requestTimeoutMs < 100 ||
+    requestTimeoutMs > 30000
+  )
+    throw new Error("Request timeout must be 100–30000ms");
   const engine = createVisitorEngine({ ...options, storage, evaluator });
   const json = (body: unknown, status: number, headers?: HeadersInit) =>
     Response.json(body, {
@@ -72,6 +100,7 @@ export function createVisitorHandler(
       context: {
         authenticatedSubject?: string;
         verified?: VerifiedIdentityContext;
+        learningConsent?: boolean;
       } = {},
     ): Promise<Response> {
       if (
@@ -102,7 +131,11 @@ export function createVisitorHandler(
       )
         return json({ error: "Insecure cookies require localhost" }, 400);
       try {
-        const payload = await readPayload(request, maxBodyBytes);
+        const payload = await readPayload(
+          request,
+          maxBodyBytes,
+          requestTimeoutMs,
+        );
         if (context.verified && !identities)
           throw new RequestError(500, "Identity directory is not configured");
         if (context.verified && context.authenticatedSubject)
@@ -134,8 +167,32 @@ export function createVisitorHandler(
           ...payload,
           visitorId: id && isVisitorId(id) ? id : undefined,
         });
+        const learningCookies = (request.headers.get("cookie") ?? "")
+          .split(";")
+          .map((cookie) => cookie.trim())
+          .filter((cookie) => cookie.startsWith(`${cookieName}_learning=`));
+        const learningSessionId =
+          learningCookies.length === 1
+            ? learningCookies[0]?.slice(cookieName.length + 10)
+            : undefined;
+        const learningCookie = learner
+          ? await learner.observe({
+              sessionId: learningSessionId,
+              allowed: context.learningConsent === true,
+              authenticated:
+                context.verified !== undefined ||
+                context.authenticatedSubject !== undefined,
+              attribution,
+              observation: normalizeObservation(
+                payload.signals,
+                payload.behavior,
+              ),
+            })
+          : learningCookies.length
+            ? { maxAge: 0, id: undefined }
+            : undefined;
         const secure = options.cookie?.secure === false ? "" : "; Secure";
-        return json(
+        const response = json(
           {
             ...identity,
             ...(subjectId ? { subjectId } : {}),
@@ -146,6 +203,12 @@ export function createVisitorHandler(
             "Set-Cookie": `${cookieName}=${identity.visitorId}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAge)}`,
           },
         );
+        if (learningCookie && (learningCookie.id || learningCookies.length))
+          response.headers.append(
+            "Set-Cookie",
+            `${cookieName}_learning=${learningCookie.id ?? ""}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${learningCookie.maxAge}`,
+          );
+        return response;
       } catch (error) {
         if (error instanceof RequestError)
           return json({ error: error.message }, error.status);
@@ -153,9 +216,13 @@ export function createVisitorHandler(
       }
     },
     identities,
+    learning: learner
+      ? { reports: learner.reports, deleteSession: learner.deleteSession }
+      : undefined,
     async cleanup() {
       await storage.cleanup();
       await identities?.cleanup();
+      await learner?.cleanup();
     },
     // Server-side only. Applications must authorize erasure and avoid automatic re-identification afterward.
     deleteVisitor: (visitorId: string) => storage.deleteVisitor(visitorId),

@@ -61,19 +61,20 @@ Core has no HTTP, hosting, database driver or provider imports. Advanced direct 
 
 ## High-level adapters
 
-All return the same shape:
+All return this lifecycle/HTTP surface (the optional `identities` directory methods are documented below):
 
 ```ts
 {
-  handle(request: Request, context?: { authenticatedSubject?: string }): Promise<Response>;
+  handle(request: Request, context?: { authenticatedSubject?: string; verified?: VerifiedIdentityContext; learningConsent?: boolean }): Promise<Response>;
   cleanup(): Promise<void>;
   deleteVisitor(visitorId: string): Promise<void>;
+  learning?: { reports(limit?: number): Promise<LearningReport[]>; deleteSession(id: string): Promise<void> };
 }
 ```
 
 Node/Vercel accept `{ db, evaluator?: { apiKey, model?, timeoutMs? } | VisitorEvaluator | false, ...options }`. Cloudflare accepts `{ db, ai?, ...options }`. Omitting an evaluator/AI binding is deterministic-only. No adapter automatically performs cleanup or blocks based on risk.
 
-Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10, 1–100 accepted), `evaluatorTimeoutMs` (1200), `restoreThreshold` (0.90, 0.8–1 accepted), `cookie: { name?, maxAgeDays?, secure? }`, `maxBodyBytes` (16384, up to 65536), `endpointPath` (`/api/visitor`), `environment` (`production`), `debug` (false), and `onMetrics` (none). Limits are validated when the adapter is constructed. Example-only port/database/key variables are handled by examples, never by core.
+Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10, 1–100 accepted), `evaluatorTimeoutMs` (1200), `restoreThreshold` (0.90, 0.8–1 accepted), `cookie: { name?, maxAgeDays?, secure? }`, `maxBodyBytes` (16384, up to 65536), `requestTimeoutMs` (5000, 100–30000; HTTP 408 on deadline), `endpointPath` (`/api/visitor`), `environment` (`production`), `debug` (false), and `onMetrics` (none). Limits are validated when the adapter is constructed. Example-only port/database/key variables are handled by examples, never by core.
 
 `createVisitorHandler` from `@janitor/adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
 
@@ -158,3 +159,11 @@ All methods are asynchronous and server-only. The application verifies credentia
 `handle(request, { verified: { subjectId, actorId?, delegationId?, audience?, requiredScopes? } })` adds `attribution` to `VisitorIdentity` when the identity directory is configured. Context must come from server-verified authentication; body claims are rejected. Anonymous calls return unknown subject/actor attribution. Directory/database failures return controlled HTTP errors, never manufactured valid grants. `cleanup()` also removes expired grants.
 
 Attribution exposes subject status (`verified`/`unknown`), actor kind (`person`/`agent`/`unknown`) with credential basis, and delegation status (`none`/`valid`/`invalid`). Invalid reasons are `missing`, `revoked`, `expired`, `principal`, `actor`, `audience`, or `scope`. A valid grant reports its scopes and expiry; it is not an access decision. Read the full [identity and delegation guide](AGENTIC-IDENTITY.md) before integration.
+
+## Risk availability
+
+`VisitorIdentity.riskStatus` is `"evaluated"` when a valid evaluator result produced the returned risk, `"unavailable"` when a configured evaluator failed or timed out, and `"disabled"` when none is configured. Fallback numeric risk stays zero. A zero fallback is not an assessment of safety; the application chooses policy. Browser clients validate this status alongside the numerical scores.
+
+## Optional learning
+
+`learning?: false | LearningOptions` is disabled by default and requires `identity` plus migration `0003_learning.sql`. Explicit `learning: { enabled: true, mode: "collect" }` and trusted `handle(request, { learningConsent: true })` enable short-session feedback. `mode: "shadow"` additionally requires a `predict({ current, examples })` callback returning `{ subjectId?, score? }`. Reports and guesses stay server-only. See [all limits, lifecycle rules and examples](LEARNING.md). No built-in cross-device model is trained or automatically enabled.

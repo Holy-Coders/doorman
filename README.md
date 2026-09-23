@@ -29,6 +29,7 @@ type VisitorIdentity = {
   confidence: number;
   isReturning: boolean;
   risk: { automation: number; suspicious: number };
+  riskStatus: "evaluated" | "unavailable" | "disabled";
 };
 ```
 
@@ -39,6 +40,10 @@ The library never blocks a user, changes access, or displays a CAPTCHA. It recog
 Jev evaluates three narrow questions: browser continuity, automation, and suspicious technical signals. The application keeps control of policy. An authorized agent can be automated and legitimate; a low automation score does not prove a human is authorized.
 
 Janitor combines browser identity with a server-side identity directory: verified email/key associations, distinct person and agent principals, and scoped, expiring, revocable delegation. Your existing authentication verifies credentials; Janitor returns attribution alongside risk. Read [Humans, agents & authority](docs/AGENTIC-IDENTITY.md) for the working APIs and trust boundaries.
+
+## Opt-in login feedback
+
+Applications can opt in to collecting short anonymous sessions that a later verified login labels. Data stays in the implementer's database. Optional shadow predictions stay server-side and never authenticate or merge accounts. Collection is disabled by default and requires server permission on every request. This does not automatically train Jev or establish anonymous cross-device accuracy. See [learning configuration and erasure](docs/LEARNING.md) and the [product review and comparison](docs/REVIEW.md).
 
 ## Cloudflare
 
@@ -107,12 +112,12 @@ pnpm test
 pnpm lint
 ```
 
-Download the prebuilt [v0.3.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.3.0) to try the packages outside the monorepo:
+Download the prebuilt [v0.4.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.4.0) to try the packages outside the monorepo:
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.3.0/janitor-0.3.0.tar.gz -o janitor-0.3.0.tar.gz
-tar -xzf janitor-0.3.0.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.4.0/janitor-0.4.0.tar.gz -o janitor-0.4.0.tar.gz
+tar -xzf janitor-0.4.0.tar.gz
 pnpm install
 ```
 
@@ -238,6 +243,6 @@ See [site/README.md](site/README.md) for publishing and content maintenance.
 
 ## Behavior, cross-device links, and benchmarks
 
-Opt in to motion/timing summaries with `createVisitorClient({ behavior: "extended" })`. For account keys, actor attribution and delegation, configure `identity: { secret, namespace }` and use the [identity directory APIs](docs/AGENTIC-IDENTITY.md). Different browsers keep their own `visitorId` while sharing a server-verified subject. The library does not infer anonymous people or implement authentication. Lightweight stateless account labels remain available in the [cross-device guide](docs/EXTENSIONS.md).
+Opt in to motion/timing summaries with `createVisitorClient({ behavior: "extended" })`. For account keys, actor attribution and delegation, configure `identity: { secret, namespace }` and use the [identity directory APIs](docs/AGENTIC-IDENTITY.md). Different browsers keep their own `visitorId` while sharing a server-verified subject. The library does not verify anonymous people or implement authentication. Optional [login feedback](docs/LEARNING.md) supports a separate shadow experiment. Lightweight stateless account labels remain available in the [cross-device guide](docs/EXTENSIONS.md).
 
 Generate controlled observations with `pnpm exec playwright install chromium firefox webkit` followed by `pnpm benchmark:browser`. [The benchmark report](docs/BENCHMARKS.md) includes both successful restoration and identical-profile false matches. The generated data is not a real-user population or a measured bot-detection accuracy claim.

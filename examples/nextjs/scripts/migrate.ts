@@ -10,7 +10,7 @@ try {
       "CREATE TABLE IF NOT EXISTS visitor_migrations (name TEXT PRIMARY KEY)",
     );
     await client.query("LOCK TABLE visitor_migrations IN EXCLUSIVE MODE");
-    for (const name of ["0001_visitors", "0002_identity"]) {
+    for (const name of ["0001_visitors", "0002_identity", "0003_learning"]) {
       const applied = await client.query(
         "SELECT name FROM visitor_migrations WHERE name = $1",
         [name],
