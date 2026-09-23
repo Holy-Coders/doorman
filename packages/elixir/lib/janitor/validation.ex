@@ -18,7 +18,10 @@ defmodule Janitor.Validation do
     do:
       String.valid?(v) and
         div(byte_size(:unicode.characters_to_binary(v, :utf8, {:utf16, :little})), 2) <=
-          (s["maxLength"] || 512)
+          (s["maxLength"] || 512) and
+        (not Map.has_key?(s, "const") or v == s["const"]) and
+        (not Map.has_key?(s, "enum") or v in s["enum"]) and
+        (not Map.has_key?(s, "pattern") or Regex.match?(Regex.compile!(s["pattern"]), v))
 
   defp valid?(v, %{"type" => "boolean"}) when is_boolean(v), do: true
 

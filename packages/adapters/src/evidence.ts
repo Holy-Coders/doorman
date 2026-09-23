@@ -261,6 +261,10 @@ const edge = z
     botScore: z.number().int().min(1).max(99).optional(),
     verifiedBot: z.boolean().optional(),
     signedAgent: z.boolean().optional(),
+    ja4: z
+      .string()
+      .regex(/^[tqd][a-z0-9]{9}_[a-f0-9]{12}_[a-f0-9]{12}$/)
+      .optional(),
   })
   .strict();
 const trusted = z

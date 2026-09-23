@@ -1,3 +1,14 @@
+import {
+  collectDetectionSignals,
+  createDetectionTracker,
+} from "./detection.js";
+import type { DetectionOptions } from "./detection.js";
+export {
+  collectDetectionSignals,
+  createInteractionDecoy,
+  FONT_PROBES,
+} from "./detection.js";
+export type { DetectionOptions } from "./detection.js";
 import { isIdentityAttribution } from "@janitor/core";
 import { createExtendedBehavior } from "./behavior.js";
 import { createIdentityAnalytics } from "./analytics.js";
@@ -79,8 +90,13 @@ export function collectBrowserSignals(): BrowserObservation {
   };
 }
 
-export function createBehaviorTracker(options: { extended?: boolean } = {}) {
+export function createBehaviorTracker(
+  options: { extended?: boolean; detection?: DetectionOptions } = {},
+) {
   const extended = options.extended ? createExtendedBehavior() : undefined;
+  const detection = options.detection
+    ? createDetectionTracker(options.detection)
+    : undefined;
   const started = Date.now();
   const counts = {
     mouseMoveCount: 0,
@@ -129,11 +145,13 @@ export function createBehaviorTracker(options: { extended?: boolean } = {}) {
     snapshot: (): BrowserBehavior => ({
       ...counts,
       ...extended?.snapshot(),
+      ...detection?.snapshot(),
       pageAgeMs: Math.min(604_800_000, Math.max(0, Date.now() - started)),
     }),
     destroy: () => {
       removers.splice(0).forEach((remove) => safe(remove));
       extended?.clear();
+      detection?.destroy();
     },
   };
 }
@@ -168,14 +186,19 @@ export function createVisitorClient(
     endpoint?: string;
     debug?: boolean;
     behavior?: "counts" | "extended";
+    detection?: DetectionOptions;
     /** Start paused when the application controls collection permission. */
     enabled?: boolean;
     /** For framework CSRF tokens; evaluated again for each request. */
     headers?: () => Record<string, string>;
   } = {},
 ) {
+  const detection = options.detection ? { ...options.detection } : undefined;
   const newTracker = () =>
-    createBehaviorTracker({ extended: options.behavior === "extended" });
+    createBehaviorTracker({
+      extended: options.behavior === "extended",
+      detection,
+    });
   let enabled = options.enabled !== false;
   let tracker = enabled ? newTracker() : undefined;
   let generation = 0;
@@ -201,6 +224,16 @@ export function createVisitorClient(
         const requestController = controller;
         const timer = setTimeout(() => requestController.abort(), 10_000);
         try {
+          const signals = collectBrowserSignals();
+          if (detection)
+            Object.assign(signals, await collectDetectionSignals(detection));
+          if (
+            currentGeneration !== generation ||
+            destroyed ||
+            !enabled ||
+            requestController.signal.aborted
+          )
+            throw new Error("Visitor request was reset");
           const response = await fetch(endpoint, {
             method: "POST",
             credentials: "same-origin",
@@ -209,7 +242,7 @@ export function createVisitorClient(
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              signals: collectBrowserSignals(),
+              signals,
               behavior: tracker?.snapshot(),
               ...(options.debug ? { debug: true } : {}),
             }),

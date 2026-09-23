@@ -6,6 +6,8 @@ import {
 } from "@janitor/core";
 import type {
   ApiActivityAssessment,
+  ApiActivityCorrelation,
+  RelatedApiActivity,
   ApiActivityContext,
   ApiActivityKey,
   ApiActivityResult,
@@ -29,10 +31,20 @@ const keySchema = z
       .refine((v) => !!v.trim()),
   })
   .strict();
+const correlationSchema = z.strictObject({
+  id: z.string().regex(/^cor_[a-f0-9]{64}$/),
+  basis: z.enum(["browser-match", "request-pattern", "verified-identifier"]),
+  confidence: z.number().finite().min(0).max(1),
+});
 const contextSchema = z
   .object({
     key: keySchema,
     route,
+    correlations: z
+      .array(correlationSchema)
+      .max(3)
+      .refine((v) => new Set(v.map((c) => c.id)).size === v.length)
+      .optional(),
     actor: z
       .object({ kind: z.enum(["person", "agent"]), delegated: z.boolean() })
       .strict()
@@ -49,6 +61,9 @@ const optionsSchema = z
       .min(1)
       .max(API_ACTIVITY_LIMITS.routes)
       .refine((v) => new Set(v.map((r) => r.route)).size === v.length),
+    correlation: z
+      .strictObject({ minConfidence: z.number().min(0.5).max(1).default(0.8) })
+      .optional(),
     windowMs: z.number().int().min(10_000).max(900_000).default(60_000),
     retentionDays: z.number().int().min(1).max(30).default(1),
     minRequests: z.number().int().min(1).max(10_000).default(20),
@@ -83,6 +98,32 @@ export function createApiActivity(
   const label = createSubjectLinker(identity);
   const owner = (key: ApiActivityKey) =>
     label(JSON.stringify(["api-activity-v1", key.kind, key.id]));
+  const links = (context: ApiActivityContext) =>
+    config.correlation
+      ? (context.correlations ?? []).filter(
+          (c) => c.confidence >= config.correlation!.minConfidence,
+        )
+      : [];
+  const correlationOwner = (link: ApiActivityCorrelation) =>
+    label(JSON.stringify(["api-correlation-v1", link.basis, link.id]));
+  const summaryFor = async (key: string, now: number, check: () => void) => {
+    const window = Math.floor(now / config.windowMs) * config.windowMs;
+    const rows = await storage.recent(
+      key,
+      window - (API_ACTIVITY_LIMITS.windows - 1) * config.windowMs,
+      window,
+    );
+    check();
+    return {
+      source: "application-api" as const,
+      observedAt: now,
+      windowMs: config.windowMs,
+      truncated: rows.length > API_ACTIVITY_LIMITS.rows,
+      buckets: rows
+        .slice(0, API_ACTIVITY_LIMITS.rows)
+        .filter((row) => routes.has(row.route)),
+    };
+  };
   let inFlight = 0;
   // A stalled driver continues occupying its slot until it settles. A timeout
   // prevents later evaluation; it must not make room for unbounded stuck work.
@@ -123,7 +164,7 @@ export function createApiActivity(
     check: () => void,
   ): Promise<ApiActivityResult> {
     const now = Date.now();
-    const currentWindow = Math.floor(now / config.windowMs) * config.windowMs;
+
     // The requested route and verified actor context are part of the cache key.
     // An assessment for one permission context is never reused for another.
     const cacheKey = await label(
@@ -135,6 +176,9 @@ export function createApiActivity(
         context.actor?.delegated ?? null,
         config.windowMs,
         routes.get(context.route)!.sensitive,
+        links(context)
+          .map((c) => [c.id, c.basis, c.confidence])
+          .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
       ]),
     );
     check();
@@ -149,27 +193,27 @@ export function createApiActivity(
         ? { status: "recorded", assessment: { ...cached, cached: true } }
         : { status: "recorded" };
     }
-    const rows = await storage.recent(
-      key,
-      currentWindow - (API_ACTIVITY_LIMITS.windows - 1) * config.windowMs,
-      currentWindow,
-    );
-    check();
-    const summary = {
-      source: "application-api" as const,
-      observedAt: now,
-      windowMs: config.windowMs,
-      truncated: rows.length > API_ACTIVITY_LIMITS.rows,
-      buckets: rows
-        .slice(0, API_ACTIVITY_LIMITS.rows)
-        .filter((row) => routes.has(row.route)),
-    };
+    const summary = await summaryFor(key, now, check);
+    const relatedActivity: RelatedApiActivity[] = [];
+    for (const link of links(context)) {
+      const groupKey = await correlationOwner(link);
+      check();
+      const group = await summaryFor(groupKey, now, check);
+      if (group.buckets.length)
+        relatedActivity.push({
+          basis: link.basis,
+          confidence: link.confidence,
+          summary: group,
+        });
+    }
     const risk =
-      evaluator?.evaluateActivity && summary.buckets.length
+      evaluator?.evaluateActivity &&
+      (summary.buckets.length || relatedActivity.length)
         ? await attemptEvaluation(
             () =>
               evaluator.evaluateActivity!({
                 activity: summary,
+                ...(relatedActivity.length ? { relatedActivity } : {}),
                 route: context.route,
                 sensitive: routes.get(context.route)!.sensitive,
                 ...(context.actor ? { actor: context.actor } : {}),
@@ -184,6 +228,7 @@ export function createApiActivity(
       evaluatedAt: now,
       expiresAt,
       summary,
+      ...(relatedActivity.length ? { relatedActivity } : {}),
       cached: false,
       risk: risk
         ? { automation: risk.automation, suspicious: risk.suspicious }
@@ -199,6 +244,81 @@ export function createApiActivity(
     return { status: "recorded", assessment };
   }
   const service = {
+    /** Key a bounded correlation hypothesis; parts never leave this method or enter model inputs. */
+    async correlation(input: {
+      basis: ApiActivityCorrelation["basis"];
+      confidence: number;
+      parts: {
+        kind: "browser" | "shape" | "target" | "credential" | "application";
+        value: string;
+      }[];
+    }): Promise<ApiActivityCorrelation> {
+      if (!config.correlation)
+        throw new Error("Activity correlation is disabled");
+      const parsed = z
+        .strictObject({
+          basis: correlationSchema.shape.basis,
+          confidence: correlationSchema.shape.confidence,
+          parts: z
+            .array(
+              z.strictObject({
+                kind: z.enum([
+                  "browser",
+                  "shape",
+                  "target",
+                  "credential",
+                  "application",
+                ]),
+                value: z.string().trim().min(1).max(512),
+              }),
+            )
+            .min(1)
+            .max(4)
+            .refine(
+              (parts) =>
+                new Set(parts.map((p) => p.kind)).size === parts.length,
+            ),
+        })
+        .parse(input);
+      if (
+        parsed.basis === "request-pattern" &&
+        (!parsed.parts.some((p) => p.kind === "shape") ||
+          parsed.parts.length < 2)
+      )
+        throw new Error("A request shape alone cannot link activity");
+      if (
+        parsed.basis === "browser-match" &&
+        !parsed.parts.some((p) => p.kind === "browser")
+      )
+        throw new Error("A browser-match correlation needs browser evidence");
+      if (
+        parsed.basis === "verified-identifier" &&
+        !parsed.parts.some(
+          (p) => p.kind === "credential" || p.kind === "application",
+        )
+      )
+        throw new Error(
+          "A verified correlation needs an application-verified reference",
+        );
+      const id = await label(
+        JSON.stringify([
+          "api-correlation-reference-v1",
+          parsed.basis,
+          [...parsed.parts].sort((a, b) => a.kind.localeCompare(b.kind)),
+        ]),
+      );
+      return {
+        id: id.replace(/^sub_/, "cor_"),
+        basis: parsed.basis,
+        confidence: parsed.confidence,
+      };
+    },
+    /** Erases the shared group, affecting all sessions using it. Also erase affected session keys to clear cached assessments. */
+    async deleteCorrelation(correlation: ApiActivityCorrelation) {
+      await storage.deleteKey(
+        await correlationOwner(correlationSchema.parse(correlation)),
+      );
+    },
     /** Record one completed request. Repeated calls count as repeated observations. */
     observe(
       context: ApiActivityContext | undefined,
@@ -232,6 +352,23 @@ export function createApiActivity(
           ),
         });
         check();
+        for (const link of links(parsed)) {
+          const groupKey = await correlationOwner(link);
+          check();
+          await storage.increment({
+            key: groupKey,
+            route: parsed.route,
+            windowStart: Math.floor(now / config.windowMs) * config.windowMs,
+            now,
+            expiresAt: now + config.retentionDays * 86_400_000,
+            status: result.status,
+            durationMs: Math.min(
+              API_ACTIVITY_LIMITS.maxDurationMs,
+              Math.round(result.durationMs),
+            ),
+          });
+          check();
+        }
         // Count doubling, first denial and configured sensitive routes trigger
         // assessment attempts. A shared lease/cache and global budget bound AI.
         const ratio = row.requests / config.minRequests;

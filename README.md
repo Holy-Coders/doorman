@@ -193,3 +193,5 @@ Optional [API activity middleware](docs/API-ACTIVITY.md) adds private Jev judgme
 ### Experimental operator attribution
 
 Estimate whether short activity windows were operated by a human, an AI assistant or a conventional script, then compare windows within an account. Optional labeled references support agent-family suggestions. Private PostHog/Mixpanel events and warehouse rows keep these inferences separate from verified identities. Scores and counts are experimental; missing comparison evidence withholds totals. See [the setup and limitations](docs/OPERATOR-ATTRIBUTION.md).
+
+See [optional detection signals](docs/EXPERIMENTAL-DETECTION.md) for local fonts, runtime/permission probes, target/focus summaries and trusted JA4 evidence. [Linked suspicious activity](docs/LINKED-ACTIVITY.md) correlates server-observed denials across likely related sessions without using IP addresses or merging people. These are opt-in source features with documented experimental limits.

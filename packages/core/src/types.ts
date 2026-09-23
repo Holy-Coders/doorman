@@ -24,6 +24,17 @@ export type BrowserObservation = {
   };
   automation?: { webdriver?: boolean };
   graphics?: { webglVendor?: string; webglRenderer?: string };
+  /** Fixed local-font probes, not an inventory. Missing/restricted access stays unknown. */
+  fonts?: { version: "local-12-v1"; available: string };
+  environment?: {
+    runtimeMarkerCount?: number;
+    webdriverOwnProperty?: boolean;
+    notificationPermission?: "default" | "granted" | "denied";
+    notificationQuery?: "prompt" | "granted" | "denied";
+    pageFontsLoaded?: number;
+    pageFontsLoading?: number;
+    pageFontsFailed?: number;
+  };
 };
 
 export type BrowserBehavior = {
@@ -51,6 +62,14 @@ export type BrowserBehavior = {
   interactionIntervalCount?: number;
   interactionIntervalMeanMs?: number;
   interactionIntervalStdDevMs?: number;
+  /** Experimental target-relative counts; no coordinates or target names are retained. */
+  targetSampleCount?: number;
+  targetCenterCount?: number;
+  targetCornerCount?: number;
+  focusChangeCount?: number;
+  focusSampleCount?: number;
+  unfocusedInputCount?: number;
+  decoyActivationCount?: number;
 };
 
 export type NormalizedObservation = BrowserObservation & {

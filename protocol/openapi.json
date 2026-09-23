@@ -285,6 +285,69 @@
                 },
                 "additionalProperties": false
               },
+              "fonts": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "string",
+                    "const": "local-12-v1"
+                  },
+                  "available": {
+                    "type": "string",
+                    "pattern": "^[01]{12}$"
+                  }
+                },
+                "required": [
+                  "version",
+                  "available"
+                ],
+                "additionalProperties": false
+              },
+              "environment": {
+                "type": "object",
+                "properties": {
+                  "runtimeMarkerCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 8
+                  },
+                  "webdriverOwnProperty": {
+                    "type": "boolean"
+                  },
+                  "notificationPermission": {
+                    "type": "string",
+                    "enum": [
+                      "default",
+                      "granted",
+                      "denied"
+                    ]
+                  },
+                  "notificationQuery": {
+                    "type": "string",
+                    "enum": [
+                      "prompt",
+                      "granted",
+                      "denied"
+                    ]
+                  },
+                  "pageFontsLoaded": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "pageFontsLoading": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "pageFontsFailed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                },
+                "additionalProperties": false
+              },
               "automation": {
                 "type": "object",
                 "properties": {
@@ -340,6 +403,41 @@
                 "maximum": 1000000
               },
               "visibilityChangeCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "targetSampleCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "targetCenterCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "targetCornerCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "focusChangeCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "focusSampleCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "unfocusedInputCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "decoyActivationCount": {
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 1000000

@@ -81,6 +81,8 @@ export type EdgeEvidence = {
   botScore?: number;
   verifiedBot?: boolean;
   signedAgent?: boolean;
+  /** Optional trusted transport fingerprint. Shared by many devices; not a person ID. */
+  ja4?: string;
 };
 export type RequestEvidence = {
   client: { source: "browser"; authenticated: false };

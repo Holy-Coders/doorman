@@ -190,3 +190,7 @@ Janitor.Activity.delete_key(config, %{kind: "actor", id: authenticated_actor_id}
 ```
 
 Use `kind: "session"` for an anonymous application session. Actor/session keys are independent of browser visitor IDs, so deleting a browser or directory subject does not automatically erase these counters. Your account-deletion flow must delete its activity key and any related session keys. Collection can be disabled by removing `activity`; existing data still requires cleanup or erasure.
+
+## Related sessions and rotating IPs
+
+The TypeScript service now supports optional correlation groups from server-derived browser matches, application-verified references or request patterns with another useful reference. It can provide related denied-operation history to Jev without merging session identities or collecting IPs. See [linked suspicious activity](LINKED-ACTIVITY.md) for configuration, confidence thresholds, bounds and erasure. Native Phoenix does not yet implement this correlation option.

@@ -5,6 +5,32 @@ defmodule JanitorTest do
   alias Janitor.{Observation, Identity, Learning, Analytics}
   @fixtures File.read!(Path.expand("../priv/conformance.json", __DIR__)) |> Jason.decode!()
   @signals hd(@fixtures["vectors"])["raw"]
+  test "experimental fields validate, survive normalization and reach compact Jev state" do
+    fonts = %{"version" => "local-12-v1", "available" => "111000000000"}
+    raw = Map.merge(@signals, %{"fonts" => fonts, "environment" => %{"runtimeMarkerCount" => 1}})
+    assert :ok == Janitor.Validation.validate(%{"signals" => raw})
+
+    assert {:error, :invalid_payload} ==
+             Janitor.Validation.validate(%{
+               "signals" => Map.put(raw, "fonts", %{fonts | "available" => "Arial"})
+             })
+
+    assert {:error, :invalid_payload} ==
+             Janitor.Validation.validate(%{
+               "signals" => Map.put(raw, "fonts", %{fonts | "version" => "anything"})
+             })
+
+    assert {:error, :invalid_payload} ==
+             Janitor.Validation.validate(%{
+               "signals" => %{"environment" => %{"notificationQuery" => "impossible"}}
+             })
+
+    normalized = Observation.normalize(raw)
+    assert Janitor.Jev.compact(normalized)["fonts"] == fonts
+    assert Observation.similarity(normalized, normalized)["features"]["fontSimilarity"] == 1
+    assert Observation.similarity(%{"fonts" => fonts}, %{"fonts" => fonts})["score"] == 0
+  end
+
   setup do
     Ecto.Adapters.SQL.query!(
       Janitor.TestRepo,

@@ -82,3 +82,7 @@ Advanced callers can pass thresholds to `operatorLabel`, `agentFamily` or `summa
 Start with independently labeled traffic from your application. Split by time and user/session group, choose weights and thresholds on a validation set, then measure errors on a held-out set. Include keyboard-only, accessibility, privacy-browser, mobile and remote-desktop users. Record coverage and abstentions alongside false positives and missed agents.
 
 Do not tune on the final test set or call a higher score an accuracy improvement. The [public dataset results](EXTERNAL-BENCHMARKS.md) show why: matching can be wrong at high scores, and behavior classifiers vary by agent family. Risk policy stays application-owned; Janitor never blocks or challenges automatically.
+
+`scoring.similarity.fontSimilarity` adds an optional relative weight for the fixed local-font set (default `0`). It does not increase minimum evidence coverage or override contradiction/ambiguity caps. For example, `0.05` adds a modest contribution when both sets are available. [Collection and limits](EXPERIMENTAL-DETECTION.md).
+
+`activity.correlation.minConfidence` controls which server-derived links contribute related activity (default `0.8`, permitted range `0.5–1`). This is separate from browser matching and operator thresholds. Request-shape similarity alone is not abuse. [Correlation guide](LINKED-ACTIVITY.md).

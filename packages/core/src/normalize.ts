@@ -59,6 +59,13 @@ export function normalizeObservation(
     ?.map(lower)
     .filter((v): v is string => !!v);
   return {
+    ...(observation.fonts?.version === "local-12-v1" &&
+    /^[01]{12}$/.test(observation.fonts.available)
+      ? { fonts: { ...observation.fonts } }
+      : {}),
+    ...(observation.environment
+      ? { environment: { ...observation.environment } }
+      : {}),
     userAgent: text(observation.userAgent),
     platform: platformFamily(observation.platform, observation.userAgent),
     browser: browserFamily(observation.userAgent),

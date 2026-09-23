@@ -52,6 +52,8 @@ defmodule Janitor.Observation do
       "hardware" => hardware,
       "automation" => raw["automation"],
       "graphics" => nested(raw["graphics"], &lower/1),
+      "fonts" => raw["fonts"],
+      "environment" => raw["environment"],
       "behavior" => behavior
     })
   end
@@ -111,6 +113,21 @@ defmodule Janitor.Observation do
     end
   end
 
+  defp fonts(%{"version" => "local-12-v1", "available" => a}, %{
+         "version" => "local-12-v1",
+         "available" => b
+       }) do
+    if Regex.match?(~r/^[01]{12}$/, a) and Regex.match?(~r/^[01]{12}$/, b) and
+         String.contains?(a, "1") and String.contains?(b, "1") do
+      pairs = Enum.zip(String.codepoints(a), String.codepoints(b))
+
+      Enum.count(pairs, fn {x, y} -> x == "1" and y == "1" end) /
+        Enum.count(pairs, fn {x, y} -> x == "1" or y == "1" end)
+    end
+  end
+
+  defp fonts(_, _), do: nil
+
   defp equal(nil, _), do: nil
   defp equal(_, nil), do: nil
   defp equal(a, b), do: a == b
@@ -126,6 +143,7 @@ defmodule Janitor.Observation do
   def similarity(a, b) do
     features =
       clean(%{
+        "fontSimilarity" => fonts(a["fonts"], b["fonts"]),
         "samePlatform" => equal(a["platform"], b["platform"]),
         "sameBrowser" => equal(a["browser"], b["browser"]),
         "sameTimezone" => equal(a["timezone"], b["timezone"]),

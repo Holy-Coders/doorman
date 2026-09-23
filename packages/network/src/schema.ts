@@ -24,6 +24,15 @@ const baseFeatures = {
   api_gap_cv: range(10),
   api_sequence_repeat_ratio: range(1),
   webdriver: z.union([z.literal(0), z.literal(1)]).optional(),
+  runtime_marker_count: range(8),
+  webdriver_own_property: z.union([z.literal(0), z.literal(1)]).optional(),
+  notification_mismatch: z.union([z.literal(0), z.literal(1)]).optional(),
+  target_sample_count: range(1_000_000),
+  target_center_ratio: range(1),
+  target_corner_ratio: range(1),
+  focus_change_count: range(1_000_000),
+  unfocused_input_ratio: range(1),
+  decoy_activation_count: range(1_000_000),
   mouse_step_mean_px: range(50_000),
   mouse_large_step_ratio: range(1),
   mouse_interval_cv: range(10),
@@ -160,7 +169,15 @@ export type Predicate = {
   value: number;
 };
 export function featureGroup(name: keyof FeatureVector): string {
-  if (name === "webdriver") return "runtime";
+  if (
+    [
+      "webdriver",
+      "runtime_marker_count",
+      "webdriver_own_property",
+      "notification_mismatch",
+    ].includes(name)
+  )
+    return "runtime";
   if (name.startsWith("route_")) return "routes";
   if (name.startsWith("transition_") || name === "api_sequence_repeat_ratio")
     return "sequence";

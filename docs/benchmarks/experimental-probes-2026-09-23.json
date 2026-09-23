@@ -1,0 +1,118 @@
+{
+  "generatedAt": "2026-09-23T19:18:54.807Z",
+  "kind": "controlled-experimental-probes",
+  "hostCount": 1,
+  "versions": {
+    "chromium": "153.0.8010.12",
+    "firefox": "155.0",
+    "webkit": "26.6"
+  },
+  "newJevCalls": 0,
+  "limitations": [
+    "All browser interactions are scripted, with no independently labeled humans or assistant brands",
+    "Headless CDP/no-CDP controls differ in launch defaults and do not isolate every confounder",
+    "Runtime timing is an experiment only, excluded from collector and scoring",
+    "Same-host fonts do not identify a person or establish cross-device identity",
+    "No accuracy claim for new features: third-party datasets do not contain these new probes",
+    "No CDP or screenshot detection rule is promoted"
+  ],
+  "rows": [
+    {
+      "engine": "chromium",
+      "repeatedFontProbeEqual": true,
+      "fontProbeAvailable": true,
+      "matchedFontSimilarity": 1,
+      "screenshotCaptures": 5,
+      "screenshotFocusChanges": 0,
+      "screenshotVisibilityChanges": 0,
+      "centeredMouseSamples": 12,
+      "keyboardAddedMouseSamples": 0,
+      "inertDecoyHiddenFromAccessibilityTree": true,
+      "normalDecoyActivations": 0,
+      "scriptedDecoyActivations": 1,
+      "fontDownloadFailureCount": 1,
+      "unavailableFontApiOmitted": true,
+      "listenersAndDecoyRemoved": true,
+      "nonlocalRequests": 0,
+      "runtimeTimingMs": [
+        0.1,
+        0.1,
+        0.1,
+        0.2,
+        0.1
+      ],
+      "runtimeMarkerCount": 0
+    },
+    {
+      "engine": "firefox",
+      "repeatedFontProbeEqual": true,
+      "fontProbeAvailable": true,
+      "matchedFontSimilarity": 1,
+      "screenshotCaptures": 5,
+      "screenshotFocusChanges": 0,
+      "screenshotVisibilityChanges": 0,
+      "centeredMouseSamples": 12,
+      "keyboardAddedMouseSamples": 0,
+      "inertDecoyHiddenFromAccessibilityTree": true,
+      "normalDecoyActivations": 0,
+      "scriptedDecoyActivations": 1,
+      "fontDownloadFailureCount": 1,
+      "unavailableFontApiOmitted": true,
+      "listenersAndDecoyRemoved": true,
+      "nonlocalRequests": 0,
+      "runtimeTimingMs": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "runtimeMarkerCount": 0
+    },
+    {
+      "engine": "webkit",
+      "repeatedFontProbeEqual": true,
+      "fontProbeAvailable": true,
+      "matchedFontSimilarity": 1,
+      "screenshotCaptures": 5,
+      "screenshotFocusChanges": 0,
+      "screenshotVisibilityChanges": 0,
+      "centeredMouseSamples": 12,
+      "keyboardAddedMouseSamples": 0,
+      "inertDecoyHiddenFromAccessibilityTree": true,
+      "normalDecoyActivations": 0,
+      "scriptedDecoyActivations": 1,
+      "fontDownloadFailureCount": 1,
+      "unavailableFontApiOmitted": true,
+      "listenersAndDecoyRemoved": true,
+      "nonlocalRequests": 0,
+      "runtimeTimingMs": [
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "runtimeMarkerCount": 0
+    },
+    {
+      "engine": "chromium-without-cdp",
+      "captures": 5,
+      "runtimeTimingMs": [
+        0.1,
+        0.1,
+        0.1,
+        0.2,
+        0.2
+      ],
+      "runtimeMarkerCounts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "repeatedFontProbeEqual": true
+    }
+  ]
+}

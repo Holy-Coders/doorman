@@ -77,6 +77,7 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
 /** Use the inbound Worker Request, never cf reconstructed from forwarded headers. */
 export function cloudflareRequestEvidence(
   request: Request,
+  options: { transport?: boolean } = {},
 ): (EdgeEvidence & { provider: "cloudflare" }) | undefined {
   const cf = (
     request as Request & {
@@ -85,12 +86,19 @@ export function cloudflareRequestEvidence(
           score?: unknown;
           verifiedBot?: unknown;
           signedAgent?: unknown;
+          ja4?: unknown;
         };
       };
     }
   ).cf;
   const bot = cf?.botManagement;
   if (!bot) return undefined;
+  const ja4 =
+    options.transport &&
+    typeof bot.ja4 === "string" &&
+    /^[tqd][a-z0-9]{9}_[a-f0-9]{12}_[a-f0-9]{12}$/.test(bot.ja4)
+      ? bot.ja4
+      : undefined;
   const botScore =
     typeof bot.score === "number" &&
     Number.isInteger(bot.score) &&
@@ -105,13 +113,15 @@ export function cloudflareRequestEvidence(
   if (
     botScore === undefined &&
     verifiedBot === undefined &&
-    signedAgent === undefined
+    signedAgent === undefined &&
+    ja4 === undefined
   )
     return undefined;
   return {
     source: "edge",
     provider: "cloudflare",
     observedAt: Date.now(),
+    ...(ja4 ? { ja4 } : {}),
     ...(botScore !== undefined ? { botScore } : {}),
     ...(verifiedBot !== undefined ? { verifiedBot } : {}),
     ...(signedAgent !== undefined ? { signedAgent } : {}),

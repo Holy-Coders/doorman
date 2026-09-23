@@ -78,3 +78,5 @@ You can ask how many evaluated windows looked assistant-operated, which accounts
 The [public benchmark](EXTERNAL-BENCHMARKS.md) compares the old five-feature model with the new measurements using FP-Agent and Balabit, and replays historical browser identity with FP-Stalker. These are research datasets, not proof of your production accuracy. Existing dataset labels do not validate unique-person counts, agent intent or permission.
 
 Use [scoring configuration](SCORING.md) to tune application thresholds. Use the [classifier pipeline](CLASSIFIER.md) to fit numeric models or combine them with versioned Jev features. Neither action fine-tunes Jev itself. New collectors are available; whether they improve detection is a measured outcome, not a product promise.
+
+See [optional detection signals](EXPERIMENTAL-DETECTION.md) for local fonts, runtime/permission probes, target/focus summaries and trusted JA4 evidence. [Linked suspicious activity](LINKED-ACTIVITY.md) correlates server-observed denials across likely related sessions without using IP addresses or merging people. These are opt-in source features with documented experimental limits.

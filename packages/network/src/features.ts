@@ -20,6 +20,17 @@ export function extractFeatures(input: {
   const result: FeatureVector = {};
   if (typeof input.observation?.automation?.webdriver === "boolean")
     result.webdriver = Number(input.observation.automation.webdriver);
+  const environment = input.observation?.environment;
+  if (environment?.runtimeMarkerCount !== undefined)
+    result.runtime_marker_count = environment.runtimeMarkerCount;
+  if (environment?.webdriverOwnProperty !== undefined)
+    result.webdriver_own_property = Number(environment.webdriverOwnProperty);
+  if (environment?.notificationPermission && environment.notificationQuery)
+    result.notification_mismatch = Number(
+      (environment.notificationPermission === "default"
+        ? "prompt"
+        : environment.notificationPermission) !== environment.notificationQuery,
+    );
   const rows =
     input.activity?.buckets
       .slice(0, 128)
@@ -59,6 +70,27 @@ export function extractFeatures(input: {
       );
   }
   const b = input.behavior;
+  if (b && (b.targetSampleCount ?? 0) >= 10) {
+    result.target_sample_count = round(b.targetSampleCount!, 5, 1_000_000);
+    if (b.targetCenterCount !== undefined)
+      result.target_center_ratio = ratio(
+        b.targetCenterCount / b.targetSampleCount!,
+      );
+    if (b.targetCornerCount !== undefined)
+      result.target_corner_ratio = ratio(
+        b.targetCornerCount / b.targetSampleCount!,
+      );
+  }
+  if (b && (b.focusSampleCount ?? 0) >= 10) {
+    if (b.focusChangeCount !== undefined)
+      result.focus_change_count = round(b.focusChangeCount, 5, 1_000_000);
+    if (b.unfocusedInputCount !== undefined)
+      result.unfocused_input_ratio = ratio(
+        b.unfocusedInputCount / b.focusSampleCount!,
+      );
+  }
+  if (b?.decoyActivationCount !== undefined)
+    result.decoy_activation_count = round(b.decoyActivationCount, 1, 1_000_000);
   // Missing APIs and sparse observations stay missing, rather than becoming bot evidence.
   if (
     b &&

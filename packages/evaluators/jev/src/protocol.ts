@@ -56,6 +56,20 @@ export function compactObservation(observation: NormalizedObservation) {
     behavior,
   } = observation;
   return {
+    ...(observation.fonts ? { fonts: observation.fonts } : {}),
+    ...(observation.environment
+      ? { environment: observation.environment }
+      : {}),
+    ...(observation.environment ||
+    observation.fonts ||
+    behavior?.targetSampleCount !== undefined ||
+    behavior?.focusSampleCount !== undefined ||
+    behavior?.decoyActivationCount !== undefined
+      ? {
+          environmentCaveat:
+            "Experimental client claims. Runtime markers and permission states are spoofable and can reflect extensions, browser policy or tests. Page font failures are normal. Focus changes do not detect screenshots. Target alignment and decoys do not establish AI, intent or abuse. Fonts compare environments, never people; missing fonts may be privacy filtering.",
+        }
+      : {}),
     platform,
     browser,
     timezone,

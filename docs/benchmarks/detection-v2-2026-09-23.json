@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-23T18:43:55.808Z",
+  "generatedAt": "2026-09-23T19:17:04.053Z",
   "comparison": "behavior-v1 versus behavior-v2 on the same published groups and splits",
   "sourceDigests": {
     "packages/browser/src/behavior.ts": "ecd6579d99688e8f33747a681bdedd3a080dc4ba84df97e0c335aad5206cca8f",
-    "packages/network/src/features.ts": "ee12fedf7f918e05261ceec7eccb1b183b9830c9fd10e44bb17af71b463926dd",
+    "packages/network/src/features.ts": "c2b21c3db701bfb636a71320531f53b360628162842cee986d4a299db55f6600",
     "scripts/benchmarks/external/behavior.ts": "ef98fcc43477dcae52f6290a880eabf7d7625667944b8b032c3ea696ee1dcd93",
     "tools/benchmarks/evaluate.py": "c2983bb1a13935b0bfd961bfd1f941e4a6420ed4d67ba9ccc6213c9922616458",
     "tools/benchmarks/prepare.py": "a15caedee0475dd01d5adf64578cc8642d6cc9c3cc83d37eb75098505e670cac",
@@ -23,8 +23,8 @@
   "identity": {
     "version": 1,
     "featureSet": "behavior-v1",
-    "generatedAt": "2026-09-23T18:36:56.093Z",
-    "revision": "6d30a46444fa8cc4464a2b12f60260c4e8afa575",
+    "generatedAt": "2026-09-23T19:12:42.231Z",
+    "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
     "worktreeModified": true,
     "provenance": {
       "url": "https://github.com/Spirals-Team/FPStalker",
@@ -101,8 +101,8 @@
     "baseline": {
       "version": 1,
       "featureSet": "behavior-v1",
-      "generatedAt": "2026-09-23T18:37:44.857Z",
-      "revision": "6d30a46444fa8cc4464a2b12f60260c4e8afa575",
+      "generatedAt": "2026-09-23T19:13:30.009Z",
+      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/ethanbwang/fp-agent",
@@ -1481,8 +1481,8 @@
     "extended": {
       "version": 1,
       "featureSet": "behavior-v2",
-      "generatedAt": "2026-09-23T18:41:43.521Z",
-      "revision": "6d30a46444fa8cc4464a2b12f60260c4e8afa575",
+      "generatedAt": "2026-09-23T19:14:33.700Z",
+      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/ethanbwang/fp-agent",
@@ -2952,8 +2952,8 @@
     "baseline": {
       "version": 1,
       "featureSet": "behavior-v1",
-      "generatedAt": "2026-09-23T18:37:53.602Z",
-      "revision": "6d30a46444fa8cc4464a2b12f60260c4e8afa575",
+      "generatedAt": "2026-09-23T19:13:38.710Z",
+      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/balabit/Mouse-Dynamics-Challenge",
@@ -3084,8 +3084,8 @@
     "extended": {
       "version": 1,
       "featureSet": "behavior-v2",
-      "generatedAt": "2026-09-23T18:41:01.298Z",
-      "revision": "6d30a46444fa8cc4464a2b12f60260c4e8afa575",
+      "generatedAt": "2026-09-23T19:14:46.488Z",
+      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/balabit/Mouse-Dynamics-Challenge",
@@ -3221,7 +3221,7 @@
   },
   "jevReplay": {
     "version": 1,
-    "generatedAt": "2026-09-23T18:41:30.982Z",
+    "generatedAt": "2026-09-23T19:15:03.525Z",
     "model": "jev-1.13.0",
     "transport": "Cloudflare AI REST /ai/run; typesafe/jev; default gateway",
     "sampling": "Frozen hash-selected pilot; no prompt changes or threshold tuning on these cases",

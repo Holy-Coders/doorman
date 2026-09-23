@@ -85,6 +85,18 @@
     "title": "Add features",
     "pages": [
       {
+        "slug": "detection",
+        "title": "Optional detection signals",
+        "description": "Local fonts, runtime observations, target and focus summaries, and trusted transport evidence.",
+        "source": "docs/EXPERIMENTAL-DETECTION.md"
+      },
+      {
+        "slug": "linked-activity",
+        "title": "Link suspicious activity",
+        "description": "Assess related sessions using request patterns and application references without merging people.",
+        "source": "docs/LINKED-ACTIVITY.md"
+      },
+      {
         "slug": "api-activity",
         "title": "Understand API activity",
         "description": "Add optional Phoenix or Web middleware, assess API behavior with Jev and enrich your existing analytics.",
@@ -243,6 +255,12 @@
         "title": "Training design and research",
         "description": "The primary sources behind the training, validation and rollout choices.",
         "source": "docs/CLASSIFIER-RESEARCH.md"
+      },
+      {
+        "slug": "detection-research",
+        "title": "Detection research status",
+        "description": "What we implemented, what we tested, and what has not earned a scoring rule.",
+        "source": "docs/DETECTION-RESEARCH-BACKLOG.md"
       }
     ]
   },

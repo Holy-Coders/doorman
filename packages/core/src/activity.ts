@@ -2,10 +2,22 @@ import { isProbability } from "./intelligence.js";
 
 /** Application-owned references. Never populate from arbitrary client claims. */
 export type ApiActivityKey = { kind: "session" | "actor"; id: string };
+export type ApiActivityCorrelation = {
+  id: string;
+  basis: "browser-match" | "request-pattern" | "verified-identifier";
+  confidence: number;
+};
+export type RelatedApiActivity = {
+  basis: ApiActivityCorrelation["basis"];
+  confidence: number;
+  summary: ApiActivitySummary;
+};
 export type ApiActivityContext = {
   key: ApiActivityKey;
   /** A configured route template, never the incoming URL. */
   route: string;
+  /** Server-derived hypotheses only. Never an authenticated identity or a client body field. */
+  correlations?: ApiActivityCorrelation[];
   /** Supplied only after the application verifies credentials and delegation. */
   actor?: { kind: "person" | "agent"; delegated: boolean };
 };
@@ -42,6 +54,7 @@ export type ApiActivityInput = {
   activity: ApiActivitySummary;
   route: string;
   sensitive: boolean;
+  relatedActivity?: RelatedApiActivity[];
   actor?: ApiActivityContext["actor"];
 };
 export type ApiActivityRisk = { automation: number; suspicious: number };
@@ -52,6 +65,7 @@ export type ApiActivityAssessment = {
   risk: ApiActivityRisk;
   riskStatus: "evaluated" | "unavailable" | "disabled";
   summary: ApiActivitySummary;
+  relatedActivity?: RelatedApiActivity[];
   cached: boolean;
 };
 export type ApiActivityResult = {

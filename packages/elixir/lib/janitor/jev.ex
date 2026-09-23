@@ -74,7 +74,19 @@ defmodule Janitor.Jev do
       "colorDepth" => get_in(o, ["screen", "colorDepth"]),
       "pixelRatio" => get_in(o, ["screen", "pixelRatio"]),
       "viewport" => o["viewport"],
-      "behavior" => o["behavior"]
+      "behavior" => o["behavior"],
+      "fonts" => o["fonts"],
+      "environment" => o["environment"],
+      "environmentCaveat" =>
+        if(
+          o["environment"] || o["fonts"] ||
+            Enum.any?(
+              ~w(targetSampleCount focusSampleCount decoyActivationCount),
+              &Map.has_key?(o["behavior"] || %{}, &1)
+            ),
+          do:
+            "Experimental client claims. Runtime markers and permission states are spoofable and can reflect extensions, browser policy or tests. Page font failures are normal. Focus changes do not detect screenshots. Target alignment and decoys do not establish AI, intent or abuse. Fonts compare environments, never people; missing fonts may be privacy filtering."
+        )
     }
     |> Map.merge(o["hardware"] || %{})
     |> Map.merge(o["automation"] || %{})

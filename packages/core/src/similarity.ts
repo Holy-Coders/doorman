@@ -2,6 +2,8 @@ import type { NormalizedObservation } from "./types.js";
 
 // Identity weights only. Automation and behavior never affect identity similarity.
 export const SIMILARITY_WEIGHTS = Object.freeze({
+  // Opt-in server weight; fonts cannot satisfy minimum evidence coverage alone.
+  fontSimilarity: 0,
   samePlatform: 0.18,
   sameBrowser: 0.12,
   sameTimezone: 0.05,
@@ -50,6 +52,7 @@ export function resolveSimilarityWeights(
 }
 
 export type SimilarityFeatures = {
+  fontSimilarity?: number;
   samePlatform?: boolean;
   sameBrowser?: boolean;
   sameTimezone?: boolean;
@@ -63,6 +66,29 @@ export type SimilarityFeatures = {
   sameWebglRenderer?: boolean;
   webdriverDetected?: boolean;
 };
+function fonts(
+  a: NormalizedObservation,
+  b: NormalizedObservation,
+): number | undefined {
+  if (
+    !a.fonts ||
+    !b.fonts ||
+    a.fonts.version !== b.fonts.version ||
+    !/^[01]{12}$/.test(a.fonts.available) ||
+    !/^[01]{12}$/.test(b.fonts.available) ||
+    !a.fonts.available.includes("1") ||
+    !b.fonts.available.includes("1")
+  )
+    return undefined;
+  let intersection = 0,
+    union = 0;
+  for (let i = 0; i < 12; i++) {
+    if (a.fonts.available[i] === "1" || b.fonts.available[i] === "1") union++;
+    if (a.fonts.available[i] === "1" && b.fonts.available[i] === "1")
+      intersection++;
+  }
+  return intersection / union;
+}
 const equal = <T>(a: T | undefined, b: T | undefined) =>
   a === undefined || b === undefined ? undefined : a === b;
 const ratio = (a: number, b: number) =>
@@ -110,6 +136,7 @@ export function calculateSimilarity(
   features: SimilarityFeatures;
 } {
   const features: SimilarityFeatures = {
+    fontSimilarity: fonts(a, b),
     samePlatform: equal(a.platform, b.platform),
     sameBrowser: equal(a.browser, b.browser),
     sameTimezone: equal(a.timezone, b.timezone),

@@ -72,6 +72,65 @@
           }
         ]
       },
+      "runtime_marker_count": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 8
+      },
+      "webdriver_own_property": {
+        "anyOf": [
+          {
+            "type": "number",
+            "const": 0
+          },
+          {
+            "type": "number",
+            "const": 1
+          }
+        ]
+      },
+      "notification_mismatch": {
+        "anyOf": [
+          {
+            "type": "number",
+            "const": 0
+          },
+          {
+            "type": "number",
+            "const": 1
+          }
+        ]
+      },
+      "target_sample_count": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1000000
+      },
+      "target_center_ratio": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "target_corner_ratio": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "focus_change_count": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1000000
+      },
+      "unfocused_input_ratio": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "decoy_activation_count": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1000000
+      },
       "mouse_step_mean_px": {
         "type": "number",
         "minimum": 0,
@@ -495,6 +554,65 @@
                 "const": 1
               }
             ]
+          },
+          "runtime_marker_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "webdriver_own_property": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 1
+              }
+            ]
+          },
+          "notification_mismatch": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 1
+              }
+            ]
+          },
+          "target_sample_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "target_center_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "target_corner_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "focus_change_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "unfocused_input_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "decoy_activation_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
           },
           "mouse_step_mean_px": {
             "type": "number",
@@ -995,6 +1113,65 @@
               }
             ]
           },
+          "runtime_marker_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "webdriver_own_property": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 1
+              }
+            ]
+          },
+          "notification_mismatch": {
+            "anyOf": [
+              {
+                "type": "number",
+                "const": 0
+              },
+              {
+                "type": "number",
+                "const": 1
+              }
+            ]
+          },
+          "target_sample_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "target_center_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "target_corner_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "focus_change_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "unfocused_input_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "decoy_activation_count": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
           "mouse_step_mean_px": {
             "type": "number",
             "minimum": 0,
@@ -1449,6 +1626,15 @@
                       "api_gap_cv",
                       "api_sequence_repeat_ratio",
                       "webdriver",
+                      "runtime_marker_count",
+                      "webdriver_own_property",
+                      "notification_mismatch",
+                      "target_sample_count",
+                      "target_center_ratio",
+                      "target_corner_ratio",
+                      "focus_change_count",
+                      "unfocused_input_ratio",
+                      "decoy_activation_count",
                       "mouse_step_mean_px",
                       "mouse_large_step_ratio",
                       "mouse_interval_cv",

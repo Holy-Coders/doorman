@@ -24,6 +24,25 @@ export const payloadSchema = z.strictObject({
         maxTouchPoints: z.number().int().min(0).max(256).optional(),
       })
       .optional(),
+    fonts: z
+      .strictObject({
+        version: z.literal("local-12-v1"),
+        available: z.string().regex(/^[01]{12}$/),
+      })
+      .optional(),
+    environment: z
+      .strictObject({
+        runtimeMarkerCount: z.number().int().min(0).max(8).optional(),
+        webdriverOwnProperty: z.boolean().optional(),
+        notificationPermission: z
+          .enum(["default", "granted", "denied"])
+          .optional(),
+        notificationQuery: z.enum(["prompt", "granted", "denied"]).optional(),
+        pageFontsLoaded: z.number().int().min(0).max(100).optional(),
+        pageFontsLoading: z.number().int().min(0).max(100).optional(),
+        pageFontsFailed: z.number().int().min(0).max(100).optional(),
+      })
+      .optional(),
     automation: z
       .strictObject({ webdriver: z.boolean().optional() })
       .optional(),
@@ -42,6 +61,13 @@ export const payloadSchema = z.strictObject({
       keyDownCount: count,
       scrollCount: count,
       visibilityChangeCount: count,
+      targetSampleCount: count.optional(),
+      targetCenterCount: count.optional(),
+      targetCornerCount: count.optional(),
+      focusChangeCount: count.optional(),
+      focusSampleCount: count.optional(),
+      unfocusedInputCount: count.optional(),
+      decoyActivationCount: count.optional(),
       mouseDistancePx: z.number().int().min(0).max(1_000_000_000).optional(),
       mouseActiveMs: z.number().int().min(0).max(1_000_000_000).optional(),
       mouseSampleCount: count.optional(),
