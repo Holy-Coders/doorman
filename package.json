@@ -26,7 +26,8 @@
     "benchmark:scale": "pnpm build && tsx scripts/benchmark-scale.ts",
     "benchmark:security": "pnpm build && tsx scripts/benchmarks/security.ts",
     "benchmark:connections:build": "pnpm build && pnpm --filter @janitor/example-node exec esbuild ../../scripts/benchmarks/connections-server.ts --bundle --platform=node --format=esm --external:pg-native --banner:js='import { createRequire } from \"node:module\"; const require = createRequire(import.meta.url);' --outfile=../../artifacts/benchmarks/server.mjs && pnpm --filter @janitor/example-node exec esbuild ../../scripts/benchmarks/connections-client.ts --bundle --platform=node --format=esm --outfile=../../artifacts/benchmarks/client.mjs",
-    "benchmark:capacity": "bash scripts/benchmarks/run-local.sh"
+    "benchmark:capacity": "bash scripts/benchmarks/run-local.sh",
+    "classifier": "tsx scripts/classifier.ts"
   },
   "devDependencies": {
     "@amplitude/analytics-browser": "^2.46.0",

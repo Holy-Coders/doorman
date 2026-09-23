@@ -24,6 +24,7 @@ An operator must provision the tenant, enable its evaluation preference, and con
 
 - [Connect, contribute and confirm outcomes](https://github.com/Holy-Coders/janitor/blob/main/docs/NETWORK-CLIENT.md)
 - [Discovery, validation and limitations](https://github.com/Holy-Coders/janitor/blob/main/docs/LEARNING-NETWORK.md)
+- [Train and evaluate a classifier](https://github.com/Holy-Coders/janitor/blob/main/docs/CLASSIFIER.md) — optional `network.classify(features)`, separate assistant/abuse targets, private shadow/canary results.
 - [Postgres deployment](https://github.com/Holy-Coders/janitor/tree/main/examples/learning-service)
 - [Cloudflare D1 deployment](https://github.com/Holy-Coders/janitor/tree/main/examples/learning-worker)
 - [Versioned HTTP schema for other languages](https://github.com/Holy-Coders/janitor/blob/main/protocol/network.schema.json)

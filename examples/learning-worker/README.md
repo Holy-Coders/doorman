@@ -64,3 +64,7 @@ To deliberately enable paid inference, set `JEV_ENABLED` to `"true"` and configu
 The example disables Workers observability logs to avoid retaining request metadata. If you enable infrastructure logs, review their contents and retention separately. Never log authorization headers, complete summaries, raw session IDs or operator API responses. Authenticated erasure remains available after the ingestion quota is exhausted. Hourly cleanup removes four bounded pages (up to 2,000 expired samples per run); larger installations must call `/operator/cleanup` often enough to clear their retention backlog. Discovery runs separately at 03:15 UTC when its holdout manifest is configured.
 
 This deployment is a bounded pilot, not a benchmark demonstrating hundreds of thousands of concurrent inference requests. Ordinary Janitor identity handling remains independent of it.
+
+## Optional supervised classifier
+
+Apply both `0001_network.sql` and `0002_classifiers.sql` through the migration command before upgrading. The service now accepts private `POST /v1/classify` requests and separate operator `/operator/classifier/export`, `/stage`, `/promote` and `/rollback` actions. Training remains offline; the scheduled Worker never starts it. Jev feature calls share the existing inference quotas and require the exact reported model pin. [Follow the classifier guide](../../docs/CLASSIFIER.md) to run the free generated-data demo or prepare a reviewed real-data pilot.

@@ -1,3 +1,5 @@
+import { classifierAssessmentSchema } from "./classifier-schema.js";
+import type { ClassifierAssessment } from "./classifier-schema.js";
 import { isIdentityAttribution } from "@janitor/core";
 import type { VisitorEvaluator, IdentityAttribution } from "@janitor/core";
 import { z } from "zod";
@@ -158,6 +160,24 @@ export function createNetworkClient(options: NetworkClientOptions) {
     }
   }
   return {
+    /** Separate learned targets. A score never authenticates or authorizes an actor. */
+    async classify(features: FeatureVector): Promise<ClassifierAssessment> {
+      try {
+        return classifierAssessmentSchema.parse(
+          await send("/v1/classify", {
+            version: 1,
+            features: parseFeatures(features),
+          }),
+        );
+      } catch {
+        return {
+          version: 1,
+          status: "unavailable",
+          cached: false,
+          predictions: [],
+        };
+      }
+    },
     /** Explicit remote evaluation only; results stay private unless your application exposes them. */
     async evaluate(features: FeatureVector): Promise<NetworkAssessment> {
       try {

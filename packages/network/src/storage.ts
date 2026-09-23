@@ -1,4 +1,10 @@
 import type {
+  ClassifierAssessment,
+  ClassifierModel,
+} from "./classifier-schema.js";
+import { classifierAssessmentSchema } from "./classifier-schema.js";
+import { validateClassifierReport } from "./classifier-evaluation.js";
+import type {
   Contribution,
   Feedback,
   NetworkAssessment,
@@ -20,7 +26,29 @@ export type StoredModel = {
   canaryPercent: number;
   status: "shadow" | "canary";
 };
+export type StoredClassifier = {
+  model: ClassifierModel;
+  status: "shadow" | "canary";
+  canaryPercent: number;
+};
 export interface NetworkStorage {
+  saveClassifier(model: ClassifierModel): Promise<void>;
+  latestClassifier(
+    now: number,
+    target: Target,
+  ): Promise<StoredClassifier | undefined>;
+  promoteClassifier(id: string, percent: number, now: number): Promise<void>;
+  rollbackClassifier(id: string): Promise<void>;
+  cachedClassifier(
+    key: string,
+    now: number,
+  ): Promise<ClassifierAssessment | undefined>;
+  saveClassification(
+    key: string,
+    lease: string,
+    result: ClassifierAssessment,
+    expiresAt: number,
+  ): Promise<void>;
   registerTenant(input: Tenant & { keyHash: string }): Promise<void>;
   authenticate(keyHash: string): Promise<Tenant | undefined>;
   preferences(tenantId: string, value: NetworkPreferences): Promise<void>;
@@ -49,7 +77,7 @@ export interface NetworkStorage {
     split?: Pick<
       DiscoveryOptions,
       "trainingBefore" | "validationBefore" | "holdoutTenants"
-    >,
+    > & { calibrationBefore?: number },
   ): Promise<{
     rows: TrainingRow[];
     revision: number;
@@ -255,7 +283,7 @@ export function createNetworkStorage(db: NetworkDatabase): NetworkStorage {
         "SELECT id FROM jn_tenants WHERE contribution=1 AND training=1 ORDER BY id LIMIT 11",
       );
       const rows: TrainingRow[] = [];
-      const truncated = tenants.length > 10;
+      let truncated = tenants.length > 10;
       let sampled = false;
       // Indexed per-tenant cap prevents one contributor dominating retrieval.
       for (const tenant of tenants.slice(0, 10)) {
@@ -264,16 +292,31 @@ export function createNetworkStorage(db: NetworkDatabase): NetworkStorage {
             ? [[split.validationBefore, now + 1, now + 1]]
             : [
                 [0, split.trainingBefore, split.trainingBefore],
-                [
-                  split.trainingBefore,
-                  split.validationBefore,
-                  split.validationBefore,
-                ],
+                ...(split.calibrationBefore
+                  ? [
+                      [
+                        split.trainingBefore,
+                        split.calibrationBefore,
+                        split.calibrationBefore,
+                      ],
+                      [
+                        split.calibrationBefore,
+                        split.validationBefore,
+                        split.validationBefore,
+                      ],
+                    ]
+                  : [
+                      [
+                        split.trainingBefore,
+                        split.validationBefore,
+                        split.validationBefore,
+                      ],
+                    ]),
               ]
           : [[0, now + 1, now + 1]];
         for (const [from, until, confirmedBefore] of ranges) {
           const samples = await db.query(
-            "SELECT s.*,l.target,l.positive,l.confirmed_at FROM jn_samples s JOIN jn_labels l ON s.tenant_id=l.tenant_id AND s.id=l.sample_id WHERE s.tenant_id=? AND s.training_allowed=1 AND s.expires_at>? AND l.target=? AND l.disputed=0 AND s.observed_at>=? AND s.observed_at<? AND l.confirmed_at<? ORDER BY s.observed_at DESC,s.id LIMIT 501",
+            "SELECT s.*,l.target,l.positive,l.confirmed_at,l.source,l.evidence_ref FROM jn_samples s JOIN jn_labels l ON s.tenant_id=l.tenant_id AND s.id=l.sample_id WHERE s.tenant_id=? AND s.training_allowed=1 AND s.expires_at>? AND l.target=? AND l.disputed=0 AND s.observed_at>=? AND s.observed_at<? AND l.confirmed_at<? ORDER BY s.observed_at DESC,s.id LIMIT 501",
             [tenant.id, now, target, from, until, confirmedBefore],
           );
           sampled ||= samples.length > 500;
@@ -290,6 +333,8 @@ export function createNetworkStorage(db: NetworkDatabase): NetworkStorage {
               target: r.target as Target,
               positive: !!Number(r.positive),
               confirmedAt: Number(r.confirmed_at),
+              source: r.source as TrainingRow["source"],
+              evidenceReference: String(r.evidence_ref),
               expiresAt: Number(r.expires_at),
             })),
           );
@@ -297,7 +342,13 @@ export function createNetworkStorage(db: NetworkDatabase): NetworkStorage {
       }
       if (before !== (await this.revision()))
         throw new Error("Dataset changed during export; retry");
-      return { rows, revision: before, truncated, sampled };
+      truncated ||= rows.length > 10000;
+      return {
+        rows: rows.slice(0, 10000),
+        revision: before,
+        truncated,
+        sampled,
+      };
     },
     async saveModel(model) {
       if (model.datasetRevision !== (await this.revision()))
@@ -393,6 +444,104 @@ export function createNetworkStorage(db: NetworkDatabase): NetworkStorage {
         [JSON.stringify(result), expiresAt, key, lease],
       );
     },
+    async saveClassifier(input) {
+      const model = validateClassifierReport(input),
+        m = model.manifest;
+      if (
+        m.origin !== "observed" ||
+        m.expiresAt <= Date.now() ||
+        m.revision !== (await this.revision())
+      )
+        throw new Error("Expired, synthetic or revoked evidence");
+      const inserted = await db.query(
+        "INSERT INTO jn_classifiers (id,created_at,expires_at,revision,target,status,canary,payload) SELECT ?,?,?,?,?,'shadow',0,? WHERE ?=(SELECT revision FROM jn_meta WHERE id=1) RETURNING id",
+        [
+          model.id,
+          Date.now(),
+          m.expiresAt,
+          m.revision,
+          m.split.target,
+          JSON.stringify(model),
+          m.revision,
+        ],
+      );
+      if (!inserted.length)
+        throw new Error("Dataset changed while staging classifier");
+    },
+    async latestClassifier(now, target) {
+      const row = (
+        await db.query(
+          "SELECT c.* FROM jn_classifiers c JOIN jn_meta g ON g.revision=c.revision WHERE c.expires_at>? AND c.target=? AND c.status IN ('shadow','canary') ORDER BY CASE WHEN c.status='canary' THEN 0 ELSE 1 END,c.created_at DESC LIMIT 1",
+          [now, target],
+        )
+      )[0];
+      return row
+        ? {
+            model: validateClassifierReport(JSON.parse(String(row.payload))),
+            status: row.status as "shadow" | "canary",
+            canaryPercent: Number(row.canary),
+          }
+        : undefined;
+    },
+    async promoteClassifier(id, percent, now) {
+      if (!Number.isInteger(percent) || percent < 1 || percent > 100)
+        throw new Error("Invalid canary percentage");
+      const row = (
+        await db.query(
+          "SELECT payload FROM jn_classifiers WHERE id=? AND status!='retired'",
+          [id],
+        )
+      )[0];
+      if (!row) throw new Error("Unknown classifier");
+      const model = validateClassifierReport(JSON.parse(String(row.payload)));
+      if (
+        !model.eligible ||
+        model.manifest.expiresAt <= now ||
+        model.manifest.revision !== (await this.revision())
+      )
+        throw new Error("Classifier did not pass promotion gates");
+      await db.atomic([
+        {
+          sql: "UPDATE jn_classifiers SET status='retired' WHERE target=? AND status='canary'",
+          args: [model.manifest.split.target],
+        },
+        {
+          sql: "UPDATE jn_classifiers SET status='canary',canary=? WHERE id=? AND revision=(SELECT revision FROM jn_meta WHERE id=1)",
+          args: [percent, id],
+        },
+      ]);
+    },
+    async rollbackClassifier(id) {
+      await db.query(
+        "UPDATE jn_classifiers SET status='retired',canary=0 WHERE id=?",
+        [id],
+      );
+    },
+    async cachedClassifier(key, now) {
+      const row = (
+        await db.query(
+          "SELECT result FROM jn_cache WHERE key=? AND expires_at>? AND result IS NOT NULL",
+          [key, now],
+        )
+      )[0];
+      return row
+        ? classifierAssessmentSchema.parse({
+            ...JSON.parse(String(row.result)),
+            cached: true,
+          })
+        : undefined;
+    },
+    async saveClassification(key, lease, result, expiresAt) {
+      await db.query(
+        "UPDATE jn_cache SET result=?,expires_at=? WHERE key=? AND lease=?",
+        [
+          JSON.stringify(classifierAssessmentSchema.parse(result)),
+          expiresAt,
+          key,
+          lease,
+        ],
+      );
+    },
     async cleanup(now) {
       await db.atomic([
         {
@@ -408,6 +557,7 @@ export function createNetworkStorage(db: NetworkDatabase): NetworkStorage {
           args: [now],
         },
         { sql: "DELETE FROM jn_models WHERE expires_at<=?", args: [now] },
+        { sql: "DELETE FROM jn_classifiers WHERE expires_at<=?", args: [now] },
       ]);
     },
   };

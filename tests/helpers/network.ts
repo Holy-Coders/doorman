@@ -2,19 +2,24 @@ import { PGlite } from "@electric-sql/pglite";
 import { Pool } from "pg";
 import { createPostgresNetworkStorage } from "../../packages/network/src/postgres.js";
 import { Miniflare } from "miniflare";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { createNetworkStorage } from "../../packages/network/src/storage.js";
 import { createD1NetworkStorage } from "../../packages/network/src/d1.js";
 import type { NetworkD1Database } from "../../packages/network/src/d1.js";
 import type { TrainingRow } from "../../packages/network/src/schema.js";
 export async function networkBackend(kind: "postgres" | "d1") {
-  const sql = await readFile(
-    new URL(
-      "../../packages/network/migrations/0001_network.sql",
-      import.meta.url,
-    ),
-    "utf8",
+  const directory = new URL(
+    "../../packages/network/migrations/",
+    import.meta.url,
   );
+  const sql = (
+    await Promise.all(
+      (await readdir(directory))
+        .filter((n) => n.endsWith(".sql"))
+        .sort()
+        .map((n) => readFile(new URL(n, directory), "utf8")),
+    )
+  ).join("\n");
   if (kind === "postgres") {
     if (process.env.NETWORK_TEST_DATABASE_URL) {
       const connectionString = process.env.NETWORK_TEST_DATABASE_URL;

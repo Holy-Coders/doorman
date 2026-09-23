@@ -1,3 +1,8 @@
+import {
+  classifierAssessmentSchema,
+  classifierDatasetSchema,
+  classifierModelSchema,
+} from "../packages/network/src/classifier-schema.js";
 import { writeFileSync, mkdirSync, copyFileSync } from "node:fs";
 import { z } from "zod";
 import { payloadSchema } from "../packages/adapters/src/validation.js";
@@ -38,6 +43,21 @@ writeFileSync(
       preferences: z.toJSONSchema(preferencesSchema),
       evaluation: z.toJSONSchema(evaluationSchema),
       assessment: z.toJSONSchema(assessmentSchema),
+    },
+    null,
+    2,
+  ) + "\n",
+);
+writeFileSync(
+  "protocol/classifier.schema.json",
+  JSON.stringify(
+    {
+      version: 1,
+      description:
+        "Operator training artifacts and private /v1/classify response. Additional semantic constraints are enforced by Janitor.",
+      dataset: z.toJSONSchema(classifierDatasetSchema),
+      model: z.toJSONSchema(classifierModelSchema),
+      assessment: z.toJSONSchema(classifierAssessmentSchema),
     },
     null,
     2,

@@ -207,6 +207,18 @@
         "title": "Identity research",
         "description": "What browser-identity studies and other security products can teach us.",
         "source": "docs/RESEARCH.md"
+      },
+      {
+        "slug": "classifier",
+        "title": "Train a classifier",
+        "description": "Learn from confirmed outcomes, compare Jev features, and roll out a private model.",
+        "source": "docs/CLASSIFIER.md"
+      },
+      {
+        "slug": "classifier-research",
+        "title": "Training design and research",
+        "description": "The primary sources behind the training, validation and rollout choices.",
+        "source": "docs/CLASSIFIER-RESEARCH.md"
       }
     ]
   },

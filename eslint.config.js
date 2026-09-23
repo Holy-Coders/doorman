@@ -13,6 +13,7 @@ export default tseslint.config(
       "**/.astro/**",
       "**/public/visitor.js",
       "artifacts/**",
+      "**/.venv/**",
       "test-results/**",
       "playwright-report/**",
     ],

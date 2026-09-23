@@ -48,6 +48,8 @@ With Jev and the identity directory configured, `learning: { enabled: true, coll
 
 The separate opt-in [learning service](docs/LEARNING-NETWORK.md) can discover recurring assistant and abuse patterns from sampled summaries and independently confirmed outcomes. It includes authenticated ingestion, Postgres/D1 storage, readable pattern discovery, future-session/application holdouts, shadow/canary rollout and erasure. Remote evaluation, contribution and training are separate choices; ordinary installations send it no data. This pilot is available from source and has not established real-world detection accuracy.
 
+The [classifier pipeline](docs/CLASSIFIER.md) now compares numeric logistic and boosted-tree models, with optional versioned Jev features. It trains offline and serves private assistant/abuse assessments in TypeScript. Start with `pnpm classifier demo`: 3,000 generated sessions, no paid calls, and models that cannot qualify for production promotion. [Research and limits](docs/CLASSIFIER-RESEARCH.md).
+
 ## Choose your server
 
 ### Cloudflare Workers

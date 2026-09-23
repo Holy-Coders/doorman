@@ -2,6 +2,7 @@ import {
   createLearningService,
   createLearningOperator,
   createWorkersNetworkEvaluator,
+  createWorkersClassifierEvaluator,
 } from "@janitor/network/server";
 import { createD1NetworkStorage } from "@janitor/network/d1";
 import type { NetworkD1Database } from "@janitor/network/d1";
@@ -22,6 +23,10 @@ function service(env: Env) {
     evaluator:
       env.JEV_ENABLED === "true"
         ? createWorkersNetworkEvaluator(env.AI)
+        : undefined,
+    classifierEvaluator:
+      env.JEV_ENABLED === "true"
+        ? createWorkersClassifierEvaluator(env.AI)
         : undefined,
     evaluatorVersion: "jev-network-questions-v1",
     maxEvaluationsPerDay: Number(env.MAX_EVALUATIONS_PER_DAY ?? 0),

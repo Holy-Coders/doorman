@@ -26,3 +26,10 @@ export type {
   PatternEvidence,
   Cohort,
 } from "./schema.js";
+
+export type {
+  ClassifierAssessment,
+  ClassifierModel,
+  ClassifierDataset,
+  JevFeatureResult,
+} from "./classifier-schema.js";

@@ -105,3 +105,7 @@ The deployment examples start with model spending disabled. An operator must con
 Run `pnpm benchmark:network` for a synthetic discovery experiment. It compares a timing-only rule with a discovered pair and deliberately introduces human sessions that mimic the assistant pattern. The expected result is that the mimicked pattern fails promotion. These are generated fixtures, not evidence of real-world bot-detection accuracy.
 
 The first real evaluation should include multiple independently operated applications, confirmed assistants, reviewed human sessions, privacy/accessibility cohorts and enough negative traffic to measure false positives. The pilot has not established those production accuracy results yet.
+
+## Train a supervised classifier
+
+The learning service also supports an offline classifier pipeline. Compare telemetry-only logistic/boosted-tree models with optional Jev features, using independently confirmed outcomes and a separate calibration window. Private `network.classify(features)` results describe assistant and abuse targets; they do not replace authentication or the existing risk result. Follow [Train a Janitor classifier](CLASSIFIER.md) for setup, validation, budgets and rollback.

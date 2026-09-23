@@ -113,3 +113,7 @@ Stop scheduling contributions in your application before revocation. `contributo
 Use `contributor.erase(sampleId)` to erase one contributed snapshot or `contributor.erase()` to erase all of your participant's contributions. Retain the mapping needed to include this in account/session deletion. Erasure remains available after the daily ingestion quota is exhausted. Backups and separately exported data require their own deletion policy.
 
 See [how discovery and validation work](LEARNING-NETWORK.md) before using a pattern match in application policy.
+
+## Train a supervised classifier
+
+The learning service also supports an offline classifier pipeline. Compare telemetry-only logistic/boosted-tree models with optional Jev features, using independently confirmed outcomes and a separate calibration window. Private `network.classify(features)` results describe assistant and abuse targets; they do not replace authentication or the existing risk result. Follow [Train a Janitor classifier](CLASSIFIER.md) for setup, validation, budgets and rollback.

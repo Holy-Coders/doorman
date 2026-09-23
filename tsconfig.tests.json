@@ -3,5 +3,11 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["tests/**/*.ts", "scripts/benchmarks/**/*.ts", "vitest.config.ts"]
+  "include": [
+    "tests/**/*.ts",
+    "scripts/benchmarks/**/*.ts",
+    "vitest.config.ts",
+    "scripts/classifier.ts",
+    "scripts/classifier/**/*.ts"
+  ]
 }

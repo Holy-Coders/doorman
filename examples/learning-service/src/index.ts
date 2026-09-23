@@ -4,6 +4,7 @@ import {
   createLearningService,
   createLearningOperator,
   createNetworkJevEvaluator,
+  createClassifierJevEvaluator,
 } from "@janitor/network/server";
 import { createPostgresNetworkStorage } from "@janitor/network/postgres";
 if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL");
@@ -17,6 +18,9 @@ const learning = createLearningService(createPostgresNetworkStorage(db), {
   evaluator: process.env.JEV_API_KEY
     ? createNetworkJevEvaluator({ apiKey: process.env.JEV_API_KEY })
     : undefined,
+  classifierEvaluator: process.env.JEV_API_KEY
+    ? createClassifierJevEvaluator({ apiKey: process.env.JEV_API_KEY })
+    : undefined,
   evaluatorVersion: "jev-network-questions-v1",
   maxEvaluationsPerDay: Number(process.env.MAX_EVALUATIONS_PER_DAY ?? 0),
   maxEvaluationsLifetime: Number(process.env.MAX_EVALUATIONS_LIFETIME ?? 0),
@@ -26,7 +30,7 @@ const operator = process.env.OPERATOR_KEY_HASH
   : undefined;
 const app = Fastify({
   logger: false,
-  bodyLimit: 16_384,
+  bodyLimit: 262144,
   requestTimeout: 10_000,
 });
 app.addContentTypeParser(

@@ -1,3 +1,10 @@
+import { createClassifierService } from "./classifier-service.js";
+import type { ClassifierFeatureEvaluator } from "./classifier-jev.js";
+export {
+  createClassifierJevEvaluator,
+  createWorkersClassifierEvaluator,
+  CLASSIFIER_JEV_MODEL,
+} from "./classifier-jev.js";
 import { z } from "zod";
 import {
   contributionSchema,
@@ -28,6 +35,7 @@ export type { NetworkStorage } from "./storage.js";
 export { createLearningOperator } from "./operator.js";
 
 export type LearningServiceOptions = {
+  classifierEvaluator?: ClassifierFeatureEvaluator;
   evaluator?: NetworkEvaluator;
   /** Change whenever provider, model pin or questions change; isolates cached results. */
   evaluatorVersion?: string;
@@ -83,6 +91,58 @@ export function createLearningService(
     throw new Error("Set evaluatorVersion for cache isolation");
   let running = 0,
     providerCalls = 0;
+  async function callProvider(
+    tenant: Tenant,
+    run: () => Promise<unknown>,
+    check: () => void,
+  ): Promise<unknown> {
+    const now = Date.now();
+    const day = Math.floor(now / 86_400_000),
+      expiry = (day + 2) * 86_400_000;
+    if (
+      !(await storage.quota(
+        "eval:" + tenant.id,
+        day,
+        config.tenantEvaluations,
+        expiry,
+      )) ||
+      !(await storage.quota("eval:global", day, config.evaluations, expiry)) ||
+      !(await storage.quota(
+        "eval:lifetime",
+        0,
+        config.lifetime,
+        8_000_000_000_000_000,
+      ))
+    )
+      throw new Error("Provider budget exhausted");
+    check();
+    if (providerCalls >= 8) throw new Error("Provider busy");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    providerCalls++;
+    const work = Promise.resolve()
+      .then(run)
+      .finally(() => {
+        providerCalls--;
+      });
+    try {
+      return await Promise.race([
+        work,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error("Evaluator timeout")),
+            config.timeout,
+          );
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  const classifiers = createClassifierService(
+    storage,
+    options.classifierEvaluator,
+    callProvider,
+  );
   async function evaluate(
     tenant: Tenant,
     input: z.infer<typeof evaluationSchema>,
@@ -141,44 +201,13 @@ export function createLearningService(
     if (cached) return cached;
     const lease = newId("lease");
     if (!(await storage.claim(key, lease, now))) return result;
-    const day = Math.floor(now / 86_400_000),
-      expiry = (day + 2) * 86_400_000;
-    if (
-      !(await storage.quota(
-        "eval:" + tenant.id,
-        day,
-        config.tenantEvaluations,
-        expiry,
-      )) ||
-      !(await storage.quota("eval:global", day, config.evaluations, expiry)) ||
-      !(await storage.quota(
-        "eval:lifetime",
-        0,
-        config.lifetime,
-        8_000_000_000_000_000,
-      ))
-    )
-      return result;
-    check();
-    if (providerCalls >= 8) return result;
-    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      providerCalls++;
-      const work = Promise.resolve()
-        .then(() => options.evaluator!({ features, patterns: activePatterns }))
-        .finally(() => {
-          providerCalls--;
-        });
       const evaluated = parseRisk(
-        await Promise.race([
-          work,
-          new Promise<never>((_, reject) => {
-            timer = setTimeout(
-              () => reject(new Error("Evaluator timeout")),
-              config.timeout,
-            );
-          }),
-        ]),
+        await callProvider(
+          tenant,
+          () => options.evaluator!({ features, patterns: activePatterns }),
+          check,
+        ),
       );
       result.risk = {
         automation: evaluated.automation,
@@ -188,9 +217,7 @@ export function createLearningService(
         result.providerModel = evaluated.providerModel;
       result.riskStatus = "evaluated";
     } catch {
-      /* Fail open; no provider payload or fingerprints are logged. */
-    } finally {
-      clearTimeout(timer);
+      /* Fail open without logging features. */
     }
     if (revision !== (await storage.revision())) return empty();
     await storage.saveAssessment(
@@ -316,6 +343,17 @@ export function createLearningService(
         result === "missing" ? 404 : result === "disputed" ? 409 : 200,
       );
     }
+    if (path === "/v1/classify") {
+      if (!tenant.preferences.evaluation)
+        return response({ error: "Remote evaluation is disabled" }, 403);
+      return response(
+        await classifiers.classify(
+          tenant,
+          evaluationSchema.parse(body).features,
+          check,
+        ),
+      );
+    }
     if (path === "/v1/evaluate") {
       if (!tenant.preferences.evaluation)
         return response({ error: "Remote evaluation is disabled" }, 403);
@@ -420,6 +458,12 @@ export function createLearningService(
       await storage.saveModel(model);
       return model;
     },
+    exportClassifier: classifiers.export,
+    stageClassifier: classifiers.stage,
+    promoteClassifier: (id: string, percent = 1) =>
+      storage.promoteClassifier(opaqueId.parse(id), percent, Date.now()),
+    rollbackClassifier: (id: string) =>
+      storage.rollbackClassifier(opaqueId.parse(id)),
     promote: (modelId: string, canaryPercent = 1) =>
       storage.promote(opaqueId.parse(modelId), canaryPercent, Date.now()),
     rollback: (modelId: string) => storage.rollback(opaqueId.parse(modelId)),

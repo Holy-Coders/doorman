@@ -106,6 +106,9 @@ export type TrainingRow = Contribution & {
   positive: boolean;
   confirmedAt: number;
   expiresAt: number;
+  /** Required by classifier exports; optional for legacy rule-discovery fixtures. */
+  source?: Feedback["source"];
+  evidenceReference?: string;
 };
 export const preferencesSchema = z
   .strictObject({

@@ -37,3 +37,7 @@ To enable inference deliberately, add `JEV_API_KEY` and positive daily/lifetime 
 Postgres hosting has no built-in scheduler. Your existing scheduler can call authenticated `/operator/cleanup` and `/operator/discover` at the desired interval. Discovery never promotes itself and does not call an AI model. Alternatively call `service.discover()` in a bounded management command. Use preselected holdout participants and chronological cutoffs; see [the learning guide](../../docs/LEARNING-NETWORK.md).
 
 For a public deployment put this server behind HTTPS, keep operator and participant credentials server-side, use a separate operator access policy, and configure infrastructure log retention. `HOST=0.0.0.0` is available for your container platform. Local loopback HTTP is supported only for development.
+
+## Optional supervised classifier
+
+Apply both `0001_network.sql` and `0002_classifiers.sql` through the migration command before upgrading. The service now accepts private `POST /v1/classify` requests and separate operator `/operator/classifier/export`, `/stage`, `/promote` and `/rollback` actions. Training remains offline; the scheduled Worker never starts it. Jev feature calls share the existing inference quotas and require the exact reported model pin. [Follow the classifier guide](../../docs/CLASSIFIER.md) to run the free generated-data demo or prepare a reviewed real-data pilot.

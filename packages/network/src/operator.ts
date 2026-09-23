@@ -1,3 +1,8 @@
+import {
+  classifierSplitSchema,
+  classifierModelSchema,
+} from "./classifier-schema.js";
+import { sealClassifierManifest } from "./classifier-data.js";
 import { z } from "zod";
 import { digest, readJSON } from "./http.js";
 import { opaqueId } from "./schema.js";
@@ -31,8 +36,50 @@ export function createLearningOperator(
     )
       return json({ error: "JSON required" }, 415);
     try {
-      const body = await readJSON(request.body, 4096);
-      switch (new URL(request.url).pathname) {
+      const path = new URL(request.url).pathname;
+      const body = await readJSON(
+        request.body,
+        path === "/operator/classifier/stage" ? 262144 : 4096,
+      );
+      switch (path) {
+        case "/operator/classifier/export": {
+          const data = await service.exportClassifier(
+            classifierSplitSchema.parse(body),
+          );
+          return json({
+            ...data,
+            seal: await sealClassifierManifest(data.manifest, keyHash),
+          });
+        }
+        case "/operator/classifier/stage": {
+          const value = z
+            .strictObject({
+              model: classifierModelSchema,
+              seal: z.string().regex(/^[a-f0-9]{64}$/),
+            })
+            .parse(body);
+          if (
+            (await sealClassifierManifest(value.model.manifest, keyHash)) !==
+            value.seal
+          )
+            throw new Error("Invalid export seal");
+          return json(await service.stageClassifier(value.model));
+        }
+        case "/operator/classifier/promote": {
+          const value = z
+            .strictObject({
+              modelId: opaqueId,
+              canaryPercent: z.number().int().min(1).max(100).default(1),
+            })
+            .parse(body);
+          await service.promoteClassifier(value.modelId, value.canaryPercent);
+          return json({ status: "canary" });
+        }
+        case "/operator/classifier/rollback": {
+          const value = z.strictObject({ modelId: opaqueId }).parse(body);
+          await service.rollbackClassifier(value.modelId);
+          return json({ status: "retired" });
+        }
         case "/operator/tenants":
           return json(
             await service.registerTenant(

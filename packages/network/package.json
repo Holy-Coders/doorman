@@ -1,6 +1,6 @@
 {
   "name": "@janitor/network",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -25,6 +25,10 @@
     "./d1": {
       "types": "./dist/d1.d.ts",
       "import": "./dist/d1.js"
+    },
+    "./classifier": {
+      "types": "./dist/classifier.d.ts",
+      "import": "./dist/classifier.js"
     }
   },
   "scripts": {
