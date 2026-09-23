@@ -266,7 +266,7 @@ for (const mode of ["reduced motion", "save data"] as const) {
     await expect(page.locator(".hero-poster")).toBeVisible();
     await expect(
       page.getByRole("heading", {
-        name: /A familiar browser\.\s*A clearer picture\./,
+        name: /Prepare your analytics\s*for the agentic era\./,
       }),
     ).toBeVisible();
     await page
@@ -327,7 +327,7 @@ test("the hero stays readable without JavaScript", async ({ browser }) => {
   await page.goto("http://127.0.0.1:4357/");
   await expect(
     page.getByRole("heading", {
-      name: /A familiar browser\.\s*A clearer picture\./,
+      name: /Prepare your analytics\s*for the agentic era\./,
     }),
   ).toBeVisible();
   await expect(page.locator(".hero-poster")).toBeVisible();
