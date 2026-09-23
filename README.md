@@ -99,6 +99,15 @@ pnpm test
 pnpm lint
 ```
 
+Download the prebuilt [v0.1.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.1.0) to try the packages outside the monorepo:
+
+```sh
+mkdir janitor-packages && cd janitor-packages
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.1.0/janitor-0.1.0.tar.gz -o janitor-0.1.0.tar.gz
+tar -xzf janitor-0.1.0.tar.gz
+pnpm install
+```
+
 Packages expose compiled ESM and TypeScript declarations. Inside this workspace use `workspace:^` dependencies. Run `pnpm pack:all` to produce seven archives and a consumer `package.json` in `artifacts/`. Copy that folder outside the workspace and run `pnpm install` there for a standalone installation. For an existing pnpm application, merge the generated `dependencies` and `pnpm.overrides` fields into its manifest, adjusting `file:` paths to the archives. The overrides are necessary because these sibling packages are unpublished; they prevent pnpm from looking them up on npm. Alternatively, publish the packages to your own registry. Subpath exports isolate Cloudflare and Node entrypoints. SQL migrations and source/declaration maps ship with the packages.
 
 Run the browser integration test:
