@@ -33,6 +33,8 @@ for _, cookie := range result.SetCookies { w.Header().Add("Set-Cookie", cookie) 
 // JSON encoding result includes visitorId and isReturning only.
 ```
 
-See the [runnable Go example](../../examples/go-http/README.md). Configure the upstream's `allowedOrigins` for the actual browser origin, keep its cookie Domain unset, and preserve CSRF/session context for Phoenix. Optional `BearerToken` comes from your server configuration; an application-owned authenticated gateway must verify it. Never accept an upstream URL or verified identity claims from the browser.
+See the [runnable Go example](../../examples/go-http/README.md). For a TypeScript upstream, configure its `allowedOrigins` for the actual browser origin, keep its cookie Domain unset, and preserve CSRF/session context for Phoenix. Optional `BearerToken` comes from your server configuration; an application-owned authenticated gateway must verify it. Never accept an upstream URL or verified identity claims from the browser.
 
 The shared browser SDK collects browser measurements. Sending measurements of the Go server would identify that server, not your visitors. The default timeout is three seconds; redirects and retries are disabled. The transport uses the standard HTTP connection pool and has no background worker or external dependency.
+
+A Phoenix upstream checks the request origin against its public host and scheme. Use an upstream route on the same public origin or a correctly configured, trusted reverse proxy that preserves them; Phoenix does not accept the TypeScript `allowedOrigins` option. Do not disable origin/CSRF checks to make a relay work.

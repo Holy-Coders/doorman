@@ -10,7 +10,7 @@ janitor = Janitor.new(
 )
 ```
 
-Use `Janitor.Plug` for the browser endpoint. Results in `conn.private[:janitor_identity]` are private server data; the response exposes the visitor ID and returning status. Your login system supplies authenticated person and agent identities. Browser matching never authenticates a user.
+Use `Janitor.Plug` for the browser endpoint. Results in `conn.assigns.janitor_identity` are private server data; the response exposes the visitor ID and returning status. Your login system supplies authenticated person and agent identities. Browser matching never authenticates a user.
 
 ## API behavior
 
