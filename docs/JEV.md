@@ -48,11 +48,11 @@ const visitor = createCloudflareVisitor({
 });
 ```
 
-The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Janitor.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request normally makes one planning call and one matching/risk call; learning can add one more. A known cookie needs one risk call, plus learning when enabled. Configure a shared [inference budget](HARDENING.md) for all stages.
+The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Janitor.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request normally makes one planning call, one identity batch call and one separate risk call; learning can add one more. A known cookie uses an identity/risk pair, plus learning when enabled. Both calls are reserved against shared budget and concurrency limits before the pair starts; allow at least two concurrent provider calls to use these Jev methods. Configure a shared [inference budget](HARDENING.md) for all stages.
 
 ## Data sent to the model
 
-For browser matching, Janitor sends a compact current observation and up to five historical observations for each of at most ten candidates. Learning sends at most three confirmed examples for each of ten people. Requests exceeding 64 KiB are declined locally and fall back. Account IDs, email keys, permissions and trusted server evidence are not sent to Jev. The model sees browser-signal strings as untrusted input rather than instructions.
+For browser matching, Janitor sends a compact current observation and up to five historical observations for each of at most ten candidates. This identity request excludes automation flags, behavior and runtime/environment probes, including the similarity feature `webdriverDetected`. A separate risk request receives only the current observation, with those signals included; it never receives identity history or similarity. Learning sends at most three confirmed examples for each of ten people. Requests exceeding 64 KiB are declined locally and fall back. Account IDs, email keys, permissions and trusted server evidence are not sent to Jev. The model sees browser-signal strings as untrusted input rather than instructions.
 
 Janitor keeps the final matching decision in code. Sparse or contradictory evidence can cap the result even when Jev returns a high score. See [matching rules](MATCHING.md).
 
@@ -72,7 +72,7 @@ The optional [API activity middleware](API-ACTIVITY.md) adds `evaluateActivity(i
 
 The following details are for people replacing or inspecting the evaluator. Normal integrations only need the adapter configuration above.
 
-Both implementations use TypeSafe's **Noul** question type: a yes/no judgment expressed as a number from 0 to 1. Janitor batches related questions in one request and reads each answer's `noul` field. The single-history method asks three questions; batch matching asks `candidate0` through `candidate9` as needed, plus `automation` and `suspicious`. Lookup uses `graphics` and `locale`; learning uses `person0` through `person9`. The exact questions are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts) and [intelligence.ts](../packages/evaluators/jev/src/intelligence.ts).
+Both implementations use TypeSafe's **Noul** question type: a yes/no judgment expressed as a number from 0 to 1. Janitor batches related questions in one request and reads each answer's `noul` field. The single-history identity request asks only `sameVisitor`; batch identity matching asks `candidate0` through `candidate9` as needed. The separate current-only risk request asks `automation` and `suspicious`. Both transports run the pair concurrently and validate every required answer. If either fails, the engine uses its existing deterministic fallback and marks risk unavailable. Lookup uses `graphics` and `locale`; learning uses `person0` through `person9`. The exact questions are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts) and [intelligence.ts](../packages/evaluators/jev/src/intelligence.ts).
 
 Verified against the official [TypeSafe API](https://docs.typesafe.ai/api), [Noul documentation](https://docs.typesafe.ai/primitives/noul) and [Cloudflare Jev model](https://developers.cloudflare.com/ai/models/typesafe/jev/) on September 23, 2026.
 
@@ -114,27 +114,32 @@ The binding takes `{ state, questions }` directly. It requires no TypeSafe API k
     history: [
       { platform: 'ios', browser: 'safari', timezone: 'Asia/Jerusalem', screen: '390x844', hardwareConcurrency: 6 }
     ],
-    current: { /* compact signals and aggregate behavior */ },
+    current: { /* compact identity signals; no automation, behavior or runtime probes */ },
     deterministicSimilarity: 0.94,
     evidence: [ /* transparent per-snapshot similarity feature values */ ]
   },
   questions: {
-    sameVisitor: { type: 'noul', instructions: '…', criteria: { true: '…', false: '…' } },
+    sameVisitor: { type: 'noul', instructions: '…', criteria: { true: '…', false: '…' } }
+  }
+}
+
+// Separate request: createRiskInput(current)
+{
+  state: { current: { /* current signals and aggregate behavior, no history */ } },
+  questions: {
     automation: { type: 'noul', instructions: '…', criteria: { true: '…', false: '…' } },
     suspicious: { type: 'noul', instructions: '…', criteria: { true: '…', false: '…' } }
   }
 }
 ```
 
-Documented response shape (illustrative values):
+Each provider response contains answers to its own questions. For example, the identity response is:
 
 ```json
 {
   "model": "jev-1.13.0",
   "answers": {
-    "sameVisitor": { "type": "noul", "noul": 0.98 },
-    "automation": { "type": "noul", "noul": 0.12 },
-    "suspicious": { "type": "noul", "noul": 0.08 }
+    "sameVisitor": { "type": "noul", "noul": 0.98 }
   },
   "usage": { "input_tokens": 500, "output_tokens": 40 }
 }
@@ -145,6 +150,8 @@ The live Cloudflare transport also returns this envelope, observed on September 
 ```ts
 { state: "Completed", result: { model: "jev-1.13.0", answers, usage }, gatewayMetadata: { keySource: "Unified" } }
 ```
+
+The separate risk response contains `automation` and `suspicious`; the adapter combines the validated answers into the unchanged `VisitorEvaluator` result. The [live isolation check](DETECTION-VALIDATION.md#identity-and-risk-isolation) covers both single-history and batch paths.
 
 The Cloudflare evaluator unwraps a completed result before validating it and also accepts the plain format shown in the model documentation. Pending, failed or malformed envelopes are rejected. This response wrapper is separate from the request format, which remains `{ state, questions }`.
 

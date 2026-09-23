@@ -29,6 +29,23 @@ export type DemoEvaluation = {
   evaluatedAt?: number;
 };
 
+/** Compound identity/risk calls may complete in either order. */
+export function mergeDemoEvaluation(
+  previous: DemoEvaluation,
+  next: DemoEvaluation,
+): DemoEvaluation {
+  if (previous.source === "fallback" || next.source === "jev") return next;
+  if (previous.source === "jev" || next.source === "fallback") return previous;
+  const evaluatedAt = Math.min(
+    previous.evaluatedAt ?? Infinity,
+    next.evaluatedAt ?? Infinity,
+  );
+  return {
+    source: "cache",
+    ...(Number.isFinite(evaluatedAt) ? { evaluatedAt } : {}),
+  };
+}
+
 export async function rows<T>(
   db: D1Database,
   sql: string,

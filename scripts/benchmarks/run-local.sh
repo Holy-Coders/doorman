@@ -48,23 +48,27 @@ wait_for docker exec janitor-capacity-pg pg_isready -U visitor -d janitor_bench
 JANITOR_BENCHMARK_DATABASE_URL=postgres://visitor:visitor@127.0.0.1:55434/janitor_bench \
 JANITOR_BENCHMARK_SHARDS=32 JANITOR_BENCHMARK_LABEL=current pnpm exec tsx scripts/benchmarks/security.ts
 created+=(janitor-capacity-server)
-docker run --name janitor-capacity-server --network janitor-capacity-local --cpus=4 --memory=2g \
+docker run --name janitor-capacity-server --network janitor-capacity-local --cpus=4 --memory="${JANITOR_BENCHMARK_SERVER_MEMORY:-4g}" \
   --ulimit nofile=262144:262144 --mount "type=bind,source=$PWD/artifacts/benchmarks,target=/bench,readonly" \
   -e JANITOR_BENCHMARK_DATABASE_URL=postgres://visitor:visitor@janitor-capacity-pg:5432/janitor_bench \
   -d node:22-alpine node --max-old-space-size=160 /bench/server.mjs >/dev/null
 wait_for server_ready
 created+=(janitor-capacity-client)
-docker run --name janitor-capacity-client --network janitor-capacity-local --cpus=2 --memory=2g \
+docker run --name janitor-capacity-client --network janitor-capacity-local --cpus=2 --memory="${JANITOR_BENCHMARK_CLIENT_MEMORY:-4g}" \
   --ulimit nofile=262144:262144 --sysctl 'net.ipv4.ip_local_port_range=10240 65535' \
   --mount "type=bind,source=$PWD/artifacts/benchmarks,target=/bench,readonly" \
   --mount "type=bind,source=$PWD/docs/benchmarks,target=/results" \
   -e JANITOR_BENCHMARK_CONNECTIONS="${JANITOR_BENCHMARK_CONNECTIONS:-200000}" \
   -e JANITOR_BENCHMARK_RATES="${JANITOR_BENCHMARK_RATES:-100}" \
+  -e JANITOR_BENCHMARK_SERVER_MEMORY="${JANITOR_BENCHMARK_SERVER_MEMORY:-4g}" \
+  -e JANITOR_BENCHMARK_CLIENT_MEMORY="${JANITOR_BENCHMARK_CLIENT_MEMORY:-4g}" \
   -e JANITOR_BENCHMARK_OUTPUT=/results/connections-current.json \
   node:22-alpine node --max-old-space-size=1300 /bench/client.mjs || run_status=1
 # Keep first-run diagnostics before restarting; the throughput sweep is independent.
 docker logs janitor-capacity-server >artifacts/benchmarks/diagnostics/server-before-restart.log 2>&1
 docker exec janitor-capacity-server cat /sys/fs/cgroup/memory.events >artifacts/benchmarks/diagnostics/memory-before-restart.txt 2>/dev/null || true
+docker exec janitor-capacity-server cat /sys/fs/cgroup/memory.peak >artifacts/benchmarks/diagnostics/memory-peak-before-restart.txt 2>/dev/null || true
+docker inspect --format '{{json .HostConfig.Memory}}' janitor-capacity-server >artifacts/benchmarks/diagnostics/memory-limit.json
 docker restart janitor-capacity-server >/dev/null
 wait_for server_ready
 created+=(janitor-capacity-throughput)
@@ -72,6 +76,7 @@ docker run --name janitor-capacity-throughput --network janitor-capacity-local -
   --ulimit nofile=262144:262144 --mount "type=bind,source=$PWD/artifacts/benchmarks,target=/bench,readonly" \
   --mount "type=bind,source=$PWD/docs/benchmarks,target=/results" \
   -e JANITOR_BENCHMARK_CONNECTIONS=10000 -e JANITOR_BENCHMARK_RATES=100,500,1000,2000 \
+  -e JANITOR_BENCHMARK_SERVER_MEMORY="${JANITOR_BENCHMARK_SERVER_MEMORY:-4g}" -e JANITOR_BENCHMARK_CLIENT_MEMORY=1g \
   -e JANITOR_BENCHMARK_OUTPUT=/results/throughput-current.json \
   node:22-alpine node --max-old-space-size=512 /bench/client.mjs || run_status=1
 exit "$run_status"

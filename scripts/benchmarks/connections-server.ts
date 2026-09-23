@@ -1,6 +1,6 @@
 import cluster from "node:cluster";
 import { createServer } from "node:http";
-import { Readable } from "node:stream";
+import { createNodeRequestListener } from "@janitor/adapters/node/http";
 import { monitorEventLoopDelay } from "node:perf_hooks";
 import pg from "pg";
 import { createNodeVisitor } from "@janitor/adapters/node";
@@ -92,7 +92,18 @@ if (cluster.isPrimary) {
     poolWaitingPeak = Math.max(poolWaitingPeak, pool.waitingCount);
     dbPeak = Math.max(dbPeak, pool.totalCount);
   }, 10).unref();
-  const server = createServer(async (req, res) => {
+  const handleNode = createNodeRequestListener(visitor, {
+    origin: `http://localhost:${port}`,
+    maxInFlightRequests: 8,
+    onOverload: () => {
+      overloads++;
+    },
+    onResponse: (status) => {
+      if (status === 200) completed++;
+      else if (status !== 503) failures++;
+    },
+  });
+  const server = createServer((req, res) => {
     const send = (
       status: number,
       body: string,
@@ -124,29 +135,7 @@ if (cluster.isPrimary) {
         }),
       );
     if (req.url !== "/api/visitor") return send(404, "{}");
-    try {
-      const headers = new Headers();
-      for (const [key, value] of Object.entries(req.headers))
-        if (value !== undefined)
-          headers.set(key, Array.isArray(value) ? value.join(",") : value);
-      const init: RequestInit & { duplex: "half" } = {
-        method: "POST",
-        headers,
-        body: Readable.toWeb(req) as ReadableStream<Uint8Array>,
-        duplex: "half",
-      };
-      const response = await visitor.handle(
-        new Request(`http://localhost:${port}/api/visitor`, init),
-      );
-      const body = await response.text();
-      if (response.status === 200) completed++;
-      else if (response.status !== 503) failures++;
-      send(response.status, body, Object.fromEntries(response.headers));
-      req.resume(); // Drain the known size-bounded benchmark body after early overload responses.
-    } catch {
-      failures++;
-      send(500, '{"error":"benchmark bridge failed"}');
-    }
+    handleNode(req, res);
   });
   server.on("connection", (socket) => {
     open++;

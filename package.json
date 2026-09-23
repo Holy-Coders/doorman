@@ -36,7 +36,8 @@
     "benchmark:detection": "pnpm build && pnpm --filter @janitor/example-node exec esbuild ../../packages/browser/src/index.ts --bundle --format=esm --outfile=../../artifacts/browser-benchmark/collector.js && tsx tests/benchmarks/detection.ts",
     "benchmark:detection:full": "pnpm benchmark:detection && tsx tests/benchmarks/font-validation.ts && tsx tests/benchmarks/runtime-validation.ts",
     "benchmark:jev:full": "pnpm build && tsx scripts/benchmarks/external/jev-validation.ts",
-    "benchmark:fonts": "\"${CLASSIFIER_PYTHON:-tools/classifier/.venv/bin/python}\" tools/benchmarks/fonts.py"
+    "benchmark:fonts": "\"${CLASSIFIER_PYTHON:-tools/classifier/.venv/bin/python}\" tools/benchmarks/fonts.py",
+    "benchmark:jev:isolation": "pnpm build && tsx scripts/benchmarks/external/jev-isolation.ts"
   },
   "devDependencies": {
     "@amplitude/analytics-browser": "^2.46.0",

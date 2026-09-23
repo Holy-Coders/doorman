@@ -64,3 +64,5 @@ This token authenticates a demonstration service, not an end user's delegation. 
 Use HTTPS in production. The cookie is Secure by default; Chromium accepts it on localhost. For a local browser that does not, use the explicit development-only option `environment: "development", cookie: { secure: false }`. The adapter rejects that exception outside loopback or in production mode.
 
 Run `visitor.cleanup()` from your existing maintenance task. Use a dedicated production database or schema per application. The local Node and Next.js examples share the supplied test database. Stop it with `docker compose -f examples/compose.yaml down` from the repository root; omit `-v` to keep local history.
+
+The visitor route uses `createNodeRequestListener` in Fastify's `onRequest` hook, before body parsing. It bounds active requests, body bytes and time spent waiting; overload returns 503 with `Retry-After`. Reuse the visitor/listener and configure upstream connection and header limits for your deployment. See [request hardening](../../docs/HARDENING.md).

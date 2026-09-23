@@ -106,12 +106,13 @@ defmodule Janitor.Protection do
          )
   end
 
-  def evaluate(c, fun, validate \\ &Janitor.Engine.valid_evaluation?/1)
+  def evaluate(c, fun, validate \\ &Janitor.Engine.valid_evaluation?/1, cost \\ 1)
 
-  def evaluate(%{protection: nil} = c, fun, _validate),
+  def evaluate(%{protection: nil} = c, fun, _validate, _cost),
     do: Janitor.Bounded.run(fun, c.evaluator_timeout_ms)
 
-  def evaluate(c, fun, validate) do
+  def evaluate(c, fun, validate, cost) do
+    unless is_integer(cost) and cost in 1..16, do: raise("Invalid evaluator request cost")
     limits = c.protection[:evaluator]
 
     reservation =
@@ -129,10 +130,10 @@ defmodule Janitor.Protection do
           s["openUntil"] > now ->
             {:return, {:denied, :circuit_open}}
 
-          s["used"] >= limits.max_calls ->
+          s["used"] + cost > limits.max_calls ->
             {:return, {:denied, :budget}}
 
-          length(s["leases"]) >= limits.max_concurrent or
+          Enum.sum(Enum.map(s["leases"], &Map.get(&1, "cost", 1))) + cost > limits.max_concurrent or
               (probe and Enum.any?(s["leases"], & &1["probe"])) ->
             {:return, {:denied, :concurrency}}
 
@@ -141,10 +142,11 @@ defmodule Janitor.Protection do
               "id" => Janitor.random_id("lease_"),
               "expiresAt" => now + c.evaluator_timeout_ms + 5000,
               "epoch" => s["epoch"],
-              "probe" => probe
+              "probe" => probe,
+              "cost" => cost
             }
 
-            {:save, %{s | "leases" => s["leases"] ++ [lease], "used" => s["used"] + 1},
+            {:save, %{s | "leases" => s["leases"] ++ [lease], "used" => s["used"] + cost},
              {:lease, lease}}
         end
       end)

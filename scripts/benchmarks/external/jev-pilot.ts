@@ -142,9 +142,12 @@ try {
     const baseline = createVisitorEngine({ storage });
     let failure: unknown,
       evaluated = false;
+    let tail: Promise<unknown> = Promise.resolve();
     const evaluator = createJevMethods(async (input) => {
       try {
-        return await transport.evaluate(input);
+        const result = tail.then(() => transport.evaluate(input));
+        tail = result.catch(() => {});
+        return await result;
       } catch (error) {
         failure = error;
         throw error;

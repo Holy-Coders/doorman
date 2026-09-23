@@ -34,12 +34,54 @@ const bounds = (yes: number, n: number): [number, number] => {
     Math.min(1, (p + z2 / (2 * n) + spread) / (1 + z2 / n)),
   ];
 };
+/** Rank statistic with half credit for ties; missing predictions are abstentions. */
+function rocAuc(
+  rows: ClassifierRow[],
+  scores: (number | null)[],
+): number | null {
+  const ranked = rows
+    .flatMap((row, i) =>
+      scores[i] == null ? [] : [{ score: scores[i]!, positive: row.positive }],
+    )
+    .sort((a, b) => a.score - b.score);
+  let positives = 0,
+    negatives = 0,
+    wins = 0;
+  for (let i = 0; i < ranked.length;) {
+    let end = i,
+      positive = 0,
+      negative = 0;
+    while (end < ranked.length && ranked[end]!.score === ranked[i]!.score) {
+      if (ranked[end]!.positive) positive++;
+      else negative++;
+      end++;
+    }
+    wins += positive * (negatives + negative / 2);
+    positives += positive;
+    negatives += negative;
+    i = end;
+  }
+  return positives && negatives ? wins / (positives * negatives) : null;
+}
+const beatsBaseline = (m: ClassifierMetrics) =>
+  m.brier !== null && m.baselineBrier !== null && m.brier < m.baselineBrier;
+const calibrated = (m: ClassifierMetrics) =>
+  (m.calibrationError ?? 1) <= LIMIT.maximumCalibrationError &&
+  beatsBaseline(m);
+const discriminates = (m: ClassifierMetrics) =>
+  (m.rocAuc ?? 0) >= LIMIT.minimumRocAuc;
+
 export function classifierMetrics(
   rows: ClassifierRow[],
   scores: (number | null)[],
   threshold: number,
   prevalence: number,
 ): ClassifierMetrics {
+  if (
+    scores.length !== rows.length ||
+    scores.some((s) => s !== null && (!Number.isFinite(s) || s < 0 || s > 1))
+  )
+    throw new Error("Invalid classifier predictions");
   let positives = 0,
     negatives = 0,
     scored = 0,
@@ -101,6 +143,7 @@ export function classifierMetrics(
         ) / scored
       : null,
     bins: reliability,
+    rocAuc: rocAuc(rows, scores),
   };
 }
 export function classifierGates(
@@ -134,12 +177,13 @@ export function classifierGates(
     ),
     validationQuality: quality(model.metrics.validation),
     holdoutQuality: quality(holdout),
-    calibration:
-      (holdout.calibrationError ?? 1) <= LIMIT.maximumCalibrationError,
-    beatsConstantBaseline:
-      holdout.brier !== null &&
-      holdout.baselineBrier !== null &&
-      holdout.brier < holdout.baselineBrier,
+    calibration: [model.metrics.validation, holdout].every(
+      (m) => (m.calibrationError ?? 1) <= LIMIT.maximumCalibrationError,
+    ),
+    beatsConstantBaseline: [model.metrics.validation, holdout].every(
+      calibrated,
+    ),
+    discrimination: [model.metrics.validation, holdout].every(discriminates),
     individualApplications: model.manifest.split.holdoutTenants.every((id) => {
       const m = model.tenants[id];
       return (
@@ -361,7 +405,9 @@ export async function finalizeClassifier(
     t.stats.coverage >= LIMIT.minimumCoverage &&
     t.stats.precisionLower >= LIMIT.precisionLower &&
     t.stats.falsePositiveUpper <= LIMIT.falsePositiveUpper &&
-    (t.stats.recall ?? 0) >= LIMIT.minimumRecall;
+    (t.stats.recall ?? 0) >= LIMIT.minimumRecall &&
+    calibrated(t.stats) &&
+    discriminates(t.stats);
   trials.sort(
     (a, b) =>
       Number(passes(b)) - Number(passes(a)) ||

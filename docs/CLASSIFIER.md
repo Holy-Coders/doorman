@@ -19,6 +19,14 @@ The trainer compares logistic regression and shallow boosted trees. If you suppl
 
 The selected model runs as bounded numeric JSON in TypeScript. Production needs no Python process or ML server. A cheaper model wins when its validation Brier score is within 0.002 of the best qualifying candidate. These initial settings need calibration with real evidence.
 
+## How we check the scores
+
+The model fits on training sessions, then a separate chronological calibration set fits its sigmoid calibrator. Validation selects the model and threshold; later sessions from entirely separate applications provide the final test. We never fit on the final test labels.
+
+Promotion now requires **both validation and final test** to have ROC-AUC at least 0.75, calibration error at most 0.10, and Brier loss better than the constant training-prevalence baseline, in addition to the existing precision, false-positive, coverage and cohort gates. Tied scores receive half credit in AUC; unscored sessions remain abstentions and reduce coverage. These are initial experimental gates, not universal accuracy guarantees. Older reports without AUC must be regenerated and checked before promotion.
+
+Calibration cannot manufacture useful ranking from near-chance predictions. The [live Jev operator panel](DETECTION-VALIDATION.md) had AUC about 0.50; we have not turned that result into a production model or lowered thresholds to make it pass. Independently confirmed labels and representative benign sessions remain necessary. See scikit-learn's [calibration guidance](https://scikit-learn.org/stable/modules/calibration.html) for why fitting and calibration data must be separate and why Brier loss alone is not a calibration test.
+
 ## Try the complete pipeline without paid calls
 
 Use Python 3.12 or newer. From the repository root:

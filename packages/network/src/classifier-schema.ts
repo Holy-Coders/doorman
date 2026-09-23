@@ -221,6 +221,7 @@ export const classifierMetricsSchema = z.strictObject({
   logLoss: finite.min(0).max(40).nullable(),
   baselineBrier: probability.nullable(),
   calibrationError: probability.nullable(),
+  rocAuc: probability.nullable().default(null),
   bins: z
     .array(
       z.strictObject({ count, predicted: probability, observed: probability }),

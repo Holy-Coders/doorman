@@ -111,6 +111,23 @@ defmodule JanitorTest do
            }) == @fixtures["jev"]
   end
 
+  test "identity excludes automation and behavior while risk keeps them" do
+    base = Observation.normalize(@signals)
+
+    changed =
+      Map.merge(base, %{
+        "automation" => %{"webdriver" => true},
+        "environment" => %{"runtimeMarkerCount" => 4},
+        "behavior" => %{"mouseMoveCount" => 999}
+      })
+
+    input = %{"current" => base, "history" => [base], "deterministicSimilarity" => 1}
+    altered = %{input | "current" => changed, "history" => [changed]}
+    assert Janitor.Jev.input(input) == Janitor.Jev.input(altered)
+    refute Janitor.Jev.risk_input(base) == Janitor.Jev.risk_input(changed)
+    refute Map.has_key?(Janitor.Jev.risk_input(base)["state"], "history")
+  end
+
   test "cookie and cookieless paths restore a retained visitor", %{c: c} do
     first = Janitor.handle(req(), c)
     assert first.status == 200

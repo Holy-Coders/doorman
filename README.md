@@ -176,7 +176,7 @@ Browser observation → normalize signals → look up plausible history
                     → compare → optional Jev evaluation → save visitor ID
 ```
 
-Most visits use the cookie directly. Without it, indexed queries produce at most ten candidate visitors. Janitor compares up to five observations per candidate and asks Jev about the full shortlist in one request. Jev can also select indexed lookup families before the search. A match must be strong enough and clearly ahead of alternatives; otherwise Janitor creates a new ID.
+Most visits use the cookie directly. Without it, indexed queries produce at most ten candidate visitors. Janitor compares up to five observations per candidate and asks Jev about the full shortlist in one identity-only request. A separate current-only request evaluates risk, so behavior and automation claims cannot leak into identity matching. Jev can also select indexed lookup families before the search. A match must be strong enough and clearly ahead of alternatives; otherwise Janitor creates a new ID.
 
 The core knows nothing about hosting providers, databases or Jev. Storage and evaluator interfaces let you replace those pieces. See the [matching rules](docs/MATCHING.md), [API reference](docs/API.md), [database scaling](docs/SCALING.md) and [capacity results](docs/CAPACITY.md).
 

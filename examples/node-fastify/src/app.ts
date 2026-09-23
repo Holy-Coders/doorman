@@ -3,6 +3,7 @@ import type { FastifyRequest } from "fastify";
 import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createNodeVisitor } from "@janitor/adapters/node";
+import { createNodeRequestListener } from "@janitor/adapters/node/http";
 import type { ApiActivityContext } from "@janitor/adapters/node";
 import type { PostgresDatabase } from "@janitor/storage-postgres";
 export function createApp(
@@ -85,23 +86,17 @@ export function createApp(
         ),
       ),
   );
-  app.post("/api/visitor", async (request, reply) => {
-    const headers = new Headers();
-    for (const [name, value] of Object.entries(request.headers))
-      if (value !== undefined)
-        headers.set(name, Array.isArray(value) ? value.join(", ") : value);
-    // Fastify has already parsed/size-limited the body. Forward only the canonical origin.
-    headers.delete("content-length");
-    const response = await visitor.handle(
-      new Request(`${origin}/api/visitor`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(request.body),
-      }),
-    );
-    reply.code(response.status);
-    response.headers.forEach((value, name) => reply.header(name, value));
-    return reply.send(await response.text());
-  });
+  const handleNode = createNodeRequestListener(visitor, { origin });
+  app.post(
+    "/api/visitor",
+    {
+      // Admit and bound the raw body before Fastify allocates/parses it.
+      onRequest: async (request, reply) => {
+        reply.hijack();
+        handleNode(request.raw, reply.raw);
+      },
+    },
+    async () => {},
+  );
   return app;
 }

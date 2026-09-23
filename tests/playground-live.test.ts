@@ -10,7 +10,12 @@ import {
 import { readFile } from "node:fs/promises";
 import { createPlaygroundWorker } from "../site/worker/index.js";
 import type { DemoEnv } from "../site/worker/index.js";
-import { createBudgetedAI, DEMO_LIMITS, rows } from "../site/worker/budget.js";
+import {
+  createBudgetedAI,
+  mergeDemoEvaluation,
+  DEMO_LIMITS,
+  rows,
+} from "../site/worker/budget.js";
 import type { D1Database } from "@janitor/storage-d1";
 import { sqlBackend } from "./helpers/sql.js";
 import { signals } from "./helpers/fixtures.js";
@@ -166,7 +171,7 @@ describe("public live playground", () => {
       isReturning: true,
       evaluation: { source: "cache" },
     });
-    expect(env.AI.run).toHaveBeenCalledTimes(2);
+    expect(env.AI.run).toHaveBeenCalledTimes(3);
     expect(vi.mocked(env.AI.run).mock.calls[0]?.[2]).toEqual({
       gateway: {
         id: "default",
@@ -356,7 +361,7 @@ describe("public live playground", () => {
         db,
         "SELECT used FROM playground_budget WHERE id='lifetime-v1'",
       ),
-    ).toEqual([{ used: 1 }]);
+    ).toEqual([{ used: 2 }]);
   });
   it("erases owned history and cached answers without resetting spending counters", async () => {
     const session = await start();
@@ -378,7 +383,7 @@ describe("public live playground", () => {
         db,
         "SELECT used FROM playground_budget WHERE id='lifetime-v1'",
       ),
-    ).toEqual([{ used: 1 }]);
+    ).toEqual([{ used: 2 }]);
   });
   it("cleans up expired sessions and retains the lifetime fuse", async () => {
     const session = await start();
@@ -392,7 +397,7 @@ describe("public live playground", () => {
         db,
         "SELECT used FROM playground_budget WHERE id='lifetime-v1'",
       ),
-    ).toEqual([{ used: 1 }]);
+    ).toEqual([{ used: 2 }]);
   });
   it("rejects oversized input and foreign payload fields before inference", async () => {
     const session = await start();
@@ -417,4 +422,14 @@ describe("public live playground", () => {
     ).toBe(413);
     expect(env.AI.run).not.toHaveBeenCalled();
   });
+});
+
+it("reports fresh inference even if a cached part finishes last", () => {
+  const fresh = { source: "jev" as const, evaluatedAt: 200 };
+  const cached = { source: "cache" as const, evaluatedAt: 100 };
+  expect(mergeDemoEvaluation(fresh, cached)).toEqual(fresh);
+  expect(mergeDemoEvaluation(cached, fresh)).toEqual(fresh);
+  expect(mergeDemoEvaluation(cached, { ...cached, evaluatedAt: 150 })).toEqual(
+    cached,
+  );
 });

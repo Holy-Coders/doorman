@@ -198,7 +198,11 @@ export function createProtection(
       async function guarded<T>(
         run: () => Promise<T>,
         validate: (value: unknown) => value is T,
+        method: keyof NonNullable<VisitorEvaluator["requestCosts"]>,
       ): Promise<T> {
+        const cost = evaluator.requestCosts?.[method] ?? 1;
+        if (!Number.isInteger(cost) || cost < 1 || cost > 16)
+          throw new Error("Invalid evaluator request cost");
         let reservation: {
           lease?: EvaluationLease;
           reason?: ProtectionReason;
@@ -215,11 +219,12 @@ export function createProtection(
               s.windowStart = now;
               s.used = 0;
             }
-            if (s.used >= limits.evaluator.maxCalls)
+            if (s.used + cost > limits.evaluator.maxCalls)
               return { result: { reason: "budget" as const } };
             const probe = s.openUntil !== 0;
             if (
-              s.leases.length >= limits.evaluator.maxConcurrent ||
+              s.leases.reduce((sum, l) => sum + (l.cost ?? 1), 0) + cost >
+                limits.evaluator.maxConcurrent ||
               (probe && s.leases.some((l) => l.probe))
             )
               return { result: { reason: "concurrency" as const } };
@@ -228,9 +233,10 @@ export function createProtection(
               expiresAt: now + timeoutMs + 5000,
               epoch: s.epoch,
               probe,
+              cost,
             };
             s.leases.push(lease);
-            s.used++;
+            s.used += cost;
             return { state: s, result: { lease } };
           });
         } catch {
@@ -299,6 +305,7 @@ export function createProtection(
         }
       }
       return {
+        requestCosts: evaluator.requestCosts,
         ...(evaluator.evaluateOperator
           ? {
               evaluateOperator: (
@@ -309,6 +316,7 @@ export function createProtection(
                 guarded(
                   () => evaluator.evaluateOperator!(input),
                   isOperatorEvaluation,
+                  "evaluateOperator",
                 ),
             }
           : {}),
@@ -322,18 +330,24 @@ export function createProtection(
                 guarded(
                   () => evaluator.evaluateActivity!(input),
                   isApiActivityRisk,
+                  "evaluateActivity",
                 ),
             }
           : {}),
         evaluate: (input) =>
-          guarded(() => evaluator.evaluate(input), isEvaluation),
+          guarded(() => evaluator.evaluate(input), isEvaluation, "evaluate"),
         ...(evaluator.planLookup
           ? {
               planLookup: (
                 input: Parameters<
                   NonNullable<VisitorEvaluator["planLookup"]>
                 >[0],
-              ) => guarded(() => evaluator.planLookup!(input), isLookupScope),
+              ) =>
+                guarded(
+                  () => evaluator.planLookup!(input),
+                  isLookupScope,
+                  "planLookup",
+                ),
             }
           : {}),
         ...(evaluator.evaluateCandidates
@@ -346,6 +360,7 @@ export function createProtection(
                 guarded(
                   () => evaluator.evaluateCandidates!(input),
                   isCandidateEvaluations,
+                  "evaluateCandidates",
                 ),
             }
           : {}),
@@ -359,6 +374,7 @@ export function createProtection(
                 guarded(
                   () => evaluator.predictIdentity!(input),
                   isCrossDevicePrediction,
+                  "predictIdentity",
                 ),
             }
           : {}),

@@ -143,6 +143,18 @@ export type Evaluation = {
   suspicious: number;
 };
 export interface VisitorEvaluator {
+  /** Maximum provider calls per method, reserved before compound evaluations start. Defaults to 1. */
+  requestCosts?: Partial<
+    Record<
+      | "evaluate"
+      | "evaluateCandidates"
+      | "evaluateOperator"
+      | "evaluateActivity"
+      | "planLookup"
+      | "predictIdentity",
+      number
+    >
+  >;
   evaluateOperator?(
     input: import("./operators.js").OperatorEvaluationInput,
   ): Promise<import("./operators.js").OperatorEvaluation>;

@@ -19,6 +19,30 @@ defmodule Janitor.ProtectionTest do
     )
   end
 
+  test "compound evaluations reserve every provider call" do
+    c =
+      config(
+        protection: [
+          secret: String.duplicate("s", 64),
+          namespace: Janitor.random_id("test_"),
+          evaluator: [max_calls: 3, max_concurrent: 2]
+        ]
+      )
+
+    result = %{"sameVisitor" => 0.9, "automation" => 0.1, "suspicious" => 0.1}
+
+    assert {:ok, ^result} =
+             Protection.evaluate(c, fn -> result end, &Janitor.Engine.valid_evaluation?/1, 2)
+
+    assert :unavailable =
+             Protection.evaluate(
+               c,
+               fn -> raise "no budget" end,
+               &Janitor.Engine.valid_evaluation?/1,
+               2
+             )
+  end
+
   test "shared request limits cap concurrent callers and never store raw keys" do
     c =
       config(

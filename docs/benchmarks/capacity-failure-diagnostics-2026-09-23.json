@@ -1,0 +1,50 @@
+{
+  "earlyAdmissionServer2GiB": {
+    "serverMemoryEvents": {
+      "low": 0,
+      "high": 0,
+      "max": 362,
+      "oom": 18,
+      "oom_kill": 3,
+      "oom_group_kill": 0
+    },
+    "workerExits": [
+      {
+        "event": "benchmark-worker-exit",
+        "worker": 2,
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      {
+        "event": "benchmark-worker-exit",
+        "worker": 5,
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      {
+        "event": "benchmark-worker-exit",
+        "worker": 7,
+        "code": null,
+        "signal": "SIGKILL"
+      }
+    ]
+  },
+  "server4GiBClient2GiB": {
+    "serverMemoryEvents": {
+      "low": 0,
+      "high": 0,
+      "max": 0,
+      "oom": 0,
+      "oom_kill": 0,
+      "oom_group_kill": 0
+    },
+    "serverMemoryPeakBytes": 2429292544,
+    "client": {
+      "OOMKilled": true,
+      "ExitCode": 137,
+      "Error": ""
+    },
+    "completed": false,
+    "reportWarning": "Client killed before final report; its progress survives only in the captured stdout. Incremental checkpoints were added before subsequent reruns."
+  }
+}

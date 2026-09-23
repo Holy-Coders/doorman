@@ -77,7 +77,8 @@ defmodule Janitor.Engine do
             case Janitor.Protection.evaluate(
                    c,
                    fn -> Janitor.Jev.evaluate_candidates(current, selected, c.evaluator) end,
-                   &is_list/1
+                   &is_list/1,
+                   2
                  ) do
               {:ok, value} -> value
               _ -> []
@@ -221,7 +222,9 @@ defmodule Janitor.Engine do
             fun when is_function(fun, 1) -> fun.(input)
             opts when is_list(opts) -> Janitor.Jev.evaluate(input, opts)
           end
-        end
+        end,
+        &valid_evaluation?/1,
+        if(is_list(c.evaluator), do: 2, else: 1)
       )
 
     value =

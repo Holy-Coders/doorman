@@ -37,7 +37,7 @@ describe("bounded Jev intelligence", () => {
       "userAgent",
     );
   });
-  it("batches ten histories in one request and binds each question to its candidate index", async () => {
+  it("batches identity histories separately from risk and binds each candidate index", async () => {
     const request = vi.fn(async () =>
       answer({
         automation: 0.2,
@@ -54,7 +54,7 @@ describe("bounded Jev intelligence", () => {
         deterministicSimilarity: 0.9,
       })),
     });
-    expect(request).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledTimes(2);
     expect(result).toHaveLength(10);
     expect(result[9]!.sameVisitor).toBe(0.9);
     const input = request.mock.calls[0] as unknown as [

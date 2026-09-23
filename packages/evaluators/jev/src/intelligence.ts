@@ -3,10 +3,10 @@ import { createOperatorInput, parseOperatorResponse } from "./operators.js";
 import { createActivityInput } from "./activity.js";
 import type { VisitorEvaluator, CrossDeviceInput } from "@janitor/core";
 import {
-  compactObservation,
+  compactIdentity,
+  createRiskInput,
   createJevInput,
   JEV_QUESTIONS,
-  parseJevResponse,
 } from "./protocol.js";
 
 const untrusted =
@@ -76,7 +76,24 @@ export function createJevMethods(
       throw new Error("Jev input exceeds 64 KiB");
     return transport(input);
   };
+  // Wait for both transports to settle before releasing an admission reservation.
+  const paired = async (identity: JevRequest, risk: JevRequest) => {
+    const results = await Promise.allSettled([
+      Promise.resolve().then(() => request(identity)),
+      Promise.resolve().then(() => request(risk)),
+    ]);
+    const values = results.map((result) => {
+      if (result.status === "rejected") throw result.reason;
+      return result.value;
+    });
+    return {
+      identity: values[0],
+      automation: readNoul(values[1], "automation"),
+      suspicious: readNoul(values[1], "suspicious"),
+    };
+  };
   return {
+    requestCosts: { evaluate: 2, evaluateCandidates: 2 },
     async evaluateOperator(input) {
       return parseOperatorResponse(
         await request(createOperatorInput(input)),
@@ -91,11 +108,19 @@ export function createJevMethods(
       };
     },
     async evaluate(input) {
-      return parseJevResponse(await request(createJevInput(input)));
+      const result = await paired(
+        createJevInput(input),
+        createRiskInput(input.current),
+      );
+      return {
+        sameVisitor: readNoul(result.identity, "sameVisitor"),
+        automation: result.automation,
+        suspicious: result.suspicious,
+      };
     },
     async planLookup(current) {
       const response = await request({
-        state: { current: compactObservation(current) },
+        state: { current: compactIdentity(current) },
         questions: {
           graphics: INTELLIGENCE_QUESTIONS.graphics,
           locale: INTELLIGENCE_QUESTIONS.locale,
@@ -112,32 +137,30 @@ export function createJevMethods(
         input.candidates.length > INTELLIGENCE_LIMITS.candidates
       )
         throw new Error("Invalid Jev candidate count");
-      const questions: JevRequest["questions"] = {
-        automation: JEV_QUESTIONS.automation,
-        suspicious: JEV_QUESTIONS.suspicious,
-      };
+      const questions: JevRequest["questions"] = {};
       input.candidates.forEach((_, index) => {
         questions[`candidate${index}`] = {
           ...JEV_QUESTIONS.sameVisitor,
           instructions: `${JEV_QUESTIONS.sameVisitor.instructions} Evaluate only candidates[${index}].history against current; candidates[${index}].deterministicSimilarity is supporting evidence.`,
         };
       });
-      const response = await request({
-        state: {
-          current: compactObservation(input.current),
-          candidates: input.candidates.map((c) => ({
-            history: c.history.slice(0, 5).map(compactObservation),
-            deterministicSimilarity: c.deterministicSimilarity,
-          })),
+      const result = await paired(
+        {
+          state: {
+            current: compactIdentity(input.current),
+            candidates: input.candidates.map((c) => ({
+              history: c.history.slice(0, 5).map(compactIdentity),
+              deterministicSimilarity: c.deterministicSimilarity,
+            })),
+          },
+          questions,
         },
-        questions,
-      });
-      const automation = readNoul(response, "automation"),
-        suspicious = readNoul(response, "suspicious");
+        createRiskInput(input.current),
+      );
       return input.candidates.map((_, index) => ({
-        sameVisitor: readNoul(response, `candidate${index}`),
-        automation,
-        suspicious,
+        sameVisitor: readNoul(result.identity, `candidate${index}`),
+        automation: result.automation,
+        suspicious: result.suspicious,
       }));
     },
     async predictIdentity(input) {
@@ -152,10 +175,16 @@ export function createJevMethods(
       });
       const response = await request({
         state: {
-          current: compactObservation(input.current),
+          current: {
+            ...compactIdentity(input.current),
+            behavior: input.current.behavior,
+          },
           candidates: candidates.map(([, examples]) => ({
             history: examples.map((e) => ({
-              observation: compactObservation(e.observation),
+              observation: {
+                ...compactIdentity(e.observation),
+                behavior: e.observation.behavior,
+              },
               observedAt: e.observedAt,
             })),
           })),

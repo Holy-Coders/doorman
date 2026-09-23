@@ -43,6 +43,12 @@ export default defineConfig({
           ),
         ),
       },
+      {
+        find: "@janitor/adapters/node/http",
+        replacement: fileURLToPath(
+          new URL("./packages/adapters/src/node/http.ts", import.meta.url),
+        ),
+      },
       ...["node", "vercel", "cloudflare"].map((name) => ({
         find: "@janitor/adapters/" + name,
         replacement: fileURLToPath(

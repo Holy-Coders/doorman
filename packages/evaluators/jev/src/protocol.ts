@@ -87,18 +87,56 @@ export function compactObservation(observation: NormalizedObservation) {
     behavior,
   };
 }
+/** Allowlist for identity: operational state cannot change the identity request. */
+export function compactIdentity(observation: NormalizedObservation) {
+  const {
+    platform,
+    browser,
+    timezone,
+    languages,
+    screen,
+    viewport,
+    hardware,
+    graphics,
+    fonts,
+  } = observation;
+  return compactObservation({
+    platform,
+    browser,
+    timezone,
+    languages,
+    screen,
+    viewport,
+    hardware,
+    graphics,
+    ...(fonts
+      ? { fonts: { version: fonts.version, available: fonts.available } }
+      : {}),
+  });
+}
+export function createRiskInput(current: NormalizedObservation) {
+  return {
+    state: { current: compactObservation(current) },
+    questions: {
+      automation: JEV_QUESTIONS.automation,
+      suspicious: JEV_QUESTIONS.suspicious,
+    },
+  };
+}
 export function createJevInput(input: EvaluationInput) {
   const history = input.history.slice(0, 5);
   return {
     state: {
-      history: history.map(compactObservation),
-      current: compactObservation(input.current),
+      history: history.map(compactIdentity),
+      current: compactIdentity(input.current),
       deterministicSimilarity: input.deterministicSimilarity,
-      evidence: history.map(
-        (previous) => calculateSimilarity(previous, input.current).features,
-      ),
+      evidence: history.map((previous) => {
+        const features = calculateSimilarity(previous, input.current).features;
+        delete features.webdriverDetected;
+        return features;
+      }),
     },
-    questions: JEV_QUESTIONS,
+    questions: { sameVisitor: JEV_QUESTIONS.sameVisitor },
   };
 }
 export function parseJevResponse(value: unknown): Evaluation {

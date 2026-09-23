@@ -9,6 +9,7 @@ import type { WorkersAI } from "@janitor/evaluator-cloudflare-jev";
 import type { JevRequest } from "@janitor/evaluator-jev";
 import {
   createBudgetedAI,
+  mergeDemoEvaluation,
   DEMO_LIMITS,
   digest,
   rows,
@@ -299,7 +300,7 @@ export function createPlaygroundWorker(env: DemoEnv) {
               secret: env.PLAYGROUND_SECRET,
               sessionId: session,
               onEvaluation: (result) => {
-                evaluation = result;
+                evaluation = mergeDemoEvaluation(evaluation, result);
               },
               onFailure: (reason) =>
                 console.warn(

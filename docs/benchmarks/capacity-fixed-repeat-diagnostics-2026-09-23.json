@@ -1,0 +1,27 @@
+{
+  "serverMemoryLimitBytes": 4294967296,
+  "serverMemoryPeakBytes": 2438787072,
+  "serverMemoryEvents": {
+    "low": 0,
+    "high": 0,
+    "max": 0,
+    "oom": 0,
+    "oom_kill": 0,
+    "oom_group_kill": 0
+  },
+  "client": {
+    "ExitCode": 0,
+    "OOMKilled": false,
+    "Error": ""
+  },
+  "throughput": {
+    "ExitCode": 0,
+    "OOMKilled": false,
+    "Error": ""
+  },
+  "server": {
+    "ExitCode": 0,
+    "OOMKilled": false,
+    "Error": ""
+  }
+}

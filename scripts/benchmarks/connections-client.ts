@@ -122,6 +122,36 @@ const post = (i: number) =>
   `POST /api/visitor HTTP/1.1\r\nHost: localhost:${3000 + (i % workers)}\r\nContent-Type: application/json\r\nCookie: __visitor=vis_${(1 + (i % 10000)).toString(16).padStart(48, "0")}\r\nContent-Length: ${Buffer.byteLength(body)}\r\nConnection: keep-alive\r\n\r\n${body}`;
 const started = new Date().toISOString();
 let failure: string | undefined;
+async function checkpoint(complete = false) {
+  const result = {
+    complete,
+    serverMemoryLimit: process.env.JANITOR_BENCHMARK_SERVER_MEMORY ?? "4g",
+    clientMemoryLimit: process.env.JANITOR_BENCHMARK_CLIENT_MEMORY ?? "4g",
+    started,
+    finished: new Date().toISOString(),
+    node: process.version,
+    target,
+    workers,
+    phase,
+    failure,
+    unexpectedCloses,
+    statsFailures,
+    errors,
+    stages,
+    limitations: [
+      "HTTP/1.1 over an isolated local Docker network, without TLS or a production load balancer.",
+      "Open keep-alive capacity differs from completed identity throughput; 503 is shed work, not successful identity.",
+      "Eight Node processes, eight database connections, 64 admitted measurements total; no real Jev inference.",
+      "The load generator shares the developer host and can bottleneck; offered scheduling delay and transport errors are reported.",
+    ],
+  };
+  await writeFile(
+    process.env.JANITOR_BENCHMARK_OUTPUT ??
+      `/results/connections-${target}.json`,
+    JSON.stringify(result, null, 2) + "\n",
+  );
+}
+await checkpoint();
 try {
   for (const step of [
     ...new Set([
@@ -158,6 +188,7 @@ try {
     };
     stages.push(result);
     console.log(JSON.stringify(result));
+    await checkpoint();
     if (live !== step) throw Error("Connections closed during ramp");
   }
   // Hold all connections while making actual Janitor requests at a declared open-loop rate.
@@ -217,9 +248,11 @@ try {
       server: await readStats(),
     });
     console.log(JSON.stringify(stages.at(-1)));
+    await checkpoint();
   }
   // One simultaneous measurement per open connection. Successful work and overload are separate outcomes.
   phase = "burst";
+  await checkpoint();
   const burstStatuses: Record<string, number> = {};
   const burstLatency: number[] = [];
   const burstStart = performance.now();
@@ -246,6 +279,7 @@ try {
     clientRssBytes: process.memoryUsage().rss,
   });
   console.log(JSON.stringify(stages.at(-1)));
+  await checkpoint();
   phase = "recovery";
   await new Promise((r) => setTimeout(r, 1000));
   const recovery: Record<string, number> = {};
@@ -259,7 +293,18 @@ try {
   }
   stages.push({ phase, statuses: recovery, server: await readStats() });
   console.log(JSON.stringify(stages.at(-1)));
+  await checkpoint();
   if (
+    stages.some((stage) => {
+      const statuses = (stage as { statuses?: Record<string, number> })
+        .statuses;
+      return (
+        statuses &&
+        Object.keys(statuses).some(
+          (status) => status !== "200" && status !== "503",
+        )
+      );
+    }) ||
     statsFailures ||
     unexpectedCloses ||
     Object.keys(errors).length ||
@@ -273,30 +318,7 @@ try {
   console.error(failure);
   process.exitCode = 1;
 } finally {
-  const result = {
-    started,
-    finished: new Date().toISOString(),
-    node: process.version,
-    target,
-    workers,
-    phase,
-    failure,
-    unexpectedCloses,
-    statsFailures,
-    errors,
-    stages,
-    limitations: [
-      "HTTP/1.1 over an isolated local Docker network, without TLS or a production load balancer.",
-      "Open keep-alive capacity differs from completed identity throughput; 503 is shed work, not successful identity.",
-      "Eight Node processes, eight database connections, 64 admitted measurements total; no real Jev inference.",
-      "The load generator shares the developer host and can bottleneck; offered scheduling delay and transport errors are reported.",
-    ],
-  };
-  await writeFile(
-    process.env.JANITOR_BENCHMARK_OUTPUT ??
-      `/results/connections-${target}.json`,
-    JSON.stringify(result, null, 2) + "\n",
-  );
+  await checkpoint(true);
   closing = true;
   for (const p of sockets) p.socket.destroy();
 }

@@ -1,0 +1,556 @@
+{
+  "recordedAt": "2026-09-23T20:43:58.456Z",
+  "label": "current",
+  "source": "synthetic; no accuracy or paid AI measurement",
+  "machine": {
+    "cpu": "Apple M2 Pro",
+    "hostMemoryBytes": 34359738368,
+    "database": "local Docker PostgreSQL 17; 2 CPU limit, 1 GiB memory limit, shared_buffers=128MB, pool=8"
+  },
+  "postgres": "PostgreSQL 17.11 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "data": {
+    "events": 1000001,
+    "subjects": 100001,
+    "bytes": 1966153728
+  },
+  "shards": 32,
+  "mockedEvaluatorCalls": 9,
+  "observations": [
+    {
+      "name": "event-insert",
+      "concurrency": 1,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 1124.7,
+      "p50Ms": 0.85,
+      "p95Ms": 1.3,
+      "p99Ms": 1.8,
+      "maxMs": 3.66,
+      "poolWaitingPeak": 0,
+      "databaseConnectionsPeak": 1,
+      "eventLoopP99Ms": 10.52
+    },
+    {
+      "name": "velocity-sparse",
+      "concurrency": 1,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 1686.7,
+      "p50Ms": 0.53,
+      "p95Ms": 0.98,
+      "p99Ms": 1.68,
+      "maxMs": 3.24,
+      "poolWaitingPeak": 0,
+      "databaseConnectionsPeak": 1,
+      "eventLoopP99Ms": 10.98
+    },
+    {
+      "name": "velocity-hot",
+      "concurrency": 1,
+      "requests": 256,
+      "failed": 0,
+      "outcomes": {
+        "saturated": 256
+      },
+      "requestsPerSecond": 889.5,
+      "p50Ms": 0.94,
+      "p95Ms": 2.23,
+      "p99Ms": 3.01,
+      "maxMs": 3.38,
+      "poolWaitingPeak": 0,
+      "databaseConnectionsPeak": 1,
+      "eventLoopP99Ms": 10.6
+    },
+    {
+      "name": "shared-global-quota",
+      "concurrency": 1,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "admitted": 1000
+      },
+      "requestsPerSecond": 726,
+      "p50Ms": 0.45,
+      "p95Ms": 6.24,
+      "p99Ms": 7.94,
+      "maxMs": 211.67,
+      "poolWaitingPeak": 0,
+      "databaseConnectionsPeak": 1,
+      "eventLoopP99Ms": 11.65
+    },
+    {
+      "name": "exhausted-global-quota",
+      "concurrency": 1,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "limited": 1000
+      },
+      "requestsPerSecond": 2378.8,
+      "p50Ms": 0.4,
+      "p95Ms": 0.5,
+      "p99Ms": 1.02,
+      "maxMs": 1.7,
+      "poolWaitingPeak": 0,
+      "databaseConnectionsPeak": 1,
+      "eventLoopP99Ms": 10.86
+    },
+    {
+      "name": "event-insert",
+      "concurrency": 16,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 6275.6,
+      "p50Ms": 2.14,
+      "p95Ms": 3.98,
+      "p99Ms": 12.84,
+      "maxMs": 19.55,
+      "poolWaitingPeak": 8,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.16
+    },
+    {
+      "name": "velocity-sparse",
+      "concurrency": 16,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 8267.8,
+      "p50Ms": 1.74,
+      "p95Ms": 3.13,
+      "p99Ms": 4.02,
+      "maxMs": 4.76,
+      "poolWaitingPeak": 8,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.94
+    },
+    {
+      "name": "velocity-hot",
+      "concurrency": 16,
+      "requests": 256,
+      "failed": 0,
+      "outcomes": {
+        "saturated": 256
+      },
+      "requestsPerSecond": 2873.7,
+      "p50Ms": 5.08,
+      "p95Ms": 8.29,
+      "p99Ms": 9.21,
+      "maxMs": 9.67,
+      "poolWaitingPeak": 8,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 12.16
+    },
+    {
+      "name": "shared-global-quota",
+      "concurrency": 16,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "admitted": 1000
+      },
+      "requestsPerSecond": 8404.9,
+      "p50Ms": 1.77,
+      "p95Ms": 2.79,
+      "p99Ms": 5.71,
+      "maxMs": 6.42,
+      "poolWaitingPeak": 8,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.09
+    },
+    {
+      "name": "exhausted-global-quota",
+      "concurrency": 16,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "limited": 1000
+      },
+      "requestsPerSecond": 5387.9,
+      "p50Ms": 2.98,
+      "p95Ms": 3.21,
+      "p99Ms": 3.41,
+      "maxMs": 3.5,
+      "poolWaitingPeak": 8,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.08
+    },
+    {
+      "name": "event-insert",
+      "concurrency": 64,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 8082.7,
+      "p50Ms": 7.75,
+      "p95Ms": 8.87,
+      "p99Ms": 9.39,
+      "maxMs": 9.98,
+      "poolWaitingPeak": 56,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.23
+    },
+    {
+      "name": "velocity-sparse",
+      "concurrency": 64,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 9082.5,
+      "p50Ms": 6.84,
+      "p95Ms": 8.17,
+      "p99Ms": 8.77,
+      "maxMs": 9.3,
+      "poolWaitingPeak": 56,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.35
+    },
+    {
+      "name": "velocity-hot",
+      "concurrency": 64,
+      "requests": 256,
+      "failed": 0,
+      "outcomes": {
+        "saturated": 256
+      },
+      "requestsPerSecond": 2597.9,
+      "p50Ms": 22.96,
+      "p95Ms": 26.19,
+      "p99Ms": 28.4,
+      "maxMs": 30.18,
+      "poolWaitingPeak": 56,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 12.95
+    },
+    {
+      "name": "shared-global-quota",
+      "concurrency": 64,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "admitted": 1000
+      },
+      "requestsPerSecond": 9654.3,
+      "p50Ms": 6.47,
+      "p95Ms": 7.3,
+      "p99Ms": 8.03,
+      "maxMs": 9.05,
+      "poolWaitingPeak": 56,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.15
+    },
+    {
+      "name": "exhausted-global-quota",
+      "concurrency": 64,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "limited": 1000
+      },
+      "requestsPerSecond": 5404.8,
+      "p50Ms": 11.81,
+      "p95Ms": 12.35,
+      "p99Ms": 12.67,
+      "maxMs": 13.27,
+      "poolWaitingPeak": 56,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.1
+    },
+    {
+      "name": "event-insert",
+      "concurrency": 256,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 8411.1,
+      "p50Ms": 29.33,
+      "p95Ms": 30.39,
+      "p99Ms": 34.04,
+      "maxMs": 35.06,
+      "poolWaitingPeak": 248,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.17
+    },
+    {
+      "name": "velocity-sparse",
+      "concurrency": 256,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 8253,
+      "p50Ms": 25.93,
+      "p95Ms": 27.97,
+      "p99Ms": 28.61,
+      "maxMs": 29.25,
+      "poolWaitingPeak": 248,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 11.13
+    },
+    {
+      "name": "velocity-hot",
+      "concurrency": 256,
+      "requests": 256,
+      "failed": 0,
+      "outcomes": {
+        "saturated": 256
+      },
+      "requestsPerSecond": 2627.5,
+      "p50Ms": 48.48,
+      "p95Ms": 75.79,
+      "p99Ms": 81.28,
+      "maxMs": 81.59,
+      "poolWaitingPeak": 248,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 11.13
+    },
+    {
+      "name": "shared-global-quota",
+      "concurrency": 256,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "admitted": 1000
+      },
+      "requestsPerSecond": 9272.6,
+      "p50Ms": 26.15,
+      "p95Ms": 29.61,
+      "p99Ms": 30.19,
+      "maxMs": 30.96,
+      "poolWaitingPeak": 248,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.89
+    },
+    {
+      "name": "exhausted-global-quota",
+      "concurrency": 256,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "limited": 1000
+      },
+      "requestsPerSecond": 4782.4,
+      "p50Ms": 49.5,
+      "p95Ms": 60.94,
+      "p99Ms": 61.28,
+      "maxMs": 61.44,
+      "poolWaitingPeak": 248,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.17
+    },
+    {
+      "name": "evaluator-admission-mocked-5ms",
+      "concurrency": 256,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "unavailable": 991,
+        "evaluated": 9
+      },
+      "requestsPerSecond": 2554.2,
+      "p50Ms": 61.78,
+      "p95Ms": 186.06,
+      "p99Ms": 189.07,
+      "maxMs": 368.67,
+      "poolWaitingPeak": 248,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.98
+    },
+    {
+      "name": "device-association-read",
+      "concurrency": 64,
+      "requests": 1000,
+      "failed": 0,
+      "outcomes": {
+        "ok": 1000
+      },
+      "requestsPerSecond": 9936.6,
+      "p50Ms": 5.92,
+      "p95Ms": 10.81,
+      "p99Ms": 12.51,
+      "maxMs": 13.31,
+      "poolWaitingPeak": 56,
+      "databaseConnectionsPeak": 8,
+      "eventLoopP99Ms": 10.14
+    }
+  ],
+  "errors": {},
+  "plans": {
+    "hot": [
+      {
+        "Plan": {
+          "Node Type": "Limit",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Startup Cost": 0.55,
+          "Total Cost": 597.06,
+          "Plan Rows": 1001,
+          "Plan Width": 51,
+          "Actual Startup Time": 0.265,
+          "Actual Total Time": 3.006,
+          "Actual Rows": 1001,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 121,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 2,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0,
+          "Plans": [
+            {
+              "Node Type": "Index Scan",
+              "Parent Relationship": "Outer",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Scan Direction": "Forward",
+              "Index Name": "idx_events_subject_action",
+              "Relation Name": "application_events",
+              "Alias": "application_events",
+              "Startup Cost": 0.55,
+              "Total Cost": 235713.87,
+              "Plan Rows": 395551,
+              "Plan Width": 51,
+              "Actual Startup Time": 0.264,
+              "Actual Total Time": 2.948,
+              "Actual Rows": 1001,
+              "Actual Loops": 1,
+              "Index Cond": "((subject_id = 'sub_0000000000000000000000000000000000000000000000000000000000000001'::text) AND (scope = 'sub_1e1f4556588e4da58ec08a562e27775022cc67864028ff2f6393f3be7dda1363'::text) AND (action = 'sign-in'::text) AND (occurred_at >= '1790195332399'::bigint) AND (occurred_at <= '1790196232399'::bigint))",
+              "Rows Removed by Index Recheck": 0,
+              "Filter": "(expires_at > '1790196232399'::bigint)",
+              "Rows Removed by Filter": 0,
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 121,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 2,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        },
+        "Planning": {
+          "Shared Hit Blocks": 37,
+          "Shared Read Blocks": 10,
+          "Shared Dirtied Blocks": 1,
+          "Shared Written Blocks": 2,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.249,
+        "Triggers": [],
+        "Execution Time": 3.105
+      }
+    ],
+    "sparse": [
+      {
+        "Plan": {
+          "Node Type": "Limit",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Startup Cost": 0.55,
+          "Total Cost": 42.13,
+          "Plan Rows": 16,
+          "Plan Width": 51,
+          "Actual Startup Time": 0.079,
+          "Actual Total Time": 0.095,
+          "Actual Rows": 5,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 1,
+          "Shared Read Blocks": 8,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0,
+          "Plans": [
+            {
+              "Node Type": "Index Scan",
+              "Parent Relationship": "Outer",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Scan Direction": "Forward",
+              "Index Name": "idx_events_subject_action",
+              "Relation Name": "application_events",
+              "Alias": "application_events",
+              "Startup Cost": 0.55,
+              "Total Cost": 42.13,
+              "Plan Rows": 16,
+              "Plan Width": 51,
+              "Actual Startup Time": 0.079,
+              "Actual Total Time": 0.095,
+              "Actual Rows": 5,
+              "Actual Loops": 1,
+              "Index Cond": "((subject_id = 'sub_00000000000000000000000000000000000000000000000000000000000003e8'::text) AND (scope = 'sub_1e1f4556588e4da58ec08a562e27775022cc67864028ff2f6393f3be7dda1363'::text) AND (action = 'sign-in'::text) AND (occurred_at >= '1790195332411'::bigint) AND (occurred_at <= '1790196232411'::bigint))",
+              "Rows Removed by Index Recheck": 0,
+              "Filter": "(expires_at > '1790196232411'::bigint)",
+              "Rows Removed by Filter": 0,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 8,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        },
+        "Planning": {
+          "Shared Hit Blocks": 0,
+          "Shared Read Blocks": 0,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 0,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0
+        },
+        "Planning Time": 0.056,
+        "Triggers": [],
+        "Execution Time": 0.107
+      }
+    ]
+  },
+  "limitations": [
+    "Closed-loop load, local network, shared developer host; not a production throughput SLA.",
+    "Hot reads intentionally saturate at 1000 returned events; counts are lower bounds.",
+    "Rows are synthetic; the seed bypasses API hashing, while measured writes use the production API.",
+    "No D1 throughput or real Jev inference capacity is measured."
+  ]
+}

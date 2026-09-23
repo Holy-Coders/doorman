@@ -4,7 +4,7 @@ We tested the optional detection signals against controlled browsers, public res
 
 The most important result: **the current Jev operator prompt did not reliably separate humans from agents on our small public-data sample.** Keep inferred operator labels experimental and keep verified account and agent identities separate.
 
-The [full verification summary](benchmarks/full-validation-2026-09-23.json) also covers database and application checks. The [six-million-observation lookup repeat](SCALING.md) completed, while the [200,000-request burst failed twice](CAPACITY.md). Passing application tests does not establish model accuracy or production capacity.
+The [full verification summary](benchmarks/full-validation-2026-09-23.json) also covers database and application checks. The [six-million-observation lookup repeat](SCALING.md) completed, and the original 200,000-request bursts failed. The [subsequent capacity fix and reruns](CAPACITY.md) preserve those failures and document the corrected limits. Passing application tests does not establish model accuracy or production capacity.
 
 ## Live Jev: working integration, limited classification
 
@@ -53,7 +53,17 @@ The model distinguished authorized automation from suspicious activity and did n
 
 Starting from a synthetic consistent browser, the baseline returned automation 0.09 and suspicious 0.10. A failed app-font download returned 0.09 / 0.16, a permission mismatch 0.12 / 0.16, and centered clicks 0.16 / 0.33. Missing all browser signals returned 0.12 / 0.12. These are sensitivity checks, not measured false-positive rates.
 
-Setting `webdriver` alone raised automation to 0.86, as expected, but also raised suspicion to 0.46 and lowered the model's same-browser answer from 0.94 to 0.78 despite unchanged deterministic similarity. Combining experimental probes produced suspicion 0.51. That is evidence of unwanted coupling in the model's judgments. Janitor's deterministic matching and final risk fields are separate, but the evaluator itself is **not demonstrated to keep those concepts independent**. A future evaluator revision needs a separately evaluated identity-only input and stronger benign-automation controls. We did not tune prompts or thresholds to make this panel pass.
+Setting `webdriver` alone raised automation to 0.86, as expected, but also raised suspicion to 0.46 and lowered the model's same-browser answer from 0.94 to 0.78 despite unchanged deterministic similarity. Combining experimental probes produced suspicion 0.51. That is evidence of unwanted coupling in the model's judgments. That shared-state evaluator has since been replaced by separately scoped identity and risk requests, described below. These historical results remain unchanged. We did not tune prompts or thresholds to make this panel pass.
+
+## Identity and risk isolation
+
+A subsequent regression experiment made **12 new real Jev requests**, under a separate 16-call cap, using captured Chromium, Firefox and WebKit test environments. For each, we changed only automation, runtime and behavior claims. The single-history identity payload and the batched identity payload stayed byte-for-byte identical; only the separate risk payload changed. Identical inputs reused cached provider answers. All 12 calls completed; provider p50 was 522 ms and p95 was 1,143 ms.
+
+This verifies the input boundary, not real-world identification accuracy. These are scripted browsers with synthetic ablations, not human labels. The public evaluator result remains unchanged, but each identity/risk evaluation now reserves two provider calls. TypeScript and native Elixir implement the same separation. See the [exact provider protocol](JEV.md) and [raw isolation report](benchmarks/jev-isolation-2026-09-23.json).
+
+Reproduce the protocol regression with `pnpm benchmark:jev:isolation`. It replays the local cache by default. New inference requires `--live --max-calls 16` and server-side Cloudflare credentials; the independent ledger reserves attempts before calls and never resets automatically. The original full panel used the shared-state protocol at commit `5d2b625`; its frozen results are historical and are not a cache for the new request format.
+
+The classifier pipeline also now checks calibration and ranking on both validation and held-out applications. It does not promote the weak raw Jev operator scores. See [training and promotion requirements](CLASSIFIER.md#how-we-check-the-scores).
 
 ## Browser experiments
 

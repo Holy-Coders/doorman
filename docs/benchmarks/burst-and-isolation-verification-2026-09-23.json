@@ -1,0 +1,88 @@
+{
+  "date": "2026-09-23",
+  "changes": [
+    "Node admission before Web Request/body allocation",
+    "Bounded native HTTP bridge used by Fastify and capacity harness",
+    "Independent Jev identity and current-only risk requests in TypeScript and Elixir",
+    "Atomic two-call budget/concurrency reservations",
+    "Classifier calibration and discrimination gates on validation and holdout",
+    "Capacity progress checkpoints and OOM diagnostics"
+  ],
+  "checks": {
+    "typescript": {
+      "passed": 411,
+      "files": 33,
+      "command": "NETWORK_TEST_DATABASE_URL=postgres://visitor:visitor@127.0.0.1:55433/visitors pnpm test"
+    },
+    "elixir": {
+      "passed": 69,
+      "database": "local Postgres 18.1"
+    },
+    "phoenix": {
+      "passed": 2
+    },
+    "browserAndAnalytics": {
+      "passed": 3
+    },
+    "siteBrowser": {
+      "passed": 17
+    },
+    "externalBenchmarkPython": {
+      "passed": 11
+    },
+    "typecheck": "passed",
+    "lint": "passed",
+    "siteCheck": "passed",
+    "siteBuild": {
+      "pages": 175
+    },
+    "cloudflareDryRun": "passed"
+  },
+  "capacity": {
+    "successfulRepeats": 2,
+    "connectionsEach": 200000,
+    "serverMemoryLimitGiB": 4,
+    "largeClientMemoryLimitGiB": 4,
+    "unexpectedClosesEach": 0,
+    "transportErrorsEach": 0,
+    "recoveryEach": {
+      "successful": 100,
+      "requests": 100
+    },
+    "burstIdentities": [
+      488,
+      609
+    ],
+    "burstOverload503": [
+      199512,
+      199391
+    ],
+    "serverMemoryPeakBytes": [
+      2437128192,
+      2438787072
+    ],
+    "oomEventsEach": 0,
+    "references": [
+      "connections-fixed-first-2026-09-23.json",
+      "connections-fixed-repeat-2026-09-23.json",
+      "capacity-failure-diagnostics-2026-09-23.json"
+    ]
+  },
+  "jev": {
+    "newCalls": 12,
+    "attemptCap": 16,
+    "model": "jev-1.13.0",
+    "reference": "jev-isolation-2026-09-23.json",
+    "previousLedgerReset": false,
+    "playgroundBudgetChanged": false,
+    "productionModelPromoted": false
+  },
+  "limits": [
+    "Capacity uses local HTTP/1.1 without TLS, production proxy or real model inference.",
+    "Original server 2 GiB failed with OOM kills; this is not a pass under the old memory cap.",
+    "Most burst requests were controlled overload, not completed identities.",
+    "Live Jev isolation uses test-browser captures and synthetic ablations, not independent identity or human/agent accuracy labels.",
+    "Raw operator quality remains experimental; stronger calibration gates do not improve weak ranking by themselves.",
+    "No npm or Hex publication in this change."
+  ]
+}

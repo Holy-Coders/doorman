@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createJevEvaluator,
   createJevInput,
+  createRiskInput,
+  createJevMethods,
   JEV_ENDPOINT,
   JEV_QUESTIONS,
 } from "@janitor/evaluator-jev";
@@ -92,7 +94,7 @@ describe("documented Jev contracts", () => {
       ).rejects.toThrow();
     },
   );
-  it("sends at most five compact observations and aggregate current behavior", () => {
+  it("sends compact identity history separately from current risk behavior", () => {
     const behavior = {
       pageAgeMs: 1,
       mouseMoveCount: 0,
@@ -107,7 +109,11 @@ describe("documented Jev contracts", () => {
       current: { ...input.current, behavior },
     });
     expect(payload.state.history).toHaveLength(5);
-    expect(payload.state.current.behavior).toEqual(behavior);
+    expect(payload.state.current.behavior).toBeUndefined();
+    const risk = createRiskInput({ ...input.current, behavior });
+    expect(risk.state.current.behavior).toEqual(behavior);
+    expect(risk.state).not.toHaveProperty("history");
+    expect(risk.questions).not.toHaveProperty("sameVisitor");
     expect(JEV_QUESTIONS.automation.instructions).toContain(
       "lack of mouse movement alone must not imply automation",
     );
@@ -232,4 +238,49 @@ describe("documented Jev contracts", () => {
     await vi.advanceTimersByTimeAsync(100);
     expect(save).toHaveBeenCalledOnce();
   });
+});
+
+it("identity payload is invariant to current and historical automation, runtime and behavior", async () => {
+  const calls: unknown[] = [];
+  const evaluator = createJevMethods(async (input) => {
+    calls.push(JSON.parse(JSON.stringify(input)));
+    return jevResponse;
+  });
+  await evaluator.evaluate(input);
+  const altered = {
+    ...input.current,
+    automation: { webdriver: true },
+    behavior: {
+      pageAgeMs: 50000,
+      mouseMoveCount: 1000,
+      keyDownCount: 1,
+      pointerDownCount: 2,
+      scrollCount: 3,
+      visibilityChangeCount: 99,
+    },
+    environment: { runtimeMarkerCount: 1 },
+  };
+  await evaluator.evaluate({ ...input, history: [altered], current: altered });
+  expect(calls[0]).toEqual(calls[2]);
+  expect(calls[1]).not.toEqual(calls[3]);
+  expect(JSON.stringify(calls[0])).not.toContain("webdriverDetected");
+  expect(evaluator.requestCosts?.evaluate).toBe(2);
+});
+it("does not release a compound evaluation while its other provider call is pending", async () => {
+  let finish!: (v: unknown) => void;
+  const evaluator = createJevMethods(async (input) => {
+    if (input.questions.sameVisitor) throw Error("identity unavailable");
+    return new Promise((resolve) => {
+      finish = resolve;
+    });
+  });
+  let settled = false;
+  const result = evaluator.evaluate(input).finally(() => {
+    settled = true;
+  });
+  const assertion = expect(result).rejects.toThrow("identity unavailable");
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  expect(settled).toBe(false);
+  finish(jevResponse);
+  await assertion;
 });

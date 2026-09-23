@@ -5,6 +5,8 @@ export type { JevRequest } from "./intelligence.js";
 export { API_ACTIVITY_QUESTIONS, createActivityInput } from "./activity.js";
 export {
   createJevInput,
+  createRiskInput,
+  compactIdentity,
   parseJevResponse,
   compactObservation,
   JEV_QUESTIONS,

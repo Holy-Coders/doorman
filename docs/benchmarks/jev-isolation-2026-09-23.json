@@ -1,0 +1,110 @@
+{
+  "createdAt": "2026-09-23T20:52:40.127Z",
+  "provider": "Cloudflare REST typesafe/jev, production evaluator/parsers",
+  "sourceSha256": "938ad8084ffa8a6102b0192ec556ebcb65f2c39b6a7fec4f9288724f5ecf82ed",
+  "codeSha256": "b71521f4508f2df8c4b12b7ba7e38e5ec092e420de77e8d41f7408f168dfa5b2",
+  "usage": {
+    "attempts": 12,
+    "completed": 12,
+    "inputBytes": 34173,
+    "inputTokens": 13405,
+    "outputTokens": 357,
+    "p50LatencyMs": 522,
+    "p95LatencyMs": 1143,
+    "aboveDefault1200ms": 0
+  },
+  "newCalls": 12,
+  "maxCalls": 16,
+  "results": [
+    {
+      "engine": "chromium",
+      "deterministicSimilarity": 1,
+      "identityPayloadEqual": true,
+      "batchIdentityPayloadEqual": true,
+      "baseline": {
+        "sameVisitor": 0.94,
+        "automation": 0.09,
+        "suspicious": 0.28
+      },
+      "variation": {
+        "sameVisitor": 0.94,
+        "automation": 0.84,
+        "suspicious": 0.76
+      },
+      "batch": {
+        "baseline": {
+          "sameVisitor": 0.95,
+          "automation": 0.09,
+          "suspicious": 0.28
+        },
+        "variation": {
+          "sameVisitor": 0.95,
+          "automation": 0.84,
+          "suspicious": 0.76
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "deterministicSimilarity": 1,
+      "identityPayloadEqual": true,
+      "batchIdentityPayloadEqual": true,
+      "baseline": {
+        "sameVisitor": 0.94,
+        "automation": 0.08,
+        "suspicious": 0.25
+      },
+      "variation": {
+        "sameVisitor": 0.94,
+        "automation": 0.83,
+        "suspicious": 0.73
+      },
+      "batch": {
+        "baseline": {
+          "sameVisitor": 0.95,
+          "automation": 0.08,
+          "suspicious": 0.25
+        },
+        "variation": {
+          "sameVisitor": 0.95,
+          "automation": 0.83,
+          "suspicious": 0.73
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "deterministicSimilarity": 1,
+      "identityPayloadEqual": true,
+      "batchIdentityPayloadEqual": true,
+      "baseline": {
+        "sameVisitor": 0.94,
+        "automation": 0.09,
+        "suspicious": 0.24
+      },
+      "variation": {
+        "sameVisitor": 0.94,
+        "automation": 0.8,
+        "suspicious": 0.7
+      },
+      "batch": {
+        "baseline": {
+          "sameVisitor": 0.95,
+          "automation": 0.09,
+          "suspicious": 0.24
+        },
+        "variation": {
+          "sameVisitor": 0.95,
+          "automation": 0.8,
+          "suspicious": 0.7
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Three captured automated test-browser environments; this is protocol isolation, not human/device detection accuracy.",
+    "Changed webdriver/runtime/behavior values are synthetic ablations. Identical identity inputs reuse a cached provider answer.",
+    "Research transport serializes calls. Production runs the pair concurrently; these timings are not end-to-end request latency.",
+    "Raw Jev confidence remains uncalibrated. No production classifier, thresholds, or provider weights were fitted here."
+  ]
+}

@@ -51,13 +51,17 @@ defmodule Janitor.Jev do
 
     %{
       "state" => %{
-        "history" => Enum.map(history, &compact/1),
-        "current" => compact(input["current"]),
+        "history" => Enum.map(history, &compact_identity/1),
+        "current" => compact_identity(input["current"]),
         "deterministicSimilarity" => input["deterministicSimilarity"],
         "evidence" =>
-          Enum.map(history, &Janitor.Observation.similarity(&1, input["current"])["features"])
+          Enum.map(
+            history,
+            &(Janitor.Observation.similarity(&1, input["current"])["features"]
+              |> Map.delete("webdriverDetected"))
+          )
       },
-      "questions" => @questions
+      "questions" => Map.take(@questions, ~w(sameVisitor))
     }
   end
 
@@ -94,13 +98,59 @@ defmodule Janitor.Jev do
     |> Janitor.Observation.clean()
   end
 
-  def evaluate(input, opts), do: parse(request(input(input), opts))
+  def compact_identity(o),
+    do:
+      o
+      |> Map.take(~w(platform browser timezone languages screen viewport hardware graphics fonts))
+      |> compact()
+
+  def risk_input(current),
+    do: %{
+      "state" => %{"current" => compact(current)},
+      "questions" => Map.take(@questions, ~w(automation suspicious))
+    }
+
+  # Parallel, separately scoped provider calls. Wait for both before releasing admission.
+  defp paired(identity, risk, opts) do
+    [a, b] =
+      [identity, risk]
+      |> Task.async_stream(
+        fn input ->
+          try do
+            {:ok, request(input, opts)}
+          rescue
+            _ -> :unavailable
+          end
+        end,
+        max_concurrency: 2,
+        timeout: Keyword.get(opts, :timeout_ms, 1000) + 100,
+        on_timeout: :kill_task
+      )
+      |> Enum.to_list()
+
+    with {:ok, {:ok, identity_response}} <- a,
+         {:ok, {:ok, risk_response}} <- b do
+      {identity_response, risk_response}
+    else
+      _ -> raise("Jev unavailable")
+    end
+  end
+
+  def evaluate(input, opts) do
+    {identity, risk} = paired(input(input), risk_input(input["current"]), opts)
+
+    %{
+      "sameVisitor" => noul(identity, "sameVisitor"),
+      "automation" => noul(risk, "automation"),
+      "suspicious" => noul(risk, "suspicious")
+    }
+  end
 
   def plan_lookup(current, opts) do
     response =
       request(
         %{
-          "state" => %{"current" => compact(current)},
+          "state" => %{"current" => compact_identity(current)},
           "questions" => Map.take(@intelligence, ~w(graphics locale))
         },
         opts
@@ -129,22 +179,23 @@ defmodule Janitor.Jev do
 
         {"candidate#{i}", q}
       end)
-      |> Map.merge(Map.take(@questions, ~w(automation suspicious)))
 
     state = %{
-      "current" => compact(current),
+      "current" => compact_identity(current),
       "candidates" =>
         Enum.map(candidates, fn c ->
           %{
-            "history" => Enum.map(Enum.take(c.history, 5), &compact/1),
+            "history" => Enum.map(Enum.take(c.history, 5), &compact_identity/1),
             "deterministicSimilarity" => c.score
           }
         end)
     }
 
-    response = request(%{"state" => state, "questions" => questions}, opts)
-    automation = noul(response, "automation")
-    suspicious = noul(response, "suspicious")
+    {response, risk} =
+      paired(%{"state" => state, "questions" => questions}, risk_input(current), opts)
+
+    automation = noul(risk, "automation")
+    suspicious = noul(risk, "suspicious")
 
     candidates
     |> Enum.with_index()
@@ -187,7 +238,9 @@ defmodule Janitor.Jev do
         end)
 
       state = %{
-        "current" => compact(current),
+        "current" =>
+          Map.put(compact_identity(current), "behavior", current["behavior"])
+          |> Janitor.Observation.clean(),
         "candidates" =>
           Enum.map(candidates, fn {_, rows} ->
             %{
@@ -195,7 +248,13 @@ defmodule Janitor.Jev do
                 Enum.map(
                   rows,
                   &%{
-                    "observation" => compact(&1["observation"]),
+                    "observation" =>
+                      Map.put(
+                        compact_identity(&1["observation"]),
+                        "behavior",
+                        &1["observation"]["behavior"]
+                      )
+                      |> Janitor.Observation.clean(),
                     "observedAt" => &1["observedAt"]
                   }
                 )

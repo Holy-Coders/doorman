@@ -4,6 +4,7 @@ export type EvaluationLease = {
   expiresAt: number;
   epoch: number;
   probe: boolean;
+  cost?: number;
 };
 export type EvaluationControl = {
   version: number;

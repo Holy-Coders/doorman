@@ -45,8 +45,8 @@ const visitor = createNodeVisitor({
 | Control                    | Behavior                                                                                                                                                                                                                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Measurement request limits | Database-atomic fixed windows. Global limit always applies when protection is configured; account/session limits apply only when supplied in trusted server context. Earlier counters count attempts denied by a later counter too. Fixed windows can admit bursts across a boundary. |
-| Call budget                | Counts evaluator starts, including failures and each candidate evaluation. Shared across adapter instances and native Elixir with matching configuration. It is a call-count limit, not a currency-denominated billing guarantee.                                                     |
-| Concurrency                | At most the configured number of unexpired leases. Reservation updates use compare-and-swap, with eight bounded attempts. Contention or storage failure skips inference.                                                                                                              |
+| Call budget                | Counts reserved provider calls, including failures. Identity/risk pairs reserve two calls atomically. Shared across adapter instances and native Elixir with matching configuration. It is a call-count limit, not a currency-denominated billing guarantee.                          |
+| Concurrency                | At most the configured number of reserved provider calls in unexpired leases. Reservation updates use compare-and-swap, with eight bounded attempts. Contention or storage failure skips inference.                                                                                   |
 | Circuit breaker            | Repeated failures open the circuit. After cooldown, one recovery probe may run. A completion from an older circuit generation cannot close the new circuit.                                                                                                                           |
 | Timeout/crash              | Timed-out calls retain their lease until the provider deadline plus five seconds. Abandoned leases expire; there is no worker or scheduler. This cannot guarantee that a remote provider or arbitrary custom evaluator stopped running or billing.                                    |
 | History protection         | A cookie-bearing observation is saved only when retained history has sufficient, non-contradictory deterministic evidence. Sparse or contradictory submissions leave useful history intact; cookie continuity remains separate from authentication.                                   |
@@ -56,6 +56,27 @@ The example limits above are illustrative, not recommended values for every appl
 ### Limit work inside each server instance
 
 The TypeScript HTTP adapters also enforce `maxInFlightRequests` (default 64, range 1–1,024) per reusable handler instance, returning 503 with `Retry-After: 1` before database work when full. `onOverload` is an optional payload-free callback. Reuse the adapter across requests; configure framework and database timeouts independently. This gate covers measurement HTTP calls, not direct core/evidence management calls or other application endpoints. Native Phoenix uses the application's HTTP admission and DBConnection pool/queue controls.
+
+For native Node HTTP servers, use `createNodeRequestListener` from `@janitor/adapters/node/http`. It checks capacity **before** allocating Web Requests or reading bodies. It bounds body size and request duration, preserves multiple response cookies, and keeps a timed-out handler's slot until the underlying work settles. Register framework admission before its body parser; the Fastify example uses this listener in `onRequest`.
+
+```ts
+import { createServer } from "node:http";
+import { createNodeRequestListener } from "@janitor/adapters/node/http";
+
+const server = createServer(
+  createNodeRequestListener(visitor, {
+    origin: "https://your-app.example", // trusted application configuration
+    maxInFlightRequests: 64,
+    maxBodyBytes: 16_384,
+    requestTimeoutMs: 5000,
+  }),
+);
+server.requestTimeout = 5000;
+server.headersTimeout = 5000;
+server.listen(3000);
+```
+
+Connection limits, TLS and socket memory still belong to your server/proxy. A small database pool or request gate cannot make hundreds of thousands of sockets fit into too little memory. The [capacity reruns](CAPACITY.md) record the limits and measured memory separately from successful identity throughput.
 
 ### Spread a shared quota across rows
 

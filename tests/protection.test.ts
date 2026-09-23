@@ -135,6 +135,34 @@ for (const kind of ["postgres", "d1"] as const)
       });
       expect(evaluate).toHaveBeenCalledTimes(1);
     });
+    it("reserves compound provider calls against budget and concurrency before running", async () => {
+      const evaluate = vi.fn(async () => result);
+      const evaluator = { requestCosts: { evaluate: 2 }, evaluate };
+      const opts = {
+        ...options(),
+        evaluator: { maxCalls: 3, maxConcurrent: 2 },
+      };
+      const protectedEvaluator = createProtection(
+        sql.protection,
+        opts,
+        1000,
+      ).wrap(evaluator);
+      await expect(protectedEvaluator.evaluate(input)).resolves.toEqual(result);
+      await expect(protectedEvaluator.evaluate(input)).rejects.toThrow(
+        "admission",
+      );
+      expect(evaluate).toHaveBeenCalledOnce();
+      await expect(
+        createProtection(
+          sql.protection,
+          { ...options(), evaluator: { maxConcurrent: 1 } },
+          1000,
+        )
+          .wrap(evaluator)
+          .evaluate(input),
+      ).rejects.toThrow("admission");
+      expect(evaluate).toHaveBeenCalledOnce();
+    });
     it("limits concurrent reservations and releases only its own lease", async () => {
       const opts = { ...options(), evaluator: { maxConcurrent: 1 } };
       let finish!: () => void;

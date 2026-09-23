@@ -41,6 +41,10 @@
     "./operators": {
       "types": "./dist/operators.d.ts",
       "import": "./dist/operators.js"
+    },
+    "./node/http": {
+      "types": "./dist/node/http.d.ts",
+      "import": "./dist/node/http.js"
     }
   },
   "scripts": {

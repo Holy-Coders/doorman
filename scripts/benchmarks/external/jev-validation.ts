@@ -69,12 +69,15 @@ const transport = await createPilotTransport({
   accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
 });
 const before = transport.summary().attempts;
+let tail: Promise<unknown> = Promise.resolve();
 // Real REST transport through the production Workers AI response adapter and parsers.
 const evaluator = createCloudflareJevEvaluator(
   {
     run: async (model, input) => {
       assert.equal(model, "typesafe/jev");
-      return { state: "Completed", result: await transport.evaluate(input) };
+      const result = tail.then(() => transport.evaluate(input));
+      tail = result.catch(() => {});
+      return { state: "Completed", result: await result };
     },
   },
   { timeoutMs: 20000 },

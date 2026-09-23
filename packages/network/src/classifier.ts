@@ -20,6 +20,7 @@ export const CLASSIFIER_LIMITS = {
   falsePositiveUpper: 0.02,
   minimumRecall: 0.25,
   maximumCalibrationError: 0.1,
+  minimumRocAuc: 0.75,
   minimumBrierImprovement: 0.002,
 } as const;
 export const sigmoid = (x: number) =>

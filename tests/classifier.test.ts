@@ -8,6 +8,8 @@ import {
 } from "../packages/network/src/classifier-data.js";
 import {
   finalizeClassifier,
+  classifierMetrics,
+  classifierGates,
   validateClassifierReport,
   enrichmentMap,
 } from "../packages/network/src/classifier-evaluation.js";
@@ -316,4 +318,44 @@ describe("Jev feature transport", () => {
     );
     expect((await client.classify({})).status).toBe("unavailable");
   });
+});
+
+it("reports tied, reversed and abstained ranking without manufacturing discrimination", async () => {
+  const { dataset } = await classifierFixture();
+  const positive = dataset.rows.find((r) => r.positive)!;
+  const negative = dataset.rows.find((r) => !r.positive)!;
+  const rows = [positive, negative, positive, negative];
+  expect(classifierMetrics(rows, [0.9, 0.1, 0.8, 0.2], 0.5, 0.5).rocAuc).toBe(
+    1,
+  );
+  expect(classifierMetrics(rows, [0.1, 0.9, 0.2, 0.8], 0.5, 0.5).rocAuc).toBe(
+    0,
+  );
+  expect(classifierMetrics(rows, [0.5, 0.5, 0.5, 0.5], 0.5, 0.5).rocAuc).toBe(
+    0.5,
+  );
+  expect(
+    classifierMetrics(rows, [0.9, null, 0.8, null], 0.5, 0.5).rocAuc,
+  ).toBeNull();
+  expect(
+    classifierMetrics(rows, [0.9, 0.1, null, null], 0.5, 0.5).coverage,
+  ).toBe(0.5);
+  expect(() =>
+    classifierMetrics(rows, [NaN, 0.1, 0.2, 0.3], 0.5, 0.5),
+  ).toThrow();
+});
+it("requires calibration and discrimination on validation as well as untouched holdout", async () => {
+  const { dataset } = await classifierFixture();
+  const model = await simpleModel(dataset);
+  expect(classifierGates(model).discrimination).toBe(true);
+  const weak = structuredClone(model);
+  weak.metrics.validation.rocAuc = 0.51;
+  expect(classifierGates(weak).discrimination).toBe(false);
+  const uncalibrated = structuredClone(model);
+  uncalibrated.metrics.validation.calibrationError = 0.3;
+  expect(classifierGates(uncalibrated).calibration).toBe(false);
+  expect(classifierGates(uncalibrated).beatsConstantBaseline).toBe(true);
+  const baseline = structuredClone(model);
+  baseline.metrics.validation.brier = baseline.metrics.validation.baselineBrier;
+  expect(classifierGates(baseline).beatsConstantBaseline).toBe(false);
 });

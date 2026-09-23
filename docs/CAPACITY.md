@@ -4,9 +4,34 @@ This page helps you distinguish open connections from successful identity reques
 
 ## How to read the results
 
-Earlier local runs kept 200,000 HTTP connections open and recovered after overload without dropped connections. **The latest validation did not reproduce that burst stability:** two repeat runs lost connections. Keeping idle sockets open does not establish safe handling of 200,000 simultaneous identifications. The latest failures are reported below, followed by the historical measurements.
+Two completed reruns now keep **200,000 HTTP connections open through a simultaneous request burst**, with zero dropped connections or transport errors and 100/100 recovery requests succeeding. Most burst requests receive a controlled 503 because the service admits only 64 identity requests at once. This measures overload stability, not 200,000 successful simultaneous identifications.
 
-## Latest validation: the large burst failed
+## The burst fix and repeated results
+
+The Node HTTP bridge now checks capacity before creating Web Requests, stream wrappers or body buffers. The production helper is `createNodeRequestListener` from `@janitor/adapters/node/http`; both the load harness and Fastify example use it. Admitted work has body and deadline limits, and a timed-out handler retains its slot until its actual work settles. [Integration example](HARDENING.md#limit-work-inside-each-server-instance).
+
+Request admission alone did not solve socket memory pressure. A diagnostic run with the original **2 GiB server cap** recorded three kernel OOM kills during connection setup. With the server raised to 4 GiB, its workers survived, but the original 2 GiB load generator was then OOM-killed while sending the burst. The final two successful runs use **4 GiB for the server and 4 GiB for the 200,000-connection client**. The server peaked at about **2.27 GiB including cgroup accounting**, already above the old cap. Neither successful run recorded OOM events. This is a configuration change, not a claim that the old 2 GiB limit now works.
+
+Eight Node 22 processes, four server CPUs, eight database connections and 64 admitted requests remain unchanged. Postgres retains two CPUs/1 GiB; the independent 10,000-connection generator uses two CPUs/1 GiB. The local tests exclude TLS, a production proxy, remote networks and paid AI inference. They ran on a shared developer host.
+
+| Phase                                      | First fixed run          | Repeat                   |
+| ------------------------------------------ | ------------------------ | ------------------------ |
+| Open, warmed connections                   | 200,000                  | 200,000                  |
+| 100 offered requests/sec                   | 1,500 / 1,500 identities | 1,500 / 1,500 identities |
+| Steady successful p95                      | 8.26 ms                  | 7.42 ms                  |
+| Burst successful identities                | 488                      | 609                      |
+| Burst controlled 503s                      | 199,512                  | 199,391                  |
+| Burst transport errors / unexpected closes | 0 / 0                    | 0 / 0                    |
+| Burst drain time                           | 6.11 s                   | 5.72 s                   |
+| Recovery                                   | 100 / 100                | 100 / 100                |
+
+The repeat's independent 10,000-connection sweep completed 1,500/1,500 identities at 100 offered/sec, 7,500/7,500 at 500/sec, 14,946/15,000 at 1,000/sec and 29,722/30,000 at 2,000/sec. The remaining requests received 503. Successful-request p95 at 2,000 offered/sec was 3.26 ms, but the generator missed 8,616 schedule deadlines; this is not proof of sustained production throughput. That sweep also recovered 100/100 with no transport errors.
+
+[First result](benchmarks/connections-fixed-first-2026-09-23.json) · [Repeat](benchmarks/connections-fixed-repeat-2026-09-23.json) · [Memory diagnostics](benchmarks/capacity-fixed-repeat-diagnostics-2026-09-23.json) · [Throughput repeat](benchmarks/throughput-fixed-repeat-2026-09-23.json) · [Failure diagnostics](benchmarks/capacity-failure-diagnostics-2026-09-23.json)
+
+`pnpm benchmark:capacity` runs these isolated local experiments. `JANITOR_BENCHMARK_SERVER_MEMORY` and `JANITOR_BENCHMARK_CLIENT_MEMORY` override the large-run limits; both default to `4g`. The harness checkpoints progress before the burst, records whether the report is complete, preserves cgroup/exit diagnostics before restart, and fails on transport errors or unexpected response statuses. Incomplete reports are not passes. No production traffic is generated.
+
+## Earlier validation: the large burst failed
 
 The September 23 expanded validation reused the eight-worker, 2 GiB server-container configuration. Both runs reached 200,000 open connections and completed all 1,500 scheduled identifications at 100 requests/second. The simultaneous burst then failed:
 
@@ -54,7 +79,7 @@ The baseline used production code from `04236ce`; the optimized run used the v0.
 
 [Raw baseline and plans](benchmarks/security-baseline.json) · [Raw optimized result and plans](benchmarks/security-optimized.json)
 
-## 200,000 live HTTP connections
+## Historical 200,000-connection measurement
 
 Eight Node 22.23.2 processes in one Docker container limited to four CPUs and 2 GiB RAM. The client used a separate two-CPU, 2 GiB container on the same local Docker network. The database retained its separate two-CPU/1 GiB limit. Each process listened on a different port; the generator distributed connections evenly. This does **not** test a production load balancer, TLS, HTTP/2, regional network latency or cloud edge capacity.
 

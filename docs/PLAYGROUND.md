@@ -20,6 +20,8 @@ Both examples stay on the page. They use no real cookies, observations, database
 4. **Remove visitor cookie & retry** tests recovery from your saved history. A separate signed demo-session cookie remains so the server can limit the lookup to your own history. This tests a controlled cookie-loss scenario, not recognition after every cookie is removed.
 5. **Stop & erase my demo data** removes your history, cached answers and both demo cookies. Collection stops immediately. If erasure fails, use the button again. Closing the page also stops collection; server data follows the retention policy below.
 
+Identity and risk use separate model inputs. Each identity/risk pair can make two provider calls; a cached half is reused independently. If either half needs fresh inference, the response reports a fresh evaluation regardless of completion order. If both use cache, the displayed time is the older cached answer. The lifetime allowance counts actual provider reservations, including failures, and remains unchanged.
+
 The response contains a visitor ID, whether it was recognized, and whether AI evaluation was fresh, cached or unavailable. Numeric risk and confidence stay on the server. Cached results include their original evaluation time. Unavailable AI is never presented as a successful Jev judgment.
 
 This is Janitor using its own library: browser collectors, matching engine, D1 storage, HTTP handler, Jev integration and shared request protections. The public-demo wrapper adds ownership checks, caching and a lifetime call allowance.
