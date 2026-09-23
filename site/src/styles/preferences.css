@@ -24,8 +24,26 @@
   min-height: 38px;
   padding: 8px 10px;
 }
+.language-control {
+  position: relative;
+  display: inline-flex;
+  color: var(--muted);
+}
+.language-control::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 14px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
 .language-control select {
-  max-width: 125px;
+  appearance: none;
+  padding-inline-end: 34px;
 }
 .theme-toggle {
   display: inline-flex;
@@ -185,8 +203,7 @@ select:focus-visible {
     gap: 7px;
   }
   .language-control select {
-    max-width: 110px;
-    padding: 8px;
+    padding-inline-start: 8px;
   }
   [data-theme-label] {
     display: none;

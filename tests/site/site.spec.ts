@@ -419,11 +419,16 @@ for (const theme of ["light", "dark"]) {
     await expect(page.locator("#analytics-title")).toHaveText(
       /Prepare your analytics/,
     );
+    const languagePicker = page.getByRole("combobox", {
+      name: "Documentation language",
+    });
+    await expect(languagePicker).toHaveCount(0);
     const next = theme === "light" ? "dark" : "light";
     await page.getByRole("button", { name: `Switch to ${next} mode` }).click();
-    await page
-      .getByRole("combobox", { name: "Documentation language" })
-      .selectOption("elixir");
+    await page.goto("/playground/");
+    await expect(languagePicker).toHaveCount(0);
+    await page.goto("/docs/getting-started/");
+    await languagePicker.selectOption("elixir");
     await expect(page).toHaveURL(/\/docs\/elixir\/getting-started\/$/);
     await expect(page.locator("html")).toHaveAttribute("data-theme", next);
     await page.locator('.docs-sidebar a[href$="/api/"]').click();

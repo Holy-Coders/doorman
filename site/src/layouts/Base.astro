@@ -85,23 +85,25 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         </a>
       </nav>
       <div class="header-actions">
-        <label class="language-control">
-          <span class="sr-only">Documentation language</span>
-          <select data-language aria-label="Documentation language">
-            <option value="typescript" selected={language === "typescript"}>
-              TypeScript
-            </option>
-            <option value="elixir" selected={language === "elixir"}>
-              Elixir
-            </option>
-            <option value="python" selected={language === "python"}>
-              Python
-            </option>
-            <option value="go" selected={language === "go"}>
-              Go
-            </option>
-          </select>
-        </label>
+        {docs && (
+          <label class="language-control">
+            <span class="sr-only">Documentation language</span>
+            <select data-language aria-label="Documentation language">
+              <option value="typescript" selected={language === "typescript"}>
+                TypeScript
+              </option>
+              <option value="elixir" selected={language === "elixir"}>
+                Elixir
+              </option>
+              <option value="python" selected={language === "python"}>
+                Python
+              </option>
+              <option value="go" selected={language === "go"}>
+                Go
+              </option>
+            </select>
+          </label>
+        )}
         <button
           class="theme-toggle"
           data-theme-toggle
