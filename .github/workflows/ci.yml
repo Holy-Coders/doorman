@@ -100,6 +100,7 @@ jobs:
           cache-dependency-path: tools/classifier/requirements.txt
       - run: pnpm install --frozen-lockfile
       - run: python -m pip install -r tools/classifier/requirements.txt
+      - run: python -m unittest discover -s tools/benchmarks -p 'test_*.py' -v
       - run: pnpm build
       - run: pnpm exec vitest run tests/classifier-training.test.ts tests/classifier-service.test.ts tests/network-service.test.ts
         env:

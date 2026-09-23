@@ -9,7 +9,9 @@ const add = (total: number, value: number) =>
 
 // Constant memory: aggregate totals and the immediately preceding delta/time only.
 // Never read absolute pointer coordinates, key values, text, or event targets.
-export function createExtendedBehavior() {
+export function createExtendedBehavior(
+  now: () => number = () => performance.now(),
+) {
   const totals = {
     mouseDistancePx: 0,
     mouseActiveMs: 0,
@@ -25,7 +27,6 @@ export function createExtendedBehavior() {
   let intervals = 0;
   let mean = 0;
   let squaredDeviation = 0;
-  const now = () => performance.now();
   return {
     observe(event: Event) {
       const time = now();

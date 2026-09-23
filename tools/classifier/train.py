@@ -32,17 +32,24 @@ def train(data, feature_names, enrichment=None):
     split = data['manifest']['split']
     fitting = [i for i, r in enumerate(rows) if partition(r, split) == 'training']
     calibration = [i for i, r in enumerate(rows) if partition(r, split) == 'calibration']
+    enriched = None if enrichment is None else {
+        (r['tenantId'], r['sampleId']): r['values'] for r in enrichment['rows']
+    }
+    extra = None if enriched is None else [enriched.get((r['tenantId'], r['sampleId']), {}) for r in rows]
+    trained, parity = fit_candidates(rows, fitting, calibration, feature_names, extra)
+    return {'version': 1, 'datasetDigest': data['manifest']['digest'], **trained}, parity
+
+
+def fit_candidates(rows, fitting, calibration, feature_names, enrichment=None):
+    """Numeric fitting shared with offline research; this grants no production provenance."""
     for indices in [fitting, calibration]:
         if len(indices) < 20 or len({rows[i]['positive'] for i in indices}) != 2:
             raise ValueError('Fitting and calibration each need at least 20 independently labeled sessions and both outcomes')
     labels = np.array([int(r['positive']) for r in rows])
-    enriched = {} if enrichment is None else {
-        (r['tenantId'], r['sampleId']): r['values'] for r in enrichment['rows']
-    }
     candidates, parity = [], []
     for mode in ['telemetry'] + (['jev'] if enrichment is not None else []):
         names = [n for n in feature_names if mode == 'jev' or not n.startswith('jev_')]
-        matrix = np.array([[({**r['features'], **(enriched.get((r['tenantId'], r['sampleId']), {}) if mode == 'jev' else {})}).get(n, np.nan) for n in names] for r in rows], dtype=np.float64)
+        matrix = np.array([[({**r['features'], **(enrichment[i] if mode == 'jev' else {})}).get(n, np.nan) for n in names] for i, r in enumerate(rows)], dtype=np.float64)
         # Missingness and variance selection uses fitting data exclusively.
         usable = [j for j in range(len(names)) if np.isfinite(matrix[fitting, j]).mean() >= .8 and np.nanstd(matrix[fitting, j]) > 1e-8]
         if len(usable) < 2:
@@ -80,7 +87,7 @@ def train(data, feature_names, enrichment=None):
             # Native predictions are checked by the TypeScript CLI before accepting an artifact.
             probabilities = calibrator.predict_proba(raw.reshape(-1, 1))[:, 1]
             parity.append({'name': name, 'scores': probabilities.tolist()})
-    return {'version': 1, 'datasetDigest': data['manifest']['digest'], 'trainerVersion': f'janitor-v1 sklearn-{sklearn.__version__} catboost-{catboost.__version__} numpy-{np.__version__}', 'candidates': candidates}, parity
+    return {'trainerVersion': f'janitor-v1 sklearn-{sklearn.__version__} catboost-{catboost.__version__} numpy-{np.__version__}', 'candidates': candidates}, parity
 
 
 if __name__ == '__main__':
