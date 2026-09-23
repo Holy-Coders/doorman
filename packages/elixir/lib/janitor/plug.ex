@@ -41,8 +41,8 @@ defmodule Janitor.Plug do
         id = cookie(conn, c.cookie_name)
         id = if is_binary(id) and Regex.match?(~r/^vis_[a-f0-9]{48}$/, id), do: id
 
-        case Janitor.identify(c, payload, Map.put(context, :visitor_id, id)) do
-          {:ok, identity} ->
+        case Janitor.assess(c, payload, Map.put(context, :visitor_id, id)) do
+          {:ok, %{identity: identity, evidence: evidence}} ->
             learning_id = cookie(conn, c.cookie_name <> "_learning")
 
             learning_cookie =
@@ -79,10 +79,18 @@ defmodule Janitor.Plug do
                 do: identity,
                 else: Map.take(identity, ["visitorId", "isReturning"])
 
-            conn |> assign(:janitor_identity, identity) |> reply(200, public)
+            conn
+            |> assign(:janitor_identity, identity)
+            |> assign(:janitor_evidence, evidence)
+            |> reply(200, public)
 
           {:error, :invalid_payload} ->
             reply(conn, 400, %{"error" => "Invalid visitor payload"})
+
+          {:error, {:rate_limited, retry}} ->
+            conn
+            |> put_resp_header("retry-after", to_string(retry))
+            |> reply(429, %{"error" => "Visitor measurement rate limited"})
 
           _ ->
             reply(conn, 503, %{"error" => "Visitor storage is unavailable"})

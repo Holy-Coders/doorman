@@ -197,3 +197,5 @@ export function createPostgresStorage(
 export * from "./identity.js";
 
 export * from "./learning.js";
+export { createPostgresProtectionStorage } from "./protection.js";
+export { createPostgresEvidenceStorage } from "./evidence.js";

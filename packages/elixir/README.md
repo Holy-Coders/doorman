@@ -68,7 +68,13 @@ The browser receives only `visitorId` and `isReturning` by default. Full evidenc
 
 Fresh `Janitor.Migration.up()` includes selective lookup indexes. Existing installations need a new Ecto migration whose `up` calls `Janitor.Migration.upgrade_lookup()`. On a large live database build the three indexes concurrently outside a transaction first; see [migration instructions](../../docs/SCALING.md). `Janitor.cleanup(config, batch_size: 100, after_visitor_id: cursor)` now returns `%{next_visitor_id: ..., has_more_expired: ...}`; advance the cursor and process further expiry batches through existing maintenance.
 
-## Browser and LiveView
+## Unreleased checkout additions
+
+This checkout adds optional `protection: [secret: ..., namespace: ...]` for shared measurement quotas and evaluator budgets/circuit breaking, plus `evidence: true` with `identity` configuration for server event counts and verified device associations. `Janitor.assess/3` returns a private evidence envelope; `Janitor.handle/3` adds `conn.assigns.janitor_evidence` without putting it in JSON. Use `Janitor.Evidence.record`, `velocity`, `link_device` and `revoke_device` after your application verifies the corresponding outcome. See [complete options, examples and limits](../../docs/HARDENING.md).
+
+Existing installations need `Janitor.Migration.upgrade_security()` in a new application-owned Ecto migration, with the same prefix. Fresh migrations include the new tables. These APIs are not in the v0.6.0 Git tag or a Hex release yet. Use the local path dependency to test this checkout.
+
+## Browser and LiveView client
 
 The Mix package includes a generated 6 KiB ESM client, so installing the server package requires no JavaScript build:
 

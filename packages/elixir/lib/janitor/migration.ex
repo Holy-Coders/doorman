@@ -1,17 +1,25 @@
 defmodule Janitor.Migration do
   @moduledoc "Call up/1 and down/1 inside an application-owned Ecto migration. Default schema: janitor."
-  @tables ~w(visitors observations identity_subjects identity_keys identity_delegations learning_sessions)
+  @tables ~w(visitors observations identity_subjects identity_keys identity_delegations learning_sessions protection_quotas evaluation_controls application_events device_links)
   def up(opts \\ []) do
     prefix = prefix!(opts)
     Ecto.Migration.execute(~s(CREATE SCHEMA IF NOT EXISTS "#{prefix}"))
 
-    apply_sql(prefix, ~w(0001_visitors 0002_identity 0003_learning 0004_candidate_lookup))
+    apply_sql(
+      prefix,
+      ~w(0001_visitors 0002_identity 0003_learning 0004_candidate_lookup 0005_protection 0006_evidence)
+    )
   end
 
   @doc "Add selective lookup indexes to an existing Janitor installation."
   def upgrade_lookup(opts \\ []) do
     apply_sql(prefix!(opts), ~w(0004_candidate_lookup))
   end
+
+  def upgrade_protection(opts \\ []), do: apply_sql(prefix!(opts), ~w(0005_protection))
+
+  def upgrade_security(opts \\ []),
+    do: apply_sql(prefix!(opts), ~w(0005_protection 0006_evidence))
 
   defp apply_sql(prefix, names) do
     for name <- names do

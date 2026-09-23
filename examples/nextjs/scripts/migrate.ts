@@ -15,6 +15,8 @@ try {
       "0002_identity",
       "0003_learning",
       "0004_candidate_lookup",
+      "0005_protection",
+      "0006_evidence",
     ]) {
       const applied = await client.query(
         "SELECT name FROM visitor_migrations WHERE name = $1",

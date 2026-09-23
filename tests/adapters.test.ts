@@ -227,6 +227,7 @@ describe("HTTP boundary", () => {
       "evaluatorUsed",
       "evaluatorLatency",
       "isReturning",
+      "observationSaved",
     ]);
   });
 });

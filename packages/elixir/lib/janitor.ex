@@ -18,6 +18,8 @@ defmodule Janitor do
             expose_client_scores: false,
             identity: nil,
             learning: false,
+            protection: nil,
+            evidence: nil,
             analytics: [],
             on_metrics: nil
 
@@ -79,14 +81,22 @@ defmodule Janitor do
 
     if config.identity, do: Janitor.Identity.validate_options!(config.identity)
     Janitor.Learning.validate_options!(config)
-    config
+
+    %{
+      config
+      | protection: Janitor.Protection.configure(config.protection),
+        evidence: Janitor.Evidence.configure(config.evidence, config.identity)
+    }
   end
 
   @doc "Identify a validated JSON payload; context must originate in server-verified authentication."
   def identify(config, payload, context \\ %{}) do
     with :ok <- Janitor.Validation.validate(payload) do
       try do
-        {:ok, Janitor.Engine.identify(config, payload, context)}
+        case Janitor.Protection.admit(config, context[:admission]) do
+          :ok -> {:ok, Janitor.Engine.identify(config, payload, context)}
+          error -> error
+        end
       rescue
         _ -> {:error, :storage_unavailable}
       catch
@@ -97,10 +107,22 @@ defmodule Janitor do
 
   def handle(conn, config, context \\ %{}), do: Janitor.Plug.handle(conn, config, context)
 
+  @doc "Return private identity and source-labeled request evidence to server code."
+  def assess(config, payload, context \\ %{}) do
+    evidence = Janitor.Evidence.request_evidence(context[:evidence])
+
+    with {:ok, identity} <- identify(config, payload, context),
+         do: {:ok, %{identity: identity, evidence: evidence}}
+  rescue
+    _ -> {:error, :invalid_context}
+  end
+
   def cleanup(config, opts \\ []) do
     progress = Janitor.Storage.cleanup(config, opts)
     if config.identity, do: Janitor.Identity.cleanup(config)
     if config.learning, do: Janitor.Learning.cleanup(config)
+    if config.protection, do: Janitor.Protection.cleanup(config)
+    if config.evidence, do: Janitor.Evidence.cleanup(config)
     progress
   end
 

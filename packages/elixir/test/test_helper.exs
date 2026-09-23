@@ -27,3 +27,10 @@ defmodule Janitor.TestLookupMigration do
 end
 
 Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_302, Janitor.TestLookupMigration, log: false)
+
+defmodule Janitor.TestSecurityMigration do
+  use Ecto.Migration
+  def up, do: Janitor.Migration.upgrade_security(prefix: "janitor_test")
+end
+
+Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_303, Janitor.TestSecurityMigration, log: false)

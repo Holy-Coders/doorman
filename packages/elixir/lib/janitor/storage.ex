@@ -140,6 +140,14 @@ defmodule Janitor.Storage do
   def delete_visitor(c, id),
     do: query(c, "DELETE FROM #{table(c, "visitors")} WHERE id = $1", [id])
 
+  def touch(c, id),
+    do:
+      query(
+        c,
+        "UPDATE #{table(c, "visitors")} SET last_seen_at = GREATEST(last_seen_at,$1) WHERE id = $2",
+        [Janitor.now(), id]
+      )
+
   def cleanup(c, opts \\ []) do
     size = Keyword.get(opts, :batch_size, 100)
 

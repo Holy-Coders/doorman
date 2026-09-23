@@ -1,13 +1,18 @@
+import type { EdgeEvidence } from "@janitor/core";
 import {
   createPostgresStorage,
   createPostgresIdentityStorage,
   createPostgresLearningStorage,
+  createPostgresProtectionStorage,
+  createPostgresEvidenceStorage,
 } from "@janitor/storage-postgres";
 import type { PostgresDatabase } from "@janitor/storage-postgres";
 import {
   createD1Storage,
   createD1IdentityStorage,
   createD1LearningStorage,
+  createD1ProtectionStorage,
+  createD1EvidenceStorage,
 } from "@janitor/storage-d1";
 import type { D1Database } from "@janitor/storage-d1";
 import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
@@ -42,5 +47,59 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
         ? createPostgresLearningStorage(postgres)
         : createD1LearningStorage(d1!)
       : undefined,
+    options.protection
+      ? postgres
+        ? createPostgresProtectionStorage(postgres)
+        : createD1ProtectionStorage(d1!)
+      : undefined,
+    options.evidence
+      ? postgres
+        ? createPostgresEvidenceStorage(postgres)
+        : createD1EvidenceStorage(d1!)
+      : undefined,
   );
+}
+
+/** Use the inbound Worker Request, never cf reconstructed from forwarded headers. */
+export function cloudflareRequestEvidence(
+  request: Request,
+): (EdgeEvidence & { provider: "cloudflare" }) | undefined {
+  const cf = (
+    request as Request & {
+      cf?: {
+        botManagement?: {
+          score?: unknown;
+          verifiedBot?: unknown;
+          signedAgent?: unknown;
+        };
+      };
+    }
+  ).cf;
+  const bot = cf?.botManagement;
+  if (!bot) return undefined;
+  const botScore =
+    typeof bot.score === "number" &&
+    Number.isInteger(bot.score) &&
+    bot.score >= 1 &&
+    bot.score <= 99
+      ? bot.score
+      : undefined;
+  const verifiedBot =
+    typeof bot.verifiedBot === "boolean" ? bot.verifiedBot : undefined;
+  const signedAgent =
+    typeof bot.signedAgent === "boolean" ? bot.signedAgent : undefined;
+  if (
+    botScore === undefined &&
+    verifiedBot === undefined &&
+    signedAgent === undefined
+  )
+    return undefined;
+  return {
+    source: "edge",
+    provider: "cloudflare",
+    observedAt: Date.now(),
+    ...(botScore !== undefined ? { botScore } : {}),
+    ...(verifiedBot !== undefined ? { verifiedBot } : {}),
+    ...(signedAgent !== undefined ? { signedAgent } : {}),
+  };
 }

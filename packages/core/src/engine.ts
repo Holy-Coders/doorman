@@ -33,6 +33,7 @@ export type IdentifyMetrics = {
   evaluatorUsed: boolean;
   evaluatorLatency: number;
   isReturning: boolean;
+  observationSaved: boolean;
 };
 export type EngineOptions = {
   storage: VisitorStorage;
@@ -103,6 +104,7 @@ export function createVisitorEngine(options: EngineOptions) {
       let deterministicScore = 0;
       let evaluatorUsed = false;
       let evaluatorLatency = 0;
+      let observationSaved = true;
       let risk = { automation: 0, suspicious: 0 };
       let riskStatus: VisitorIdentity["riskStatus"] = evaluator
         ? "unavailable"
@@ -140,6 +142,15 @@ export function createVisitorEngine(options: EngineOptions) {
             ...history.map(
               (previous) => calculateSimilarity(previous, current).score,
             ),
+          );
+          // A copied cookie must not teach a contradictory or sparse environment to the history.
+          observationSaved = history.some(
+            (previous) =>
+              !hasContradiction(previous, current) &&
+              calculateSimilarity(previous, current).score >=
+                MATCHING_DEFAULTS.candidateFloor &&
+              evidenceCap(previous, current) >=
+                MATCHING_DEFAULTS.restoreThreshold,
           );
           const result = await run({
             history,
@@ -260,7 +271,7 @@ export function createVisitorEngine(options: EngineOptions) {
           }
         }
         visitorId ??= await storage.createVisitor();
-        await storage.saveObservation(visitorId, current);
+        if (observationSaved) await storage.saveObservation(visitorId, current);
         await storage.touchVisitor(visitorId);
         const identity: VisitorIdentity = {
           visitorId,
@@ -286,6 +297,7 @@ export function createVisitorEngine(options: EngineOptions) {
             evaluatorUsed,
             evaluatorLatency,
             isReturning,
+            observationSaved,
           });
         } catch {
           /* Telemetry must not affect identity. */

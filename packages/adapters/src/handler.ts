@@ -1,4 +1,8 @@
+import { createEvidence, requestEvidence } from "./evidence.js";
+import type { EvidenceOptions, TrustedRequestEvidence } from "./evidence.js";
 import { createLearning } from "./learning.js";
+import { createProtection } from "./protection.js";
+import type { AdmissionContext, ProtectionOptions } from "./protection.js";
 import { createIdentityDirectory } from "./identity.js";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
@@ -18,12 +22,18 @@ import type {
   RetentionOptions,
   VisitorEvaluator,
   VisitorIdentity,
+  ProtectionStorage,
+  EvidenceStorage,
+  RequestEvidence,
 } from "@janitor/core";
 import { readPayload, RequestError } from "./validation.js";
+const EVALUATOR_STORAGE_GRACE_MS = 1000;
 export type AdapterOptions = RetentionOptions &
   Omit<EngineOptions, "storage" | "evaluator"> & {
     /** Opt-in public feedback. Prefer assess() for server-only scores. */
     exposeClientScores?: boolean;
+    protection?: ProtectionOptions;
+    evidence?: true | EvidenceOptions;
     environment?: "production" | "development" | "test";
     cookie?: { name?: string; maxAgeDays?: number; secure?: boolean };
     maxBodyBytes?: number;
@@ -37,10 +47,14 @@ export type VisitorRequestContext = {
   authenticatedSubject?: string;
   verified?: VerifiedIdentityContext;
   learningConsent?: boolean;
+  /** Server-owned account/session references; never copy these from browser JSON or headers. */
+  admission?: AdmissionContext;
+  evidence?: TrustedRequestEvidence;
 };
 export type VisitorAssessment = {
   response: Response;
   identity?: VisitorIdentity;
+  evidence?: RequestEvidence;
 };
 export function createVisitorHandler(
   storage: ManagedVisitorStorage,
@@ -48,7 +62,31 @@ export function createVisitorHandler(
   options: AdapterOptions = {},
   identityStorage?: IdentityStorage,
   learningStorage?: LearningStorage,
+  protectionStorage?: ProtectionStorage,
+  evidenceStorage?: EvidenceStorage,
 ) {
+  if (options.evidence && (!options.identity || !evidenceStorage))
+    throw new Error(
+      "Evidence requires identity configuration and evidence storage",
+    );
+  const evidence =
+    options.evidence && options.identity && evidenceStorage
+      ? createEvidence(
+          evidenceStorage,
+          options.identity,
+          options.evidence === true ? {} : options.evidence,
+        )
+      : undefined;
+  if (options.protection && !protectionStorage)
+    throw new Error("Protection storage is required");
+  const protection =
+    options.protection && protectionStorage
+      ? createProtection(
+          protectionStorage,
+          options.protection,
+          options.evaluatorTimeoutMs ?? 1200,
+        )
+      : undefined;
   if (options.identity && !identityStorage)
     throw new Error("Identity storage is required");
   const identities =
@@ -96,7 +134,16 @@ export function createVisitorHandler(
     requestTimeoutMs > 30000
   )
     throw new Error("Request timeout must be 100–30000ms");
-  const engine = createVisitorEngine({ ...options, storage, evaluator });
+  const engine = createVisitorEngine({
+    ...options,
+    // Allow the guard's provider deadline to fire and persist its circuit outcome.
+    // The engine still caps a stalled guard; database/driver deadlines remain app-owned.
+    evaluatorTimeoutMs: protection
+      ? (options.evaluatorTimeoutMs ?? 1200) + EVALUATOR_STORAGE_GRACE_MS
+      : options.evaluatorTimeoutMs,
+    storage,
+    evaluator: evaluator && protection ? protection.wrap(evaluator) : evaluator,
+  });
   const json = (body: unknown, status: number, headers?: HeadersInit) =>
     Response.json(body, {
       status,
@@ -110,7 +157,7 @@ export function createVisitorHandler(
   async function handle(
     request: Request,
     context: VisitorRequestContext = {},
-    capture?: (identity: VisitorIdentity) => void,
+    capture?: (identity: VisitorIdentity, evidence: RequestEvidence) => void,
   ): Promise<Response> {
     if (
       new URL(request.url).pathname !== (options.endpointPath ?? "/api/visitor")
@@ -139,6 +186,12 @@ export function createVisitorHandler(
     )
       return json({ error: "Insecure cookies require localhost" }, 400);
     try {
+      const trustedEvidence = requestEvidence(context.evidence);
+      const admission = await protection?.admit(context.admission);
+      if (admission && !admission.allowed)
+        return json({ error: "Visitor measurement rate limited" }, 429, {
+          "Retry-After": String(admission.retryAfterSeconds),
+        });
       const payload = await readPayload(
         request,
         maxBodyBytes,
@@ -207,7 +260,7 @@ export function createVisitorHandler(
         ...(subjectId ? { subjectId } : {}),
         ...(attribution ? { attribution } : {}),
       };
-      capture?.(fullIdentity);
+      capture?.(fullIdentity, trustedEvidence);
       const response = json(
         options.exposeClientScores === true
           ? fullIdentity
@@ -241,12 +294,18 @@ export function createVisitorHandler(
       context?: VisitorRequestContext,
     ): Promise<VisitorAssessment> {
       let identity: VisitorIdentity | undefined;
-      const response = await handle(request, context, (result) => {
+      let evidence: RequestEvidence | undefined;
+      const response = await handle(request, context, (result, trusted) => {
         identity = result;
+        evidence = trusted;
       });
-      return { response, ...(response.ok && identity ? { identity } : {}) };
+      return {
+        response,
+        ...(response.ok && identity ? { identity, evidence } : {}),
+      };
     },
     identities,
+    evidence,
     learning: learner
       ? { reports: learner.reports, deleteSession: learner.deleteSession }
       : undefined,
@@ -254,6 +313,8 @@ export function createVisitorHandler(
       const progress = await storage.cleanup(options);
       await identities?.cleanup();
       await learner?.cleanup();
+      await protection?.cleanup();
+      await evidence?.cleanup();
       return progress;
     },
     // Server-side only. Applications must authorize erasure and avoid automatic re-identification afterward.

@@ -1,6 +1,21 @@
 # Validation record
 
-Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. The repository targets Node 22.12+; CI is configured for Node 22.
+## Unreleased abuse controls and evidence — 2026-09-23
+
+The current checkout adds the [shared protection and trusted evidence APIs](HARDENING.md). These changes have not been published or integrated into Open Calls. Validation is local and uses mocked external inference.
+
+- `pnpm typecheck`, `pnpm test` and `pnpm lint` pass: **191 TypeScript tests across ten files**, including 20 shared-protection and 19 trusted-evidence cases on real Postgres SQL (PGlite) and D1 (Miniflare).
+- Native Elixir: **45 tests pass against fresh Postgres 17**, including concurrent quotas, shared inference budgets, one recovery probe, timeout fallback, cookie-history protection, event idempotency, provenance/revocation and cross-language HMAC vectors. `mix format --check-formatted` passes.
+- Phoenix: fresh migrations, the idempotent security upgrade and **one endpoint test pass**. New migrations use indexed foreign keys for erasure and namespace-scoped event/link cleanup. No production database was migrated.
+- Browser integration: **one Chromium test passes** through Fastify/Postgres, covering first visit, cookie continuity, cookie removal and viewport drift.
+- Next.js production build and Cloudflare `deploy --dry-run` pass; no deployment occurs. Website checks pass with **seven Chromium tests**, 27 primary pages at mobile/desktop widths and 28 generated HTML pages including 404.
+- Regressions exercise provider timeout bookkeeping before the response, stale completions, duplicate event races, proof reuse across accounts, shared devices, forged browser/forwarded evidence, bounded retention, erasure and the public Node/Vercel/Cloudflare factory composition. New evidence remains private even with public score opt-in.
+
+These are implementation and trust-boundary checks, not a penetration test or fraud-accuracy benchmark. New event queries and database-shared controls have not been measured at production-scale throughput. Compatible fabricated fingerprints and credential theft still require independent authentication and application policy. Current package versions remain unchanged pending the separate release step.
+
+## v0.6 baseline validation
+
+The following records the earlier v0.6 validation on 2026-09-23; the checks rerun for the unreleased checkout are listed above. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. The repository targets Node 22.12+; CI is configured for Node 22.
 
 | Check                         | Result                                                                                                                                                          |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -16,7 +31,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | All three live local examples | Browser identifies, uses HttpOnly cookie, then restores ID after cookies are cleared                                                                            |
 | Packed installation           | All seven packages install in an isolated consumer with local pnpm overrides; nine factory exports, SSR-safe browser import and both migration exports verified |
 
-Current unit/integration coverage: 30 core cases, 12 browser cases, 15 evaluator cases, 24 HTTP/high-level adapter cases, 16 shared SQL storage contract cases, 18 identity directory/delegation cases, 28 opt-in learning cases across both databases, and 9 credential/receipt/analytics cases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
+Baseline unit/integration coverage: 30 core cases, 12 browser cases, 15 evaluator cases, 24 HTTP/high-level adapter cases, 16 shared SQL storage contract cases, 18 identity directory/delegation cases, 28 opt-in learning cases across both databases, and 9 credential/receipt/analytics cases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
 
 Storage contract tests execute real SQL using PGlite (embedded Postgres) and Miniflare D1. Core matching is not mocked. Evaluator network calls are mocked against the current official Jev/Workers AI contracts, including 500/429/529 errors, malformed outputs and timeouts.
 
@@ -52,7 +67,7 @@ Example boot commands and environment variables are in each example's README and
 
 ## Public website checks
 
-`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all 26 primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The site produces 27 HTML pages including the 404 page, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
+`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all 27 primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The current checkout produces 28 HTML pages including the 404 page, a sitemap, and an `llms.txt` index. The new hardening page is local and not deployed yet. The site makes no third-party browser requests or fingerprint-collection calls.
 
 ## Controlled browser dataset
 

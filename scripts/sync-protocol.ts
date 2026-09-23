@@ -47,6 +47,32 @@ const shared = {
     current,
     deterministicSimilarity: 1,
   }),
+  evidenceLabels: await Promise.all(
+    [
+      ["scope", "application"],
+      ["event", "event-משתמש"],
+      ["session", "session-123"],
+      ["verification", ["auth", "proof-123"]],
+    ].map(async ([purpose, value]) => ({
+      purpose,
+      value,
+      expected: await createSubjectLinker({
+        secret: "a".repeat(64),
+        namespace: "fixture",
+      })(JSON.stringify(["evidence-v1", purpose, value])),
+    })),
+  ),
+  protectionLabels: await Promise.all(
+    ["global", "evaluator", JSON.stringify(["account", "account-123"])].map(
+      async (value) => ({
+        value,
+        expected: await createSubjectLinker({
+          secret: "a".repeat(64),
+          namespace: "fixture",
+        })(JSON.stringify(["protection-v1", value])),
+      }),
+    ),
+  ),
   subjects: await Promise.all(
     ["account-123", "משתמש", "é", 'a"b'].map(async (id) => ({
       id,
@@ -79,6 +105,8 @@ for (const migration of [
   "0002_identity",
   "0003_learning",
   "0004_candidate_lookup",
+  "0005_protection",
+  "0006_evidence",
 ])
   copyFileSync(
     `packages/storage/postgres/migrations/${migration}.sql`,

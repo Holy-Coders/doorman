@@ -71,8 +71,8 @@ All return this lifecycle/HTTP surface (the optional `identities` directory meth
 
 ```ts
 {
-  handle(request: Request, context?: { authenticatedSubject?: string; verified?: VerifiedIdentityContext; learningConsent?: boolean }): Promise<Response>;
-  assess(request: Request, context?: VisitorRequestContext): Promise<{ response: Response; identity?: VisitorIdentity }>;
+  handle(request: Request, context?: VisitorRequestContext): Promise<Response>;
+  assess(request: Request, context?: VisitorRequestContext): Promise<{ response: Response; identity?: VisitorIdentity; evidence?: RequestEvidence }>;
   cleanup(options?: { batchSize?: number; afterVisitorId?: string }): Promise<{ nextVisitorId?: string; hasMoreExpired: boolean } | void>;
   deleteVisitor(visitorId: string): Promise<void>;
   learning?: { reports(limit?: number): Promise<LearningReport[]>; deleteSession(id: string): Promise<void> };
@@ -86,6 +86,14 @@ Node/Vercel accept `{ db, evaluator?: { apiKey, model?, timeoutMs? } | VisitorEv
 Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10, 1–100 accepted), `evaluatorTimeoutMs` (1200), `restoreThreshold` (0.90, 0.8–1 accepted), `cookie: { name?, maxAgeDays?, secure? }`, `maxBodyBytes` (16384, up to 65536), `requestTimeoutMs` (5000, 100–30000; HTTP 408 on deadline), `endpointPath` (`/api/visitor`), `environment` (`production`), `debug` (false), `exposeClientScores` (false), and `onMetrics` (none). Limits are validated when the adapter is constructed. Example-only port/database/key variables are handled by examples, never by core.
 
 `createVisitorHandler` from `@janitor/adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
+
+### Unreleased: abuse controls and trusted evidence
+
+`protection: { secret, namespace, requests?, evaluator?, onEvent? }` enables shared request quotas and evaluator budgets/concurrency/circuit breaking in the existing database. `VisitorRequestContext.admission` accepts server-owned `account` and `session` keys; the browser cannot supply these. Measurement quota exhaustion returns HTTP 429. Inference denial preserves deterministic identity and unavailable risk.
+
+`VisitorRequestContext.evidence` accepts allowlisted server authentication, application action and optional trusted edge assessments. `assess().evidence` stays private even when `exposeClientScores` is enabled. Cloudflare exports `cloudflareRequestEvidence(request)` for the original Worker request's available bot-management flags, without trusting forwarded headers.
+
+`evidence: true | { eventRetentionDays?, linkRetentionDays?, maxEventsPerQuery? }` requires `identity` configuration and enables `visitor.evidence`: `record`, `velocity`, `linkDevice`, `assessDevice`, `listDevices`, `revokeDevice`, `deleteSession`, `deleteSubjectEvents`, `cleanup`. Event categories, verification provenance, retention and input bounds are specified in the [complete guide](HARDENING.md). These are server management APIs, not public ingestion endpoints. Apply migrations 0005 and 0006 before enabling them. These APIs are not present in the published v0.6.0 GitHub artifacts.
 
 ## Installation artifacts
 

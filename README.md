@@ -73,7 +73,7 @@ export default {
 };
 ```
 
-Uses D1 and `typesafe/jev` through the Workers AI binding. No separate TypeSafe key. Apply the [D1 migrations](packages/storage/d1/migrations) through `0004_candidate_lookup.sql` first.
+Uses D1 and `typesafe/jev` through the Workers AI binding. No separate TypeSafe key. Apply the [D1 migrations](packages/storage/d1/migrations) in order first. This checkout includes `0005_protection.sql` and `0006_evidence.sql`; the public v0.6.0 artifacts stop at `0004_candidate_lookup.sql`.
 
 ## Vercel / Next.js
 
@@ -93,7 +93,9 @@ export async function POST(request: Request) {
 }
 ```
 
-Any compatible Postgres pool works. Isolate each application in its own database or schema/search_path; sharing these tables shares the identity namespace. The adapter does not create or close database connections. Use your database's pooled connection URL and connection limits for serverless execution. Apply the [Postgres migrations](packages/storage/postgres/migrations) through `0004_candidate_lookup.sql` first.
+Any compatible Postgres pool works. Isolate each application in its own database or schema/search_path; sharing these tables shares the identity namespace. The adapter does not create or close database connections. Use your database's pooled connection URL and connection limits for serverless execution. Apply the [Postgres migrations](packages/storage/postgres/migrations) in order first (through `0006_evidence.sql` for this checkout, `0004_candidate_lookup.sql` for v0.6.0).
+
+The unreleased checkout adds optional database-backed request limits, shared Jev call budgets and circuit breaking, plus private edge/authentication evidence, narrow application events and auditable, revocable device associations. TypeScript and native Elixir share the same storage contract. These features preserve the application's control over access decisions; they do not authenticate a person from a fingerprint. See [configuration, APIs and migration instructions](docs/HARDENING.md). They have not been published or integrated into an application yet.
 
 ## Node
 

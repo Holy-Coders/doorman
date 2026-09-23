@@ -6,6 +6,12 @@ const output = resolve(root, "site/src/generated");
 mkdirSync(output, { recursive: true });
 const entries = [
   [
+    "hardening",
+    "Abuse controls & evidence",
+    "Shared inference budgets, trusted events and revocable device associations.",
+    "docs/HARDENING.md",
+  ],
+  [
     "security",
     "Private scores & security",
     "Private server evidence, encrypted receipts and action boundaries.",

@@ -94,7 +94,16 @@ defmodule Janitor.Engine do
       end
 
     id = id || Storage.create(c)
-    Storage.save(c, id, current)
+
+    save =
+      history == [] or
+        Enum.any?(history, fn previous ->
+          not Observation.contradiction?(previous, current) and
+            Observation.similarity(previous, current)["score"] >= @candidate_floor and
+            Observation.evidence_cap(previous, current) >= 0.9
+        end)
+
+    if save, do: Storage.save(c, id, current), else: Storage.touch(c, id)
     risk = if evaluation, do: Map.take(evaluation, ["automation", "suspicious"]), else: @zero
 
     status =
@@ -136,7 +145,8 @@ defmodule Janitor.Engine do
           final_confidence: confidence,
           evaluator_used: used,
           evaluator_latency: latency,
-          is_returning: returning
+          is_returning: returning,
+          observation_saved: save
         })
       rescue
         _ -> :ok
@@ -162,14 +172,14 @@ defmodule Janitor.Engine do
     started = System.monotonic_time(:millisecond)
 
     result =
-      Janitor.Bounded.run(
+      Janitor.Protection.evaluate(
+        c,
         fn ->
           case c.evaluator do
             fun when is_function(fun, 1) -> fun.(input)
             opts when is_list(opts) -> Janitor.Jev.evaluate(input, opts)
           end
-        end,
-        c.evaluator_timeout_ms
+        end
       )
 
     value =

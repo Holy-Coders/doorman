@@ -93,6 +93,13 @@ export const sections = [
     title: "Under the hood",
     pages: [
       {
+        slug: "hardening",
+        title: "Abuse controls & evidence",
+        description:
+          "Shared inference budgets, trusted events and revocable device associations.",
+        source: "docs/HARDENING.md",
+      },
+      {
         slug: "security",
         title: "Private scores & security",
         description:

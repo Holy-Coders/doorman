@@ -1,7 +1,7 @@
 defmodule Janitor.Bounded do
   @moduledoc false
   # No global worker/queue. Monitor one short-lived evaluation and kill it on timeout.
-  def run(fun, timeout) do
+  def run(fun, timeout, detailed \\ false) do
     caller = self()
     ref = make_ref()
 
@@ -40,7 +40,7 @@ defmodule Janitor.Bounded do
           0 -> :ok
         end
 
-        :unavailable
+        if detailed, do: :timeout, else: :unavailable
     end
   end
 end

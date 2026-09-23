@@ -725,6 +725,45 @@
       }
     }
   },
+  "evidenceLabels": [
+    {
+      "purpose": "scope",
+      "value": "application",
+      "expected": "sub_71ba7f4d250df8969ed0c893619d01e7775a27b7e7c3602ffd7efdac8c4eb743"
+    },
+    {
+      "purpose": "event",
+      "value": "event-משתמש",
+      "expected": "sub_bd7e997769b6e5ccacf41bb7947cc1e7b07a47037dc0abe981f0b81f9130b71a"
+    },
+    {
+      "purpose": "session",
+      "value": "session-123",
+      "expected": "sub_359fd514c12de9aa2939cfda65ff6fc9aa3507525e333c92bbb1ca75e3d4e79b"
+    },
+    {
+      "purpose": "verification",
+      "value": [
+        "auth",
+        "proof-123"
+      ],
+      "expected": "sub_6bbd80503043b01f82c778c6b903257869c25aa5d35996d42a38497d70af3f63"
+    }
+  ],
+  "protectionLabels": [
+    {
+      "value": "global",
+      "expected": "sub_ace649205ec1f3a17e27be1f8d4ce96faa97d0caf1f9b3aed494dc97c418f819"
+    },
+    {
+      "value": "evaluator",
+      "expected": "sub_ef231cbd96d67a6db34458bf37b7f3ba045d3b2df8b2d743ce6106c69238d619"
+    },
+    {
+      "value": "[\"account\",\"account-123\"]",
+      "expected": "sub_3270e5c2f8f309ab0c42955bb143c499f10aad4f8b766ef1e6a107f17e5cde50"
+    }
+  ],
   "subjects": [
     {
       "id": "account-123",
