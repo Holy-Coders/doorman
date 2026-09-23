@@ -1,5 +1,5 @@
-import { collectBrowserSignals, createBehaviorTracker } from "@janitor/browser";
-import type { BrowserObservation, BrowserBehavior } from "@janitor/core";
+import { collectBrowserSignals, createBehaviorTracker } from "@aarondovturkel/doorman-browser";
+import type { BrowserObservation, BrowserBehavior } from "@aarondovturkel/doorman-core";
 
 const lab = document.querySelector<HTMLElement>("[data-live-playground]");
 if (lab) {
@@ -38,7 +38,7 @@ if (lab) {
         signal: current.signal,
         headers: {
           "Content-Type": "application/json",
-          "X-Janitor-Playground": "1",
+          "X-Doorman-Playground": "1",
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
@@ -68,7 +68,7 @@ if (lab) {
       };
     set(
       "status",
-      "Sending this snapshot to Janitor. The server is checking your browser history.",
+      "Sending this snapshot to Doorman. The server is checking your browser history.",
     );
     const result = await api("identify", snapshot);
     set("snapshot", JSON.stringify(snapshot, null, 2));
@@ -97,7 +97,7 @@ if (lab) {
     );
     set(
       "status",
-      `${result.isReturning ? "Janitor recognized a browser in your demo history." : "Janitor created a visitor ID for this demo."} ${source === "cache" ? "This evaluation came from the private cache; no new Jev call was needed." : source === "jev" ? "Jev evaluated the snapshot on our server." : "The AI allowance may be paused, busy or exhausted. Your browser ID still works."}`,
+      `${result.isReturning ? "Doorman recognized a browser in your demo history." : "Doorman created a visitor ID for this demo."} ${source === "cache" ? "This evaluation came from the private cache; no new Jev call was needed." : source === "jev" ? "Jev evaluated the snapshot on our server." : "The AI allowance may be paused, busy or exhausted. Your browser ID still works."}`,
     );
   }
   async function run(fn: () => Promise<void>) {

@@ -25,13 +25,13 @@ import {
   API_ACTIVITY_QUESTIONS,
   createActivityInput,
   createJevInput,
-} from "@janitor/evaluator-jev";
+} from "@aarondovturkel/doorman-evaluator-jev";
 import {
   normalizeObservation,
   calculateSimilarity,
   evidenceCap,
   hasContradiction,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { signals, phone } from "../tests/helpers/fixtures.js";
 import { createSubjectLinker } from "../packages/adapters/src/subject.js";
 const schema = z.toJSONSchema(payloadSchema);
@@ -74,7 +74,7 @@ writeFileSync(
     {
       version: 1,
       description:
-        "Operator training artifacts and private /v1/classify response. Additional semantic constraints are enforced by Janitor.",
+        "Operator training artifacts and private /v1/classify response. Additional semantic constraints are enforced by Doorman.",
       dataset: z.toJSONSchema(classifierDatasetSchema),
       model: z.toJSONSchema(classifierModelSchema),
       assessment: z.toJSONSchema(classifierAssessmentSchema),
@@ -247,7 +247,7 @@ writeFileSync(
     {
       openapi: "3.1.0",
       info: {
-        title: "Janitor first-party browser protocol",
+        title: "Doorman first-party browser protocol",
         version: "0.9.0",
         description:
           "Self-hosted by each implementer. Measurements never establish authenticated account claims.",

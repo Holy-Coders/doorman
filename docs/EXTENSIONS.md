@@ -1,13 +1,13 @@
 # Behavior and cross-device links
 
-Janitor’s default browser client counts events such as mouse moves and key presses. You can optionally collect more detailed totals to give the risk evaluator additional context. This page also shows the simplest way to label several signed-in browsers with the same account ID.
+Doorman’s default browser client counts events such as mouse moves and key presses. You can optionally collect more detailed totals to give the risk evaluator additional context. This page also shows the simplest way to label several signed-in browsers with the same account ID.
 
 If you need verified email keys or agent permissions as well, use the [identity directory](AGENTIC-IDENTITY.md). The lightweight account labels below are a separate option that requires no account tables.
 
 ## Optional motion and timing summaries
 
 ```ts
-import { createVisitorClient } from "@janitor/browser";
+import { createVisitorClient } from "@aarondovturkel/doorman-browser";
 
 const visitor = createVisitorClient({
   endpoint: "/api/visitor",
@@ -22,16 +22,16 @@ Use compatible client and server versions: the server rejects measurement fields
 
 ## One account, multiple devices
 
-Use the application's existing verified authentication. Janitor does not implement login or infer an account from anonymous fingerprints.
+Use the application's existing verified authentication. Doorman does not implement login or infer an account from anonymous fingerprints.
 
 ```ts
-import { createVercelVisitor } from "@janitor/adapters/vercel";
+import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
 
 const visitor = createVercelVisitor({
   db,
   evaluator: false,
   subjectLinking: {
-    secret: process.env.JANITOR_SUBJECT_SECRET!,
+    secret: process.env.DOORMAN_SUBJECT_SECRET!,
     namespace: "my-app-production",
   },
 });
@@ -59,7 +59,7 @@ The shortened IDs and omitted risk/confidence fields above are illustrative. The
 
 On logout, omit `authenticatedSubject`; the private result no longer contains `subjectId`, even when the browser cookie remains. Signing in as a different account returns a different subject. Shared accounts, stolen credentials and account takeovers require the application's own authentication/security controls. A subject label is not an authentication token.
 
-This stateless `subjectLinking` option stores no account graph and needs no new database tables. Your application may store associations using its existing account model and should erase them with that account. Secret/namespace rotation changes all labels. Account-specific generation IDs can invalidate one account's prior derived label. For anonymous cross-device pairing, the application must first verify a pairing flow and pass the resulting stable subject identifier; Janitor does not implement that verification.
+This stateless `subjectLinking` option stores no account graph and needs no new database tables. Your application may store associations using its existing account model and should erase them with that account. Secret/namespace rotation changes all labels. Account-specific generation IDs can invalidate one account's prior derived label. For anonymous cross-device pairing, the application must first verify a pairing flow and pass the resulting stable subject identifier; Doorman does not implement that verification.
 
 ## Anonymous sessions and later logins
 

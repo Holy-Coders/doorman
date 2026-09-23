@@ -1,16 +1,16 @@
 # How browser matching works
 
-Janitor remembers a browser with a cookie and a small history of observations. An observation is a snapshot of the signals the browser makes available, such as its browser family, language and screen size.
+Doorman remembers a browser with a cookie and a small history of observations. An observation is a snapshot of the signals the browser makes available, such as its browser family, language and screen size.
 
 ## A normal return visit
 
-If a request contains a valid `__visitor` cookie and its history is still retained, Janitor uses that visitor ID immediately. It loads up to five recent observations, assesses current risk if Jev is enabled, and saves the visit. It does not search other visitors.
+If a request contains a valid `__visitor` cookie and its history is still retained, Doorman uses that visitor ID immediately. It loads up to five recent observations, assesses current risk if Jev is enabled, and saves the visit. It does not search other visitors.
 
 The result has `isReturning: true` and `confidence: 1`. That confidence means the cookie identifies an existing visitor record. It is not proof of the person using it.
 
 ## When the cookie is missing
 
-Janitor looks up a small number of plausible visitors, compares their recent observations, and optionally asks Jev whether the current visit fits each history. It restores an ID only when the best match is strong and sufficiently different from the alternatives. Otherwise it creates a new ID.
+Doorman looks up a small number of plausible visitors, compares their recent observations, and optionally asks Jev whether the current visit fits each history. It restores an ID only when the best match is strong and sufficiently different from the alternatives. Otherwise it creates a new ID.
 
 For example, rotating a phone keeps the same physical screen dimensions. Resizing a window has little effect on matching. A completely different platform is much stronger evidence against a match. Missing WebGL information is treated as missing data rather than a mismatch.
 
@@ -24,7 +24,7 @@ Whitespace-only strings become absent. Browser user agents are classified into C
 
 ## Compare available signals
 
-Janitor gives each comparable feature a weight, then averages the results. If either observation is missing a feature, that pair is left out of the comparison. An empty observation scores zero. Compared weight must total at least `0.55` before a perfect score is possible, and the same coverage cap is applied after evaluator blending.
+Doorman gives each comparable feature a weight, then averages the results. If either observation is missing a feature, that pair is left out of the comparison. An empty observation scores zero. Compared weight must total at least `0.55` before a perfect score is possible, and the same coverage cap is applied after evaluator blending.
 
 | Feature                    | Weight |
 | -------------------------- | -----: |

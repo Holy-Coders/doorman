@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createOperatorService } from "../packages/adapters/src/operators.js";
 import type { OperatorWindowInput } from "../packages/adapters/src/operators.js";
-import { createNodeVisitor } from "@janitor/adapters/node";
-import { createVercelVisitor } from "@janitor/adapters/vercel";
-import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
-import type { VisitorEvaluator, OperatorStorage } from "@janitor/core";
-import type { PostgresDatabase } from "@janitor/storage-postgres";
-import type { D1Database } from "@janitor/storage-d1";
+import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
+import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
+import type { VisitorEvaluator, OperatorStorage } from "@aarondovturkel/doorman-core";
+import type { PostgresDatabase } from "@aarondovturkel/doorman-storage-postgres";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
 import { sqlBackend } from "./helpers/sql.js";
 import { evidence, evaluation } from "./helpers/operators.js";
 const identity = { secret: "a".repeat(64), namespace: "operator-tests" };

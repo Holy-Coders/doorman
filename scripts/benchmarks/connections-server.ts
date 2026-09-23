@@ -1,16 +1,16 @@
 import cluster from "node:cluster";
 import { createServer } from "node:http";
-import { createNodeRequestListener } from "@janitor/adapters/node/http";
+import { createNodeRequestListener } from "@aarondovturkel/doorman-adapters/node/http";
 import { monitorEventLoopDelay } from "node:perf_hooks";
 import pg from "pg";
-import { createNodeVisitor } from "@janitor/adapters/node";
-import { normalizeObservation } from "@janitor/core";
+import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+import { normalizeObservation } from "@aarondovturkel/doorman-core";
 
-const workers = Number(process.env.JANITOR_BENCHMARK_WORKERS ?? 8);
-const database = process.env.JANITOR_BENCHMARK_DATABASE_URL;
+const workers = Number(process.env.DOORMAN_BENCHMARK_WORKERS ?? 8);
+const database = process.env.DOORMAN_BENCHMARK_DATABASE_URL;
 if (
   !database ||
-  !["127.0.0.1", "localhost", "janitor-capacity-pg"].includes(
+  !["127.0.0.1", "localhost", "doorman-capacity-pg"].includes(
     new URL(database).hostname,
   ) ||
   !Number.isInteger(workers) ||
@@ -32,7 +32,7 @@ if (cluster.isPrimary) {
   const db = new pg.Pool({
     connectionString: database,
     max: 1,
-    options: "-c search_path=janitor_security_benchmark",
+    options: "-c search_path=doorman_security_benchmark",
   });
   // Reproducible known cookies. They represent 10,000 indistinguishable browsers, not accuracy labels.
   await db.query("DELETE FROM observations");
@@ -42,7 +42,7 @@ if (cluster.isPrimary) {
   );
   await db.end();
   for (let i = 0; i < workers; i++)
-    cluster.fork({ JANITOR_BENCHMARK_WORKER: String(i) });
+    cluster.fork({ DOORMAN_BENCHMARK_WORKER: String(i) });
   cluster.on("exit", (worker, code, signal) => {
     if (code || signal) {
       console.error(
@@ -57,14 +57,14 @@ if (cluster.isPrimary) {
     }
   });
 } else {
-  const worker = Number(process.env.JANITOR_BENCHMARK_WORKER);
+  const worker = Number(process.env.DOORMAN_BENCHMARK_WORKER);
   const port = 3000 + worker;
   const pool = new pg.Pool({
     connectionString: database,
     max: 1,
     connectionTimeoutMillis: 500,
     options:
-      "-c search_path=janitor_security_benchmark -c statement_timeout=2000 -c lock_timeout=1000",
+      "-c search_path=doorman_security_benchmark -c statement_timeout=2000 -c lock_timeout=1000",
   });
   let open = 0,
     peakOpen = 0,

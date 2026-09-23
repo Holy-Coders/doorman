@@ -1,3 +1,3 @@
-module github.com/Holy-Coders/janitor/packages/go
+module github.com/Holy-Coders/doorman/packages/go
 
 go 1.23

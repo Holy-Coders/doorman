@@ -5,7 +5,7 @@ import type {
   LearningStorage,
   NormalizedObservation,
   VisitorEvaluator,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
 
@@ -47,7 +47,7 @@ export function createLearning(
     throw new Error(
       "Shadow learning requires Jev or a predictor; collect mode does not run one",
     );
-  const scope = createSubjectLinker(identity)("janitor-learning-scope-v1");
+  const scope = createSubjectLinker(identity)("doorman-learning-scope-v1");
   const validSession = (id?: string) =>
     id && /^ses_[a-f0-9]{48}$/.test(id) ? id : undefined;
   const cutoff = () => Date.now() - retention * 86400000;

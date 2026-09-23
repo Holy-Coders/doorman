@@ -1,4 +1,4 @@
-import type { EvaluationControl, ProtectionStorage } from "@janitor/core";
+import type { EvaluationControl, ProtectionStorage } from "@aarondovturkel/doorman-core";
 import type { D1Database } from "./index.js";
 
 export function createD1ProtectionStorage(db: D1Database): ProtectionStorage {

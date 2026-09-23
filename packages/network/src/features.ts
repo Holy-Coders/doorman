@@ -2,7 +2,7 @@ import type {
   ApiActivitySummary,
   BrowserBehavior,
   BrowserObservation,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { ROUTE_CATEGORIES, parseFeatures } from "./schema.js";
 import type { FeatureVector, RouteCategory } from "./schema.js";
 

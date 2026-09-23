@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { createVisitorHandler } from "@janitor/adapters/node";
+import { createVisitorHandler } from "@aarondovturkel/doorman-adapters/node";
 import { createMemoryStorage } from "./helpers/memory.js";
 import { signals } from "./helpers/fixtures.js";
 const request = () =>

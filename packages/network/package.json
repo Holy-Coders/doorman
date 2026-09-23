@@ -1,6 +1,6 @@
 {
-  "name": "@janitor/network",
-  "version": "0.11.0",
+  "name": "@aarondovturkel/doorman-network",
+  "version": "0.12.0",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -39,12 +39,21 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@janitor/core": "workspace:^",
+    "@aarondovturkel/doorman-core": "workspace:^",
     "zod": "^4.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Holy-Coders/janitor.git",
+    "url": "git+https://github.com/Holy-Coders/doorman.git",
     "directory": "packages/network"
+  },
+  "description": "Opt-in pattern learning and private classifier serving for Doorman.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "homepage": "https://doorman.holycoders.io",
+  "bugs": {
+    "url": "https://github.com/Holy-Coders/doorman/issues"
   }
 }

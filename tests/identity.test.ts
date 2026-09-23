@@ -2,10 +2,10 @@ import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { Miniflare } from "miniflare";
-import { createNodeVisitor } from "@janitor/adapters/node";
-import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
-import type { D1Database } from "@janitor/storage-d1";
-import type { VisitorIdentity } from "@janitor/core";
+import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
+import type { VisitorIdentity } from "@aarondovturkel/doorman-core";
 import { signals } from "./helpers/fixtures.js";
 
 for (const backend of ["postgres", "d1"] as const) {

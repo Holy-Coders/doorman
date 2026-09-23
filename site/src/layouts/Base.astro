@@ -5,6 +5,7 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "../styles/global.css";
 import "../styles/brand.css";
 import "../styles/preferences.css";
+import "../styles/doorman.css";
 import { REPO } from "../content";
 interface Props {
   title?: string;
@@ -13,7 +14,7 @@ interface Props {
   language?: string;
 }
 const {
-  title = "Janitor — Visitor identity, with context.",
+  title = "Doorman — Visitor identity, with context.",
   description = "An open-source library for recognizing returning browsers, assessing risk with Jev, and connecting authenticated people and agents. Runs on your server.",
   docs = false,
   language,
@@ -34,12 +35,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link
       id="theme-icon"
       rel="icon"
-      href="/janitor-mark.svg"
-      type="image/svg+xml"
+      href="/doorman-mark.png"
+      type="image/png"
     />
     <script is:inline>
       try {
-        const preference = localStorage.getItem("janitor-theme");
+        const preference = localStorage.getItem("doorman-theme");
         const theme =
           preference === "light" || preference === "dark"
             ? preference
@@ -48,7 +49,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
               : "dark";
         document.documentElement.dataset.theme = theme;
         document.getElementById("theme-icon").href =
-          theme === "light" ? "/janitor-mark-dark.svg" : "/janitor-mark.svg";
+          theme === "light" ? "/doorman-mark-dark.png" : "/doorman-mark.png";
       } catch {
         document.documentElement.dataset.theme = "dark";
       }
@@ -66,9 +67,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       Skip to content
     </a>
     <header class="site-header">
-      <a href="/" class="brand" aria-label="Janitor home">
+      <a href="/" class="brand" aria-label="Doorman home">
         <Logo />
-        janitor<span class="brand-period">.</span>
+        doorman<span class="brand-period">.</span>
       </a>
       <nav aria-label="Main navigation" class="desktop-nav">
         <a href={docPath("introduction")} class:list={[docs && "active"]}>
@@ -159,7 +160,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       <div class="footer-brand">
         <a href="/" class="brand">
           <Logo />
-          janitor.
+          doorman.
         </a>
         <p>
           Visitor identity.
@@ -171,7 +172,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         </span>
       </div>
       <div>
-        <span class="footer-heading">Build with Janitor</span>
+        <span class="footer-heading">Build with Doorman</span>
         <a href={docPath("getting-started")}>Get started</a>
         <a href={docPath("api")}>API reference</a>
         <a href={docPath("agentic-identity")}>Humans, agents & authority</a>
@@ -191,7 +192,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           The live demo starts only with your consent.
         </p>
         <a href={REPO}>Read the source ↗</a>
-        <a href="/janitor-mark.svg" download>
+        <a href="/doorman-logo.png" download>
           Download the logo ↗
         </a>
       </div>

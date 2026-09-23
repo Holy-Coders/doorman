@@ -1,7 +1,7 @@
 package main
 
 import (
-	janitor "github.com/Holy-Coders/janitor/packages/go"
+	doorman "github.com/Holy-Coders/doorman/packages/go"
 	"log"
 	"net/http"
 	"os"
@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	client, err := janitor.NewClient(os.Getenv("JANITOR_ENDPOINT"), janitor.Options{BearerToken: os.Getenv("JANITOR_GATEWAY_TOKEN")})
+	client, err := doorman.NewClient(os.Getenv("DOORMAN_ENDPOINT"), doorman.Options{BearerToken: os.Getenv("DOORMAN_GATEWAY_TOKEN")})
 	if err != nil {
 		log.Fatal(err)
 	}

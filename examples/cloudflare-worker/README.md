@@ -1,10 +1,10 @@
 # Cloudflare Workers
 
-This example runs Janitor in a Cloudflare Worker with D1, Cloudflare’s SQL database. It serves a small page and a `/api/visitor` endpoint. Local development uses a database on your machine and starts with AI disabled.
+This example runs Doorman in a Cloudflare Worker with D1, Cloudflare’s SQL database. It serves a small page and a `/api/visitor` endpoint. Local development uses a database on your machine and starts with AI disabled.
 
 ## Run the example
 
-You need Node 22.12+, pnpm 9.12.0 and a checkout of the [Janitor repository](https://github.com/Holy-Coders/janitor). From its root:
+You need Node 22.12+, pnpm 9.12.0 and a checkout of the [Doorman repository](https://github.com/Holy-Coders/doorman). From its root:
 
 ```sh
 pnpm install
@@ -21,7 +21,7 @@ Open **http://localhost:8787** and select **Identify** twice. The first call cre
 Apply the [D1 migrations](../../packages/storage/d1/migrations) to your database, bind it as `VISITORS`, and mount the handler at your chosen route:
 
 ```ts
-import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
+import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
 
 const visitor = createCloudflareVisitor({ db: env.VISITORS });
 return visitor.handle(request);

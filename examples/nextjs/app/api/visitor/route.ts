@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { createVercelVisitor } from "@janitor/adapters/vercel";
+import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
 export const runtime = "nodejs";
 const db = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 const visitor = createVercelVisitor({

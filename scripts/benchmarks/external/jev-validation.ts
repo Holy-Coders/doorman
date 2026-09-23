@@ -8,7 +8,7 @@ import {
   calculateSimilarity,
   operatorLabel,
   hasOperatorEvidence,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   ApiActivitySummary,
   ApiActivityInput,
@@ -16,8 +16,8 @@ import type {
   BrowserBehavior,
   OperatorEvidence,
   OperatorEvaluation,
-} from "@janitor/core";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
+} from "@aarondovturkel/doorman-core";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
 import { extractFeatures } from "../../../packages/network/src/features.js";
 import type { FeatureVector } from "../../../packages/network/src/schema.js";
 import { createPilotTransport, requestDigest } from "./jev-transport.js";

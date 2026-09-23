@@ -3,7 +3,7 @@ import {
   calculateSimilarity,
   evaluateLearning,
   type FeedbackExport,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 const [source, output] = process.argv.slice(2);
 if (!source || !output)
   throw new Error("Usage: pnpm evaluate:learning feedback.json report.json");

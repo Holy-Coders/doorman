@@ -53,7 +53,7 @@ it("reserves paid attempts before calls, resumes caches and honors a cumulative 
     fixture.manifest.split,
     { origin: "observed", revision: 0, now: fixture.manifest.createdAt },
   );
-  const directory = await mkdtemp(join(tmpdir(), "janitor-budget-test-")),
+  const directory = await mkdtemp(join(tmpdir(), "doorman-budget-test-")),
     path = join(directory, "cache.json");
   const provider = vi.fn(async () => ({
     version: CLASSIFIER_FEATURE_VERSION,

@@ -4,7 +4,7 @@
     "pages": [
       {
         "slug": "introduction",
-        "title": "What is Janitor?",
+        "title": "What is Doorman?",
         "description": "First-party identity and private activity classification for people, assistants and scripts.",
         "source": "docs/INTRODUCTION.md"
       },
@@ -16,8 +16,8 @@
       },
       {
         "slug": "languages",
-        "title": "Install Janitor",
-        "description": "Use npm, pnpm, Bun or Mix, or call Janitor from another language.",
+        "title": "Install Doorman",
+        "description": "Use npm, pnpm, Bun or Mix, or call Doorman from another language.",
         "source": "docs/LANGUAGES.md"
       },
       {
@@ -64,13 +64,13 @@
       {
         "slug": "node",
         "title": "Node & Fastify",
-        "description": "Run the example or mount Janitor in your existing Node server.",
+        "description": "Run the example or mount Doorman in your existing Node server.",
         "source": "examples/node-fastify/README.md"
       },
       {
         "slug": "elixir",
         "title": "Elixir & Phoenix",
-        "description": "Add Janitor to an existing Phoenix application with Ecto and Postgres.",
+        "description": "Add Doorman to an existing Phoenix application with Ecto and Postgres.",
         "source": "packages/elixir/README.md"
       },
       {
@@ -117,7 +117,7 @@
       {
         "slug": "matching",
         "title": "How browser matching works",
-        "description": "How Janitor remembers a browser and handles a missing cookie.",
+        "description": "How Doorman remembers a browser and handles a missing cookie.",
         "source": "docs/MATCHING.md"
       },
       {
@@ -135,7 +135,7 @@
       {
         "slug": "analytics",
         "title": "Connect your analytics",
-        "description": "Use PostHog, Mixpanel, Segment, Amplitude or RudderStack with Janitor.",
+        "description": "Use PostHog, Mixpanel, Segment, Amplitude or RudderStack with Doorman.",
         "source": "docs/ANALYTICS.md"
       },
       {
@@ -182,7 +182,7 @@
       {
         "slug": "privacy",
         "title": "Privacy & collected signals",
-        "description": "What Janitor collects, where it goes and how to erase it.",
+        "description": "What Doorman collects, where it goes and how to erase it.",
         "source": "PRIVACY.md"
       }
     ]
@@ -241,7 +241,7 @@
       {
         "slug": "review",
         "title": "Compare with other tools",
-        "description": "Where Janitor fits alongside analytics, authentication and fingerprinting products.",
+        "description": "Where Doorman fits alongside analytics, authentication and fingerprinting products.",
         "source": "docs/REVIEW.md"
       },
       {

@@ -2,11 +2,11 @@ import { createConnection, type Socket } from "node:net";
 import { writeFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 // Restricted to a local Docker network/loopback. No arbitrary load-test target.
-const host = process.env.JANITOR_BENCHMARK_HOST ?? "janitor-capacity-server";
-if (!["janitor-capacity-server", "127.0.0.1", "localhost"].includes(host))
+const host = process.env.DOORMAN_BENCHMARK_HOST ?? "doorman-capacity-server";
+if (!["doorman-capacity-server", "127.0.0.1", "localhost"].includes(host))
   throw Error("Local benchmark only");
-const target = Number(process.env.JANITOR_BENCHMARK_CONNECTIONS ?? 200_000);
-const workers = Number(process.env.JANITOR_BENCHMARK_WORKERS ?? 8);
+const target = Number(process.env.DOORMAN_BENCHMARK_CONNECTIONS ?? 200_000);
+const workers = Number(process.env.DOORMAN_BENCHMARK_WORKERS ?? 8);
 if (
   !Number.isInteger(target) ||
   target < 100 ||
@@ -125,8 +125,8 @@ let failure: string | undefined;
 async function checkpoint(complete = false) {
   const result = {
     complete,
-    serverMemoryLimit: process.env.JANITOR_BENCHMARK_SERVER_MEMORY ?? "4g",
-    clientMemoryLimit: process.env.JANITOR_BENCHMARK_CLIENT_MEMORY ?? "4g",
+    serverMemoryLimit: process.env.DOORMAN_BENCHMARK_SERVER_MEMORY ?? "4g",
+    clientMemoryLimit: process.env.DOORMAN_BENCHMARK_CLIENT_MEMORY ?? "4g",
     started,
     finished: new Date().toISOString(),
     node: process.version,
@@ -146,7 +146,7 @@ async function checkpoint(complete = false) {
     ],
   };
   await writeFile(
-    process.env.JANITOR_BENCHMARK_OUTPUT ??
+    process.env.DOORMAN_BENCHMARK_OUTPUT ??
       `/results/connections-${target}.json`,
     JSON.stringify(result, null, 2) + "\n",
   );
@@ -191,9 +191,9 @@ try {
     await checkpoint();
     if (live !== step) throw Error("Connections closed during ramp");
   }
-  // Hold all connections while making actual Janitor requests at a declared open-loop rate.
+  // Hold all connections while making actual Doorman requests at a declared open-loop rate.
   phase = "steady";
-  const rates = (process.env.JANITOR_BENCHMARK_RATES ?? "100")
+  const rates = (process.env.DOORMAN_BENCHMARK_RATES ?? "100")
     .split(",")
     .map(Number);
   const durationSeconds = 15;

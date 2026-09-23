@@ -1,22 +1,22 @@
 # Understand API activity
 
-An assistant can use your API without opening a browser. Janitor's optional API middleware gives those requests context: which routes a session or authenticated actor uses, how often requests complete, and whether the application accepts or rejects them.
+An assistant can use your API without opening a browser. Doorman's optional API middleware gives those requests context: which routes a session or authenticated actor uses, how often requests complete, and whether the application accepts or rejects them.
 
-It runs in **your application**, with your database and existing authentication. Keep PostHog, Mixpanel or Segment for analytics. Janitor can add identity context and a separate API-risk assessment to the events you send there.
+It runs in **your application**, with your database and existing authentication. Keep PostHog, Mixpanel or Segment for analytics. Doorman can add identity context and a separate API-risk assessment to the events you send there.
 
-This feature does not intercept browser `fetch`, proxy traffic through Janitor, or read request/response bodies. It never changes access permissions, blocks a request or shows a CAPTCHA. Browser identity confidence stays separate from API activity.
+This feature does not intercept browser `fetch`, proxy traffic through Doorman, or read request/response bodies. It never changes access permissions, blocks a request or shows a CAPTCHA. Browser identity confidence stays separate from API activity.
 
 ## Enable it on Node, Next.js or Cloudflare
 
 Apply your storage package's migrations through `0008_api_activity.sql`. Existing installations only need the new migration if earlier ones are already applied. Fresh installations apply all migrations in order.
 
 ```ts
-import { createNodeVisitor } from "@janitor/adapters/node";
+import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
 
-const janitor = createNodeVisitor({
+const doorman = createNodeVisitor({
   db, // Your existing Postgres pool.
   identity: {
-    secret: process.env.JANITOR_IDENTITY_SECRET!,
+    secret: process.env.DOORMAN_IDENTITY_SECRET!,
     namespace: "my-app-production",
   },
   evaluator: { apiKey: process.env.JEV_API_KEY! }, // Optional.
@@ -29,9 +29,9 @@ const janitor = createNodeVisitor({
 });
 ```
 
-Vercel and Cloudflare accept the same `activity` option. Cloudflare uses its configured D1 or Postgres database and Workers AI evaluator. Without an evaluator, Janitor records aggregates and returns `riskStatus: "disabled"` when an assessment is requested. Custom evaluators can implement the optional `evaluateActivity(input)` method; existing browser evaluators continue working.
+Vercel and Cloudflare accept the same `activity` option. Cloudflare uses its configured D1 or Postgres database and Workers AI evaluator. Without an evaluator, Doorman records aggregates and returns `riskStatus: "disabled"` when an assessment is requested. Custom evaluators can implement the optional `evaluateActivity(input)` method; existing browser evaluators continue working.
 
-Configure at most 32 route templates. Use names from your router, such as `GET /api/orders/:id`. Never substitute the incoming URL, a resource ID, query parameters or user-provided text. Janitor only accepts configured templates, and rejects query strings in template configuration.
+Configure at most 32 route templates. Use names from your router, such as `GET /api/orders/:id`. Never substitute the incoming URL, a resource ID, query parameters or user-provided text. Doorman only accepts configured templates, and rejects query strings in template configuration.
 
 ## Wrap a Web Request handler
 
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     key: { kind: "actor" as const, id: actor.id },
     // Include actor kind/delegation only when your server has verified them.
   };
-  const { response, activity } = await janitor.activity!.handle(
+  const { response, activity } = await doorman.activity!.handle(
     request,
     context,
     (request) => readOrder(request, actor),
@@ -59,34 +59,34 @@ export async function GET(request: Request) {
 }
 ```
 
-The handler receives the original unread request. Janitor preserves the returned `Response`, its status, headers, cookies and body stream. It records a completed operation after your handler returns. If the handler throws, Janitor attempts to record a server error and rethrows the original exception.
+The handler receives the original unread request. Doorman preserves the returned `Response`, its status, headers, cookies and body stream. It records a completed operation after your handler returns. If the handler throws, Doorman attempts to record a server error and rethrows the original exception.
 
 For an anonymous browser, use `key: { kind: "session", id: serverSession.id }` from an application-issued, validated session. Do not use a bearer token, raw email, incoming actor header or fuzzy visitor ID as that key. Unknown callers without a trusted session/actor key can be skipped by passing `undefined`; no shared “anonymous” bucket is created. Rotate/reset your session's activity key on logout or user changes to avoid combining people on a shared browser.
 
 Collection is opt-in at configuration time. Your application can additionally return no context for routes or sessions where its collection policy does not permit activity measurement.
 
-If you need recent activity **before** a sensitive operation, call `await janitor.activity!.assess(context)` after authenticating the caller. This reads previously completed activity; it cannot know the outcome of the pending operation. Your existing authorization still runs. A cached assessment is advisory and is never proof that credentials or delegation remain valid.
+If you need recent activity **before** a sensitive operation, call `await doorman.activity!.assess(context)` after authenticating the caller. This reads previously completed activity; it cannot know the outcome of the pending operation. Your existing authorization still runs. A cached assessment is advisory and is never proof that credentials or delegation remain valid.
 
 ## Add a Phoenix Plug
 
 For an existing installation, create an Ecto migration:
 
 ```elixir
-defmodule MyApp.Repo.Migrations.AddJanitorApiActivity do
+defmodule MyApp.Repo.Migrations.AddDoormanApiActivity do
   use Ecto.Migration
-  def up, do: Janitor.Migration.upgrade_activity()
+  def up, do: Doorman.Migration.upgrade_activity()
   def down, do: raise("Coordinate activity erasure before removing these tables")
 end
 ```
 
-Fresh installations use `Janitor.Migration.up()` as usual. Add `activity` to your server configuration:
+Fresh installations use `Doorman.Migration.up()` as usual. Add `activity` to your server configuration:
 
 ```elixir
-def janitor do
-  Janitor.new(
+def doorman do
+  Doorman.new(
     repo: MyApp.Repo,
     identity: [
-      secret: System.fetch_env!("JANITOR_IDENTITY_SECRET"),
+      secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
       namespace: "my-app-production"
     ],
     evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
@@ -100,11 +100,11 @@ def janitor do
 end
 ```
 
-Mount `Janitor.ActivityPlug` in the API pipeline after your authentication plug:
+Mount `Doorman.ActivityPlug` in the API pipeline after your authentication plug:
 
 ```elixir
-plug Janitor.ActivityPlug,
-  config: &MyApp.Identity.janitor/0,
+plug Doorman.ActivityPlug,
+  config: &MyApp.Identity.doorman/0,
   context: &MyApp.Identity.api_context/1
 ```
 
@@ -114,24 +114,24 @@ Your `api_context/1` returns a configured template and an authenticated actor ID
 def api_context(conn) do
   if actor = conn.assigns[:current_actor] do
     %{
-      route: conn.assigns.janitor_route_template,
+      route: conn.assigns.doorman_route_template,
       key: %{kind: "actor", id: actor.id}
     }
   end
 end
 ```
 
-The Plug runs in `register_before_send`, preserving the application's response and adding private `conn.assigns.janitor_api_activity`. If another before-send callback consumes that assign, register the consumer **before** the activity Plug: Plug executes those callbacks in reverse registration order. Unhandled exceptions that never produce a response do not invoke the callback; your normal exception telemetry owns those cases.
+The Plug runs in `register_before_send`, preserving the application's response and adding private `conn.assigns.doorman_api_activity`. If another before-send callback consumes that assign, register the consumer **before** the activity Plug: Plug executes those callbacks in reverse registration order. Unhandled exceptions that never produce a response do not invoke the callback; your normal exception telemetry owns those cases.
 
-You can also call `Janitor.Activity.observe(config, context, %{status: 200, duration_ms: 12})` directly, or `Janitor.Activity.assess(config, context)` before a sensitive action. An optional `activity: [..., evaluator: fn input -> ... end]` replaces Jev for API activity and must return string-keyed `automation` and `suspicious` numbers in `[0, 1]`.
+You can also call `Doorman.Activity.observe(config, context, %{status: 200, duration_ms: 12})` directly, or `Doorman.Activity.assess(config, context)` before a sensitive action. An optional `activity: [..., evaluator: fn input -> ... end]` replaces Jev for API activity and must return string-keyed `automation` and `suspicious` numbers in `[0, 1]`.
 
 The [Phoenix example](../examples/phoenix/README.md) includes an opt-in API route and server-issued session. The [Fastify example](../examples/node-fastify/README.md) uses an authenticated demo service and an `onSend` hook. Both run with Jev disabled when no API key is provided.
 
 ## What is recorded and evaluated
 
-Janitor stores one aggregate row per application-scoped HMAC actor/session key, route template and time window. It updates that row atomically across processes. There is no raw request log.
+Doorman stores one aggregate row per application-scoped HMAC actor/session key, route template and time window. It updates that row atomically across processes. There is no raw request log.
 
-Each row contains request count, 401/403 count, all 4xx count, 5xx count, total/max handler duration, first/last completion time and a count of completion gaps below 100ms on the same route. Durations are rounded and capped at 60 seconds; counts saturate at one billion. Timing covers the handler through response creation/before-send, not reading a streamed response. It is affected by server load and application behavior and is not human reaction time. Janitor does not collect exact action sequences or infer distributed concurrency from these counters.
+Each row contains request count, 401/403 count, all 4xx count, 5xx count, total/max handler duration, first/last completion time and a count of completion gaps below 100ms on the same route. Durations are rounded and capped at 60 seconds; counts saturate at one billion. Timing covers the handler through response creation/before-send, not reading a streamed response. It is affected by server load and application behavior and is not human reaction time. Doorman does not collect exact action sequences or infer distributed concurrency from these counters.
 
 Jev receives at most 128 aggregate rows from the latest five windows, the configured route being assessed, its sensitive-action flag, and optional **server-verified** actor kind/delegation status. Truncated summaries are labeled. Raw IDs, cookies, credentials, headers, URLs, query values, bodies, IPs and browser observations are absent. API summaries are evaluated independently of fingerprint matching and cross-device learning.
 
@@ -163,7 +163,7 @@ Both middleware paths fail open for activity collection. Provider failures retur
 After obtaining attribution from your verified identity context, pass an API assessment through the existing **server** bridge:
 
 ```ts
-const attribution = await janitor.identities!.assess(verifiedContext);
+const attribution = await doorman.identities!.assess(verifiedContext);
 if (activity.assessment && !activity.assessment.cached) {
   await analytics.capture(
     { attribution, apiActivity: activity.assessment },
@@ -173,20 +173,20 @@ if (activity.assessment && !activity.assessment.cached) {
 }
 ```
 
-`analytics` is your configured [PostHog, Mixpanel or Segment bridge](ANALYTICS.md). Phoenix accepts the same addition as `"apiActivity" => assessment` in `Janitor.Analytics.capture`. Exports contain only API risk status, evaluated scores, evaluation/expiry times, cache/truncation flags, window size and request totals, alongside the existing verified identity fields. Route history stays private. Unavailable scores are omitted from analytics rather than reported as an evaluated zero. Export remains explicit; the middleware sends no analytics automatically.
+`analytics` is your configured [PostHog, Mixpanel or Segment bridge](ANALYTICS.md). Phoenix accepts the same addition as `"apiActivity" => assessment` in `Doorman.Analytics.capture`. Exports contain only API risk status, evaluated scores, evaluation/expiry times, cache/truncation flags, window size and request totals, alongside the existing verified identity fields. Route history stays private. Unavailable scores are omitted from analytics rather than reported as an evaluated zero. Export remains explicit; the middleware sends no analytics automatically.
 
 ## Retention and erasure
 
-`janitor.cleanup()` / `Janitor.cleanup(config)` removes up to 100 expired counter rows and 100 expired assessment records per call. Invoke it from existing maintenance frequently enough for your traffic. Expired data can remain physically present until cleanup runs; assessment reads only consider the recent bounded windows and unexpired cache. Include database backups and any explicitly exported analytics in your erasure process.
+`doorman.cleanup()` / `Doorman.cleanup(config)` removes up to 100 expired counter rows and 100 expired assessment records per call. Invoke it from existing maintenance frequently enough for your traffic. Expired data can remain physically present until cleanup runs; assessment reads only consider the recent bounded windows and unexpired cache. Include database backups and any explicitly exported analytics in your erasure process.
 
 Stop collection for a key and coordinate in-flight requests before deletion:
 
 ```ts
-await janitor.activity!.deleteKey({ kind: "actor", id: authenticatedActorId });
+await doorman.activity!.deleteKey({ kind: "actor", id: authenticatedActorId });
 ```
 
 ```elixir
-Janitor.Activity.delete_key(config, %{kind: "actor", id: authenticated_actor_id})
+Doorman.Activity.delete_key(config, %{kind: "actor", id: authenticated_actor_id})
 ```
 
 Use `kind: "session"` for an anonymous application session. Actor/session keys are independent of browser visitor IDs, so deleting a browser or directory subject does not automatically erase these counters. Your account-deletion flow must delete its activity key and any related session keys. Collection can be disabled by removing `activity`; existing data still requires cleanup or erasure.

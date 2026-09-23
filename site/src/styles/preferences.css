@@ -73,7 +73,7 @@ select:focus-visible {
 }
 :root[data-theme="light"] .brand-symbol img,
 :root[data-theme="light"] .hero-mark {
-  content: url("/janitor-mark-dark.svg");
+  content: url("/doorman-mark-dark.png");
 }
 :root[data-theme="light"] .hero-film {
   filter: invert(1) hue-rotate(180deg);

@@ -1,8 +1,8 @@
-defmodule Janitor.EvidenceTest do
+defmodule Doorman.EvidenceTest do
   use ExUnit.Case, async: false
   import Plug.Test
   import Plug.Conn
-  alias Janitor.{Evidence, Identity, Storage}
+  alias Doorman.{Evidence, Identity, Storage}
   @fixtures File.read!(Path.expand("../priv/conformance.json", __DIR__)) |> Jason.decode!()
   @signals hd(@fixtures["vectors"])["raw"]
 
@@ -24,12 +24,12 @@ defmodule Janitor.EvidenceTest do
 
   setup do
     c =
-      Janitor.new(
-        repo: Janitor.TestRepo,
-        prefix: "janitor_test",
+      Doorman.new(
+        repo: Doorman.TestRepo,
+        prefix: "doorman_test",
         environment: :test,
         evidence: true,
-        identity: [secret: String.duplicate("e", 64), namespace: Janitor.random_id("evidence_")]
+        identity: [secret: String.duplicate("e", 64), namespace: Doorman.random_id("evidence_")]
       )
 
     subject = Identity.identify_user(c, "user-a")
@@ -38,7 +38,7 @@ defmodule Janitor.EvidenceTest do
   end
 
   defp proof(subject, visitor, id) do
-    now = Janitor.now()
+    now = Doorman.now()
 
     %{
       subject_id: subject["id"],
@@ -154,7 +154,7 @@ defmodule Janitor.EvidenceTest do
     assert %{"status" => "invalid", "reason" => "revoked"} = Evidence.assess_device(c, expected)
     assert Evidence.link_device(c, input)["revocation"]["issuer"] == "security"
     assert length(Evidence.list_devices(c, s["id"])) == 1
-    stale = put_in(input, [:verification, :verified_at], Janitor.now() - 301_000)
+    stale = put_in(input, [:verification, :verified_at], Doorman.now() - 301_000)
     assert_raise ArgumentError, fn -> Evidence.link_device(c, stale) end
   end
 
@@ -182,11 +182,11 @@ defmodule Janitor.EvidenceTest do
         edge: %{
           source: :edge,
           provider: :cloudflare,
-          observed_at: Janitor.now(),
+          observed_at: Doorman.now(),
           bot_score: 5,
           signed_agent: true
         },
-        authentication: %{method: "mfa", verified_at: Janitor.now()},
+        authentication: %{method: "mfa", verified_at: Doorman.now()},
         action: "payment"
       }
     }
@@ -197,20 +197,20 @@ defmodule Janitor.EvidenceTest do
       |> put_req_header("cf-bot-score", "99")
     end
 
-    conn = Janitor.handle(req.(%{"signals" => @signals}), c, context)
+    conn = Doorman.handle(req.(%{"signals" => @signals}), c, context)
     assert conn.status == 200
-    assert conn.assigns.janitor_evidence["edge"]["botScore"] == 5
+    assert conn.assigns.doorman_evidence["edge"]["botScore"] == 5
     refute conn.resp_body =~ "botScore"
     refute conn.resp_body =~ "payment"
-    assert Janitor.handle(req.(%{"signals" => @signals, "evidence" => %{}}), c).status == 400
-    default = Janitor.handle(req.(%{"signals" => @signals}), c)
+    assert Doorman.handle(req.(%{"signals" => @signals, "evidence" => %{}}), c).status == 400
+    default = Doorman.handle(req.(%{"signals" => @signals}), c)
 
-    assert default.assigns.janitor_evidence == %{
+    assert default.assigns.doorman_evidence == %{
              "client" => %{"source" => "browser", "authenticated" => false}
            }
 
-    stale = put_in(context, [:evidence, :edge, :observed_at], Janitor.now() - 61_000)
-    assert Janitor.handle(req.(%{"signals" => @signals}), c, stale).status == 503
+    stale = put_in(context, [:evidence, :edge, :observed_at], Doorman.now() - 61_000)
+    assert Doorman.handle(req.(%{"signals" => @signals}), c, stale).status == 503
   end
 
   test "rejects arbitrary data, ambiguous keys, overlarge windows and invalid provenance", %{
@@ -236,7 +236,7 @@ defmodule Janitor.EvidenceTest do
 
     assert_raise ArgumentError, fn ->
       Evidence.request_evidence(%{
-        edge: %{source: :browser, provider: :cloudflare, observed_at: Janitor.now()}
+        edge: %{source: :browser, provider: :cloudflare, observed_at: Doorman.now()}
       })
     end
   end

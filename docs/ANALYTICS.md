@@ -2,48 +2,48 @@
 
 For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
 
-Use Janitor alongside your existing analytics to connect anonymous visits to login, keep user profiles correct on shared browsers, and report on the people and agents using an account.
+Use Doorman alongside your existing analytics to connect anonymous visits to login, keep user profiles correct on shared browsers, and report on the people and agents using an account.
 
-There are two parts: a browser helper calls your SDK’s identify/reset methods when authentication changes; a server helper can send private Janitor assessments as analytics events. You can use either part independently. Nothing is exported until you configure and call it.
+There are two parts: a browser helper calls your SDK’s identify/reset methods when authentication changes; a server helper can send private Doorman assessments as analytics events. You can use either part independently. Nothing is exported until you configure and call it.
 
-If you are new to Janitor, set up [browser identification](GETTING-STARTED.md) first. For agent or shared-account reports, also configure the [identity directory](AGENTIC-IDENTITY.md).
+If you are new to Doorman, set up [browser identification](GETTING-STARTED.md) first. For agent or shared-account reports, also configure the [identity directory](AGENTIC-IDENTITY.md).
 
-For agents and other callers using your API, add optional [API activity middleware](API-ACTIVITY.md). Its private assessment can travel through the same server bridge as `apiActivity`, alongside verified actor/account attribution. The bridge exports selected aggregate fields with the `janitor_api_` prefix, keeping API risk separate from browser confidence. It never exports route history or treats an inferred risk score as an authenticated identity.
+For agents and other callers using your API, add optional [API activity middleware](API-ACTIVITY.md). Its private assessment can travel through the same server bridge as `apiActivity`, alongside verified actor/account attribution. The bridge exports selected aggregate fields with the `doorman_api_` prefix, keeping API risk separate from browser confidence. It never exports route history or treats an inferred risk score as an authenticated identity.
 
 ## One client for your identity lifecycle
 
-Use Janitor in application code instead of calling each provider's identify, profile-update and reset methods separately. Initialize your existing SDKs with your project configuration, then pass them to Janitor:
+Use Doorman in application code instead of calling each provider's identify, profile-update and reset methods separately. Initialize your existing SDKs with your project configuration, then pass them to Doorman:
 
 ```ts
-import { createJanitorClient } from "@janitor/browser";
+import { createDoormanClient } from "@aarondovturkel/doorman-browser";
 
 // posthog, mixpanel and analytics are SDK instances already initialized by your app.
-const janitor = createJanitorClient({
+const doorman = createDoormanClient({
   endpoint: "/api/visitor",
   analytics: { posthog, mixpanel, segment: analytics }, // Include only providers you use.
 });
 
-await janitor.identify(); // Measure the anonymous browser; no person profile merge.
-await janitor.track("Pricing viewed", { plan: "team" });
+await doorman.identify(); // Measure the anonymous browser; no person profile merge.
+await doorman.track("Pricing viewed", { plan: "team" });
 
 // After your application's login succeeds:
-await janitor.identify(user.id, { name: user.name, email: user.email });
-await janitor.update({ plan: "team" });
-await janitor.track("Checkout opened", { plan: "team" });
+await doorman.identify(user.id, { name: user.name, email: user.email });
+await doorman.update({ plan: "team" });
+await doorman.track("Checkout opened", { plan: "team" });
 
 // After logout, before recording another person's activity:
-await janitor.reset();
+await doorman.reset();
 // On app teardown:
-janitor.destroy();
+doorman.destroy();
 ```
 
-Janitor manages one known-user identity and forwards it consistently to your destinations. It calls their supported APIs internally because each provider owns its storage and merge semantics. SDKs keep their anonymous device IDs so their anonymous-to-login joins keep working. Janitor adds `janitor_visitor_id` to events sent through `janitor.track` after successful browser measurement. A recovered browser ID is not used as an authenticated person's ID.
+Doorman manages one known-user identity and forwards it consistently to your destinations. It calls their supported APIs internally because each provider owns its storage and merge semantics. SDKs keep their anonymous device IDs so their anonymous-to-login joins keep working. Doorman adds `doorman_visitor_id` to events sent through `doorman.track` after successful browser measurement. A recovered browser ID is not used as an authenticated person's ID.
 
-The same `user.id` on a phone and laptop joins the known person across devices. You can instead use the canonical subject ID returned by Janitor’s server identity directory; use the same choice in every browser and server destination. Never substitute an unverified suggestion. A different user on a shared browser triggers provider resets before identification. The initial login preserves the provider's anonymous ID; logout resets it. Your app still authenticates users and supplies the server's verified identity context. Calling a browser method alone never authenticates that user to Janitor's server.
+The same `user.id` on a phone and laptop joins the known person across devices. You can instead use the canonical subject ID returned by Doorman’s server identity directory; use the same choice in every browser and server destination. Never substitute an unverified suggestion. A different user on a shared browser triggers provider resets before identification. The initial login preserves the provider's anonymous ID; logout resets it. Your app still authenticates users and supplies the server's verified identity context. Calling a browser method alone never authenticates that user to Doorman's server.
 
-`update` accepts `name`, `email` and `plan`; identify a known user first. `track` accepts a bounded event name and up to 50 flat string, number, boolean or null properties. Reserved identity fields and private Janitor score fields are rejected. Provider failures are isolated; `track` returns a status per destination (`queued`, `unavailable` or `skipped`). Queued means submitted to the SDK, not confirmed ingestion.
+`update` accepts `name`, `email` and `plan`; identify a known user first. `track` accepts a bounded event name and up to 50 flat string, number, boolean or null properties. Reserved identity fields and private Doorman score fields are rejected. Provider failures are isolated; `track` returns a status per destination (`queued`, `unavailable` or `skipped`). Queued means submitted to the SDK, not confirmed ingestion.
 
-`enabled: false` starts the Janitor client paused; `setEnabled(true)` starts collection. While paused, Janitor's identify, update and track calls do not publish. Separately configure each SDK's autocapture, replay and consent settings: Janitor does not control calls made directly to those SDKs. `destroy()` removes Janitor's listeners but does not shut down provider SDKs.
+`enabled: false` starts the Doorman client paused; `setEnabled(true)` starts collection. While paused, Doorman's identify, update and track calls do not publish. Separately configure each SDK's autocapture, replay and consent settings: Doorman does not control calls made directly to those SDKs. `destroy()` removes Doorman's listeners but does not shut down provider SDKs.
 
 For gradual adoption, the smaller `createIdentityAnalytics` bridge remains available below. Avoid running two identity managers against the same provider instances at once.
 
@@ -53,21 +53,21 @@ For gradual adoption, the smaller `createIdentityAnalytics` bridge remains avail
 | ----------------------------------- | ----------------------- | ------------------------------------------ |
 | Your authenticated user or agent ID | `user_123`, `agent_456` | The analytics person’s distinct ID.        |
 | Your account or workspace ID        | `studio_789`            | Grouping activity within a shared account. |
-| Janitor’s visitor ID                | `vis_…`                 | Browser context on an event.               |
+| Doorman’s visitor ID                | `vis_…`                 | Browser context on an event.               |
 
 One person can use several browsers, and several people can share one browser. Do not use a visitor ID as the analytics person ID. See [the identity terms](CONCEPTS.md) for a worked example.
 
 ## What the user experiences
 
-Your existing signup and login screens stay the same. In the example below, measurement runs in the background when your application allows collection. A failed measurement does not interrupt navigation or sign-in, and Janitor does not show a score or CAPTCHA. Authenticated users retain their existing profile across devices. On logout, analytics starts a fresh anonymous identity for whoever uses that browser next.
+Your existing signup and login screens stay the same. In the example below, measurement runs in the background when your application allows collection. A failed measurement does not interrupt navigation or sign-in, and Doorman does not show a score or CAPTCHA. Authenticated users retain their existing profile across devices. On logout, analytics starts a fresh anonymous identity for whoever uses that browser next.
 
-A shared family browser can therefore show two verified users in analytics without merging their profiles. Two humans using the same credential remain one authenticated actor: browser differences alone cannot establish how many physical people are present. Janitor can report uncertainty and risk, not secretly authenticate the operator.
+A shared family browser can therefore show two verified users in analytics without merging their profiles. Two humans using the same credential remain one authenticated actor: browser differences alone cannot establish how many physical people are present. Doorman can report uncertainty and risk, not secretly authenticate the operator.
 
-If the application decides a sensitive operation requires extra verification, its normal passkey/MFA/CAPTCHA flow appears there. The server verifies that proof. Janitor never selects or renders that UI.
+If the application decides a sensitive operation requires extra verification, its normal passkey/MFA/CAPTCHA flow appears there. The server verifies that proof. Doorman never selects or renders that UI.
 
 ## Connect login and logout in the browser
 
-Use the PostHog/Mixpanel instances your application already initializes. Do not install a second instance, turn on replay, or change their collection settings to use Janitor. Installing SDKs is only needed if the application does not have them:
+Use the PostHog/Mixpanel instances your application already initializes. Do not install a second instance, turn on replay, or change their collection settings to use Doorman. Installing SDKs is only needed if the application does not have them:
 
 ```sh
 npm install posthog-js mixpanel-browser
@@ -75,13 +75,13 @@ npm install posthog-js mixpanel-browser
 # or: pnpm add posthog-js mixpanel-browser
 ```
 
-For Phoenix, the generated client comes from the Mix package; no additional Janitor JavaScript build is required. In an npm/Bun application import the same exports from `@janitor/browser`.
+For Phoenix, the generated client comes from the Mix package; no additional Doorman JavaScript build is required. In an npm/Bun application import the same exports from `@aarondovturkel/doorman-browser`.
 
 ```js
 import {
   createVisitorClient,
   createIdentityAnalytics,
-} from "/janitor/janitor.js";
+} from "/doorman/doorman.js";
 // posthog and mixpanel below are your existing initialized browser SDKs.
 const visitor = createVisitorClient({
   headers: () => ({
@@ -118,22 +118,22 @@ Create this bridge once per browser application lifecycle, outside frequently re
 
 ### What the helper calls
 
-The bridge calls PostHog `identify`, Mixpanel `identify` followed by one `janitor user identified` event, and the providers' own `reset` functions. The extra Mixpanel event completes its Simplified ID Merge transition. No arbitrary alias or visitor ID is used as a person's ID. The helper never receives scores, raw signals or inferred account IDs. It does not load SDKs, enable collection, subscribe to auth, retry requests or manage a server session.
+The bridge calls PostHog `identify`, Mixpanel `identify` followed by one `doorman user identified` event, and the providers' own `reset` functions. The extra Mixpanel event completes its Simplified ID Merge transition. No arbitrary alias or visitor ID is used as a person's ID. The helper never receives scores, raw signals or inferred account IDs. It does not load SDKs, enable collection, subscribe to auth, retry requests or manage a server session.
 
 ### Preserve the anonymous visit
 
-Do not reset provider anonymous IDs immediately before the first successful login: that would discard the link to the current anonymous journey. Janitor's `visitor.reset()` only clears aggregate behavior and stale requests; it does not delete the HttpOnly browser cookie or log out your application. Clear the learning cookie server-side on logout as described in the [Phoenix guide](../packages/elixir/README.md). Collection withdrawal also requires the application's provider opt-out/reset policy; `visitor.setEnabled(false)` pauses only Janitor.
+Do not reset provider anonymous IDs immediately before the first successful login: that would discard the link to the current anonymous journey. Doorman's `visitor.reset()` only clears aggregate behavior and stale requests; it does not delete the HttpOnly browser cookie or log out your application. Clear the learning cookie server-side on logout as described in the [Phoenix guide](../packages/elixir/README.md). Collection withdrawal also requires the application's provider opt-out/reset policy; `visitor.setEnabled(false)` pauses only Doorman.
 
 Sources: [PostHog identification semantics](https://github.com/PostHog/posthog.com/blob/master/contents/docs/product-analytics/identify.mdx), [Mixpanel identification and merge](https://docs.mixpanel.com/docs/tracking-methods/id-management/identifying-users-simplified), [Mixpanel profile updates](https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#storing-user-profiles).
 
 ## Send server events from Phoenix
 
-Apply Janitor's migration and serve `/janitor/janitor.js` using the [native setup](../packages/elixir/README.md). Configure only the providers you use:
+Apply Doorman's migration and serve `/doorman/doorman.js` using the [native setup](../packages/elixir/README.md). Configure only the providers you use:
 
 ```elixir
-Janitor.new(
+Doorman.new(
   repo: MyApp.Repo,
-  identity: [secret: System.fetch_env!("JANITOR_IDENTITY_SECRET"), namespace: "my-app"],
+  identity: [secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"), namespace: "my-app"],
   analytics: [
     posthog: [api_key: System.fetch_env!("POSTHOG_API_KEY")],
     mixpanel: [token: System.fetch_env!("MIXPANEL_TOKEN")]
@@ -153,7 +153,7 @@ def identify(conn, _params) do
   context = case conn.assigns[:current_user] do
     nil -> %{}
     user ->
-      person = Janitor.Identity.identify_user(c, to_string(user.id))
+      person = Doorman.Identity.identify_user(c, to_string(user.id))
       %{
         verified: %{subject_id: person["id"], actor_id: person["id"]},
         analytics_consent: conn.assigns[:analytics_allowed] == true,
@@ -161,38 +161,38 @@ def identify(conn, _params) do
         analytics_context: %{account_id: to_string(conn.assigns.current_account.id)}
       }
   end
-  Janitor.handle(conn, c, context)
+  Doorman.handle(conn, c, context)
 end
 ```
 
-`current_account` must be the account the server authorized for this request. For an application with no workspace/account concept, omit `analytics_context`. The authenticated actor's stable application ID must match the browser SDK's distinct ID. An agent gets its own stable ID (for example `agent:123`), never its owner's distinct ID. Unknown operators must not be reported under the owner's ID merely because a browser matches. `analytics_consent` is a server-owned collection-policy decision; it does not require a Janitor consent dialog.
+`current_account` must be the account the server authorized for this request. For an application with no workspace/account concept, omit `analytics_context`. The authenticated actor's stable application ID must match the browser SDK's distinct ID. An agent gets its own stable ID (for example `agent:123`), never its owner's distinct ID. Unknown operators must not be reported under the owner's ID merely because a browser matches. `analytics_consent` is a server-owned collection-policy decision; it does not require a Doorman consent dialog.
 
-The browser receives only `visitorId` and `isReturning`. Full private results are in `conn.assigns.janitor_identity` and `conn.assigns.janitor_evidence`. Provider delivery is best effort and bounded to 750 ms/provider by default; it does not change identity. The configured automatic exports are synchronous on the measurement request, so use existing server SDK buffering/application delivery infrastructure at high volume instead of paying two export waits per measurement. Nothing new runs on every LiveView render or WebSocket message.
+The browser receives only `visitorId` and `isReturning`. Full private results are in `conn.assigns.doorman_identity` and `conn.assigns.doorman_evidence`. Provider delivery is best effort and bounded to 750 ms/provider by default; it does not change identity. The configured automatic exports are synchronous on the measurement request, so use existing server SDK buffering/application delivery infrastructure at high volume instead of paying two export waits per measurement. Nothing new runs on every LiveView render or WebSocket message.
 
 For explicit server exports or profile updates:
 
 ```elixir
 # Existing authenticated actor and server-owned assessment:
-Janitor.Analytics.capture(:mixpanel, identity, to_string(actor.id),
+Doorman.Analytics.capture(:mixpanel, identity, to_string(actor.id),
   token: System.fetch_env!("MIXPANEL_TOKEN"),
   account_id: to_string(account.id)
 )
-Janitor.Analytics.identify_user(:mixpanel, to_string(user.id),
+Doorman.Analytics.identify_user(:mixpanel, to_string(user.id),
   %{"email" => user.email, "name" => user.name, "plan" => "pro"},
   token: System.fetch_env!("MIXPANEL_TOKEN")
 )
 # Same calls with :posthog and api_key: ...
-# Existing SDK: Janitor.Analytics.properties(identity, %{account_id: to_string(account.id)})
+# Existing SDK: Doorman.Analytics.properties(identity, %{account_id: to_string(account.id)})
 ```
 
-Only pass profile values the application is allowed to disclose. Verified email keys in Janitor's identity directory are a separate HMAC-based lookup feature; changing an email must not change the analytics person's ID. Account updates and analytics work with learning disabled.
+Only pass profile values the application is allowed to disclose. Verified email keys in Doorman's identity directory are a separate HMAC-based lookup feature; changing an email must not change the analytics person's ID. Account updates and analytics work with learning disabled.
 
 ## Send server events from TypeScript
 
 The bridge adds no provider dependency. Supply an existing `posthog-node`, `mixpanel`, or `@segment/analytics-node` client:
 
 ```ts
-import { createAnalyticsBridge } from "@janitor/adapters/analytics";
+import { createAnalyticsBridge } from "@aarondovturkel/doorman-adapters/analytics";
 const analytics = createAnalyticsBridge({
   provider: "mixpanel",
   client: mixpanelServer,
@@ -206,15 +206,15 @@ await analytics.capture(privateIdentity, authenticatedActor.id, {
 
 PostHog uses `provider: "posthog"`; Segment uses `provider: "segment"`. Keep risk export on the server. The server bridge returns `queued` or `unavailable`; callback-based SDK failures may arrive later. Configure provider error handlers and flush/shutdown at the relevant application lifecycle boundary. Native Elixir exports use bounded real HTTP and report `:ok` on accepted ingestion, not dashboard verification.
 
-Mixpanel server events send both `distinct_id` and `$user_id` for Simplified ID Merge. Projects using Original ID Merge can select `identityMerge: "original"` or native `identity_merge: :original`. Check the existing project's identity mode before rollout; the bridge does not change it. Browser SDKs retain control of their anonymous/device IDs. No server merge uses a fuzzy-restored Janitor visitor ID.
+Mixpanel server events send both `distinct_id` and `$user_id` for Simplified ID Merge. Projects using Original ID Merge can select `identityMerge: "original"` or native `identity_merge: :original`. Check the existing project's identity mode before rollout; the bridge does not change it. Browser SDKs retain control of their anonymous/device IDs. No server merge uses a fuzzy-restored Doorman visitor ID.
 
 ### Agents without a browser
 
 After verifying an agent credential and its delegation, export the directory assessment directly. No browser collection, synthetic visitor ID or manufactured zero risk is needed:
 
 ```elixir
-attribution = Janitor.Identity.assess(config, verified_context)
-Janitor.Analytics.capture(:mixpanel, %{"attribution" => attribution}, "agent:123",
+attribution = Doorman.Identity.assess(config, verified_context)
+Doorman.Analytics.capture(:mixpanel, %{"attribution" => attribution}, "agent:123",
   token: System.fetch_env!("MIXPANEL_TOKEN"), account_id: to_string(account.id))
 ```
 
@@ -229,19 +229,19 @@ These use the same event and actor dimensions; browser/risk fields are absent. M
 
 ## Understand the exported fields
 
-The server event remains `janitor identified`. Its event properties describe the assessment at that moment; they are not persistent account membership or a permanent fraud label.
+The server event remains `doorman identified`. Its event properties describe the assessment at that moment; they are not persistent account membership or a permanent fraud label.
 
 | Property                                                          | Meaning                                                                           |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `janitor_schema_version`                                          | `1` for this export schema                                                        |
-| `janitor_account_id`                                              | Optional application account/workspace, supplied by the authorized server         |
-| `janitor_subject_id`, `janitor_subject_status`                    | Verified principal being represented; opaque Janitor directory ID                 |
-| `janitor_actor_id`                                                | Opaque directory ID of the separately authenticated operator; absent when unknown |
-| `janitor_actor_kind`, `janitor_actor_basis`                       | `person`, `agent`, or `unknown`; verified credential basis or unknown             |
-| `janitor_visitor_id`                                              | Browser continuity ID; can relate to multiple actors                              |
-| `janitor_confidence`, `janitor_returning`                         | Browser matching evidence, not human/account authentication probability           |
-| `janitor_automation`, `janitor_suspicious`, `janitor_risk_status` | Technical risk and whether it was evaluated, unavailable or disabled              |
-| `janitor_delegation_status`                                       | `none`, `valid`, or `invalid` when assessed                                       |
+| `doorman_schema_version`                                          | `1` for this export schema                                                        |
+| `doorman_account_id`                                              | Optional application account/workspace, supplied by the authorized server         |
+| `doorman_subject_id`, `doorman_subject_status`                    | Verified principal being represented; opaque Doorman directory ID                 |
+| `doorman_actor_id`                                                | Opaque directory ID of the separately authenticated operator; absent when unknown |
+| `doorman_actor_kind`, `doorman_actor_basis`                       | `person`, `agent`, or `unknown`; verified credential basis or unknown             |
+| `doorman_visitor_id`                                              | Browser continuity ID; can relate to multiple actors                              |
+| `doorman_confidence`, `doorman_returning`                         | Browser matching evidence, not human/account authentication probability           |
+| `doorman_automation`, `doorman_suspicious`, `doorman_risk_status` | Technical risk and whether it was evaluated, unavailable or disabled              |
+| `doorman_delegation_status`                                       | `none`, `valid`, or `invalid` when assessed                                       |
 
 There is no raw fingerprint, behavior summary, debug record, IP, secret, email key or anonymous learning prediction in these events. Actor/subject fields come from the private credential assessment. Low automation never turns an unknown actor into a verified person. Stable actor IDs allow distinct counting without merging users who share a browser/account. Use the same actor ID conventions throughout the application; prefix separately managed agent IDs to prevent collisions with human IDs.
 
@@ -253,48 +253,48 @@ These examples count identities whose credentials your app verified. They cannot
 
 | Question                                                                   | Aggregation and filter                                                                                 |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| How many humans used account X this month?                                 | Distinct `janitor_actor_id`; account X, kind `person`, basis `verified-credential`, chosen time window |
+| How many humans used account X this month?                                 | Distinct `doorman_actor_id`; account X, kind `person`, basis `verified-credential`, chosen time window |
 | How many agents used it?                                                   | Same, kind `agent`; filter valid delegation when asking about delegated agents                         |
 | Has one browser been used by multiple people?                              | Distinct actor IDs grouped by visitor ID; verified persons only; count > 1                             |
 | How many browsers did a person use?                                        | Distinct visitor IDs for one actor; these are browser environments, not guaranteed physical devices    |
 | What activity came from unknown operators?                                 | Event count where actor basis is `unknown`; do not turn that into a number of people                   |
 | How many members/agents are authorized right now, including inactive ones? | Your current membership/delegation database, not historical analytics events                           |
 
-These reports count **observed active actors**, not everyone registered. An invalid delegation can still describe an observed authenticated agent, so explicitly require `janitor_delegation_status = valid` when counting observed authorized delegations. Historical events remain historical after revocation. No report can count distinct physical humans sharing one undifferentiated credential. Browser-cookie copying and probabilistic recovery also mean a shared visitor ID is evidence to investigate, not proof that people share a physical device.
+These reports count **observed active actors**, not everyone registered. An invalid delegation can still describe an observed authenticated agent, so explicitly require `doorman_delegation_status = valid` when counting observed authorized delegations. Historical events remain historical after revocation. No report can count distinct physical humans sharing one undifferentiated credential. Browser-cookie copying and probabilistic recovery also mean a shared visitor ID is evidence to investigate, not proof that people share a physical device.
 
 ### Mixpanel report setup
 
-In Insights, select `janitor identified`, filter `janitor_account_id = your-account` and `janitor_actor_basis = verified-credential`, then measure **Distinct count of property → janitor_actor_id**. Break down by `janitor_actor_kind`. Use the total over your chosen date range; adding daily unique counts double-counts returning actors. For shared-browser analysis, filter kind `person` and break down by `janitor_visitor_id` instead. These reports use event properties and do not require enabling Group Analytics. [Mixpanel distinct-property measurements](https://docs.mixpanel.com/docs/reports/insights).
+In Insights, select `doorman identified`, filter `doorman_account_id = your-account` and `doorman_actor_basis = verified-credential`, then measure **Distinct count of property → doorman_actor_id**. Break down by `doorman_actor_kind`. Use the total over your chosen date range; adding daily unique counts double-counts returning actors. For shared-browser analysis, filter kind `person` and break down by `doorman_visitor_id` instead. These reports use event properties and do not require enabling Group Analytics. [Mixpanel distinct-property measurements](https://docs.mixpanel.com/docs/reports/insights).
 
-If you already use provider account/group analytics, opt into `accountGroup: "account"` on the TypeScript bridge or `account_group: "account"` in native provider options. Janitor attaches each event to that account: PostHog `groups`/`$groups`, Mixpanel the configured group-key property. Earlier events retain their original account when a user switches workspaces. The plain `janitor_account_id` field remains available either way. Group support must already be enabled/configured in your project; Janitor does not purchase an add-on or create/change group definitions. [PostHog groups](https://github.com/PostHog/posthog.com/blob/master/contents/docs/product-analytics/group-analytics.mdx), [Mixpanel groups](https://docs.mixpanel.com/docs/data-structure/group-analytics).
+If you already use provider account/group analytics, opt into `accountGroup: "account"` on the TypeScript bridge or `account_group: "account"` in native provider options. Doorman attaches each event to that account: PostHog `groups`/`$groups`, Mixpanel the configured group-key property. Earlier events retain their original account when a user switches workspaces. The plain `doorman_account_id` field remains available either way. Group support must already be enabled/configured in your project; Doorman does not purchase an add-on or create/change group definitions. [PostHog groups](https://github.com/PostHog/posthog.com/blob/master/contents/docs/product-analytics/group-analytics.mdx), [Mixpanel groups](https://docs.mixpanel.com/docs/data-structure/group-analytics).
 
 ### PostHog SQL recipes
 
 Copy into PostHog SQL and replace the example account literal with your selected account. These recipes are supplied for your project; they have not been executed against a live analytics project.
 
 ```sql
-SELECT properties.janitor_actor_kind AS actor_kind,
-       uniqExact(properties.janitor_actor_id) AS observed_actors
+SELECT properties.doorman_actor_kind AS actor_kind,
+       uniqExact(properties.doorman_actor_id) AS observed_actors
 FROM events
-WHERE event = 'janitor identified'
+WHERE event = 'doorman identified'
   AND timestamp >= now() - INTERVAL 30 DAY
-  AND properties.janitor_account_id = 'account-example'
-  AND properties.janitor_actor_basis = 'verified-credential'
-  AND properties.janitor_actor_id IS NOT NULL
+  AND properties.doorman_account_id = 'account-example'
+  AND properties.doorman_actor_basis = 'verified-credential'
+  AND properties.doorman_actor_id IS NOT NULL
 GROUP BY actor_kind
 ```
 
 ```sql
-SELECT properties.janitor_visitor_id AS browser_id,
-       uniqExact(properties.janitor_actor_id) AS verified_people
+SELECT properties.doorman_visitor_id AS browser_id,
+       uniqExact(properties.doorman_actor_id) AS verified_people
 FROM events
-WHERE event = 'janitor identified'
+WHERE event = 'doorman identified'
   AND timestamp >= now() - INTERVAL 30 DAY
-  AND properties.janitor_account_id = 'account-example'
-  AND properties.janitor_actor_kind = 'person'
-  AND properties.janitor_actor_basis = 'verified-credential'
-  AND properties.janitor_actor_id IS NOT NULL
-  AND properties.janitor_visitor_id IS NOT NULL
+  AND properties.doorman_account_id = 'account-example'
+  AND properties.doorman_actor_kind = 'person'
+  AND properties.doorman_actor_basis = 'verified-credential'
+  AND properties.doorman_actor_id IS NOT NULL
+  AND properties.doorman_visitor_id IS NOT NULL
 GROUP BY browser_id
 HAVING verified_people > 1
 ORDER BY verified_people DESC
@@ -306,32 +306,32 @@ PostHog documents [`uniqExact` and conditional aggregates](https://github.com/Po
 
 Once events are ingested, give the provider's assistant this metric definition along with your question:
 
-> Use the `janitor identified` event. For account `account-example` over the last 30 days, count distinct `janitor_actor_id`, filtering `janitor_actor_basis = verified-credential`, and break down by `janitor_actor_kind`. Separately show observed agents with valid delegation. Do not count visitors as people, unknown operators as humans, or events as users. Show the report/query and time window used.
+> Use the `doorman identified` event. For account `account-example` over the last 30 days, count distinct `doorman_actor_id`, filtering `doorman_actor_basis = verified-credential`, and break down by `doorman_actor_kind`. Separately show observed agents with valid delegation. Do not count visitors as people, unknown operators as humans, or events as users. Show the report/query and time window used.
 
-> For that account and date range, which `janitor_visitor_id` values had more than one distinct verified person? Report the count and IDs without merging their profiles. Describe these as browser-continuity associations, not proof of shared hardware or account compromise.
+> For that account and date range, which `doorman_visitor_id` values had more than one distinct verified person? Report the count and IDs without merging their profiles. Describe these as browser-continuity associations, not proof of shared hardware or account compromise.
 
 The library prepares the event schema; it does not add an AI query agent or a new dashboard. These prompts require the analytics product's query/assistant capability and your access permissions. Do not feed browser scores into a frontend AI assistant; use authorized access to the server-ingested analytics dataset.
 
 ## Check the integration in a development project
 
-Connect one provider first, then the other if needed. In a development project, verify: anonymous visit → login → second device login to the same user → logout → different user on the original browser → delegated agent with its own ID. Confirm one profile per actor, two profiles for two people sharing a browser, the intended account on every event, and no private scores in browser requests. Check rejected/late events and regional ingestion hosts. Analytics deletion and consent withdrawal must follow your provider's own lifecycle as well as Janitor erasure.
+Connect one provider first, then the other if needed. In a development project, verify: anonymous visit → login → second device login to the same user → logout → different user on the original browser → delegated agent with its own ID. Confirm one profile per actor, two profiles for two people sharing a browser, the intended account on every event, and no private scores in browser requests. Check rejected/late events and regional ingestion hosts. Analytics deletion and consent withdrawal must follow your provider's own lifecycle as well as Doorman erasure.
 
 The repository tests the actual installed PostHog and Mixpanel browser SDKs with all analytics requests intercepted locally, and native HTTP payloads with mocked transports. The tests do not verify live provider profile merging or dashboard counts. Transport acceptance does not establish a report's accuracy; review ingestion and distinct-count results in your own project before using them operationally.
 
 ## Amplitude and RudderStack
 
-Janitor also supports initialized Amplitude Browser SDK 2 and RudderStack JavaScript SDKs:
+Doorman also supports initialized Amplitude Browser SDK 2 and RudderStack JavaScript SDKs:
 
 ```ts
-const janitor = createJanitorClient({
+const doorman = createDoormanClient({
   analytics: { amplitude, rudderstack },
 });
-await janitor.identify(currentUser.id, { plan: "pro" });
-await janitor.track("project opened");
-await janitor.reset();
+await doorman.identify(currentUser.id, { plan: "pro" });
+await doorman.track("project opened");
+await doorman.reset();
 ```
 
-Import `createJanitorClient` from `@janitor/browser`. Configure consent, region, autocapture and destinations in your provider's initialization first; Janitor does not load or enable those SDKs. Amplitude uses `setUserId`, the documented `$identify` event with `$set` traits, and `reset` to rotate its device ID. RudderStack explicitly rotates its anonymous ID and clears custom context on account changes and logout. Destination SDKs loaded independently still need their own reset lifecycle. These behaviors follow [Amplitude's browser contract](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2), [HTTP V2](https://amplitude.com/docs/apis/analytics/http-v2), and [RudderStack's reset contract](https://www.rudderstack.com/docs/sources/event-streams/sdks/rudderstack-javascript-sdk/supported-api/).
+Import `createDoormanClient` from `@aarondovturkel/doorman-browser`. Configure consent, region, autocapture and destinations in your provider's initialization first; Doorman does not load or enable those SDKs. Amplitude uses `setUserId`, the documented `$identify` event with `$set` traits, and `reset` to rotate its device ID. RudderStack explicitly rotates its anonymous ID and clears custom context on account changes and logout. Destination SDKs loaded independently still need their own reset lifecycle. These behaviors follow [Amplitude's browser contract](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2), [HTTP V2](https://amplitude.com/docs/apis/analytics/http-v2), and [RudderStack's reset contract](https://www.rudderstack.com/docs/sources/event-streams/sdks/rudderstack-javascript-sdk/supported-api/).
 
 The server bridge accepts `provider: "amplitude"` with the initialized `@amplitude/analytics-node` client, or `provider: "rudderstack"` with `@rudderstack/rudder-sdk-node`. The same `capture`, `identifyUser` and account context apply. Amplitude supports an optional configured `accountGroup`; group features depend on the customer's project. Use stable user IDs of at least five characters or explicitly configure Amplitude's `minIdLength` in the SDK. `queued` does not guarantee downstream ingestion. Flush the provider SDK during server shutdown.
 

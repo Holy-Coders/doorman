@@ -5,23 +5,23 @@ import pg from "pg";
 import {
   createPostgresEvidenceStorage,
   createPostgresProtectionStorage,
-} from "@janitor/storage-postgres";
+} from "@aarondovturkel/doorman-storage-postgres";
 import { createEvidence } from "../../packages/adapters/src/evidence.js";
 import { createProtection } from "../../packages/adapters/src/protection.js";
-import { normalizeObservation } from "@janitor/core";
+import { normalizeObservation } from "@aarondovturkel/doorman-core";
 
-const url = process.env.JANITOR_BENCHMARK_DATABASE_URL;
+const url = process.env.DOORMAN_BENCHMARK_DATABASE_URL;
 if (
   !url ||
   !["localhost", "127.0.0.1", "[::1]"].includes(new URL(url).hostname)
 )
   throw Error(
-    "Set JANITOR_BENCHMARK_DATABASE_URL to disposable local Postgres.",
+    "Set DOORMAN_BENCHMARK_DATABASE_URL to disposable local Postgres.",
   );
-const count = Number(process.env.JANITOR_BENCHMARK_EVENTS ?? 1_000_000);
-const samples = Number(process.env.JANITOR_BENCHMARK_SAMPLES ?? 1000);
-const shards = Number(process.env.JANITOR_BENCHMARK_SHARDS ?? 1);
-const label = process.env.JANITOR_BENCHMARK_LABEL ?? "baseline";
+const count = Number(process.env.DOORMAN_BENCHMARK_EVENTS ?? 1_000_000);
+const samples = Number(process.env.DOORMAN_BENCHMARK_SAMPLES ?? 1000);
+const shards = Number(process.env.DOORMAN_BENCHMARK_SHARDS ?? 1);
+const label = process.env.DOORMAN_BENCHMARK_LABEL ?? "baseline";
 if (
   !Number.isSafeInteger(count) ||
   count < 10_000 ||
@@ -32,7 +32,7 @@ if (
   !/^[a-z0-9-]{1,40}$/.test(label)
 )
   throw Error("Invalid benchmark bounds");
-const schema = "janitor_security_benchmark";
+const schema = "doorman_security_benchmark";
 const pool = new pg.Pool({
   connectionString: url,
   max: 8,
@@ -115,7 +115,7 @@ async function load(
   console.log(JSON.stringify(result));
 }
 try {
-  if (process.env.JANITOR_BENCHMARK_REUSE !== "1") {
+  if (process.env.DOORMAN_BENCHMARK_REUSE !== "1") {
     await query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
     await query(`CREATE SCHEMA ${schema}`);
     for (const name of (

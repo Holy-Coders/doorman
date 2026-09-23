@@ -1,6 +1,6 @@
 # Run the learning service with Postgres
 
-This example hosts the optional Janitor learning protocol with a small Fastify server and a caller-owned Postgres pool. It is separate from visitor identity storage. The service accepts only authenticated, bounded feature summaries; it does not install collection into your app automatically.
+This example hosts the optional Doorman learning protocol with a small Fastify server and a caller-owned Postgres pool. It is separate from visitor identity storage. The service accepts only authenticated, bounded feature summaries; it does not install collection into your app automatically.
 
 From the repository root:
 
@@ -13,7 +13,7 @@ cd examples/learning-service
 Create `.env` (ignored by Git):
 
 ```dotenv
-DATABASE_URL=postgres://visitor:visitor@localhost:5432/janitor_network
+DATABASE_URL=postgres://visitor:visitor@localhost:5432/doorman_network
 PORT=3002
 HOST=127.0.0.1
 OPERATOR_KEY_HASH=replace_with_sha256_of_a_random_operator_token

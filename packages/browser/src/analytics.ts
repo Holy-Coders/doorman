@@ -12,7 +12,7 @@ const providers = [
 ] as const;
 export type AnalyticsResult = Partial<Record<Provider, Status>>;
 
-/** Browser SDK lifecycle only. Private Janitor results never enter this bridge. */
+/** Browser SDK lifecycle only. Private Doorman results never enter this bridge. */
 export type IdentityAnalyticsOptions = {
   visitor?: { reset(): void };
   posthog?: {
@@ -179,7 +179,7 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
             if (previous.mixpanel !== id) {
               options.mixpanel!.identify(id);
               // Simplified ID Merge needs an event after identify to join device and user IDs.
-              options.mixpanel!.track("janitor user identified");
+              options.mixpanel!.track("doorman user identified");
             }
             if (Object.keys(profile).length)
               options.mixpanel!.people.set(

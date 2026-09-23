@@ -3,7 +3,7 @@ import http.server
 import json
 import threading
 import unittest
-from janitor_client import Client, JanitorError
+from doorman_client import Client, DoormanError
 
 class ClientTest(unittest.TestCase):
     def setUp(self):
@@ -41,7 +41,7 @@ class ClientTest(unittest.TestCase):
         self.assertEqual({call[0].get("Cookie") for call in self.calls},{None,*[f"__visitor={i}" for i in range(8)]})
     def test_redirects_are_not_followed(self):
         self.status=302
-        with self.assertRaises(JanitorError): self.client.identify({})
+        with self.assertRaises(DoormanError): self.client.identify({})
         self.assertEqual(len(self.calls),1)
     def test_input_headers_and_size_are_bounded(self):
         for kwargs in ({"signals":{"userAgent":"a"*33000}},{"signals":{},"cookie":"x\r\nInjected: yes"},{"signals":{"x":float("nan")}}):
@@ -50,7 +50,7 @@ class ClientTest(unittest.TestCase):
     def test_malformed_and_oversized_output_is_controlled(self):
         for body in ({"visitorId":"anything","isReturning":True},{"visitorId":"vis_"+"a"*48,"isReturning":1},[1],{"large":"x"*70000}):
             self.body=body
-            with self.assertRaises(JanitorError): self.client.identify({})
+            with self.assertRaises(DoormanError): self.client.identify({})
     def test_insecure_external_urls_and_credentials_are_rejected(self):
         for endpoint in ("http://external.example/api", "https://user:pass@example.com/", "https://example.com/?token=x"):
             with self.assertRaises(ValueError): Client(endpoint)

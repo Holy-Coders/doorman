@@ -3,9 +3,9 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { chromium, firefox, webkit } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { PGlite } from "@electric-sql/pglite";
-import { createPostgresStorage } from "@janitor/storage-postgres";
-import { createVisitorEngine, normalizeObservation } from "@janitor/core";
-import type { BrowserObservation, BrowserBehavior } from "@janitor/core";
+import { createPostgresStorage } from "@aarondovturkel/doorman-storage-postgres";
+import { createVisitorEngine, normalizeObservation } from "@aarondovturkel/doorman-core";
+import type { BrowserObservation, BrowserBehavior } from "@aarondovturkel/doorman-core";
 
 type Capture = { signals: BrowserObservation; behavior: BrowserBehavior };
 type Sample = Capture & { engine: string; profile: string; scenario: string };
@@ -31,7 +31,7 @@ const server = createServer((request, response) => {
   } else {
     response.writeHead(200, { "Content-Type": "text/html" });
     response.end(
-      `<!doctype html><title>Janitor controlled benchmark</title><style>body{height:4000px}</style><button>Test interaction</button><script type="module">import{collectBrowserSignals,createBehaviorTracker}from'/collector.js';const tracker=createBehaviorTracker({extended:true});window.capture=()=>({signals:collectBrowserSignals(),behavior:tracker.snapshot()});</script>`,
+      `<!doctype html><title>Doorman controlled benchmark</title><style>body{height:4000px}</style><button>Test interaction</button><script type="module">import{collectBrowserSignals,createBehaviorTracker}from'/collector.js';const tracker=createBehaviorTracker({extended:true});window.capture=()=>({signals:collectBrowserSignals(),behavior:tracker.snapshot()});</script>`,
     );
   }
 });

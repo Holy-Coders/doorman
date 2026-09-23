@@ -11,7 +11,7 @@ import type {
   OperatorWindow,
   OperatorSummary,
   OperatorProfile,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 export {
   operatorWindowProperties,
   operatorSummaryProperties,
@@ -25,7 +25,7 @@ import type {
   ApiActivityAssessment,
   IdentityAttribution,
   VisitorIdentity,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 /** An authenticated server agent can have attribution without a browser observation. */
 export type AnalyticsAssessment = (
@@ -54,38 +54,38 @@ export function analyticsProperties(
   const api = identity.apiActivity;
   return Object.fromEntries(
     Object.entries({
-      janitor_schema_version: 1,
-      janitor_account_id:
+      doorman_schema_version: 1,
+      doorman_account_id:
         context.accountId === undefined
           ? undefined
           : validId(context.accountId),
-      janitor_subject_id:
+      doorman_subject_id:
         subject?.status === "verified" ? subject.id : undefined,
-      janitor_subject_status: subject?.status ?? "unknown",
-      janitor_actor_id: verifiedActor ? actor.id : undefined,
-      janitor_actor_basis: verifiedActor ? "verified-credential" : "unknown",
-      janitor_visitor_id: browser?.visitorId,
-      janitor_confidence: browser?.confidence,
-      janitor_returning: browser?.isReturning,
-      janitor_automation: browser?.risk.automation,
-      janitor_suspicious: browser?.risk.suspicious,
-      janitor_risk_status: browser?.riskStatus,
-      janitor_actor_kind: verifiedActor ? actor.kind : "unknown",
-      janitor_delegation_status: identity.attribution?.delegation.status,
-      janitor_api_risk_status: api?.riskStatus,
-      janitor_api_automation:
+      doorman_subject_status: subject?.status ?? "unknown",
+      doorman_actor_id: verifiedActor ? actor.id : undefined,
+      doorman_actor_basis: verifiedActor ? "verified-credential" : "unknown",
+      doorman_visitor_id: browser?.visitorId,
+      doorman_confidence: browser?.confidence,
+      doorman_returning: browser?.isReturning,
+      doorman_automation: browser?.risk.automation,
+      doorman_suspicious: browser?.risk.suspicious,
+      doorman_risk_status: browser?.riskStatus,
+      doorman_actor_kind: verifiedActor ? actor.kind : "unknown",
+      doorman_delegation_status: identity.attribution?.delegation.status,
+      doorman_api_risk_status: api?.riskStatus,
+      doorman_api_automation:
         api?.riskStatus === "evaluated" ? api.risk.automation : undefined,
-      janitor_api_suspicious:
+      doorman_api_suspicious:
         api?.riskStatus === "evaluated" ? api.risk.suspicious : undefined,
-      janitor_api_evaluated_at: api?.evaluatedAt,
-      janitor_api_expires_at: api?.expiresAt,
-      janitor_api_cached: api?.cached,
-      janitor_api_window_ms: api?.summary.windowMs,
-      janitor_api_requests: api?.summary.buckets.reduce(
+      doorman_api_evaluated_at: api?.evaluatedAt,
+      doorman_api_expires_at: api?.expiresAt,
+      doorman_api_cached: api?.cached,
+      doorman_api_window_ms: api?.summary.windowMs,
+      doorman_api_requests: api?.summary.buckets.reduce(
         (total, bucket) => total + bucket.requests,
         0,
       ),
-      janitor_api_truncated: api?.summary.truncated,
+      doorman_api_truncated: api?.summary.truncated,
     }).filter(([, v]) => v !== undefined),
   );
 }
@@ -96,7 +96,7 @@ type Properties = Record<string, Property>;
 type BridgeOptions =
   | {
       provider: "posthog";
-      /** Optional provider group type; janitor_account_id is always an event property. */
+      /** Optional provider group type; doorman_account_id is always an event property. */
       accountGroup?: string;
       client: {
         capture(event: {
@@ -162,7 +162,7 @@ export function createAnalyticsBridge(options: BridgeOptions) {
         "properties",
         "user_id",
       ].includes(group) ||
-      (group.startsWith("janitor_") && group !== "janitor_account_id"))
+      (group.startsWith("doorman_") && group !== "doorman_account_id"))
   )
     throw new Error("Invalid analytics account group");
   const safe = async (send: () => unknown) => {
@@ -232,7 +232,7 @@ export function createAnalyticsBridge(options: BridgeOptions) {
       context: AnalyticsContext = {},
     ) {
       return send(
-        "janitor identified",
+        "doorman identified",
         analyticsProperties(identity, context),
         validId(authenticatedId),
         context,
@@ -244,7 +244,7 @@ export function createAnalyticsBridge(options: BridgeOptions) {
       context: OperatorAnalyticsContext,
     ) {
       return send(
-        "janitor operator assessed",
+        "doorman operator assessed",
         operatorWindowProperties(window, context),
         validId(authenticatedId),
         context,
@@ -256,7 +256,7 @@ export function createAnalyticsBridge(options: BridgeOptions) {
       context: OperatorReportContext,
     ) {
       return send(
-        "janitor operators summarized",
+        "doorman operators summarized",
         operatorSummaryProperties(summary, context),
         validId(authenticatedId),
         context,
@@ -269,7 +269,7 @@ export function createAnalyticsBridge(options: BridgeOptions) {
       context: OperatorReportContext,
     ) {
       return send(
-        "janitor operator profile",
+        "doorman operator profile",
         operatorProfileProperties(profile, summary, context),
         validId(authenticatedId),
         context,

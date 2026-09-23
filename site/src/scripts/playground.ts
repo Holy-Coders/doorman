@@ -2,12 +2,12 @@ import {
   createVisitorEngine,
   createVisitorId,
   normalizeObservation,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   BrowserObservation,
   NormalizedObservation,
   VisitorStorage,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 const base: BrowserObservation = {
   userAgent:
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36",

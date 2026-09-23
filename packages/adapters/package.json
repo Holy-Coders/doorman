@@ -1,6 +1,6 @@
 {
-  "name": "@janitor/adapters",
-  "version": "0.9.0",
+  "name": "@aarondovturkel/doorman-adapters",
+  "version": "0.12.0",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -51,21 +51,26 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@janitor/core": "workspace:^",
-    "@janitor/evaluator-cloudflare-jev": "workspace:^",
-    "@janitor/evaluator-jev": "workspace:^",
-    "@janitor/storage-d1": "workspace:^",
-    "@janitor/storage-postgres": "workspace:^",
+    "@aarondovturkel/doorman-core": "workspace:^",
+    "@aarondovturkel/doorman-evaluator-cloudflare-jev": "workspace:^",
+    "@aarondovturkel/doorman-evaluator-jev": "workspace:^",
+    "@aarondovturkel/doorman-storage-d1": "workspace:^",
+    "@aarondovturkel/doorman-storage-postgres": "workspace:^",
     "jose": "^6",
     "zod": "^4.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Holy-Coders/janitor.git",
+    "url": "git+https://github.com/Holy-Coders/doorman.git",
     "directory": "packages/adapters"
   },
-  "homepage": "https://janitor.holycoders.io",
+  "homepage": "https://doorman.holycoders.io",
   "bugs": {
-    "url": "https://github.com/Holy-Coders/janitor/issues"
+    "url": "https://github.com/Holy-Coders/doorman/issues"
+  },
+  "description": "Cloudflare, Node and Vercel adapters for Doorman browser identity and private risk.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

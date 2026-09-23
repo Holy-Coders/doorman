@@ -1,4 +1,4 @@
-import type { BrowserBehavior, BrowserObservation } from "@janitor/core";
+import type { BrowserBehavior, BrowserObservation } from "@aarondovturkel/doorman-core";
 
 /** Each probe is separately opt-in. No permission prompts, network requests or hidden-value recovery. */
 export type DetectionOptions = {
@@ -65,7 +65,7 @@ async function collectFonts(): Promise<BrowserObservation["fonts"]> {
     const results = await Promise.all(
       FONT_PROBES.map(async (name) => {
         // Construction errors are unknown; a rejected local lookup is unavailable.
-        const face = new FontFace("janitor-local-probe", `local("${name}")`);
+        const face = new FontFace("doorman-local-probe", `local("${name}")`);
         try {
           await face.load();
           return "1";
@@ -149,8 +149,8 @@ export function createInteractionDecoy(container?: HTMLElement) {
     node.inert = true;
     node.tabIndex = -1;
     node.setAttribute("aria-hidden", "true");
-    node.dataset.janitorDecoy = "diagnostic";
-    node.textContent = "Janitor diagnostic control";
+    node.dataset.doormanDecoy = "diagnostic";
+    node.textContent = "Doorman diagnostic control";
     (container ?? document.body).append(node);
     return node;
   });

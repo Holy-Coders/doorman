@@ -1,5 +1,5 @@
 import type { Ai, D1Database, Fetcher } from "@cloudflare/workers-types";
-import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
+import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
 interface Env {
   VISITORS: D1Database;
   AI: Ai;

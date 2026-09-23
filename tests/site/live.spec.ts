@@ -11,7 +11,7 @@ test("live collection begins only after consent and shows safe responses, cache 
     const request = route.request();
     const action = new URL(request.url()).pathname.split("/").at(-1)!;
     calls.push(`${request.method()} ${action}`);
-    expect(request.headers()["x-janitor-playground"]).toBe("1");
+    expect(request.headers()["x-doorman-playground"]).toBe("1");
     if (action === "identify") {
       payloads.push(request.postDataJSON());
       evaluations++;

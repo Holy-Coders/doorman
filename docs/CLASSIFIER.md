@@ -1,10 +1,10 @@
-# Train a Janitor classifier
+# Train a Doorman classifier
 
 For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
 
-Janitor can learn which combinations of session measurements tend to accompany confirmed assistants or confirmed abuse. This is an optional training pipeline for operators of the learning service. Your existing visitor identity and analytics integrations keep working independently.
+Doorman can learn which combinations of session measurements tend to accompany confirmed assistants or confirmed abuse. This is an optional training pipeline for operators of the learning service. Your existing visitor identity and analytics integrations keep working independently.
 
-**This trains a Janitor model, not Jev's weights.** TypeSafe does not offer customer fine-tuning or LoRA for Jev. We use Jev's typed answers as optional numeric features, then train a small supervised classifier. See [the research and design decisions](CLASSIFIER-RESEARCH.md).
+**This trains a Doorman model, not Jev's weights.** TypeSafe does not offer customer fine-tuning or LoRA for Jev. We use Jev's typed answers as optional numeric features, then train a small supervised classifier. See [the research and design decisions](CLASSIFIER-RESEARCH.md).
 
 The pipeline is implemented and tested on generated sessions. No real-world detection accuracy has been established. You need independently labeled, opted-in sessions before training a deployable model. Buying inference credits does not supply those labels.
 
@@ -70,7 +70,7 @@ Create a private `split.json` with your **preselected** cutoffs in Unix millisec
 
 These illustrative IDs must be replaced with the opaque IDs issued by your service. Use cutoffs inside your retention period; for a 30-day pilot, 21, 14 and 7 days ago are a starting point.
 
-Set `JANITOR_NETWORK_ENDPOINT` and `JANITOR_OPERATOR_TOKEN` in your secret-managed shell. Alternatively, `--config /private/operator.json` reads `{ "endpoint": "https://your-service", "operatorToken": "..." }`; keep that file outside the repository with mode 0600. Never use the operator credential in a browser or participant application.
+Set `DOORMAN_NETWORK_ENDPOINT` and `DOORMAN_OPERATOR_TOKEN` in your secret-managed shell. Alternatively, `--config /private/operator.json` reads `{ "endpoint": "https://your-service", "operatorToken": "..." }`; keep that file outside the repository with mode 0600. Never use the operator credential in a browser or participant application.
 
 ```sh
 pnpm classifier export --split /private/split.json --out artifacts/pilot

@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased — operator attribution pilot
+## 0.12.0 — 2026-09-24
+
+- Rename the product to Doorman. JavaScript packages use `@aarondovturkel/doorman-*`; the Hex package is `doorman_identity` and its modules are `Doorman.*`.
+- Add `createDoormanClient` for the unified browser and analytics lifecycle. Update examples, protocol field names, analytics properties and SDK imports to the new name.
+- Separate Jev identity evidence from automation/risk evidence and account for the two provider calls in shared budgets.
+- Add bounded Node HTTP admission before request-body allocation and verify recovery from 200,000-connection bursts. Most burst requests receive controlled overload responses.
+- Include adjustable scoring, aggregate detection signals, operator attribution and opt-in classifier experiments. Public-data results continue to show accuracy limitations; the rename does not establish new detection accuracy.
+- Package documentation, licenses, migrations and the bundled Phoenix browser client for registry installation.
+
+### Operator attribution pilot
 
 - Add private activity-window labels and bounded account-scoped operator comparisons to the TypeScript adapters, backed by D1/Postgres migration 0009.
 - Add shared Jev/Workers AI operator questions, immutable evaluation caching, existing shared budgets, unknown/failure states and account/session/browser erasure.
@@ -31,11 +40,11 @@
 
 Existing SQL installations must apply `0005_protection.sql` and `0006_evidence.sql`
 after earlier migrations before enabling the corresponding features. Native Elixir
-applications use `Janitor.Migration.upgrade_security()` in an application-owned Ecto
+applications use `Doorman.Migration.upgrade_security()` in an application-owned Ecto
 migration. See [the upgrade guide](docs/HARDENING.md).
 
 Install the JavaScript archives or the native Elixir Git dependency from the
-[v0.7.0 GitHub release](https://github.com/Holy-Coders/janitor/releases/tag/v0.7.0).
+[v0.7.0 GitHub release](https://github.com/Holy-Coders/doorman/releases/tag/v0.7.0).
 npm registry publishing requires authenticator verification (`EOTP`); Hex registry
 publishing requires account authentication. The attached Hex-format archive is
 not a Hex registry publication. See [installation options](docs/LANGUAGES.md).

@@ -3,17 +3,17 @@
 This guide covers two optional server utilities. You do not need either one for basic browser identification.
 
 - **Agent credential verification** checks an existing signed token from an issuer you trust, such as your authentication provider.
-- **Result receipts** let a browser carry an encrypted, short-lived Janitor assessment to a later request without reading or changing the scores.
+- **Result receipts** let a browser carry an encrypted, short-lived Doorman assessment to a later request without reading or changing the scores.
 
 Both complement your existing authentication. They do not turn a browser match into proof of account ownership. For the terms used below, see [browsers, people and agents](CONCEPTS.md).
 
 ## Verify an agent's existing credential
 
-Janitor’s `verifyAgentCredential` helper uses `jose` to verify a JSON Web Token (JWT). Configure which issuer you trust, which service the token is for (its audience), the accepted signature algorithms, and a trusted public key or key-set URL (JWKS). Never use a token's `jku`/`x5u` header or an unverified issuer to choose where to fetch keys.
+Doorman’s `verifyAgentCredential` helper uses `jose` to verify a JSON Web Token (JWT). Configure which issuer you trust, which service the token is for (its audience), the accepted signature algorithms, and a trusted public key or key-set URL (JWKS). Never use a token's `jku`/`x5u` header or an unverified issuer to choose where to fetch keys.
 
 ```ts
 import { createRemoteJWKSet } from "jose";
-import { verifyAgentCredential } from "@janitor/adapters/security";
+import { verifyAgentCredential } from "@aarondovturkel/doorman-adapters/security";
 
 // From your chosen issuer's configuration/documentation, not request input.
 const keys = createRemoteJWKSet(new URL(process.env.AGENT_JWKS_URL!), {
@@ -36,14 +36,14 @@ const actor = await visitor.identities!.updateSubject({
 
 `actor_type` above is an example for your issuer, not a universal provider claim. Standard expiry, issued-at, issuer, audience and signature checks are required. A bearer credential does not prove possession of a signing key on this particular request; handle provider revocation and replay policy in your existing authentication. This is not a Web Bot Auth implementation or universal agent-vendor detector.
 
-A recognized agent is not automatically authorized by a user. Retrieve the independently authenticated principal and previously authorized delegation, then call `identities.assess({ subjectId, actorId: actor.id, delegationId, audience, requiredScopes })`. Check revocation, scope and audience on every sensitive operation. Do not accept a principal/account claim solely because a recognized agent supplied it. Native Phoenix can use an existing verified Guardian/Joken/OAuth credential and pass the resulting actor to `Janitor.Identity.assess/2`; it does not need the TypeScript JWT helper.
+A recognized agent is not automatically authorized by a user. Retrieve the independently authenticated principal and previously authorized delegation, then call `identities.assess({ subjectId, actorId: actor.id, delegationId, audience, requiredScopes })`. Check revocation, scope and audience on every sensitive operation. Do not accept a principal/account claim solely because a recognized agent supplied it. Native Phoenix can use an existing verified Guardian/Joken/OAuth credential and pass the resulting actor to `Doorman.Identity.assess/2`; it does not need the TypeScript JWT helper.
 
 ## Short-lived result receipts
 
 For example, your measurement endpoint may assess a visit before the checkout endpoint receives a payment request. A receipt can carry that earlier assessment to checkout. Receipts encrypt and authenticate selected evidence, not the truth of browser measurements. They omit debug and fingerprint data. Always retain normal authentication and verify that the operation belongs to the authenticated account.
 
 ```ts
-import { createResultReceipts } from "@janitor/adapters/security";
+import { createResultReceipts } from "@aarondovturkel/doorman-adapters/security";
 
 const receipts = createResultReceipts({
   secret: receiptSecretBytes, // Exactly 32 cryptographically random bytes, server-only.
@@ -69,19 +69,19 @@ const evidence = await receipts.verify(token, {
 });
 ```
 
-`appConsumeNonce` is application code, not a Janitor API. A Postgres implementation can use `INSERT ... ON CONFLICT DO NOTHING RETURNING nonce` in your operation transaction. Bind `operationId` to the authenticated account, immutable amount/destination/request hash and idempotency state; do not choose it from an unchecked header. A mismatch, expired token, tampering, replay or nonce-store failure returns `undefined`. Only a fully verified receipt invokes nonce consumption. Treat failed downstream operations as a separate idempotency/retry decision. Clean expired nonces with existing maintenance. Never use a per-process Set as production replay protection.
+`appConsumeNonce` is application code, not a Doorman API. A Postgres implementation can use `INSERT ... ON CONFLICT DO NOTHING RETURNING nonce` in your operation transaction. Bind `operationId` to the authenticated account, immutable amount/destination/request hash and idempotency state; do not choose it from an unchecked header. A mismatch, expired token, tampering, replay or nonce-store failure returns `undefined`. Only a fully verified receipt invokes nonce consumption. Treat failed downstream operations as a separate idempotency/retry decision. Clean expired nonces with existing maintenance. Never use a per-process Set as production replay protection.
 
 Action categories are supplied by server code and bound to the receipt; they do not alter identity matching or automatically label an action malicious. Current risk questions remain technical browser questions. Keep receipts out of URLs/logs. Receipts use JWE `dir` / `A256GCM` through `jose`, with authenticated encryption and randomized IVs. Browser recipients cannot read the scores. Older signed-only plaintext receipts are not accepted. Use distinct keys per environment/purpose; rotation invalidates outstanding receipts, which expire within five minutes. Both holders of the symmetric key can issue and decrypt receipts; use an existing asymmetric token service if verifiers must not issue.
 
 ## Explicit cross-device pairing
 
-Use the application's existing passkey/OAuth login or authenticated device-approval flow. The smallest implementation needs no new Janitor token protocol:
+Use the application's existing passkey/OAuth login or authenticated device-approval flow. The smallest implementation needs no new Doorman token protocol:
 
 1. Device A requests an application-generated, short-lived pairing challenge while authenticated.
 2. Device B scans the link and authenticates with the same application. The app verifies challenge possession, account equality, expiry and one-time use, and asks for explicit approval as appropriate.
 3. Each device's authenticated route calls `updateSubject({ id: account.id, kind: "person" })` (Elixir: `identify_user`). Both derive the same account subject, while preserving distinct `visitorId` values.
-4. The app stores its revocable device grant and verifies it on subsequent requests before supplying Janitor's trusted context. Removing the grant stops account attribution for that device; browser continuity alone never reinstates it.
+4. The app stores its revocable device grant and verifies it on subsequent requests before supplying Doorman's trusted context. Removing the grant stops account attribution for that device; browser continuity alone never reinstates it.
 
-Do not grant account access merely because a device received a QR link, resembles another browser, or scores highly with Jev. If your application already has device pairing or passkeys, these are the Janitor integration points rather than a second authentication system.
+Do not grant account access merely because a device received a QR link, resembles another browser, or scores highly with Jev. If your application already has device pairing or passkeys, these are the Doorman integration points rather than a second authentication system.
 
 Implementation reference: [jose verification and signing](https://github.com/panva/jose). These checks have deterministic tests for signature, audience, action, operation, replay and expiry. They do not prove human presence or calibrate risk.

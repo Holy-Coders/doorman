@@ -3,11 +3,11 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "janitor-identity-client"
+name = "doorman-identity-client"
 version = "0.9.0"
-description = "Bounded, stateless HTTP client for your own Janitor identity endpoint"
+description = "Bounded, stateless HTTP client for your own Doorman identity endpoint"
 requires-python = ">=3.10"
 license = "MIT"
 
 [tool.setuptools.packages.find]
-include = ["janitor_client*"]
+include = ["doorman_client*"]

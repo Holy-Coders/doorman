@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
-import { createPostgresStorage } from "@janitor/storage-postgres";
-import { createVisitorEngine } from "@janitor/core";
+import { createPostgresStorage } from "@aarondovturkel/doorman-storage-postgres";
+import { createVisitorEngine } from "@aarondovturkel/doorman-core";
 import { MATCHING_DEFAULTS } from "../../../packages/core/src/engine.js";
 import type { IdentifyMetrics } from "../../../packages/core/src/engine.js";
-import type { BrowserObservation } from "@janitor/core";
+import type { BrowserObservation } from "@aarondovturkel/doorman-core";
 import { ndjson } from "./io.js";
 
 export type IdentityRow = {

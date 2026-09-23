@@ -5,12 +5,12 @@ import {
   createVisitorId,
   DAY_MS,
   retentionOptions,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   ManagedVisitorStorage,
   NormalizedObservation,
   RetentionOptions,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 // Compatible with pg.Pool and pg.Client, without owning the connection lifecycle.
 export interface PostgresDatabase {

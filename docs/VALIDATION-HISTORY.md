@@ -11,7 +11,7 @@
 
 ## v0.8.1 live playground and Cloudflare transport — 2026-09-23
 
-- The public site now hosts an explicit opt-in endpoint backed by the actual Janitor collectors, core, HTTP handler and a dedicated Cloudflare D1 database. Ordinary page views and the original synthetic examples remain local and do not collect browser data.
+- The public site now hosts an explicit opt-in endpoint backed by the actual Doorman collectors, core, HTTP handler and a dedicated Cloudflare D1 database. Ordinary page views and the original synthetic examples remain local and do not collect browser data.
 - Sixteen new real-D1 tests cover ownership, caching, competing budget claims, timeouts, billing rejection, the kill switch, retention, private responses and erasure. Four evaluator regressions cover the live Cloudflare envelope. The TypeScript suite passed 243 tests; fifteen site browser tests and strict typechecking/lint passed. The static build produces 32 HTML pages.
 - Hosted Chromium verified first visits, cookie continuity, recovery after removing the visitor cookie, private scores, mobile layout and erasure. Database counts confirmed the smoke sessions, observations and cached rows were erased while aggregate spending counters remained. The separate signed ownership cookie stays during the recovery experiment; this does not establish recovery after all cookies disappear.
 - The documented local migrations and HTTPS Wrangler boot command also passed the browser smoke flow with local D1 and inference disabled.
@@ -24,17 +24,17 @@
 
 - TypeScript strict typechecking, lint and 223 tests in thirteen files pass. Real SQL covers D1/Postgres learning defaults, namespace isolation and inference quotas across all Jev methods.
 - Native Elixir: 52 Postgres-backed tests pass, including automatic Jev learning and private Plug assigns. The migration adds language/timezone learning indexes; Hex-format packaging includes the shared questions and browser module.
-- Two Chromium integration tests pass with real PostHog/Mixpanel SDKs and intercepted local delivery, including the unified Janitor client. Thirteen site browser tests and Astro checks pass.
+- Two Chromium integration tests pass with real PostHog/Mixpanel SDKs and intercepted local delivery, including the unified Doorman client. Thirteen site browser tests and Astro checks pass.
 - Fresh npm, pnpm and Bun consumers install all seven v0.8.0 tarballs and import the new client, three evaluator capabilities and migration 0007.
 - No paid provider inference or live analytics ingestion was used. Prediction accuracy and production performance of the additional stages remain unmeasured. Earlier capacity benchmarks below describe their original versions.
 
 ## v0.7.0 release verification — 2026-09-23
 
-- The functional changes and site redesign passed [GitHub CI](https://github.com/Holy-Coders/janitor/actions/runs/35842422160), including TypeScript, native Elixir/Postgres, Phoenix, browser integration, example builds and website tests.
+- The functional changes and site redesign passed [GitHub CI](https://github.com/Holy-Coders/doorman/actions/runs/35842422160), including TypeScript, native Elixir/Postgres, Phoenix, browser integration, example builds and website tests.
 - Local release checks passed: 204 TypeScript tests, typecheck, lint, 11 website browser tests and Astro diagnostics with no errors or warnings. The site builds 29 HTML pages.
 - All seven v0.7.0 JavaScript archives installed in isolated npm, pnpm and Bun consumers. Ten public factory/helper exports and the analytics identify/reset lifecycle passed in each. The native v0.7.0 Hex-format archive builds successfully. SHA256 checksums accompany the GitHub assets.
-- All ten public GitHub release assets were downloaded successfully; the nine archives match the published SHA256 manifest. The release commit also passed [CI](https://github.com/Holy-Coders/janitor/actions/runs/35842788097).
-- The redesigned site is deployed at [janitor.holycoders.io](https://janitor.holycoders.io). Live Chromium checks pass for desktop/mobile rendering, video playback/pause, reduced motion, documentation search, synthetic cookie restoration and agent delegation, with no browser errors, cookies or third-party requests. The site's `no-transform` response header prevents Cloudflare's automatic analytics injection.
+- All ten public GitHub release assets were downloaded successfully; the nine archives match the published SHA256 manifest. The release commit also passed [CI](https://github.com/Holy-Coders/doorman/actions/runs/35842788097).
+- The redesigned site is deployed at [doorman.holycoders.io](https://doorman.holycoders.io). Live Chromium checks pass for desktop/mobile rendering, video playback/pause, reduced motion, documentation search, synthetic cookie restoration and agent delegation, with no browser errors, cookies or third-party requests. The site's `no-transform` response header prevents Cloudflare's automatic analytics injection.
 - npm publication was attempted and rejected with `EOTP` (authenticator verification required). Hex reports no authenticated account. GitHub archives and the versioned Elixir Git dependency are the installation paths until registry authentication is completed.
 - Publication does not imply a production identity endpoint, live analytics ingestion, Open Calls integration, paid inference validation or real-user accuracy calibration.
 
@@ -101,8 +101,8 @@ pnpm test
 pnpm lint
 pnpm exec playwright install chromium
 pnpm test:e2e
-pnpm --filter @janitor/example-nextjs build
-pnpm --filter @janitor/example-cloudflare build
+pnpm --filter @aarondovturkel/doorman-example-nextjs build
+pnpm --filter @aarondovturkel/doorman-example-cloudflare build
 pnpm pack:all
 ```
 

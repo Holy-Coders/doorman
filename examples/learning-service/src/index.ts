@@ -5,8 +5,8 @@ import {
   createLearningOperator,
   createNetworkJevEvaluator,
   createClassifierJevEvaluator,
-} from "@janitor/network/server";
-import { createPostgresNetworkStorage } from "@janitor/network/postgres";
+} from "@aarondovturkel/doorman-network/server";
+import { createPostgresNetworkStorage } from "@aarondovturkel/doorman-network/postgres";
 if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL");
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -61,7 +61,7 @@ await app.listen({
   host: process.env.HOST ?? "127.0.0.1",
 });
 console.log(
-  "Janitor learning service listening; raw request logging is disabled",
+  "Doorman learning service listening; raw request logging is disabled",
 );
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, () => {

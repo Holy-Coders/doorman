@@ -37,7 +37,7 @@ def groups(rows):
 
 
 def assign_groups(values, fractions):
-    unique = sorted(set(values), key=lambda s: fingerprint('janitor-external-v1:' + s))
+    unique = sorted(set(values), key=lambda s: fingerprint('doorman-external-v1:' + s))
     boundaries = np.cumsum(fractions) * len(unique)
     return {value: next(i for i, end in enumerate(boundaries) if rank < end) for rank, value in enumerate(unique)}
 

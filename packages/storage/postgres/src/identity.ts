@@ -3,7 +3,7 @@ import type {
   IdentityKey,
   IdentityStorage,
   IdentitySubject,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type { PostgresDatabase } from "./index.js";
 export function createPostgresIdentityStorage(
   db: PostgresDatabase,

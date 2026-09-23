@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { assessIdentity } from "@janitor/core";
-import type { IdentityStorage, VerifiedIdentityContext } from "@janitor/core";
+import { assessIdentity } from "@aarondovturkel/doorman-core";
+import type { IdentityStorage, VerifiedIdentityContext } from "@aarondovturkel/doorman-core";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
 

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { createVisitorClient } from "@janitor/browser";
+import { createVisitorClient } from "@aarondovturkel/doorman-browser";
 export function Identify() {
   const client = useRef<ReturnType<typeof createVisitorClient> | null>(null);
   const [result, setResult] = useState("No observation sent yet.");

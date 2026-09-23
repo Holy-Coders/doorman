@@ -1,18 +1,18 @@
-defmodule Janitor.ProtectionTest do
+defmodule Doorman.ProtectionTest do
   use ExUnit.Case, async: false
   import Plug.Test
   import Plug.Conn
-  alias Janitor.{Storage, Protection}
+  alias Doorman.{Storage, Protection}
   @fixtures File.read!(Path.expand("../priv/conformance.json", __DIR__)) |> Jason.decode!()
   @signals hd(@fixtures["vectors"])["raw"]
   defp config(extra \\ []) do
-    Janitor.new(
+    Doorman.new(
       Keyword.merge(
         [
-          repo: Janitor.TestRepo,
-          prefix: "janitor_test",
+          repo: Doorman.TestRepo,
+          prefix: "doorman_test",
           environment: :test,
-          protection: [secret: String.duplicate("s", 64), namespace: Janitor.random_id("test_")]
+          protection: [secret: String.duplicate("s", 64), namespace: Doorman.random_id("test_")]
         ],
         extra
       )
@@ -24,7 +24,7 @@ defmodule Janitor.ProtectionTest do
       config(
         protection: [
           secret: String.duplicate("s", 64),
-          namespace: Janitor.random_id("test_"),
+          namespace: Doorman.random_id("test_"),
           evaluator: [max_calls: 3, max_concurrent: 2]
         ]
       )
@@ -32,13 +32,13 @@ defmodule Janitor.ProtectionTest do
     result = %{"sameVisitor" => 0.9, "automation" => 0.1, "suspicious" => 0.1}
 
     assert {:ok, ^result} =
-             Protection.evaluate(c, fn -> result end, &Janitor.Engine.valid_evaluation?/1, 2)
+             Protection.evaluate(c, fn -> result end, &Doorman.Engine.valid_evaluation?/1, 2)
 
     assert :unavailable =
              Protection.evaluate(
                c,
                fn -> raise "no budget" end,
-               &Janitor.Engine.valid_evaluation?/1,
+               &Doorman.Engine.valid_evaluation?/1,
                2
              )
   end
@@ -48,7 +48,7 @@ defmodule Janitor.ProtectionTest do
       config(
         protection: [
           secret: String.duplicate("s", 64),
-          namespace: Janitor.random_id("test_"),
+          namespace: Doorman.random_id("test_"),
           requests: [global: 7]
         ]
       )
@@ -80,13 +80,13 @@ defmodule Janitor.ProtectionTest do
         end,
         protection: [
           secret: String.duplicate("s", 64),
-          namespace: Janitor.random_id("test_"),
+          namespace: Doorman.random_id("test_"),
           evaluator: [failure_threshold: 1]
         ]
       )
 
-    {:ok, first} = Janitor.identify(c, %{"signals" => @signals})
-    {:ok, next} = Janitor.identify(c, %{"signals" => @signals}, %{visitor_id: first["visitorId"]})
+    {:ok, first} = Doorman.identify(c, %{"signals" => @signals})
+    {:ok, next} = Doorman.identify(c, %{"signals" => @signals}, %{visitor_id: first["visitorId"]})
     assert :atomics.get(count, 1) == 1
     assert next["visitorId"] == first["visitorId"]
     assert next["riskStatus"] == "unavailable"
@@ -98,7 +98,7 @@ defmodule Janitor.ProtectionTest do
       config(
         protection: [
           secret: String.duplicate("s", 64),
-          namespace: Janitor.random_id("shards_"),
+          namespace: Doorman.random_id("shards_"),
           requests: [global: 21, shards: 4, window_ms: 3_600_000]
         ]
       )
@@ -117,7 +117,7 @@ defmodule Janitor.ProtectionTest do
         evaluator_timeout_ms: 10,
         protection: [
           secret: String.duplicate("s", 64),
-          namespace: Janitor.random_id("test_"),
+          namespace: Doorman.random_id("test_"),
           evaluator: [max_concurrent: 1]
         ]
       )
@@ -133,7 +133,7 @@ defmodule Janitor.ProtectionTest do
   test "successful evaluations still consume the shared call budget" do
     opts = [
       secret: String.duplicate("b", 64),
-      namespace: Janitor.random_id("test_"),
+      namespace: Doorman.random_id("test_"),
       evaluator: [max_calls: 1]
     ]
 
@@ -149,7 +149,7 @@ defmodule Janitor.ProtectionTest do
       config(
         protection: [
           secret: String.duplicate("b", 64),
-          namespace: Janitor.random_id("test_"),
+          namespace: Doorman.random_id("test_"),
           evaluator: [failure_threshold: 1, cooldown_ms: 1000]
         ]
       )
@@ -179,7 +179,7 @@ defmodule Janitor.ProtectionTest do
       config(
         protection: [
           secret: String.duplicate("s", 64),
-          namespace: Janitor.random_id("test_"),
+          namespace: Doorman.random_id("test_"),
           requests: [global: 1]
         ]
       )
@@ -189,8 +189,8 @@ defmodule Janitor.ProtectionTest do
       |> put_req_header("content-type", "application/json")
     end
 
-    assert Janitor.handle(req.(), c).status == 200
-    denied = Janitor.handle(req.(), c)
+    assert Doorman.handle(req.(), c).status == 200
+    denied = Doorman.handle(req.(), c)
     assert denied.status == 429
     assert get_resp_header(denied, "retry-after") == ["60"]
     refute denied.resp_body =~ "risk"
@@ -198,12 +198,12 @@ defmodule Janitor.ProtectionTest do
 
   test "a stolen cookie cannot replace history with a contradictory device" do
     c = config()
-    {:ok, first} = Janitor.identify(c, %{"signals" => @signals})
+    {:ok, first} = Doorman.identify(c, %{"signals" => @signals})
     before = Storage.history(c, first["visitorId"])
 
     for _ <- 1..6 do
       {:ok, copied} =
-        Janitor.identify(
+        Doorman.identify(
           c,
           %{"signals" => %{"platform" => "Android", "hardware" => %{"maxTouchPoints" => 5}}},
           %{visitor_id: first["visitorId"]}

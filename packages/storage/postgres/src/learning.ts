@@ -3,7 +3,7 @@ import type {
   LearningSession,
   LearningReport,
   LearningExample,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type { PostgresDatabase } from "./index.js";
 function decode(row: Record<string, unknown>): LearningSession {
   return {

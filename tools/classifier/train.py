@@ -87,7 +87,7 @@ def fit_candidates(rows, fitting, calibration, feature_names, enrichment=None):
             # Native predictions are checked by the TypeScript CLI before accepting an artifact.
             probabilities = calibrator.predict_proba(raw.reshape(-1, 1))[:, 1]
             parity.append({'name': name, 'scores': probabilities.tolist()})
-    return {'trainerVersion': f'janitor-v1 sklearn-{sklearn.__version__} catboost-{catboost.__version__} numpy-{np.__version__}', 'candidates': candidates}, parity
+    return {'trainerVersion': f'doorman-v1 sklearn-{sklearn.__version__} catboost-{catboost.__version__} numpy-{np.__version__}', 'candidates': candidates}, parity
 
 
 if __name__ == '__main__':

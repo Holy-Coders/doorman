@@ -1,12 +1,12 @@
-import { createVisitorHandler } from "@janitor/adapters/node";
+import { createVisitorHandler } from "@aarondovturkel/doorman-adapters/node";
 import {
   createD1Storage,
   createD1ProtectionStorage,
-} from "@janitor/storage-d1";
-import type { D1Database } from "@janitor/storage-d1";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
-import type { WorkersAI } from "@janitor/evaluator-cloudflare-jev";
-import type { JevRequest } from "@janitor/evaluator-jev";
+} from "@aarondovturkel/doorman-storage-d1";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import type { WorkersAI } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import type { JevRequest } from "@aarondovturkel/doorman-evaluator-jev";
 import {
   createBudgetedAI,
   mergeDemoEvaluation,
@@ -37,8 +37,8 @@ export type DemoEnv = {
   PLAYGROUND_SECRET: string;
   JEV_ENABLED?: string;
 };
-const SESSION_COOKIE = "__janitor_playground_session";
-const VISITOR_COOKIE = "__janitor_playground";
+const SESSION_COOKIE = "__doorman_playground_session";
+const VISITOR_COOKIE = "__doorman_playground";
 const PREFIX = "/api/playground/";
 const json = (body: unknown, status = 200) =>
   Response.json(body, {
@@ -190,7 +190,7 @@ export function createPlaygroundWorker(env: DemoEnv) {
     if (
       request.headers.get("origin") !== url.origin ||
       request.headers.get("sec-fetch-site") === "cross-site" ||
-      request.headers.get("x-janitor-playground") !== "1"
+      request.headers.get("x-doorman-playground") !== "1"
     )
       return json({ error: "Use the playground on this site" }, 403);
     if (
@@ -305,7 +305,7 @@ export function createPlaygroundWorker(env: DemoEnv) {
               onFailure: (reason) =>
                 console.warn(
                   JSON.stringify({
-                    event: "janitor-playground-evaluation",
+                    event: "doorman-playground-evaluation",
                     reason,
                   }),
                 ),
@@ -387,7 +387,7 @@ export function createPlaygroundWorker(env: DemoEnv) {
       ]);
       if (result.some((r) => !r.success))
         throw new Error("Demo cleanup failed");
-      // Also remove any interrupted inserts and old observations using Janitor's cleanup API.
+      // Also remove any interrupted inserts and old observations using Doorman's cleanup API.
       const storage = createD1Storage(env.VISITORS, {
         observationRetentionDays: 1,
         maxObservationsPerVisitor: 5,

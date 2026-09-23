@@ -1,8 +1,8 @@
-defmodule Janitor.ActivityTest do
+defmodule Doorman.ActivityTest do
   use ExUnit.Case, async: false
   import Plug.Test
   import Plug.Conn
-  alias Janitor.{Activity, ActivityPlug, ActivityStore, Identity, Storage}
+  alias Doorman.{Activity, ActivityPlug, ActivityStore, Identity, Storage}
   @route "GET /api/orders/:id"
   @context %{
     key: %{kind: "actor", id: "private-actor"},
@@ -14,11 +14,11 @@ defmodule Janitor.ActivityTest do
 
   setup do
     c =
-      Janitor.new(
-        repo: Janitor.TestRepo,
-        prefix: "janitor_test",
+      Doorman.new(
+        repo: Doorman.TestRepo,
+        prefix: "doorman_test",
         environment: :test,
-        identity: [secret: String.duplicate("a", 64), namespace: Janitor.random_id("api_")],
+        identity: [secret: String.duplicate("a", 64), namespace: Doorman.random_id("api_")],
         activity: [routes: [%{route: @route, sensitive: true}]]
       )
 
@@ -58,7 +58,7 @@ defmodule Janitor.ActivityTest do
     assert Identity.label(options, Jason.encode!(["api-activity-v1", "actor", "private-actor"])) ==
              @fixtures["activityLabel"]
 
-    assert Janitor.Jev.activity_input(@fixtures["activity"]["state"]) == @fixtures["activity"]
+    assert Doorman.Jev.activity_input(@fixtures["activity"]["state"]) == @fixtures["activity"]
   end
 
   test "aggregates concurrent requests in SQL without raw identifiers or browser history", %{c: c} do
@@ -151,8 +151,8 @@ defmodule Janitor.ActivityTest do
     assert conn.status == 201
     assert conn.resp_body == "application response"
     assert conn.resp_cookies["app"].value == "unchanged"
-    assert conn.assigns.janitor_api_activity["assessment"]["riskStatus"] == "disabled"
-    refute Jason.encode!(conn.assigns.janitor_api_activity) =~ "secret"
+    assert conn.assigns.doorman_api_activity["assessment"]["riskStatus"] == "disabled"
+    refute Jason.encode!(conn.assigns.doorman_api_activity) =~ "secret"
 
     unknown =
       conn(:get, "/")
@@ -160,7 +160,7 @@ defmodule Janitor.ActivityTest do
       |> ActivityPlug.call(opts)
       |> send_resp(200, "ok")
 
-    assert unknown.assigns.janitor_api_activity == %{"status" => "skipped"}
+    assert unknown.assigns.doorman_api_activity == %{"status" => "skipped"}
   end
 
   test "Plug preserves normal responses when context callbacks or storage fail", %{c: c} do
@@ -171,7 +171,7 @@ defmodule Janitor.ActivityTest do
       opts = ActivityPlug.init(config: config, context: context)
       conn = conn(:get, "/") |> ActivityPlug.call(opts) |> send_resp(200, "ok")
       assert conn.status == 200 and conn.resp_body == "ok"
-      assert conn.assigns.janitor_api_activity == %{"status" => "unavailable"}
+      assert conn.assigns.doorman_api_activity == %{"status" => "unavailable"}
     end
   end
 
@@ -187,7 +187,7 @@ defmodule Janitor.ActivityTest do
       c = %{
         c
         | evaluator_timeout_ms: 20,
-          identity: Keyword.put(c.identity, :namespace, Janitor.random_id("timeout_")),
+          identity: Keyword.put(c.identity, :namespace, Doorman.random_id("timeout_")),
           activity: %{c.activity | evaluator: model}
       }
 
@@ -208,7 +208,7 @@ defmodule Janitor.ActivityTest do
 
     c = %{
       c
-      | protection: Janitor.Protection.configure(c.identity ++ [evaluator: [max_calls: 1]]),
+      | protection: Doorman.Protection.configure(c.identity ++ [evaluator: [max_calls: 1]]),
         activity: %{c.activity | evaluator: model}
     }
 
@@ -247,8 +247,8 @@ defmodule Janitor.ActivityTest do
   end
 
   test "expired leases cannot overwrite a newer cached assessment", %{c: c} do
-    id = Janitor.random_id("lease_")
-    now = Janitor.now()
+    id = Doorman.random_id("lease_")
+    now = Doorman.now()
     assert ActivityStore.claim(c, id, "owner", "old", now, now + 1)
     assert ActivityStore.claim(c, id, "owner", "new", now + 2, now + 1000)
     ActivityStore.save(c, id, "old", %{"expiresAt" => now + 1000})

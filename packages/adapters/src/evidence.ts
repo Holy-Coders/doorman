@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { ACTIONS, EVENT_TYPES, VERIFICATION_METHODS } from "@janitor/core";
+import { ACTIONS, EVENT_TYPES, VERIFICATION_METHODS } from "@aarondovturkel/doorman-core";
 import type {
   ActivitySummary,
   EvidenceStorage,
   RequestEvidence,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
 

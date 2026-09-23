@@ -15,12 +15,12 @@ import { createIdentityDirectory } from "../packages/adapters/src/identity.js";
 import {
   createVisitorHandler,
   createNodeVisitor,
-} from "@janitor/adapters/node";
-import { createVercelVisitor } from "@janitor/adapters/vercel";
+} from "@aarondovturkel/doorman-adapters/node";
+import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
 import {
   cloudflareRequestEvidence,
   createCloudflareVisitor,
-} from "@janitor/adapters/cloudflare";
+} from "@aarondovturkel/doorman-adapters/cloudflare";
 import { sqlBackend } from "./helpers/sql.js";
 import { signals } from "./helpers/fixtures.js";
 const request = (body: unknown = { signals }) =>

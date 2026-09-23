@@ -68,7 +68,7 @@ test("real analytics SDKs link login to their anonymous device, then separate an
     .poll(() =>
       mixpanelEvents.some(
         (e) =>
-          e.event === "janitor user identified" &&
+          e.event === "doorman user identified" &&
           e.properties.$user_id === "user-a" &&
           e.properties.$device_id === before.device,
       ),
@@ -121,7 +121,7 @@ test("real analytics SDKs link login to their anonymous device, then separate an
     .poll(() =>
       mixpanelEvents.some(
         (e) =>
-          e.event === "janitor user identified" &&
+          e.event === "doorman user identified" &&
           e.properties.$user_id === "user-b" &&
           e.properties.$device_id === second.device,
       ),
@@ -133,11 +133,11 @@ test("real analytics SDKs link login to their anonymous device, then separate an
   expect(after.mixpanel).not.toBe("user-b");
   expect(after.device).not.toBe(second.device);
   const measured = await page.evaluate(() =>
-    window.analyticsDemo.janitor.identify("user-c", { plan: "pro" }),
+    window.analyticsDemo.doorman.identify("user-c", { plan: "pro" }),
   );
   expect(measured.visitorId).toMatch(/^vis_/);
   await page.evaluate(() =>
-    window.analyticsDemo.janitor.track("checkout opened", { plan: "pro" }),
+    window.analyticsDemo.doorman.track("checkout opened", { plan: "pro" }),
   );
   await expect
     .poll(() =>
@@ -145,7 +145,7 @@ test("real analytics SDKs link login to their anonymous device, then separate an
         (e) =>
           e.event === "checkout opened" &&
           e.properties.$user_id === "user-c" &&
-          e.properties.janitor_visitor_id === measured.visitorId,
+          e.properties.doorman_visitor_id === measured.visitorId,
       ),
     )
     .toBe(true);
@@ -155,21 +155,21 @@ test("real analytics SDKs link login to their anonymous device, then separate an
         (e) =>
           e.event === "checkout opened" &&
           e.properties.distinct_id === "user-c" &&
-          e.properties.janitor_visitor_id === measured.visitorId,
+          e.properties.doorman_visitor_id === measured.visitorId,
       ),
     )
     .toBe(true);
-  await page.evaluate(() => window.analyticsDemo.janitor.reset());
+  await page.evaluate(() => window.analyticsDemo.doorman.reset());
   expect(
     (await page.evaluate(() => window.analyticsDemo.snapshot())).posthog,
   ).not.toBe("user-c");
   expect(JSON.stringify([mixpanelEvents, posthogEvents])).not.toMatch(
-    /janitor_automation|janitor_confidence|collectedSignals/,
+    /doorman_automation|doorman_confidence|collectedSignals/,
   );
   expect(external).toEqual([]);
 });
 
-test("real Amplitude SDK receives Janitor identities and rotates device IDs at account boundaries", async ({
+test("real Amplitude SDK receives Doorman identities and rotates device IDs at account boundaries", async ({
   page,
 }) => {
   const events: Record<string, unknown>[] = [];
@@ -229,7 +229,7 @@ test("real Amplitude SDK receives Janitor identities and rotates device IDs at a
   expect(after.userId).toBeUndefined();
   expect(after.deviceId).not.toBe(second.deviceId);
   expect(JSON.stringify(events)).not.toMatch(
-    /janitor_automation|collectedSignals/,
+    /doorman_automation|collectedSignals/,
   );
   expect(external).toEqual([]);
 });

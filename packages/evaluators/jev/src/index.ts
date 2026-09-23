@@ -1,4 +1,4 @@
-import type { VisitorEvaluator } from "@janitor/core";
+import type { VisitorEvaluator } from "@aarondovturkel/doorman-core";
 import { createJevMethods } from "./intelligence.js";
 export { createJevMethods, INTELLIGENCE_QUESTIONS } from "./intelligence.js";
 export type { JevRequest } from "./intelligence.js";

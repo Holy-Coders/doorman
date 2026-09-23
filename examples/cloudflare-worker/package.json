@@ -1,5 +1,5 @@
 {
-  "name": "@janitor/example-cloudflare",
+  "name": "@aarondovturkel/doorman-example-cloudflare",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,8 +10,8 @@
     "dev:ai": "pnpm build:browser && wrangler dev --var JEV_ENABLED:true"
   },
   "dependencies": {
-    "@janitor/browser": "workspace:^",
-    "@janitor/adapters": "workspace:^"
+    "@aarondovturkel/doorman-browser": "workspace:^",
+    "@aarondovturkel/doorman-adapters": "workspace:^"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260921.1",

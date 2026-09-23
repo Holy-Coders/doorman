@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import type { VisitorClientIdentity } from "@janitor/core";
+import type { VisitorClientIdentity } from "@aarondovturkel/doorman-core";
 test.beforeEach(async ({ request }) => {
   expect((await request.post("/test/reset")).ok()).toBe(true);
 });

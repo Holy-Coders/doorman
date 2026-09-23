@@ -8,8 +8,8 @@ import {
   vi,
 } from "vitest";
 import { createProtection } from "../packages/adapters/src/protection.js";
-import { createVisitorHandler } from "@janitor/adapters/node";
-import { createVisitorEngine, normalizeObservation } from "@janitor/core";
+import { createVisitorHandler } from "@aarondovturkel/doorman-adapters/node";
+import { createVisitorEngine, normalizeObservation } from "@aarondovturkel/doorman-core";
 import { sqlBackend } from "./helpers/sql.js";
 import { signals, phone } from "./helpers/fixtures.js";
 const result = { sameVisitor: 0.99, automation: 0.13, suspicious: 0.02 };

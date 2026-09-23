@@ -1,50 +1,50 @@
 ExUnit.start()
 Logger.configure(level: :warning)
 
-defmodule Janitor.TestRepo do
-  use Ecto.Repo, otp_app: :janitor, adapter: Ecto.Adapters.Postgres
+defmodule Doorman.TestRepo do
+  use Ecto.Repo, otp_app: :doorman_identity, adapter: Ecto.Adapters.Postgres
 end
 
-Application.put_env(:janitor, Janitor.TestRepo,
+Application.put_env(:doorman_identity, Doorman.TestRepo,
   url: System.get_env("DATABASE_URL", "postgres://visitor:visitor@localhost:55433/visitors"),
   pool_size: 5,
   log: false
 )
 
-{:ok, _} = Janitor.TestRepo.start_link()
+{:ok, _} = Doorman.TestRepo.start_link()
 
-defmodule Janitor.TestMigration do
+defmodule Doorman.TestMigration do
   use Ecto.Migration
-  def up, do: Janitor.Migration.up(prefix: "janitor_test")
-  def down, do: Janitor.Migration.down(prefix: "janitor_test")
+  def up, do: Doorman.Migration.up(prefix: "doorman_test")
+  def down, do: Doorman.Migration.down(prefix: "doorman_test")
 end
 
-Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_301, Janitor.TestMigration, log: false)
+Ecto.Migrator.up(Doorman.TestRepo, 2_026_092_301, Doorman.TestMigration, log: false)
 
-defmodule Janitor.TestLookupMigration do
+defmodule Doorman.TestLookupMigration do
   use Ecto.Migration
-  def up, do: Janitor.Migration.upgrade_lookup(prefix: "janitor_test")
+  def up, do: Doorman.Migration.upgrade_lookup(prefix: "doorman_test")
 end
 
-Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_302, Janitor.TestLookupMigration, log: false)
+Ecto.Migrator.up(Doorman.TestRepo, 2_026_092_302, Doorman.TestLookupMigration, log: false)
 
-defmodule Janitor.TestSecurityMigration do
+defmodule Doorman.TestSecurityMigration do
   use Ecto.Migration
-  def up, do: Janitor.Migration.upgrade_security(prefix: "janitor_test")
+  def up, do: Doorman.Migration.upgrade_security(prefix: "doorman_test")
 end
 
-Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_303, Janitor.TestSecurityMigration, log: false)
+Ecto.Migrator.up(Doorman.TestRepo, 2_026_092_303, Doorman.TestSecurityMigration, log: false)
 
-defmodule Janitor.TestLearningMigration do
+defmodule Doorman.TestLearningMigration do
   use Ecto.Migration
-  def up, do: Janitor.Migration.upgrade_learning(prefix: "janitor_test")
+  def up, do: Doorman.Migration.upgrade_learning(prefix: "doorman_test")
 end
 
-Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_304, Janitor.TestLearningMigration, log: false)
+Ecto.Migrator.up(Doorman.TestRepo, 2_026_092_304, Doorman.TestLearningMigration, log: false)
 
-defmodule Janitor.TestActivityMigration do
+defmodule Doorman.TestActivityMigration do
   use Ecto.Migration
-  def up, do: Janitor.Migration.upgrade_activity(prefix: "janitor_test")
+  def up, do: Doorman.Migration.upgrade_activity(prefix: "doorman_test")
 end
 
-Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_305, Janitor.TestActivityMigration, log: false)
+Ecto.Migrator.up(Doorman.TestRepo, 2_026_092_305, Doorman.TestActivityMigration, log: false)

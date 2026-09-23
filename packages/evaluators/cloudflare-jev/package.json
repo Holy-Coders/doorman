@@ -1,6 +1,6 @@
 {
-  "name": "@janitor/evaluator-cloudflare-jev",
-  "version": "0.9.0",
+  "name": "@aarondovturkel/doorman-evaluator-cloudflare-jev",
+  "version": "0.12.0",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -19,16 +19,21 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@janitor/core": "workspace:^",
-    "@janitor/evaluator-jev": "workspace:^"
+    "@aarondovturkel/doorman-core": "workspace:^",
+    "@aarondovturkel/doorman-evaluator-jev": "workspace:^"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Holy-Coders/janitor.git",
+    "url": "git+https://github.com/Holy-Coders/doorman.git",
     "directory": "packages/evaluators/cloudflare-jev"
   },
-  "homepage": "https://janitor.holycoders.io",
+  "homepage": "https://doorman.holycoders.io",
   "bugs": {
-    "url": "https://github.com/Holy-Coders/janitor/issues"
+    "url": "https://github.com/Holy-Coders/doorman/issues"
+  },
+  "description": "Cloudflare Workers AI Jev evaluation for Doorman identity and private risk.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

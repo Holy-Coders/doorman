@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { chromium, firefox, webkit } from "@playwright/test";
-import type { BrowserObservation } from "@janitor/core";
+import type { BrowserObservation } from "@aarondovturkel/doorman-core";
 type Fixture = Window & { capture: () => Promise<BrowserObservation> };
 const server = createServer((req, res) => {
   const file =
@@ -28,7 +28,7 @@ const server = createServer((req, res) => {
     res
       .writeHead(200, { "Content-Type": "text/html" })
       .end(
-        `<!doctype html><title>Janitor font controls</title><script type="module">import{collectDetectionSignals}from'/collector.js';window.capture=()=>collectDetectionSignals({fonts:true,pageFonts:true,permissions:true});</script>`,
+        `<!doctype html><title>Doorman font controls</title><script type="module">import{collectDetectionSignals}from'/collector.js';window.capture=()=>collectDetectionSignals({fonts:true,pageFonts:true,permissions:true});</script>`,
       );
 });
 await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
@@ -71,7 +71,7 @@ try {
           const before = await capture();
           await page.evaluate(async () => {
             const face = new FontFace(
-              "JanitorDownloadFixture",
+              "DoormanDownloadFixture",
               "url(/app.woff2)",
             );
             document.fonts.add(face);

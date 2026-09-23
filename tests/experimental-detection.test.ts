@@ -3,15 +3,15 @@ import {
   collectDetectionSignals,
   FONT_PROBES,
 } from "../packages/browser/src/detection.js";
-import { createVisitorClient } from "@janitor/browser";
+import { createVisitorClient } from "@aarondovturkel/doorman-browser";
 import {
   calculateSimilarity,
   normalizeObservation,
   evidenceCap,
   hasOperatorEvidence,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { payloadSchema } from "../packages/adapters/src/validation.js";
-import { cloudflareRequestEvidence } from "@janitor/adapters/cloudflare";
+import { cloudflareRequestEvidence } from "@aarondovturkel/doorman-adapters/cloudflare";
 import { requestEvidence } from "../packages/adapters/src/evidence.js";
 import { extractFeatures } from "../packages/network/src/features.js";
 import { compactObservation } from "../packages/evaluators/jev/src/protocol.js";

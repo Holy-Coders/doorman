@@ -48,7 +48,7 @@ for (const language of ["typescript", "elixir", "python", "go"]) {
       if (/^(https?:|#|\/)/.test(href)) return match;
       const [path, hash] = href.split("#");
       const resolved = relative(root, resolve(root, dirname(source), path));
-      return `](${flavoredRoutes.get(resolved) ?? `https://github.com/Holy-Coders/janitor/blob/main/${resolved}`}${hash ? "#" + hash : ""})`;
+      return `](${flavoredRoutes.get(resolved) ?? `https://github.com/Holy-Coders/doorman/blob/main/${resolved}`}${hash ? "#" + hash : ""})`;
     });
     writeFileSync(
       resolve(output, `${language}--${slug}.md`),
@@ -77,12 +77,12 @@ for (const language of ["typescript", "elixir", "python", "go"]) {
 }
 writeFileSync(
   resolve(root, "site/public/llms.txt"),
-  "# Janitor\n\n> Janitor is an open-source library for recognizing returning browsers, estimating browser risk with the optional Jev AI model, and connecting authenticated people and agents. It runs on your server and stores history in your database. Browser matching is not login. Your app decides whether to allow an action or show a CAPTCHA.\n\n" +
+  "# Doorman\n\n> Doorman is an open-source library for recognizing returning browsers, estimating browser risk with the optional Jev AI model, and connecting authenticated people and agents. It runs on your server and stores history in your database. Browser matching is not login. Your app decides whether to allow an action or show a CAPTCHA.\n\n" +
     entries
       .map(
         ([slug, title, description]) =>
-          `- [${title}](https://janitor.holycoders.io/docs/${slug}/): ${description}`,
+          `- [${title}](https://doorman.holycoders.io/docs/${slug}/): ${description}`,
       )
       .join("\n") +
-    "\n\nSource: https://github.com/Holy-Coders/janitor\n",
+    "\n\nSource: https://github.com/Holy-Coders/doorman\n",
 );

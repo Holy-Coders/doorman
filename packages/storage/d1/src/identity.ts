@@ -3,7 +3,7 @@ import type {
   IdentityKey,
   IdentityStorage,
   IdentitySubject,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type { D1Database } from "./index.js";
 export function createD1IdentityStorage(db: D1Database): IdentityStorage {
   async function run(sql: string, values: unknown[]) {

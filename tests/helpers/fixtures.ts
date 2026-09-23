@@ -1,4 +1,4 @@
-import type { BrowserObservation } from "@janitor/core";
+import type { BrowserObservation } from "@aarondovturkel/doorman-core";
 export const signals: BrowserObservation = {
   userAgent:
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36",

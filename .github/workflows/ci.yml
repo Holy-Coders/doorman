@@ -19,12 +19,12 @@ jobs:
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
-      - run: pnpm --filter @janitor/example-nextjs build
-      - run: pnpm --filter @janitor/example-cloudflare build
-      - run: pnpm --filter @janitor/example-learning-worker build
+      - run: pnpm --filter @aarondovturkel/doorman-example-nextjs build
+      - run: pnpm --filter @aarondovturkel/doorman-example-cloudflare build
+      - run: pnpm --filter @aarondovturkel/doorman-example-learning-worker build
       - run: pnpm site:check
       - run: pnpm site:test
-      - run: pnpm --filter @janitor/site exec wrangler deploy --dry-run
+      - run: pnpm --filter @aarondovturkel/doorman-site exec wrangler deploy --dry-run
 
   elixir:
     runs-on: ubuntu-latest
@@ -67,7 +67,7 @@ jobs:
       - run: python -m unittest discover -s packages/python/tests -v
       - run: go test -race ./...
         working-directory: packages/go
-      - run: go build -o /tmp/janitor-example .
+      - run: go build -o /tmp/doorman-example .
         working-directory: examples/go-http
 
   classifier:
@@ -76,12 +76,12 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_USER: janitor
-          POSTGRES_PASSWORD: janitor-ci-only
-          POSTGRES_DB: janitor_network
+          POSTGRES_USER: doorman
+          POSTGRES_PASSWORD: doorman-ci-only
+          POSTGRES_DB: doorman_network
         ports: ["55436:5432"]
         options: >-
-          --health-cmd "pg_isready -U janitor -d janitor_network"
+          --health-cmd "pg_isready -U doorman -d doorman_network"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
@@ -105,4 +105,4 @@ jobs:
       - run: pnpm exec vitest run tests/classifier-training.test.ts tests/classifier-service.test.ts tests/network-service.test.ts
         env:
           CLASSIFIER_PYTHON: ${{ steps.python.outputs.python-path }}
-          NETWORK_TEST_DATABASE_URL: postgres://janitor:janitor-ci-only@localhost:55436/janitor_network
+          NETWORK_TEST_DATABASE_URL: postgres://doorman:doorman-ci-only@localhost:55436/doorman_network

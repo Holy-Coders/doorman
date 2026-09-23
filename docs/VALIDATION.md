@@ -1,6 +1,6 @@
 # Testing and limitations
 
-Janitor’s tests check whether the implementation behaves as documented: matching, cookies, database queries, failure handling and the privacy boundary between browser and server. They do not tell us how accurately Jev detects bots or how often browser recovery will be correct on your traffic.
+Doorman’s tests check whether the implementation behaves as documented: matching, cookies, database queries, failure handling and the privacy boundary between browser and server. They do not tell us how accurately Jev detects bots or how often browser recovery will be correct on your traffic.
 
 ## What is verified
 
@@ -33,13 +33,13 @@ API activity checks use real Postgres and D1 SQL. They cover bounded aggregates,
 
 The database contract tests execute real SQL using embedded Postgres (PGlite) and Cloudflare’s local D1 runtime (Miniflare). Core matching is not mocked. External Jev and analytics responses are mocked or intercepted so automated tests do not make paid inference calls or send test users to analytics projects.
 
-Earlier checks cover bounded lookup planning, ten-candidate batch matching, cold-start/ambiguity abstention, private Jev learning on both databases, shared inference budgets and asynchronous analytics logout races. The real SDK integration also exercises `createJanitorClient` events and identity transitions. External inference remains mocked; these checks establish implementation behavior, not cross-device or bot-detection accuracy.
+Earlier checks cover bounded lookup planning, ten-candidate batch matching, cold-start/ambiguity abstention, private Jev learning on both databases, shared inference budgets and asynchronous analytics logout races. The real SDK integration also exercises `createDoormanClient` events and identity transitions. External inference remains mocked; these checks establish implementation behavior, not cross-device or bot-detection accuracy.
 
 The earlier September 23 live playground follow-up passed **243 TypeScript tests and 15 site browser tests**. New real-D1 checks cover session isolation, atomic call allowances, cache hits, erasure, billing rejection and the inference kill switch. The site produces 32 HTML pages, with navigation and internal documentation links checked in Chromium.
 
 The deployed [live playground](PLAYGROUND.md) passed real browser cookie continuity, controlled cookie-loss recovery, private-response, mobile-layout and erasure checks. After funding Cloudflare inference, a hosted flow received fresh Jev evaluations, reused a private cached answer without another model call, and restored its visitor cookie. The live response exposed a Cloudflare `Completed` envelope absent from the model documentation example; regression tests now cover it. The documented local HTTPS Worker flow also passed with local D1 and AI disabled.
 
-See the [latest CI runs](https://github.com/Holy-Coders/janitor/actions) and [detailed dated records](VALIDATION-HISTORY.md) for exact commands, environments and historical counts.
+See the [latest CI runs](https://github.com/Holy-Coders/doorman/actions) and [detailed dated records](VALIDATION-HISTORY.md) for exact commands, environments and historical counts.
 
 ## What the benchmarks show
 
@@ -67,10 +67,10 @@ Measure at least:
 - **False matches:** distinct browsers incorrectly assigned the same ID.
 - **Missed matches:** a returning browser assigned a new ID.
 - **False risk alerts:** ordinary activity flagged by your chosen threshold.
-- **Abstention and availability:** how often Janitor cannot make a useful match or risk assessment.
+- **Abstention and availability:** how often Doorman cannot make a useful match or risk assessment.
 - **Latency and cost:** the complete request path, including your database and actual AI provider.
 
-Compare built-in matching with AI-assisted matching on the same held-out visits. Do not use Janitor’s own guessed IDs as the truth labels. Anonymous cross-device prediction needs a separate evaluation; see [testing a learning model](EVALUATION.md).
+Compare built-in matching with AI-assisted matching on the same held-out visits. Do not use Doorman’s own guessed IDs as the truth labels. Anonymous cross-device prediction needs a separate evaluation; see [testing a learning model](EVALUATION.md).
 
 ## Run the checks yourself
 
@@ -91,6 +91,6 @@ The [Elixir guide](../packages/elixir/README.md) explains its Postgres test setu
 
 ## What is published
 
-The public source, documentation site and [v0.8.1 GitHub archives](https://github.com/Holy-Coders/janitor/releases/tag/v0.8.1) are available. This patch includes the live Cloudflare response-envelope fix. All seven patch archives passed isolated npm, pnpm and Bun installation/import checks, including a completed-envelope evaluation; the native Hex-format archive also builds. npm publication requires release-account verification, and Hex publication requires an authenticated account; neither registry is claimed as published. Use the [documented GitHub installation paths](LANGUAGES.md).
+The public source, documentation site and [v0.8.1 GitHub archives](https://github.com/Holy-Coders/doorman/releases/tag/v0.8.1) are available. This patch includes the live Cloudflare response-envelope fix. All seven patch archives passed isolated npm, pnpm and Bun installation/import checks, including a completed-envelope evaluation; the native Hex-format archive also builds. npm publication requires release-account verification, and Hex publication requires an authenticated account; neither registry is claimed as published. Use the [documented GitHub installation paths](LANGUAGES.md).
 
 Installing the library does not create a hosted identity endpoint or configure your analytics project. Those run in your application. Live provider ingestion, real-user risk calibration and your production capacity need verification in that environment.

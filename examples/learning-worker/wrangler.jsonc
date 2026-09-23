@@ -1,12 +1,12 @@
 {
-  "name": "janitor-network",
+  "name": "doorman-network",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-23",
   "workers_dev": true,
   "d1_databases": [
     {
       "binding": "NETWORK",
-      "database_name": "janitor-network",
+      "database_name": "doorman-network",
       "database_id": "5babbfb4-0c25-4e5f-a401-a950a6eb83f1",
       "migrations_dir": "../../packages/network/migrations",
     },

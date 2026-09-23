@@ -4,7 +4,7 @@ import { extractFeatures } from "../packages/network/src/features.js";
 import { payloadSchema } from "../packages/adapters/src/validation.js";
 import { operatorEvidenceSchema } from "../packages/adapters/src/operators.js";
 import { createOperatorInput } from "../packages/evaluators/jev/src/operators.js";
-import { hasOperatorEvidence } from "@janitor/core";
+import { hasOperatorEvidence } from "@aarondovturkel/doorman-core";
 
 describe("optional aggregate detection evidence", () => {
   it("summarizes large steps and short/repeated gaps without reading event content", () => {

@@ -1,33 +1,33 @@
 # Go client
 
-Use Go to expose a first-party visitor route backed by a Janitor endpoint you own. The client preserves per-request cookie context and projects only the public response. Matching, Jev, storage, API activity evaluation and private analytics run in your TypeScript or Elixir engine.
+Use Go to expose a first-party visitor route backed by a Doorman endpoint you own. The client preserves per-request cookie context and projects only the public response. Matching, Jev, storage, API activity evaluation and private analytics run in your TypeScript or Elixir engine.
 
 ## Install
 
 Go 1.23 or newer is required:
 
 ```sh
-go get github.com/Holy-Coders/janitor/packages/go@v0.9.0
+go get github.com/Holy-Coders/doorman/packages/go@v0.12.0
 ```
 
-The Go submodule uses the `packages/go/v0.9.0` Git tag. For a local checkout, see the example's `replace` directive.
+The Go submodule uses the `packages/go/v0.12.0` Git tag. For a local checkout, see the example's `replace` directive.
 
 ## Mount a route
 
 ```go
-client, err := janitor.NewClient("https://identity.your-app.example/api/visitor", janitor.Options{})
+client, err := doorman.NewClient("https://identity.your-app.example/api/visitor", doorman.Options{})
 if err != nil { return err }
 mux.Handle("/api/visitor", client.Handler())
 ```
 
-Import it as `janitor "github.com/Holy-Coders/janitor/packages/go"`. Mount the route behind your application's origin/CSRF and rate controls. The handler accepts only POST JSON, bounds the body, relays Cookie/Origin/CSRF context, returns a controlled error on failure, and appends Set-Cookie without exposing private scores. There is no shared cookie jar. Request cancellation propagates to the upstream call.
+Import it as `doorman "github.com/Holy-Coders/doorman/packages/go"`. Mount the route behind your application's origin/CSRF and rate controls. The handler accepts only POST JSON, bounds the body, relays Cookie/Origin/CSRF context, returns a controlled error on failure, and appends Set-Cookie without exposing private scores. There is no shared cookie jar. Request cancellation propagates to the upstream call.
 
 ## Use your own handler
 
 ```go
-result, err := client.Identify(r.Context(), janitor.Request{
+result, err := client.Identify(r.Context(), doorman.Request{
     Signals: browserSignals,
-}, janitor.Context{Cookie: r.Header.Get("Cookie"), Origin: r.Header.Get("Origin")})
+}, doorman.Context{Cookie: r.Header.Get("Cookie"), Origin: r.Header.Get("Origin")})
 if err != nil { /* your controlled failure response */ return }
 for _, cookie := range result.SetCookies { w.Header().Add("Set-Cookie", cookie) }
 // JSON encoding result includes visitorId and isReturning only.

@@ -9,7 +9,7 @@ import {
   operatorLabel,
   summarizeOperators,
   resolveOperatorThresholds,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import {
   operatorWindowProperties,
   operatorSummaryProperties,
@@ -134,7 +134,7 @@ describe("server scoring configuration", () => {
     a.thresholds = resolveOperatorThresholds(config);
     expect(
       operatorWindowProperties(a, { accountId: "account" })
-        .janitor_operator_kind,
+        .doorman_operator_kind,
     ).toBe("unknown");
     const strict = summarizeOperators([a, b], range, { linkThreshold: 0.95 });
     expect(strict.profiles).toHaveLength(2);
@@ -142,7 +142,7 @@ describe("server scoring configuration", () => {
       operatorSummaryProperties(strict, {
         accountId: "account",
         revisionId: "v2",
-      }).janitor_operator_scoring_policy,
+      }).doorman_operator_scoring_policy,
     ).toBe(strict.scoringPolicy);
     expect(() => resolveOperatorThresholds({ linkThreshold: 0.99 })).toThrow();
     expect(() => resolveOperatorThresholds({ labelMargin: 0 })).toThrow();

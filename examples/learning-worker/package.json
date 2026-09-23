@@ -1,5 +1,5 @@
 {
-  "name": "@janitor/example-learning-worker",
+  "name": "@aarondovturkel/doorman-example-learning-worker",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "@janitor/network": "workspace:^"
+    "@aarondovturkel/doorman-network": "workspace:^"
   },
   "devDependencies": {
     "wrangler": "^4.136.3"

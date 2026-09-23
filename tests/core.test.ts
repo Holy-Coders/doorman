@@ -5,7 +5,7 @@ import {
   normalizeObservation,
   VisitorStorageError,
   evidenceCap,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { createMemoryStorage } from "./helpers/memory.js";
 import { evaluation, phone, signals } from "./helpers/fixtures.js";
 

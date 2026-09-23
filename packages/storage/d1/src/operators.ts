@@ -1,5 +1,5 @@
-import type { OperatorStorage, OperatorWindow } from "@janitor/core";
-import { OPERATOR_LIMITS } from "@janitor/core";
+import type { OperatorStorage, OperatorWindow } from "@aarondovturkel/doorman-core";
+import { OPERATOR_LIMITS } from "@aarondovturkel/doorman-core";
 import type { D1Database } from "./index.js";
 export function createD1OperatorStorage(db: D1Database): OperatorStorage {
   async function rows(sql: string, args: unknown[]) {

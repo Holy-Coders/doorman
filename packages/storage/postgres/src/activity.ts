@@ -1,9 +1,9 @@
-import { API_ACTIVITY_LIMITS } from "@janitor/core";
+import { API_ACTIVITY_LIMITS } from "@aarondovturkel/doorman-core";
 import type {
   ApiActivityAssessment,
   ApiActivityBucket,
   ApiActivityStorage,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type { PostgresDatabase } from "./index.js";
 
 function bucket(row: Record<string, unknown>): ApiActivityBucket {

@@ -1,5 +1,5 @@
 {
-  "name": "@janitor/site",
+  "name": "@aarondovturkel/doorman-site",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,12 +15,12 @@
   "dependencies": {
     "@fontsource-variable/space-grotesk": "^5.2.0",
     "@fontsource/ibm-plex-mono": "^5.2.0",
-    "@janitor/core": "workspace:^",
-    "@janitor/adapters": "workspace:^",
-    "@janitor/browser": "workspace:^",
-    "@janitor/evaluator-cloudflare-jev": "workspace:^",
-    "@janitor/evaluator-jev": "workspace:^",
-    "@janitor/storage-d1": "workspace:^",
+    "@aarondovturkel/doorman-core": "workspace:^",
+    "@aarondovturkel/doorman-adapters": "workspace:^",
+    "@aarondovturkel/doorman-browser": "workspace:^",
+    "@aarondovturkel/doorman-evaluator-cloudflare-jev": "workspace:^",
+    "@aarondovturkel/doorman-evaluator-jev": "workspace:^",
+    "@aarondovturkel/doorman-storage-d1": "workspace:^",
     "astro": "^7.3.4",
     "cookie": "^2.0.1"
   },

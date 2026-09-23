@@ -3,9 +3,9 @@ import {
   collectBrowserSignals,
   createBehaviorTracker,
   createVisitorClient,
-  createJanitorClient,
-} from "@janitor/browser";
-import { createVisitorId } from "@janitor/core";
+  createDoormanClient,
+} from "@aarondovturkel/doorman-browser";
+import { createVisitorId } from "@aarondovturkel/doorman-core";
 const identity = {
   visitorId: createVisitorId(),
   confidence: 0.95,
@@ -294,7 +294,7 @@ it("accepts private-score responses and rejects partially exposed scores", async
   visitor.destroy();
 });
 
-describe("Janitor identity lifecycle", () => {
+describe("Doorman identity lifecycle", () => {
   it("owns identify, profile updates, events and logout across destinations", async () => {
     documentStub();
     vi.stubGlobal(
@@ -311,27 +311,27 @@ describe("Janitor identity lifecycle", () => {
       people: { set: vi.fn() },
     };
     const segment = { identify: vi.fn(), reset: vi.fn(), track: vi.fn() };
-    const janitor = createJanitorClient({
+    const doorman = createDoormanClient({
       analytics: { posthog, mixpanel, segment },
     });
-    await janitor.identify();
+    await doorman.identify();
     expect(posthog.identify).not.toHaveBeenCalled();
-    await janitor.track("page viewed", { page: "pricing" });
+    await doorman.track("page viewed", { page: "pricing" });
     expect(segment.track).toHaveBeenCalledWith("page viewed", {
       page: "pricing",
-      janitor_visitor_id: identity.visitorId,
+      doorman_visitor_id: identity.visitorId,
     });
-    await janitor.identify("alex", { plan: "free" });
-    await janitor.update({ plan: "pro" });
+    await doorman.identify("alex", { plan: "free" });
+    await doorman.update({ plan: "pro" });
     expect(segment.identify).toHaveBeenLastCalledWith("alex", { plan: "pro" });
-    await janitor.identify("sam");
+    await doorman.identify("sam");
     expect(posthog.reset).toHaveBeenCalledOnce();
-    await janitor.reset();
+    await doorman.reset();
     expect(segment.reset).toHaveBeenCalledTimes(2);
-    await expect(janitor.update({ name: "forgot login" })).rejects.toThrow(
+    await expect(doorman.update({ name: "forgot login" })).rejects.toThrow(
       "authenticated",
     );
-    janitor.destroy();
+    doorman.destroy();
   });
   it("does not publish while paused and isolates failed destinations", async () => {
     documentStub();
@@ -349,26 +349,26 @@ describe("Janitor identity lifecycle", () => {
       }),
     };
     const segment = { identify: vi.fn(), reset: vi.fn(), track: vi.fn() };
-    const janitor = createJanitorClient({
+    const doorman = createDoormanClient({
       enabled: false,
       analytics: { posthog, segment },
     });
-    await expect(janitor.identify("alex")).rejects.toThrow("paused");
+    await expect(doorman.identify("alex")).rejects.toThrow("paused");
     expect(posthog.identify).not.toHaveBeenCalled();
-    expect(() => janitor.track("page")).toThrow("paused");
-    janitor.setEnabled(true);
-    await janitor.identify("alex");
-    expect(await janitor.track("page")).toEqual({
+    expect(() => doorman.track("page")).toThrow("paused");
+    doorman.setEnabled(true);
+    await doorman.identify("alex");
+    expect(await doorman.track("page")).toEqual({
       posthog: "unavailable",
       segment: "queued",
     });
-    expect(() => janitor.track("page", { distinct_id: "other" })).toThrow(
+    expect(() => doorman.track("page", { distinct_id: "other" })).toThrow(
       "Reserved",
     );
-    expect(() => janitor.track("page", { janitor_confidence: 0.9 })).toThrow(
+    expect(() => doorman.track("page", { doorman_confidence: 0.9 })).toThrow(
       "Reserved",
     );
-    janitor.destroy();
+    doorman.destroy();
   });
   it("discards measurements racing with an account switch", async () => {
     documentStub();
@@ -382,11 +382,11 @@ describe("Janitor identity lifecycle", () => {
           }),
       ),
     );
-    const janitor = createJanitorClient();
-    const old = janitor.identify("alex");
+    const doorman = createDoormanClient();
+    const old = doorman.identify("alex");
     await Promise.resolve();
     const discarded = expect(old).rejects.toThrow("reset");
-    const next = janitor.identify("sam");
+    const next = doorman.identify("sam");
     await Promise.resolve();
     replies[0]!(
       Response.json({ visitorId: identity.visitorId, isReturning: false }),
@@ -395,6 +395,6 @@ describe("Janitor identity lifecycle", () => {
     const nextId = createVisitorId();
     replies[1]!(Response.json({ visitorId: nextId, isReturning: false }));
     expect((await next).visitorId).toBe(nextId);
-    janitor.destroy();
+    doorman.destroy();
   });
 });

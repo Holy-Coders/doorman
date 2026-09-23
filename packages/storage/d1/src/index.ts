@@ -5,12 +5,12 @@ import {
   createVisitorId,
   DAY_MS,
   retentionOptions,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   ManagedVisitorStorage,
   NormalizedObservation,
   RetentionOptions,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 // Structural subset of the D1 binding; no Workers runtime dependency in consumers.
 export interface D1Statement {

@@ -1,6 +1,6 @@
 # Connection capacity and load
 
-This page helps you distinguish open connections from successful identity requests. Janitor is a request handler; it does not create a long-lived connection for each browser. Your hosting stack handles connections, while your database and optional AI provider determine how much identity work can run at once.
+This page helps you distinguish open connections from successful identity requests. Doorman is a request handler; it does not create a long-lived connection for each browser. Your hosting stack handles connections, while your database and optional AI provider determine how much identity work can run at once.
 
 ## How to read the results
 
@@ -8,7 +8,7 @@ Two completed reruns now keep **200,000 HTTP connections open through a simultan
 
 ## The burst fix and repeated results
 
-The Node HTTP bridge now checks capacity before creating Web Requests, stream wrappers or body buffers. The production helper is `createNodeRequestListener` from `@janitor/adapters/node/http`; both the load harness and Fastify example use it. Admitted work has body and deadline limits, and a timed-out handler retains its slot until its actual work settles. [Integration example](HARDENING.md#limit-work-inside-each-server-instance).
+The Node HTTP bridge now checks capacity before creating Web Requests, stream wrappers or body buffers. The production helper is `createNodeRequestListener` from `@aarondovturkel/doorman-adapters/node/http`; both the load harness and Fastify example use it. Admitted work has body and deadline limits, and a timed-out handler retains its slot until its actual work settles. [Integration example](HARDENING.md#limit-work-inside-each-server-instance).
 
 Request admission alone did not solve socket memory pressure. A diagnostic run with the original **2 GiB server cap** recorded three kernel OOM kills during connection setup. With the server raised to 4 GiB, its workers survived, but the original 2 GiB load generator was then OOM-killed while sending the burst. The final two successful runs use **4 GiB for the server and 4 GiB for the 200,000-connection client**. The server peaked at about **2.27 GiB including cgroup accounting**, already above the old cap. Neither successful run recorded OOM events. This is a configuration change, not a claim that the old 2 GiB limit now works.
 
@@ -29,7 +29,7 @@ The repeat's independent 10,000-connection sweep completed 1,500/1,500 identitie
 
 [First result](benchmarks/connections-fixed-first-2026-09-23.json) · [Repeat](benchmarks/connections-fixed-repeat-2026-09-23.json) · [Memory diagnostics](benchmarks/capacity-fixed-repeat-diagnostics-2026-09-23.json) · [Throughput repeat](benchmarks/throughput-fixed-repeat-2026-09-23.json) · [Failure diagnostics](benchmarks/capacity-failure-diagnostics-2026-09-23.json)
 
-`pnpm benchmark:capacity` runs these isolated local experiments. `JANITOR_BENCHMARK_SERVER_MEMORY` and `JANITOR_BENCHMARK_CLIENT_MEMORY` override the large-run limits; both default to `4g`. The harness checkpoints progress before the burst, records whether the report is complete, preserves cgroup/exit diagnostics before restart, and fails on transport errors or unexpected response statuses. Incomplete reports are not passes. No production traffic is generated.
+`pnpm benchmark:capacity` runs these isolated local experiments. `DOORMAN_BENCHMARK_SERVER_MEMORY` and `DOORMAN_BENCHMARK_CLIENT_MEMORY` override the large-run limits; both default to `4g`. The harness checkpoints progress before the burst, records whether the report is complete, preserves cgroup/exit diagnostics before restart, and fails on transport errors or unexpected response statuses. Incomplete reports are not passes. No production traffic is generated.
 
 ## Earlier validation: the large burst failed
 
@@ -140,9 +140,9 @@ const pool = new Pool({
 const visitor = createNodeVisitor({
   db: pool,
   maxInFlightRequests: 32,
-  onOverload: () => metrics.increment("janitor.overload"),
+  onOverload: () => metrics.increment("doorman.overload"),
   protection: {
-    secret: process.env.JANITOR_PROTECTION_SECRET!,
+    secret: process.env.DOORMAN_PROTECTION_SECRET!,
     namespace: "my-app",
     requests: { global: 60_000, shards: 32, windowMs: 60_000 },
   },
@@ -157,7 +157,7 @@ Native Elixir uses the same sharded SQL/HMAC contract and smaller event projecti
 
 ## Plan a test for your deployment
 
-Support hundreds of thousands of **connected application sessions** through a connection-handling tier and multiple stateless application instances, each with a small database pool and explicit measurement admission. HTTP keep-alive sockets and Phoenix LiveView/WebSocket sessions are different workloads. Janitor itself does not create long-lived browser connections. Spread browser collection over time and avoid a coordinated identify-on-every-render or retry storm. Honor Retry-After with bounded randomized backoff at the application; do not treat an unavailable measurement as authentication.
+Support hundreds of thousands of **connected application sessions** through a connection-handling tier and multiple stateless application instances, each with a small database pool and explicit measurement admission. HTTP keep-alive sockets and Phoenix LiveView/WebSocket sessions are different workloads. Doorman itself does not create long-lived browser connections. Spread browser collection over time and avoid a coordinated identify-on-every-render or retry storm. Honor Retry-After with bounded randomized backoff at the application; do not treat an unavailable measurement as authentication.
 
 Size actual work from identification frequency: 200,000 sessions measured once per minute offer about 3,333 identifications/sec; once per ten minutes, about 333/sec, before retries/new arrivals. This is arithmetic, not measured fleet capacity. Missing-cookie lookup and AI calls cost more than the measured cookie path. Keep Postgres pool totals within the database's connection budget across every replica; one client connection must not imply one database connection. [node-postgres pool sizing](https://node-postgres.com/guides/pool-sizing), [Postgres row lock behavior](https://www.postgresql.org/docs/17/explicit-locking.html), [Node HTTP connection controls](https://nodejs.org/download/release/latest-jod/docs/api/http.html).
 
@@ -172,15 +172,15 @@ pnpm install --frozen-lockfile
 pnpm benchmark:capacity
 ```
 
-This seeds the million-event dataset, benchmarks evidence/protection, opens 200,000 connections, runs the burst/recovery test and a 10,000-connection rate sweep. Raw output is written as `security-current.json`, `connections-current.json` and `throughput-current.json` under `docs/benchmarks/`; recorded historical results are preserved. Reduce `JANITOR_BENCHMARK_CONNECTIONS` for a smaller smoke run. Limit adjustments apply only inside the benchmark containers. Successful completion of the command must still be assessed using success/overload counts and latency in the JSON; absence of a transport crash is not a throughput SLA.
+This seeds the million-event dataset, benchmarks evidence/protection, opens 200,000 connections, runs the burst/recovery test and a 10,000-connection rate sweep. Raw output is written as `security-current.json`, `connections-current.json` and `throughput-current.json` under `docs/benchmarks/`; recorded historical results are preserved. Reduce `DOORMAN_BENCHMARK_CONNECTIONS` for a smaller smoke run. Limit adjustments apply only inside the benchmark containers. Successful completion of the command must still be assessed using success/overload counts and latency in the JSON; absence of a transport crash is not a throughput SLA.
 
-For the higher-rate workload with all 200,000 connections open, run `JANITOR_BENCHMARK_RATES=100,1000,2000 pnpm benchmark:capacity`. A smaller launcher smoke test is `JANITOR_BENCHMARK_EVENTS=10000 JANITOR_BENCHMARK_SAMPLES=100 JANITOR_BENCHMARK_CONNECTIONS=1000 pnpm benchmark:capacity`; it still runs the separate 10,000-connection rate sweep.
+For the higher-rate workload with all 200,000 connections open, run `DOORMAN_BENCHMARK_RATES=100,1000,2000 pnpm benchmark:capacity`. A smaller launcher smoke test is `DOORMAN_BENCHMARK_EVENTS=10000 DOORMAN_BENCHMARK_SAMPLES=100 DOORMAN_BENCHMARK_CONNECTIONS=1000 pnpm benchmark:capacity`; it still runs the separate 10,000-connection rate sweep.
 
 To measure only the evidence SQL against an explicitly supplied disposable local database:
 
 ```sh
-JANITOR_BENCHMARK_DATABASE_URL=postgres://visitor:visitor@127.0.0.1:55434/janitor_bench \
-JANITOR_BENCHMARK_SHARDS=32 JANITOR_BENCHMARK_LABEL=my-run pnpm benchmark:security
+DOORMAN_BENCHMARK_DATABASE_URL=postgres://visitor:visitor@127.0.0.1:55434/doorman_bench \
+DOORMAN_BENCHMARK_SHARDS=32 DOORMAN_BENCHMARK_LABEL=my-run pnpm benchmark:security
 ```
 
-The SQL benchmark recreates only `janitor_security_benchmark` in that local database; `JANITOR_BENCHMARK_REUSE=1` keeps an existing fixture. The HTTP server resets that schema's synthetic observation fixture before starting. Do not point either tool at an application's data, even locally. Dataset size, offered rates, machine limits, errors, saturation, p95/p99, pool waits and query plans are part of the result, not hidden success criteria.
+The SQL benchmark recreates only `doorman_security_benchmark` in that local database; `DOORMAN_BENCHMARK_REUSE=1` keeps an existing fixture. The HTTP server resets that schema's synthetic observation fixture before starting. Do not point either tool at an application's data, even locally. Dataset size, offered rates, machine limits, errors, saturation, p95/p99, pool waits and query plans are part of the result, not hidden success criteria.

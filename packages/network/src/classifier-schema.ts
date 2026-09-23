@@ -9,7 +9,7 @@ import {
 } from "./schema.js";
 import type { FeatureVector } from "./schema.js";
 
-export const CLASSIFIER_FEATURE_VERSION = "janitor-jev-features-v1" as const;
+export const CLASSIFIER_FEATURE_VERSION = "doorman-jev-features-v1" as const;
 export const JEV_FEATURE_NAMES = [
   "jev_regular_timing",
   "jev_repeated_workflow",

@@ -1,14 +1,14 @@
-# What is Janitor?
+# What is Doorman?
 
-Janitor is an open-source identity and activity-classification library. It helps you recognize returning browsers, connect verified people and agents to accounts, and add private activity estimates to the analytics tools you already use.
+Doorman is an open-source identity and activity-classification library. It helps you recognize returning browsers, connect verified people and agents to accounts, and add private activity estimates to the analytics tools you already use.
 
-You run Janitor inside your own server and store its data in your own database. There is no Janitor account to create and no hosted Janitor service to send your visitors to.
+You run Doorman inside your own server and store its data in your own database. There is no Doorman account to create and no hosted Doorman service to send your visitors to.
 
 ## A visitor comes back without their cookie
 
-Imagine someone visits your app on Monday. Janitor assigns their browser a random ID, such as `vis_abc123`, stores a small set of browser signals, and sets a cookie on your domain.
+Imagine someone visits your app on Monday. Doorman assigns their browser a random ID, such as `vis_abc123`, stores a small set of browser signals, and sets a cookie on your domain.
 
-On Tuesday, that cookie gives Janitor the ID immediately. If the cookie is gone, Janitor compares the new visit with a small set of plausible past visitors. A close, unambiguous match can restore the original ID. Otherwise, Janitor creates a new one.
+On Tuesday, that cookie gives Doorman the ID immediately. If the cookie is gone, Doorman compares the new visit with a small set of plausible past visitors. A close, unambiguous match can restore the original ID. Otherwise, Doorman creates a new one.
 
 This is useful when you want continuity across ordinary browser updates, window resizing or cookie loss. It is an estimate: similar browsers can be hard to tell apart.
 
@@ -17,7 +17,7 @@ This is useful when you want continuity across ordinary browser updates, window 
 The browser client makes one request to an endpoint in your application:
 
 ```ts
-import { createVisitorClient } from "@janitor/browser";
+import { createVisitorClient } from "@aarondovturkel/doorman-browser";
 
 const visitor = createVisitorClient({ endpoint: "/api/visitor" });
 const identity = await visitor.identify();
@@ -26,23 +26,23 @@ const identity = await visitor.identify();
 
 Your server receives more detail: matching confidence, risk scores and whether the risk assessment succeeded. Those fields stay on the server by default, so visitors cannot inspect the scores while changing their inputs.
 
-The client needs a Janitor server endpoint and database behind it. Follow [your first visitor ID](GETTING-STARTED.md) for a runnable setup, or [install the packages](LANGUAGES.md) in an existing app.
+The client needs a Doorman server endpoint and database behind it. Follow [your first visitor ID](GETTING-STARTED.md) for a runnable setup, or [install the packages](LANGUAGES.md) in an existing app.
 
 ## What Jev adds
 
-**Jev** is an AI model made by TypeSafe. Janitor can ask it whether a browser fits its past history, whether a session looks automated, and whether the technical signals look inconsistent. Jev returns a score between 0 and 1 for each question. It also helps choose bounded lookup paths and, when learning is enabled, compares anonymous visits with earlier login-confirmed sessions to suggest a person across devices. Suggestions remain separate from verified logins.
+**Jev** is an AI model made by TypeSafe. Doorman can ask it whether a browser fits its past history, whether a session looks automated, and whether the technical signals look inconsistent. Jev returns a score between 0 and 1 for each question. It also helps choose bounded lookup paths and, when learning is enabled, compares anonymous visits with earlier login-confirmed sessions to suggest a person across devices. Suggestions remain separate from verified logins.
 
-Jev is optional. Without it, Janitor uses its built-in comparison rules for browser matching and marks risk as disabled. If an enabled evaluator fails, matching falls back to those rules and risk is marked unavailable.
+Jev is optional. Without it, Doorman uses its built-in comparison rules for browser matching and marks risk as disabled. If an enabled evaluator fails, matching falls back to those rules and risk is marked unavailable.
 
-Janitor does not show a CAPTCHA or block requests. Your application can use the private assessment when making those decisions. The scores need evaluation on your own traffic before you rely on a threshold. Read [Jev and risk scoring](JEV.md).
+Doorman does not show a CAPTCHA or block requests. Your application can use the private assessment when making those decisions. The scores need evaluation on your own traffic before you rely on a threshold. Read [Jev and risk scoring](JEV.md).
 
 ## A browser ID is different from a user ID
 
 One person may have several browsers. Several people may share a browser. Recognizing a browser does not establish who is using it.
 
-After your existing login system verifies a user, you can give Janitor that verified identity. It can then associate multiple devices with that user. You can also register an AI agent separately and record the actions it is allowed to perform for a user.
+After your existing login system verifies a user, you can give Doorman that verified identity. It can then associate multiple devices with that user. You can also register an AI agent separately and record the actions it is allowed to perform for a user.
 
-Janitor does not infer those permissions from mouse movements or an AI score. Your authentication system verifies the credentials; Janitor records and checks the relationships. [Browsers, people and agents](CONCEPTS.md) explains the terms with an example.
+Doorman does not infer those permissions from mouse movements or an AI score. Your authentication system verifies the credentials; Doorman records and checks the relationships. [Browsers, people and agents](CONCEPTS.md) explains the terms with an example.
 
 ## Understand the activity behind a login
 
@@ -62,4 +62,4 @@ You can use each feature as you need it:
 | Connect visits to product analytics     | [PostHog and Mixpanel](ANALYTICS.md)                               |
 | Decide what data to collect and keep    | [Privacy](../PRIVACY.md) and [storage](../site/content/storage.md) |
 
-Janitor is a developer preview. Its matching and risk scores are experimental. Use your existing authentication and authorization to protect accounts and sensitive actions.
+Doorman is a developer preview. Its matching and risk scores are experimental. Use your existing authentication and authorization to protect accounts and sensitive actions.

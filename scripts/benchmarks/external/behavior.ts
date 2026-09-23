@@ -1,6 +1,6 @@
 import { createExtendedBehavior } from "../../../packages/browser/src/behavior.js";
 import { extractFeatures } from "../../../packages/network/src/features.js";
-import type { BrowserBehavior } from "@janitor/core";
+import type { BrowserBehavior } from "@aarondovturkel/doorman-core";
 
 export type ReplayEvent = [string, number, number?, number?];
 /** Offline approximation from research events; the production aggregator runs unchanged. */

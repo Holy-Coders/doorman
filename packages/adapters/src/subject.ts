@@ -19,7 +19,7 @@ export function createSubjectLinker(options: SubjectLinkingOptions) {
       ["sign"],
     );
     const message = JSON.stringify([
-      "janitor-subject-v1",
+      "doorman-subject-v1",
       options.namespace,
       authenticatedSubject,
     ]);

@@ -3,8 +3,8 @@ import {
   OPERATOR_FEATURE_NAMES,
   OPERATOR_LIMITS,
   hasOperatorEvidence,
-} from "@janitor/core";
-import type { AgentFamilyReference, OperatorEvidence } from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
+import type { AgentFamilyReference, OperatorEvidence } from "@aarondovturkel/doorman-core";
 import { featureSchema, parseFeatures } from "./schema.js";
 
 /** Independent test-harness labels. Login, model predictions and self-declared user agents are not labels. */

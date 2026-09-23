@@ -1,4 +1,4 @@
-package janitor
+package doorman
 
 import (
 	"context"

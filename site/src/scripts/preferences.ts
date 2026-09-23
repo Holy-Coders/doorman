@@ -3,7 +3,7 @@ const root = document.documentElement;
 const system = matchMedia("(prefers-color-scheme: light)");
 let explicit = false;
 try {
-  explicit = !!localStorage.getItem("janitor-theme");
+  explicit = !!localStorage.getItem("doorman-theme");
 } catch {
   /* Storage may be unavailable. */
 }
@@ -12,10 +12,10 @@ function applyTheme(theme: string) {
   const icon = document.querySelector<HTMLLinkElement>("#theme-icon");
   if (icon)
     icon.href =
-      theme === "light" ? "/janitor-mark-dark.svg" : "/janitor-mark.svg";
+      theme === "light" ? "/doorman-mark-dark.png" : "/doorman-mark.png";
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", theme === "light" ? "#f5f8f6" : "#080c0c");
+    ?.setAttribute("content", theme === "light" ? "#fff5e3" : "#151510");
   document
     .querySelectorAll<HTMLButtonElement>("[data-theme-toggle]")
     .forEach((button) => {
@@ -36,7 +36,7 @@ document.querySelectorAll("[data-theme-toggle]").forEach((button) =>
     explicit = true;
     applyTheme(theme);
     try {
-      localStorage.setItem("janitor-theme", theme);
+      localStorage.setItem("doorman-theme", theme);
     } catch {
       /* In-memory preference still works. */
     }
@@ -44,7 +44,7 @@ document.querySelectorAll("[data-theme-toggle]").forEach((button) =>
 );
 let language = root.dataset.docLanguage as Language | undefined;
 try {
-  language ??= localStorage.getItem("janitor-language") as Language;
+  language ??= localStorage.getItem("doorman-language") as Language;
 } catch {
   /* Default below. */
 }
@@ -53,7 +53,7 @@ root.dataset.language = language;
 // A shared documentation URL takes precedence over a stored preference.
 try {
   if (root.dataset.docLanguage)
-    localStorage.setItem("janitor-language", language!);
+    localStorage.setItem("doorman-language", language!);
 } catch {
   /* Optional preference. */
 }
@@ -64,7 +64,7 @@ document
     select.addEventListener("change", () => {
       const next = select.value as Language;
       try {
-        localStorage.setItem("janitor-language", next);
+        localStorage.setItem("doorman-language", next);
       } catch {
         /* Navigation still works. */
       }

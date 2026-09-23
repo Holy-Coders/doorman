@@ -9,7 +9,7 @@ export {
   FONT_PROBES,
 } from "./detection.js";
 export type { DetectionOptions } from "./detection.js";
-import { isIdentityAttribution } from "@janitor/core";
+import { isIdentityAttribution } from "@aarondovturkel/doorman-core";
 import { createExtendedBehavior } from "./behavior.js";
 import { createIdentityAnalytics } from "./analytics.js";
 import type { IdentityAnalyticsOptions, Profile } from "./analytics.js";
@@ -23,13 +23,13 @@ import type {
   BrowserBehavior,
   BrowserObservation,
   VisitorClientIdentity,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 export type {
   BrowserBehavior,
   BrowserObservation,
   VisitorIdentity,
   VisitorClientIdentity,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 export function safe<T>(fn: () => T): T | undefined {
   try {
@@ -296,7 +296,7 @@ export function createVisitorClient(
 }
 
 /** One identity lifecycle for your application and its existing analytics SDKs. */
-export function createJanitorClient(
+export function createDoormanClient(
   options: NonNullable<Parameters<typeof createVisitorClient>[0]> & {
     analytics?: Omit<IdentityAnalyticsOptions, "visitor">;
   } = {},
@@ -309,13 +309,13 @@ export function createJanitorClient(
   let generation = 0;
   let destroyed = false;
   const active = () => {
-    if (destroyed) throw new Error("Janitor client has been destroyed");
+    if (destroyed) throw new Error("Doorman client has been destroyed");
   };
   return {
     /** With a user ID: call after your application has authenticated that user. */
     async identify(id?: string, traits: Profile = {}) {
       active();
-      if (!collecting) throw new Error("Janitor collection is paused");
+      if (!collecting) throw new Error("Doorman collection is paused");
       if (id !== undefined) {
         analytics.identifyUser(id, traits);
         if (userId !== id) {
@@ -327,13 +327,13 @@ export function createJanitorClient(
       const current = generation;
       const identity = await visitor.identify();
       if (current !== generation || destroyed)
-        throw new Error("Janitor identity changed during request");
+        throw new Error("Doorman identity changed during request");
       visitorId = identity.visitorId;
       return identity;
     },
     async update(traits: Profile) {
       active();
-      if (!collecting) throw new Error("Janitor collection is paused");
+      if (!collecting) throw new Error("Doorman collection is paused");
       if (!userId)
         throw new Error(
           "Identify an authenticated user before updating a profile",
@@ -347,7 +347,7 @@ export function createJanitorClient(
       properties: Record<string, string | number | boolean | null> = {},
     ) {
       active();
-      if (!collecting) throw new Error("Janitor collection is paused");
+      if (!collecting) throw new Error("Doorman collection is paused");
       if (
         typeof event !== "string" ||
         !event.trim() ||
@@ -359,7 +359,7 @@ export function createJanitorClient(
       for (const [key, value] of Object.entries(properties)) {
         if (
           !/^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(key) ||
-          key.startsWith("janitor_") ||
+          key.startsWith("doorman_") ||
           [
             "distinct_id",
             "user_id",
@@ -386,7 +386,7 @@ export function createJanitorClient(
       }
       return analytics.track(event, {
         ...clean,
-        ...(visitorId ? { janitor_visitor_id: visitorId } : {}),
+        ...(visitorId ? { doorman_visitor_id: visitorId } : {}),
       });
     },
     async reset() {

@@ -20,6 +20,9 @@
   // Funded one-time pilot; the persistent 100-call limit survives deployments.
   "vars": { "JEV_ENABLED": "true" },
   "triggers": { "crons": ["0 * * * *"] },
-  "routes": [{ "pattern": "janitor.holycoders.io", "custom_domain": true }],
+  "routes": [
+    { "pattern": "doorman.holycoders.io", "custom_domain": true },
+    { "pattern": "janitor.holycoders.io", "custom_domain": true },
+  ],
   "workers_dev": true,
 }

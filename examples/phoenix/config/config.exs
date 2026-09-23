@@ -1,15 +1,15 @@
 import Config
-config :janitor_example, ecto_repos: [JanitorExample.Repo]
+config :doorman_example, ecto_repos: [DoormanExample.Repo]
 
-config :janitor_example, JanitorExample.Repo,
+config :doorman_example, DoormanExample.Repo,
   url: System.get_env("DATABASE_URL", "postgres://visitor:visitor@localhost:55433/visitors"),
   pool_size: 5,
   log: false
 
-config :janitor_example, JanitorExample.Endpoint,
+config :doorman_example, DoormanExample.Endpoint,
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: JanitorExample.ErrorHTML, json: JanitorExample.ErrorJSON],
+    formats: [html: DoormanExample.ErrorHTML, json: DoormanExample.ErrorJSON],
     layout: false
   ],
   url: [host: "localhost"],

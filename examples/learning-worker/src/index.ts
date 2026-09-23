@@ -3,9 +3,9 @@ import {
   createLearningOperator,
   createWorkersNetworkEvaluator,
   createWorkersClassifierEvaluator,
-} from "@janitor/network/server";
-import { createD1NetworkStorage } from "@janitor/network/d1";
-import type { NetworkD1Database } from "@janitor/network/d1";
+} from "@aarondovturkel/doorman-network/server";
+import { createD1NetworkStorage } from "@aarondovturkel/doorman-network/d1";
+import type { NetworkD1Database } from "@aarondovturkel/doorman-network/d1";
 export interface Env {
   NETWORK: NetworkD1Database;
   AI: { run(model: string, input: unknown): Promise<unknown> };

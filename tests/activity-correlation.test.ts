@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApiActivity } from "../packages/adapters/src/activity.js";
-import { createActivityInput } from "@janitor/evaluator-jev";
-import type { VisitorEvaluator, ApiActivityInput } from "@janitor/core";
+import { createActivityInput } from "@aarondovturkel/doorman-evaluator-jev";
+import type { VisitorEvaluator, ApiActivityInput } from "@aarondovturkel/doorman-core";
 import { sqlBackend } from "./helpers/sql.js";
 
 for (const kind of ["postgres", "d1"] as const)

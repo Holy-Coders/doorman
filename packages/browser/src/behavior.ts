@@ -1,4 +1,4 @@
-import type { BrowserBehavior } from "@janitor/core";
+import type { BrowserBehavior } from "@aarondovturkel/doorman-core";
 
 const MAX_TOTAL = 1_000_000_000;
 const MAX_COUNT = 1_000_000;

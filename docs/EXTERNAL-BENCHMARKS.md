@@ -1,8 +1,8 @@
 # Tests with public research datasets
 
-We ran Janitor against three public research datasets. The results show useful behavioral evidence, and a serious limitation in recovering identity from browser signals alone.
+We ran Doorman against three public research datasets. The results show useful behavioral evidence, and a serious limitation in recovering identity from browser signals alone.
 
-**Cookie-loss recovery is not reliable enough to treat as verified identity.** In the historical fingerprint replay, wrong restores outnumbered correct restores. The behavioral experiments also missed many agents and sometimes flagged humans. These findings are published so you can judge the limits before using Janitor in your application.
+**Cookie-loss recovery is not reliable enough to treat as verified identity.** In the historical fingerprint replay, wrong restores outnumbered correct restores. The behavioral experiments also missed many agents and sometimes flagged humans. These findings are published so you can judge the limits before using Doorman in your application.
 
 | Experiment                 | Data evaluated                                              | Main finding                                                                  |
 | -------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------- |
@@ -56,7 +56,7 @@ The expanded run writes separate `*-extended-*` artifacts, preserving baseline r
 
 [FP-Stalker](https://github.com/Spirals-Team/FPStalker) publishes an unfiltered sample of historical observations. We used its browser labels as evaluation truth and replayed all 15,000 observations in timestamp order, from October 2015 through August 2016.
 
-Each observation goes through Janitor's actual normalization, matching engine and Postgres storage adapter, backed by PGlite. Every request has its cookie removed. The normal ten-candidate limit, five-observation matching history, 90-day retention window, ambiguity check and 0.90 restore threshold remain in place. The clock advances through the original timestamps.
+Each observation goes through Doorman's actual normalization, matching engine and Postgres storage adapter, backed by PGlite. Every request has its cookie removed. The normal ten-candidate limit, five-observation matching history, 90-day retention window, ambiguity check and 0.90 restore threshold remain in place. The clock advances through the original timestamps.
 
 The evaluator is disabled. Ground-truth labels stay outside the matcher. The engine saves its own predictions, so a wrong match can affect later observations, just as it can in a running application.
 
@@ -72,7 +72,7 @@ The evaluator is disabled. Ground-truth labels stay outside the matcher. The eng
 
 Only **35.3% of attempted restores were correct**. Correct restores covered **9.5% of returning observations**. Lookup never returned more than ten candidates; it reported saturation on 8,548 requests. Bounded lookup worked, but that does not establish matching accuracy.
 
-The projection uses the published HTTP user-agent string as a proxy for the browser user agent, JavaScript platform, screen dimensions/depth, and available WebGL vendor/renderer. The old sample lacks several signals Janitor can collect today. We do not convert a timezone offset into a guessed IANA timezone, turn an HTTP language header into `navigator.languages`, or invent hardware values. Flash, plugins, canvas hashes, network addresses and the author's derived browser classifications are excluded.
+The projection uses the published HTTP user-agent string as a proxy for the browser user agent, JavaScript platform, screen dimensions/depth, and available WebGL vendor/renderer. The old sample lacks several signals Doorman can collect today. We do not convert a timezone offset into a guessed IANA timezone, turn an HTTP language header into `navigator.languages`, or invent hardware values. Flash, plugins, canvas hashes, network addresses and the author's derived browser classifications are excluded.
 
 This is an intentionally difficult all-cookies-missing scenario on selected, old data. It is not the FP-Stalker paper's original filtered experiment and is not a modern population estimate. It still exposes false matches that a similarity threshold cannot resolve. A high matching score is not a calibrated probability of identity. Use authenticated account links for account identity; never use a recovered visitor ID to authorize access.
 
@@ -80,7 +80,7 @@ This is an intentionally difficult all-cookies-missing scenario on selected, old
 
 ## What real Jev calls added
 
-We tested `jev-1.13.0` through Cloudflare's `typesafe/jev` endpoint. This was actual provider inference, not mocked responses. The pilot reused Janitor's existing questions without changing prompts or thresholds after seeing answers. Source labels and identifiers stayed local; Jev received only the projected measurements needed for each question.
+We tested `jev-1.13.0` through Cloudflare's `typesafe/jev` endpoint. This was actual provider inference, not mocked responses. The pilot reused Doorman's existing questions without changing prompts or thresholds after seeing answers. Source labels and identifiers stayed local; Jev received only the projected measurements needed for each question.
 
 ### Cookie recovery on the same stored history
 
@@ -135,11 +135,11 @@ The allowance is cumulative in the local ledger, capped at 120 attempts, and fai
 
 [FP-Agent](https://github.com/ethanbwang/fp-agent) provides recordings of humans and seven browsing-agent families performing controlled website tasks. We evaluated the raw release linked by the authors. Its 7,728 sessions differ slightly from the separately published, precomputed feature-vector file; we do not mix the two releases.
 
-We discard request headers, IP information, typed content, key values, selectors and URLs from the projected data. Pointer positions are converted locally into movement deltas, then passed through Janitor's production aggregate collector and feature extraction. Only five existing numeric features are eligible: mouse speed, turn ratio, pause ratio, mean interaction interval and interval variation.
+We discard request headers, IP information, typed content, key values, selectors and URLs from the projected data. Pointer positions are converted locally into movement deltas, then passed through Doorman's production aggregate collector and feature extraction. Only five existing numeric features are eligible: mouse speed, turn ratio, pause ratio, mean interaction interval and interval variation.
 
-This is a replay approximation: the source records absolute cursor positions instead of native `movementX`/`movementY`, and a study task can span pages. The importer resets transient motion/timing state on recorded clock resets. It does not invent server API timing from client telemetry batches. No new browser signals were added to Janitor for this benchmark.
+This is a replay approximation: the source records absolute cursor positions instead of native `movementX`/`movementY`, and a study task can span pages. The importer resets transient motion/timing state on recorded clock resets. It does not invent server API timing from client telemetry batches. No new browser signals were added to Doorman for this benchmark.
 
-We compare logistic regression and small boosted trees using the shared offline trainer, then check their predictions against Janitor's TypeScript scorer. Features and scaling are chosen using fitting data only. Separate groups are used for calibration, model/threshold selection and final testing. Sessions with insufficient evidence remain in the test denominators as abstentions.
+We compare logistic regression and small boosted trees using the shared offline trainer, then check their predictions against Doorman's TypeScript scorer. Features and scaling are chosen using fitting data only. Separate groups are used for calibration, model/threshold selection and final testing. Sessions with insufficient evidence remain in the test denominators as abstentions.
 
 For the first experiment, each agent family is held out completely in turn. Linked human browser identifiers stay together; other agent sessions are grouped by their published source run. The final test contains the held-out agent and the same 68 human sessions in each fold.
 
@@ -173,7 +173,7 @@ This is configuration separation, not verified physical-device separation. The r
 
 The [Balabit Mouse Dynamics Challenge](https://github.com/balabit/Mouse-Dynamics-Challenge) contains real remote-desktop mouse recordings for ten owners. Its simulated impostor sessions are recordings from other legitimate users assigned to an account. They are not recordings of actual account takeovers or malicious behavior.
 
-We derive Janitor's five aggregate behavior features using the recorded client clock. Each owner's training recordings establish a median and standard deviation. Test recordings receive an anomaly score based on their standardized distance from that owner's baseline. This is a research baseline, not a deployed Janitor ownership classifier.
+We derive Doorman's five aggregate behavior features using the recorded client clock. Each owner's training recordings establish a median and standard deviation. Test recordings receive an anomaly score based on their standardized distance from that owner's baseline. This is a research baseline, not a deployed Doorman ownership classifier.
 
 The 816 labeled test recordings contain 405 simulated impostors and 411 owner sessions. Of those, 799 contain enough evidence to score. The pooled AUC is **0.668**, indicating modest separation. There are only five to seven training recordings per owner, so we do not claim a reliable calibrated detection threshold.
 
@@ -201,7 +201,7 @@ The downloader pins author URLs, repository revisions, sizes and SHA-256 checksu
 
 Only aggregate reports are published. Row identifiers, raw datasets, event recordings and fitted model parameters remain local. Downloaded research files include personal or potentially identifying fields even though the projection excludes them; treat the directory accordingly and delete it when no longer needed. The recorded source revision in each report identifies the benchmark implementation used.
 
-## What this changes for Janitor
+## What this changes for Doorman
 
 Keep useful behavioral collection optional and aggregate: movement dynamics, interaction intervals and server-owned API summaries. Combine it with explicit agent credentials and authenticated actions. An endpoint name, regular timing, absence of mouse movement, or a model score alone cannot prove authorization or malicious intent.
 

@@ -29,16 +29,16 @@ createVisitorClient(options?: {
 
 ## Application identity client
 
-`createJanitorClient({ ...browserOptions, analytics: { posthog?, mixpanel?, segment? } })` is the application-facing identity layer. It accepts your existing initialized SDK instances.
+`createDoormanClient({ ...browserOptions, analytics: { posthog?, mixpanel?, segment? } })` is the application-facing identity layer. It accepts your existing initialized SDK instances.
 
 | Method                             | Behavior                                                                                      |
 | ---------------------------------- | --------------------------------------------------------------------------------------------- |
 | `identify()`                       | Measure the current browser without identifying a person to analytics.                        |
 | `identify(userId, traits?)`        | Use an authenticated application user ID across destinations, then measure the browser again. |
 | `update({ name?, email?, plan? })` | Update the current identified person's profile.                                               |
-| `track(event, properties?)`        | Send an event to each destination with the known Janitor visitor ID.                          |
+| `track(event, properties?)`        | Send an event to each destination with the known Doorman visitor ID.                          |
 | `reset()`                          | Clear local identity state and reset destinations on logout/account changes.                  |
-| `setEnabled(boolean)`              | Pause/resume Janitor collection and its analytics calls.                                      |
+| `setEnabled(boolean)`              | Pause/resume Doorman collection and its analytics calls.                                      |
 | `destroy()`                        | Remove browser listeners and discard pending measurements.                                    |
 
 Provider SDKs own delivery and anonymous IDs. Inferred person suggestions never enter this API. See [provider setup, login flow and limitations](ANALYTICS.md).
@@ -81,9 +81,9 @@ Node/Vercel accept `{ db, evaluator?: { apiKey, model?, timeoutMs? } | VisitorEv
 
 Configuration is validated when the adapter is created. Environment variables such as database URLs are read by your application, not by the core library.
 
-`createVisitorHandler` from `@janitor/adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
+`createVisitorHandler` from `@aarondovturkel/doorman-adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
 
-`activity: { routes: [{ route, sensitive? }], windowMs?, retentionDays?, minRequests?, evaluationIntervalMs?, timeoutMs?, maxInFlight? }` enables optional server API instrumentation. It requires identity configuration and migration `0008_api_activity.sql`. The high-level adapters compose storage, evaluator admission and a private `visitor.activity` service with `observe`, `assess`, `handle`, `deleteKey` and `cleanup`. `handle(request, context, next)` returns `{ response, activity }`; return only `response` to the caller. See [API activity](API-ACTIVITY.md) for the complete context, response, failure and retention contract. Advanced users can import `createApiActivity` from `@janitor/adapters/activity` and implement the core `ApiActivityStorage` interface.
+`activity: { routes: [{ route, sensitive? }], windowMs?, retentionDays?, minRequests?, evaluationIntervalMs?, timeoutMs?, maxInFlight? }` enables optional server API instrumentation. It requires identity configuration and migration `0008_api_activity.sql`. The high-level adapters compose storage, evaluator admission and a private `visitor.activity` service with `observe`, `assess`, `handle`, `deleteKey` and `cleanup`. `handle(request, context, next)` returns `{ response, activity }`; return only `response` to the caller. See [API activity](API-ACTIVITY.md) for the complete context, response, failure and retention contract. Advanced users can import `createApiActivity` from `@aarondovturkel/doorman-adapters/activity` and implement the core `ApiActivityStorage` interface.
 
 The handler also accepts `maxInFlightRequests` (default 64, range 1–1,024) and an `onOverload` callback. The limit applies per reusable TypeScript handler instance and rejects excess measurement calls with 503/Retry-After before database work. `protection.requests.shards` optionally distributes the global allowance across 1–128 rows. See [benchmarks and operational semantics](CAPACITY.md). No automatic request retries are performed.
 
@@ -141,7 +141,7 @@ identities.revokeDelegation(delegationId);
 identities.assess({ subjectId, actorId?, delegationId?, audience?, requiredScopes? });
 ```
 
-All methods are asynchronous and server-only. The application verifies credentials/key ownership and authorizes management operations. `updateSubject` returns `{ id, kind, updatedAt }`; `findSubject` returns that record or `undefined`. Adding/removing keys and deletion/revocation return no value. `createDelegation` returns `{ id, principalId, actorId, audience, scopes, expiresAt }`. `assess` returns `IdentityAttribution` exported by `@janitor/core`.
+All methods are asynchronous and server-only. The application verifies credentials/key ownership and authorizes management operations. `updateSubject` returns `{ id, kind, updatedAt }`; `findSubject` returns that record or `undefined`. Adding/removing keys and deletion/revocation return no value. `createDelegation` returns `{ id, principalId, actorId, audience, scopes, expiresAt }`. `assess` returns `IdentityAttribution` exported by `@aarondovturkel/doorman-core`.
 
 `handle(request, { verified: { subjectId, actorId?, delegationId?, audience?, requiredScopes? } })` adds server-only `attribution` to `VisitorIdentity` when the identity directory is configured. Context must come from server-verified authentication; body claims are rejected. Anonymous calls return unknown subject/actor attribution. Directory/database failures return controlled HTTP errors, never manufactured valid grants. `cleanup()` also removes expired grants.
 
@@ -159,9 +159,9 @@ High-level adapters accept `subjectLinking: { secret, namespace }`. Supply at le
 
 ## Native Elixir and optional utilities
 
-- [Elixir / Phoenix](../packages/elixir/README.md): `Janitor.new`, `Janitor.handle`, `Janitor.identify`, `Janitor.Identity.identify_user`, Ecto migrations, cleanup and native PostHog/Mixpanel HTTP.
-- [Analytics](ANALYTICS.md): `@janitor/adapters/analytics` exports `analyticsProperties` and `createAnalyticsBridge` for existing PostHog, Mixpanel and Segment server SDKs.
-- [Trust](TRUST.md): `@janitor/adapters/security` exports `createResultReceipts` and `verifyAgentCredential`; these never alter the matching engine or application policy.
+- [Elixir / Phoenix](../packages/elixir/README.md): `Doorman.new`, `Doorman.handle`, `Doorman.identify`, `Doorman.Identity.identify_user`, Ecto migrations, cleanup and native PostHog/Mixpanel HTTP.
+- [Analytics](ANALYTICS.md): `@aarondovturkel/doorman-adapters/analytics` exports `analyticsProperties` and `createAnalyticsBridge` for existing PostHog, Mixpanel and Segment server SDKs.
+- [Trust](TRUST.md): `@aarondovturkel/doorman-adapters/security` exports `createResultReceipts` and `verifyAgentCredential`; these never alter the matching engine or application policy.
 - [Evaluation](EVALUATION.md): core exports `createFeedbackExport`, `revokeFeedback` and `evaluateLearning` for local, verified feedback experiments.
 - [HTTP protocol](../protocol/openapi.json): OpenAPI 3.1, with generated JSON payload schema and TypeScript/Elixir conformance fixtures.
 
@@ -231,10 +231,12 @@ Core has no HTTP, hosting, database driver or provider imports. Advanced direct 
 
 ```sh
 pnpm pack:all
-# Seven .tgz archives appear in artifacts/.
+# Eight .tgz archives appear in artifacts/.
 ```
 
-The output also includes a consumer `package.json` with local dependencies and `pnpm.overrides` for unpublished sibling packages. Copy `artifacts/` outside the workspace and run `pnpm install`, or merge those fields into an existing application and adjust the archive paths. Without the overrides, pnpm may try to resolve unpublished dependencies from npm. Alternatively, publish the packages under your chosen registry/namespaces. Package names in this repository are not claimed to be published on npm. Core and browser have no third-party runtime dependency; Zod is used only by the server adapter's input boundary. SQL drivers are supplied by applications. The examples add their own framework/runtime dependencies.
+The packages are published on npm as `@aarondovturkel/doorman-*`. Use `npm install`, `pnpm add`, or `bun add` for normal installation; see [language setup](LANGUAGES.md). `pnpm pack:all` is useful when testing your own source changes. Its consumer manifest uses local archives and overrides so all sibling dependencies come from that build.
+
+Core and browser have no third-party runtime dependency. SQL drivers are supplied by applications. The examples add their own framework/runtime dependencies.
 
 ## Repository layout
 
@@ -280,7 +282,7 @@ LICENSE
 .github/workflows/ci.yml
 ```
 
-Every package has an ESM export map, strict TypeScript build, version, license, and declaration files. `@janitor/adapters` has three public subpath entrypoints, not three conflicting npm packages. Storage migration files are exported as `@janitor/storage-d1/migrations/0001_visitors.sql` and the corresponding Postgres subpath.
+Every package has an ESM export map, strict TypeScript build, version, license, and declaration files. `@aarondovturkel/doorman-adapters` has three public subpath entrypoints, not three conflicting npm packages. Storage migration files are exported as `@aarondovturkel/doorman-storage-d1/migrations/0001_visitors.sql` and the corresponding Postgres subpath.
 
 ## Optional evaluator capabilities
 

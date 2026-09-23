@@ -1,8 +1,8 @@
 # Connect Python to the learning service
 
-The optional learning service uses a server-to-server HTTPS protocol. Your Python application can call it directly while the existing Janitor endpoint continues to handle visitor identity. No browser API key is involved.
+The optional learning service uses a server-to-server HTTPS protocol. Your Python application can call it directly while the existing Doorman endpoint continues to handle visitor identity. No browser API key is involved.
 
-The operator supplies `JANITOR_NETWORK_URL` and `JANITOR_NETWORK_KEY`. Participant preferences start disabled. Explicitly enable evaluation with `POST /v1/preferences` and `{"evaluation":true,"contribution":false,"training":false}`. The operator separately configures a provider and its budget.
+The operator supplies `DOORMAN_NETWORK_URL` and `DOORMAN_NETWORK_KEY`. Participant preferences start disabled. Explicitly enable evaluation with `POST /v1/preferences` and `{"evaluation":true,"contribution":false,"training":false}`. The operator separately configures a provider and its budget.
 
 ```python
 import json
@@ -17,10 +17,10 @@ opener = urllib.request.build_opener(NoRedirect)
 
 def assess_features(features):
     request = urllib.request.Request(
-        os.environ["JANITOR_NETWORK_URL"].rstrip("/") + "/v1/evaluate",
+        os.environ["DOORMAN_NETWORK_URL"].rstrip("/") + "/v1/evaluate",
         data=json.dumps({"version": 1, "features": features}).encode(),
         headers={
-            "Authorization": "Bearer " + os.environ["JANITOR_NETWORK_KEY"],
+            "Authorization": "Bearer " + os.environ["DOORMAN_NETWORK_KEY"],
             "Content-Type": "application/json",
         },
         method="POST",

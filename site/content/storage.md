@@ -1,6 +1,6 @@
 # Storage and retention
 
-Janitor stores a random visitor ID and a short history of browser observations in your database. Use Postgres for Node, Next.js or Elixir, or D1 for a Cloudflare Worker. Cloudflare can also use the shared Postgres adapter.
+Doorman stores a random visitor ID and a short history of browser observations in your database. Use Postgres for Node, Next.js or Elixir, or D1 for a Cloudflare Worker. Cloudflare can also use the shared Postgres adapter.
 
 Each application should have its own database or schema. Sharing these tables makes visitor history available to every application using them.
 
@@ -18,7 +18,7 @@ The Node and Next.js examples include a migration command:
 pnpm migrate
 ```
 
-For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.9.0 release includes all eight:
+For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.12.0 release includes all nine:
 
 | Migration                   | Creates or changes                                              |
 | --------------------------- | --------------------------------------------------------------- |
@@ -30,14 +30,15 @@ For an existing application, use your migration runner to apply the SQL files in
 | `0006_evidence.sql`         | Verified application events and device associations.            |
 | `0007_learning_lookup.sql`  | Indexed retrieval of login-confirmed sessions for Jev learning. |
 | `0008_api_activity.sql`     | Optional aggregate API counters and private assessment cache.   |
+| `0009_operators.sql`        | Private operator windows, profiles and assessment reports.      |
 
 Creating an optional feature’s tables does not enable that feature. For an existing large Postgres installation, read the [index migration instructions](../../docs/SCALING.md) before applying lookup indexes to a busy table.
 
-Native Elixir applications use `Janitor.Migration.up()` for a fresh installation. Existing installations use the upgrade functions in the [Phoenix guide](../../packages/elixir/README.md).
+Native Elixir applications use `Doorman.Migration.up()` for a fresh installation. Existing installations use the upgrade functions in the [Phoenix guide](../../packages/elixir/README.md).
 
 ## What the browser tables contain
 
-`visitors` holds the random ID, creation time and last-seen time. `observations` holds the normalized browser signals, timestamp and visitor ID. A few columns are indexed so Janitor can find candidates without comparing every visitor:
+`visitors` holds the random ID, creation time and last-seen time. `observations` holds the normalized browser signals, timestamp and visitor ID. A few columns are indexed so Doorman can find candidates without comparing every visitor:
 
 | Field                        | Purpose                                                                       |
 | ---------------------------- | ----------------------------------------------------------------------------- |
@@ -64,7 +65,7 @@ Expired observations stop participating in matching immediately, even if cleanup
 
 ## Run cleanup from existing maintenance
 
-Janitor does not install a scheduler. Call cleanup from a maintenance task you already run:
+Doorman does not install a scheduler. Call cleanup from a maintenance task you already run:
 
 ```ts
 const page = await visitor.cleanup({ batchSize: 100 });

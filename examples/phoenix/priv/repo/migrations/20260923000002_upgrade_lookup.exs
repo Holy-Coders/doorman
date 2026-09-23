@@ -1,5 +1,5 @@
-defmodule JanitorExample.Repo.Migrations.UpgradeLookup do
+defmodule DoormanExample.Repo.Migrations.UpgradeLookup do
   use Ecto.Migration
-  def up, do: Janitor.Migration.upgrade_lookup()
+  def up, do: Doorman.Migration.upgrade_lookup()
   def down, do: :ok
 end

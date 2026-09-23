@@ -1,9 +1,9 @@
-import { agentFamily, operatorLabel, operatorPolicy } from "@janitor/core";
+import { agentFamily, operatorLabel, operatorPolicy } from "@aarondovturkel/doorman-core";
 import type {
   OperatorWindow,
   OperatorSummary,
   OperatorProfile,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 export type OperatorAnalyticsContext = { accountId: string };
 export type OperatorReportContext = OperatorAnalyticsContext & {
@@ -24,24 +24,24 @@ export function operatorWindowProperties(
   const family = agentFamily(evaluation, window.thresholds);
   return Object.fromEntries(
     Object.entries({
-      janitor_schema_version: 1,
-      janitor_account_id: boundedId(context.accountId),
-      janitor_operator_window_id: window.id,
-      janitor_operator_window_start: window.startedAt,
-      janitor_operator_window_end: window.endedAt,
-      janitor_operator_status: window.status,
-      janitor_operator_basis: "model-inference",
-      janitor_operator_score_kind: "uncalibrated",
-      janitor_operator_scoring_policy: operatorPolicy(window.thresholds),
-      janitor_operator_kind: operatorLabel(evaluation, window.thresholds),
-      janitor_operator_model_version: evaluation?.modelVersion,
-      janitor_operator_human_score: evaluation?.scores.human,
-      janitor_operator_assistant_score: evaluation?.scores.assistant,
-      janitor_operator_automation_score: evaluation?.scores.automation,
-      janitor_operator_abuse_score: evaluation?.abuse,
-      janitor_operator_family: family?.family,
-      janitor_operator_family_score: family?.score,
-      janitor_operator_family_reference: family
+      doorman_schema_version: 1,
+      doorman_account_id: boundedId(context.accountId),
+      doorman_operator_window_id: window.id,
+      doorman_operator_window_start: window.startedAt,
+      doorman_operator_window_end: window.endedAt,
+      doorman_operator_status: window.status,
+      doorman_operator_basis: "model-inference",
+      doorman_operator_score_kind: "uncalibrated",
+      doorman_operator_scoring_policy: operatorPolicy(window.thresholds),
+      doorman_operator_kind: operatorLabel(evaluation, window.thresholds),
+      doorman_operator_model_version: evaluation?.modelVersion,
+      doorman_operator_human_score: evaluation?.scores.human,
+      doorman_operator_assistant_score: evaluation?.scores.assistant,
+      doorman_operator_automation_score: evaluation?.scores.automation,
+      doorman_operator_abuse_score: evaluation?.abuse,
+      doorman_operator_family: family?.family,
+      doorman_operator_family_score: family?.score,
+      doorman_operator_family_reference: family
         ? window.referenceVersions?.[family.family]
         : undefined,
     }).filter(([, v]) => v !== undefined),
@@ -52,30 +52,30 @@ export function operatorSummaryProperties(
   context: OperatorReportContext,
 ) {
   return {
-    janitor_schema_version: 1,
-    janitor_account_id: boundedId(context.accountId),
-    janitor_resolution_revision: boundedId(context.revisionId),
-    janitor_resolution_version: summary.resolutionVersion,
-    janitor_operator_score_kind: summary.scoreKind,
-    janitor_operator_scoring_policy: summary.scoringPolicy,
-    janitor_operator_basis: "model-inference",
-    janitor_report_since: summary.window.since,
-    janitor_report_until: summary.window.until,
-    janitor_report_complete: summary.complete,
-    janitor_observed_browser_ids: summary.observedBrowserIds,
-    janitor_observed_windows: summary.observedWindows,
-    janitor_evaluated_windows: summary.evaluatedWindows,
-    janitor_unresolved_windows: summary.unresolvedWindows,
-    janitor_compared_pairs: summary.comparedPairs,
-    janitor_possible_pairs: summary.possiblePairs,
+    doorman_schema_version: 1,
+    doorman_account_id: boundedId(context.accountId),
+    doorman_resolution_revision: boundedId(context.revisionId),
+    doorman_resolution_version: summary.resolutionVersion,
+    doorman_operator_score_kind: summary.scoreKind,
+    doorman_operator_scoring_policy: summary.scoringPolicy,
+    doorman_operator_basis: "model-inference",
+    doorman_report_since: summary.window.since,
+    doorman_report_until: summary.window.until,
+    doorman_report_complete: summary.complete,
+    doorman_observed_browser_ids: summary.observedBrowserIds,
+    doorman_observed_windows: summary.observedWindows,
+    doorman_evaluated_windows: summary.evaluatedWindows,
+    doorman_unresolved_windows: summary.unresolvedWindows,
+    doorman_compared_pairs: summary.comparedPairs,
+    doorman_possible_pairs: summary.possiblePairs,
     ...Object.fromEntries(
       Object.entries(summary.estimates).flatMap(([kind, e]) =>
         e.likely === null
           ? []
           : [
-              [`janitor_estimated_${kind}_profiles`, e.likely],
-              [`janitor_${kind}_sensitivity_min`, e.thresholdSensitivity!.min],
-              [`janitor_${kind}_sensitivity_max`, e.thresholdSensitivity!.max],
+              [`doorman_estimated_${kind}_profiles`, e.likely],
+              [`doorman_${kind}_sensitivity_min`, e.thresholdSensitivity!.min],
+              [`doorman_${kind}_sensitivity_max`, e.thresholdSensitivity!.max],
             ],
       ),
     ),
@@ -89,25 +89,25 @@ export function operatorProfileProperties(
   if (!summary.profiles.some((p) => p === profile))
     throw new Error("Profile must belong to this report");
   return {
-    janitor_schema_version: 1,
-    janitor_account_id: boundedId(context.accountId),
-    janitor_resolution_revision: boundedId(context.revisionId),
-    janitor_resolution_version: summary.resolutionVersion,
-    janitor_operator_score_kind: summary.scoreKind,
-    janitor_operator_scoring_policy: summary.scoringPolicy,
-    janitor_operator_basis: "model-inference",
-    janitor_report_since: summary.window.since,
-    janitor_report_until: summary.window.until,
-    janitor_report_complete: summary.complete,
-    janitor_inferred_operator_id: profile.id,
-    janitor_operator_kind: profile.kind,
-    janitor_operator_label_score: profile.labelScore,
-    janitor_operator_browser_count: profile.browserCount,
-    janitor_operator_window_count: profile.windowIds.length,
+    doorman_schema_version: 1,
+    doorman_account_id: boundedId(context.accountId),
+    doorman_resolution_revision: boundedId(context.revisionId),
+    doorman_resolution_version: summary.resolutionVersion,
+    doorman_operator_score_kind: summary.scoreKind,
+    doorman_operator_scoring_policy: summary.scoringPolicy,
+    doorman_operator_basis: "model-inference",
+    doorman_report_since: summary.window.since,
+    doorman_report_until: summary.window.until,
+    doorman_report_complete: summary.complete,
+    doorman_inferred_operator_id: profile.id,
+    doorman_operator_kind: profile.kind,
+    doorman_operator_label_score: profile.labelScore,
+    doorman_operator_browser_count: profile.browserCount,
+    doorman_operator_window_count: profile.windowIds.length,
     ...(profile.family
       ? {
-          janitor_operator_family: profile.family.family,
-          janitor_operator_family_score: profile.family.score,
+          doorman_operator_family: profile.family.family,
+          doorman_operator_family_score: profile.family.score,
         }
       : {}),
   };

@@ -1,7 +1,7 @@
 import { EncryptJWT, jwtDecrypt, jwtVerify } from "jose";
 import type { JWTVerifyGetKey } from "jose";
 import { z } from "zod";
-import type { VisitorIdentity } from "@janitor/core";
+import type { VisitorIdentity } from "@aarondovturkel/doorman-core";
 
 const label = z.string().min(1).max(256);
 const probability = z.number().finite().min(0).max(1);
@@ -69,7 +69,7 @@ export function createResultReceipts(options: {
         .setProtectedHeader({
           alg: "dir",
           enc: "A256GCM",
-          typ: "janitor-result+jwe",
+          typ: "doorman-result+jwe",
         })
         .setIssuer(issuer)
         .setAudience(label.parse(input.audience))
@@ -94,7 +94,7 @@ export function createResultReceipts(options: {
           audience: label.parse(expected.audience),
           keyManagementAlgorithms: ["dir"],
           contentEncryptionAlgorithms: ["A256GCM"],
-          typ: "janitor-result+jwe",
+          typ: "doorman-result+jwe",
           maxTokenAge: 300,
           requiredClaims: ["exp", "iat", "jti"],
         });

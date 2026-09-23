@@ -1,4 +1,4 @@
-import type { EdgeEvidence } from "@janitor/core";
+import type { EdgeEvidence } from "@aarondovturkel/doorman-core";
 import {
   createPostgresStorage,
   createPostgresIdentityStorage,
@@ -7,8 +7,8 @@ import {
   createPostgresEvidenceStorage,
   createPostgresActivityStorage,
   createPostgresOperatorStorage,
-} from "@janitor/storage-postgres";
-import type { PostgresDatabase } from "@janitor/storage-postgres";
+} from "@aarondovturkel/doorman-storage-postgres";
+import type { PostgresDatabase } from "@aarondovturkel/doorman-storage-postgres";
 import {
   createD1Storage,
   createD1IdentityStorage,
@@ -17,10 +17,10 @@ import {
   createD1EvidenceStorage,
   createD1ActivityStorage,
   createD1OperatorStorage,
-} from "@janitor/storage-d1";
-import type { D1Database } from "@janitor/storage-d1";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
-import type { WorkersAI } from "@janitor/evaluator-cloudflare-jev";
+} from "@aarondovturkel/doorman-storage-d1";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import type { WorkersAI } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
 import { createVisitorHandler } from "../handler.js";
 import type { AdapterOptions } from "../handler.js";
 export type CloudflareVisitorOptions = AdapterOptions & {

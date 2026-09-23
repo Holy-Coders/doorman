@@ -8,14 +8,14 @@ import {
   summarizeOperators,
   resolveOperatorThresholds,
   type OperatorThresholds,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   AgentFamilyReference,
   OperatorEvidence,
   OperatorStorage,
   OperatorWindow,
   VisitorEvaluator,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
 

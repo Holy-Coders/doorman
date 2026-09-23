@@ -148,10 +148,10 @@ test("every internal navigation link and asset on the landing page resolves", as
     "/sitemap.xml",
     "/llms.txt",
     "/robots.txt",
-    "/janitor-mark.svg",
-    "/janitor-logo.png",
+    "/doorman-mark.png",
+    "/doorman-logo.png",
     "/social.png",
-    "/janitor-mark.webp",
+    "/doorman-mark.webp",
     "/favicon.png",
     "/media/continuity-poster.webp",
     "/media/continuity.webm",
@@ -196,122 +196,120 @@ test("actor lab executes delegation checks for agents, family and invalid grants
   expect(await page.context().cookies()).toEqual([]);
 });
 
-test("motion can be paused and follows reduced-motion preference without disabling the labs", async ({
+test("pixel actors animate, support keyboard selection and pause for reduced motion", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
-  const film = page.locator("[data-hero-video]");
-  await expect(film).toHaveAttribute("data-ready", "true");
-  await expect
-    .poll(() => film.evaluate((el) => !(el as HTMLVideoElement).paused))
-    .toBe(true);
-  const start = await film.evaluate(
-    (el) => (el as HTMLVideoElement).currentTime,
-  );
-  await expect
-    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).currentTime))
-    .toBeGreaterThan(start);
-
+  const stage = page.locator("[data-doorway]");
+  await stage.scrollIntoViewIfNeeded();
+  await expect(stage).toHaveAttribute("data-ready", "true");
+  await expect(stage).toHaveAttribute("data-animating", "true");
+  await expect(stage).toHaveAttribute("data-phase", "formed");
+  const actors = page.getByRole("group", {
+    name: "Choose an illustrated operator",
+  });
+  await actors.getByRole("button", { name: "A robot", exact: true }).click();
+  await expect(stage).toHaveAttribute("data-actor", "robot");
+  await actors
+    .getByRole("button", { name: "A robot", exact: true })
+    .press("ArrowRight");
+  await expect(
+    actors.getByRole("button", { name: "An AI assistant", exact: true }),
+  ).toBeFocused();
+  await expect(stage).toHaveAttribute("data-actor", "assistant");
   await page.getByRole("button", { name: "Pause motion", exact: true }).click();
-  await expect
-    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).paused))
-    .toBe(true);
+  await expect(stage).toHaveAttribute("data-animating", "false");
+  const pixels = () =>
+    page
+      .locator("[data-doorway-canvas]")
+      .evaluate((el) => (el as HTMLCanvasElement).toDataURL());
+  const paused = await pixels();
+  await page.waitForTimeout(150);
+  expect(await pixels()).toBe(paused);
   await page.getByRole("button", { name: "Play motion", exact: true }).click();
-  await expect
-    .poll(() => film.evaluate((el) => !(el as HTMLVideoElement).paused))
-    .toBe(true);
+  await expect(stage).toHaveAttribute("data-animating", "true");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(
     page.getByRole("button", { name: "Reduced motion", exact: true }),
   ).toBeDisabled();
-  await expect(film).toBeHidden();
-  await expect
-    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).paused))
-    .toBe(true);
+  await expect(stage).toHaveAttribute("data-animating", "false");
+  await expect(stage).toHaveAttribute("data-phase", "formed");
   await page
     .getByRole("button", { name: "Your AI assistant", exact: false })
     .click();
   await expect(page.locator("[data-actor-verdict]")).toHaveText(
     "Valid delegation",
   );
-  const running = await page
-    .locator(".actor-node")
-    .evaluateAll(
-      (nodes) =>
-        nodes
-          .flatMap((node) => node.getAnimations())
-          .filter((animation) => animation.playState === "running").length,
-    );
-  expect(running).toBe(0);
+  expect(
+    await page
+      .locator(".actor-node")
+      .evaluateAll(
+        (nodes) =>
+          nodes
+            .flatMap((node) => node.getAnimations())
+            .filter((animation) => animation.playState === "running").length,
+      ),
+  ).toBe(0);
 });
 
 for (const mode of ["reduced motion", "save data"] as const) {
-  test(`${mode} uses the poster without downloading video`, async ({
+  test(`${mode} keeps the pixel illustration static and interactive`, async ({
     page,
   }) => {
-    if (mode === "reduced motion")
-      await page.emulateMedia({ reducedMotion: "reduce" });
-    else {
-      await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.emulateMedia({
+      reducedMotion: mode === "reduced motion" ? "reduce" : "no-preference",
+    });
+    if (mode === "save data")
       await page.addInitScript(() =>
         Object.defineProperty(navigator, "connection", {
           value: Object.assign(new EventTarget(), { saveData: true }),
           configurable: true,
         }),
       );
-    }
-    const videoRequests: string[] = [];
+    const network: string[] = [];
     page.on("request", (req) => {
-      if (/continuity\.(webm|mp4)/.test(req.url()))
-        videoRequests.push(req.url());
+      if (/\.(webm|mp4)(?:\?|$)/.test(req.url()) || req.method() === "POST")
+        network.push(req.url());
     });
     await page.goto("/");
-    await expect(page.locator(".hero-poster")).toBeVisible();
-    await expect(
-      page.getByRole("heading", {
-        name: /Prepare your analytics\s*for the agentic era\./,
-      }),
-    ).toBeVisible();
+    const stage = page.locator("[data-doorway]");
+    await expect(stage).toHaveAttribute("data-ready", "true");
+    await expect(stage).toHaveAttribute("data-animating", "false");
+    await expect(stage).toHaveAttribute("data-phase", "formed");
     await page
-      .getByRole("link", { name: "Understand browser matching" })
-      .hover();
-    expect(videoRequests).toEqual([]);
-    await expect(page.locator("[data-hero-video]")).not.toHaveAttribute(
-      "data-loaded",
-      "true",
-    );
+      .getByRole("button", { name: "Another human", exact: true })
+      .click();
+    await expect(stage).toHaveAttribute("data-actor", "another");
+    await expect(stage).toHaveAttribute("data-phase", "formed");
+    expect(network).toEqual([]);
     if (mode === "save data") {
       await page
         .getByRole("button", { name: "Play motion", exact: true })
         .click();
-      await expect(page.locator("[data-hero-video]")).toHaveAttribute(
-        "data-ready",
-        "true",
-      );
-      expect(videoRequests.length).toBeGreaterThan(0);
+      await expect(stage).toHaveAttribute("data-animating", "true");
     }
   });
 }
 
-test("video pauses offscreen and the site survives unavailable media", async ({
+test("canvas pauses offscreen and the page survives an unavailable canvas", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
-  const film = page.locator("[data-hero-video]");
-  await expect(film).toHaveAttribute("data-ready", "true");
+  const stage = page.locator("[data-doorway]");
+  await stage.scrollIntoViewIfNeeded();
+  await expect(stage).toHaveAttribute("data-animating", "true");
   await page.locator(".site-footer").scrollIntoViewIfNeeded();
-  await expect
-    .poll(() => film.evaluate((el) => (el as HTMLVideoElement).paused))
-    .toBe(true);
-  await page.locator(".site-header").scrollIntoViewIfNeeded();
-  await expect
-    .poll(() => film.evaluate((el) => !(el as HTMLVideoElement).paused))
-    .toBe(true);
-  await page.route(/continuity\.(webm|mp4)/, (route) => route.abort());
+  await expect(stage).toHaveAttribute("data-animating", "false");
+  await stage.scrollIntoViewIfNeeded();
+  await expect(stage).toHaveAttribute("data-animating", "true");
+  await page.addInitScript(() => {
+    HTMLCanvasElement.prototype.getContext = (() =>
+      null) as typeof HTMLCanvasElement.prototype.getContext;
+  });
   await page.reload();
-  await expect(page.locator(".hero-poster")).toBeVisible();
+  await expect(page.locator(".doorway-fallback")).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Start building", exact: true }),
   ).toBeVisible();
@@ -324,18 +322,11 @@ test("video pauses offscreen and the site survives unavailable media", async ({
 test("the hero stays readable without JavaScript", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  const videos: string[] = [];
-  page.on("request", (req) => {
-    if (/continuity\.(webm|mp4)/.test(req.url())) videos.push(req.url());
-  });
   await page.goto("http://127.0.0.1:4357/");
   await expect(
-    page.getByRole("heading", {
-      name: /Prepare your analytics\s*for the agentic era\./,
-    }),
+    page.getByRole("heading", { name: /Know who’s\s*behind the request/ }),
   ).toBeVisible();
-  await expect(page.locator(".hero-poster")).toBeVisible();
-  expect(videos).toEqual([]);
+  await expect(page.locator(".doorway-fallback")).toBeVisible();
   await expect(page.locator("[data-motion-toggle]")).toBeHidden();
   await context.close();
 });
@@ -350,7 +341,7 @@ test("new readers can follow introduction, first example and identity concepts",
     .click();
   await expect(page).toHaveURL(/\/docs\/introduction\/$/);
   await expect(
-    page.getByRole("heading", { name: "What is Janitor?", exact: true }),
+    page.getByRole("heading", { name: "What is Doorman?", exact: true }),
   ).toBeVisible();
   await page
     .locator(".sidebar-section")
@@ -436,7 +427,7 @@ for (const theme of ["light", "dark"]) {
     await expect(page).toHaveURL(/\/docs\/elixir\/getting-started\/$/);
     await expect(page.locator("html")).toHaveAttribute("data-theme", next);
     await page.locator('.docs-sidebar a[href$="/api/"]').click();
-    await expect(page.locator("article")).toContainText("Janitor.new/1");
+    await expect(page.locator("article")).toContainText("Doorman.new/1");
     await page
       .getByRole("combobox", { name: "Documentation language" })
       .selectOption("python");
@@ -461,7 +452,7 @@ for (const theme of ["light", "dark"]) {
     ).toBe(true);
     await expect(page.locator("#theme-icon")).toHaveAttribute(
       "href",
-      next === "light" ? "/janitor-mark-dark.svg" : "/janitor-mark.svg",
+      next === "light" ? "/doorman-mark-dark.png" : "/doorman-mark.png",
     );
   });
 }

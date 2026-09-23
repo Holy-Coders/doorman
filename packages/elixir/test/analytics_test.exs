@@ -1,7 +1,7 @@
-defmodule Janitor.AnalyticsTest do
+defmodule Doorman.AnalyticsTest do
   use ExUnit.Case, async: false
   import Plug.Conn
-  alias Janitor.Analytics
+  alias Doorman.Analytics
 
   setup do
     Req.Test.set_req_test_to_shared()
@@ -40,9 +40,9 @@ defmodule Janitor.AnalyticsTest do
 
   test "low risk never manufactures a verified person or an account" do
     props = identity() |> Map.delete("attribution") |> Analytics.properties()
-    assert props["janitor_actor_kind"] == "unknown"
-    refute Map.has_key?(props, "janitor_actor_id")
-    refute Map.has_key?(props, "janitor_account_id")
+    assert props["doorman_actor_kind"] == "unknown"
+    refute Map.has_key?(props, "doorman_actor_id")
+    refute Map.has_key?(props, "doorman_account_id")
     refute Map.has_key?(props, "debug")
   end
 
@@ -52,10 +52,10 @@ defmodule Janitor.AnalyticsTest do
         account_id: "account-a"
       })
 
-    assert props["janitor_actor_kind"] == "agent"
-    assert props["janitor_account_id"] == "account-a"
+    assert props["doorman_actor_kind"] == "agent"
+    assert props["doorman_account_id"] == "account-a"
 
-    for key <- ~w(janitor_visitor_id janitor_confidence janitor_automation janitor_risk_status),
+    for key <- ~w(doorman_visitor_id doorman_confidence doorman_automation doorman_risk_status),
         do: refute(Map.has_key?(props, key))
   end
 
@@ -75,17 +75,17 @@ defmodule Janitor.AnalyticsTest do
 
     input = %{"attribution" => identity()["attribution"], "apiActivity" => api}
     props = Analytics.properties(input)
-    assert props["janitor_api_automation"] == 0.9
-    assert props["janitor_api_requests"] == 10
-    assert props["janitor_actor_kind"] == "agent"
-    refute Map.has_key?(props, "janitor_visitor_id")
-    refute Map.has_key?(props, "janitor_confidence")
+    assert props["doorman_api_automation"] == 0.9
+    assert props["doorman_api_requests"] == 10
+    assert props["doorman_actor_kind"] == "agent"
+    refute Map.has_key?(props, "doorman_visitor_id")
+    refute Map.has_key?(props, "doorman_confidence")
     refute Jason.encode!(props) =~ "/private"
 
     unavailable =
       put_in(input, ["apiActivity", "riskStatus"], "unavailable") |> Analytics.properties()
 
-    refute Map.has_key?(unavailable, "janitor_api_automation")
+    refute Map.has_key?(unavailable, "doorman_api_automation")
   end
 
   for provider <- [:posthog, :mixpanel] do
@@ -119,10 +119,10 @@ defmodule Janitor.AnalyticsTest do
 
         {distinct_id, props, group} = unpack(provider, payload)
 
-        assert props["janitor_actor_kind"] == "agent"
-        assert props["janitor_actor_basis"] == "verified-credential"
-        assert props["janitor_actor_id"] == identity()["attribution"]["actor"]["id"]
-        assert props["janitor_account_id"] == account
+        assert props["doorman_actor_kind"] == "agent"
+        assert props["doorman_actor_basis"] == "verified-credential"
+        assert props["doorman_actor_id"] == identity()["attribution"]["actor"]["id"]
+        assert props["doorman_account_id"] == account
 
         assert distinct_id == "agent:a"
         assert group == account
@@ -135,7 +135,7 @@ defmodule Janitor.AnalyticsTest do
                  provider,
                  identity(),
                  "a",
-                 Keyword.put(opts, :account_group, "janitor_actor_kind")
+                 Keyword.put(opts, :account_group, "doorman_actor_kind")
                )
     end
   end
@@ -180,7 +180,7 @@ defmodule Janitor.AnalyticsTest do
                  ]
 
           assert body["userId"] == "agent:a"
-          assert body["properties"]["janitor_account_id"] == "account-a"
+          assert body["properties"]["doorman_account_id"] == "account-a"
           send_resp(conn, 200, "OK")
         end
       end)
@@ -198,16 +198,16 @@ defmodule Janitor.AnalyticsTest do
 
   test "warehouse rows are stable scalar JSONL and omit private or injected data" do
     row =
-      Janitor.Warehouse.event(identity(), "agent:a",
+      Doorman.Warehouse.event(identity(), "agent:a",
         event_id: "event-a",
         occurred_at: ~U[2026-09-23 00:00:00.000Z],
         account_id: "account-a"
       )
 
-    line = row |> Map.put("debug", %{"signals" => "private"}) |> Janitor.Warehouse.encode()
+    line = row |> Map.put("debug", %{"signals" => "private"}) |> Doorman.Warehouse.encode()
     assert String.ends_with?(line, "\n")
     assert Jason.decode!(line)["event_id"] == "event-a"
     refute line =~ "private"
-    assert_raise ArgumentError, fn -> Janitor.Warehouse.encode(%{"janitor_account_id" => %{}}) end
+    assert_raise ArgumentError, fn -> Doorman.Warehouse.encode(%{"doorman_account_id" => %{}}) end
   end
 end

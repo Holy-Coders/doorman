@@ -6,9 +6,9 @@ import {
   createJevMethods,
   JEV_ENDPOINT,
   JEV_QUESTIONS,
-} from "@janitor/evaluator-jev";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
-import { createVisitorEngine, normalizeObservation } from "@janitor/core";
+} from "@aarondovturkel/doorman-evaluator-jev";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import { createVisitorEngine, normalizeObservation } from "@aarondovturkel/doorman-core";
 import { createMemoryStorage } from "./helpers/memory.js";
 import { evaluation, signals } from "./helpers/fixtures.js";
 export const jevResponse = {

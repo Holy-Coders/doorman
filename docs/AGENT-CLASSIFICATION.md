@@ -2,7 +2,7 @@
 
 An email address tells you which account is signed in. It does not tell you who is operating it right now. A person might browse manually, hand a task to an AI assistant, or run a scheduled script.
 
-Janitor adds private evidence about that activity to the identity context you already send to analytics. It supports three separate things:
+Doorman adds private evidence about that activity to the identity context you already send to analytics. It supports three separate things:
 
 | Capability                            | What supports it                                                           | What you receive                                                                                      |
 | ------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -33,18 +33,18 @@ const visitor = createVisitorClient({
 | Short interaction gaps      | Fraction of consecutive pointer/key press intervals below 100 milliseconds         |
 | Repeated interaction gaps   | Fraction of comparable neighboring intervals within 10 milliseconds of one another |
 
-Only totals, counts and distribution summaries leave the page. Janitor does not retain coordinate arrays, key values, event targets or an individual keystroke trail. Held-key repeats are excluded from timing; visibility changes and blur break the timing sequence. Invalid or missing movement values are skipped. Measurements are rounded before use in the optional learning service. [The full data contract](../PRIVACY.md) lists collection and retention.
+Only totals, counts and distribution summaries leave the page. Doorman does not retain coordinate arrays, key values, event targets or an individual keystroke trail. Held-key repeats are excluded from timing; visibility changes and blur break the timing sequence. Invalid or missing movement values are skipped. Measurements are rounded before use in the optional learning service. [The full data contract](../PRIVACY.md) lists collection and retention.
 
-These patterns can help a classifier, but none proves automation. Browser event batching, high-DPI devices, remote desktops, accessibility tools and ordinary repeated tasks can produce similar patterns. Janitor does not call a large movement a physically impossible jump. [W3C Pointer Events](https://www.w3.org/TR/pointerevents/) documents implementation-dependent event delivery and coalescing.
+These patterns can help a classifier, but none proves automation. Browser event batching, high-DPI devices, remote desktops, accessibility tools and ordinary repeated tasks can produce similar patterns. Doorman does not call a large movement a physically impossible jump. [W3C Pointer Events](https://www.w3.org/TR/pointerevents/) documents implementation-dependent event delivery and coalescing.
 
-The existing `navigator.webdriver` signal can also be included in operator evidence as `webdriver: 0 | 1`. A true value is technical evidence of reported browser automation; false or missing values do not prove human operation or identify an AI product. Janitor does not attempt to defeat browser privacy protections, inspect DevTools internals or infer screenshot capture from focus changes.
+The existing `navigator.webdriver` signal can also be included in operator evidence as `webdriver: 0 | 1`. A true value is technical evidence of reported browser automation; false or missing values do not prove human operation or identify an AI product. Doorman does not attempt to defeat browser privacy protections, inspect DevTools internals or infer screenshot capture from focus changes.
 
 ## Bring browser and server evidence together
 
 The server receives browser behavior through the existing validated identification payload. For operator assessment, explicitly project an authorized, closed activity window:
 
 ```ts
-import { extractFeatures } from "@janitor/network";
+import { extractFeatures } from "@aarondovturkel/doorman-network";
 
 const features = extractFeatures({
   behavior: validatedBehavior,
@@ -54,7 +54,7 @@ const features = extractFeatures({
   sequence: serverSequence,
 });
 
-const result = await janitor.operators!.observe({
+const result = await doorman.operators!.observe({
   accountId: authorizedAccount.id,
   sessionId: serverSession.id,
   windowId: closedWindow.id,

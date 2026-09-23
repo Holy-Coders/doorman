@@ -1,10 +1,10 @@
 import { it, expect, vi } from "vitest";
-import { createIdentityAnalytics } from "@janitor/browser";
+import { createIdentityAnalytics } from "@aarondovturkel/doorman-browser";
 import {
   createAnalyticsBridge,
   type AnalyticsAssessment,
-} from "@janitor/adapters/analytics";
-import { warehouseEvent, warehouseJSONL } from "@janitor/adapters/warehouse";
+} from "@aarondovturkel/doorman-adapters/analytics";
+import { warehouseEvent, warehouseJSONL } from "@aarondovturkel/doorman-adapters/warehouse";
 import * as amplitude from "@amplitude/analytics-browser";
 import * as amplitudeNode from "@amplitude/analytics-node";
 import { RudderAnalytics } from "@rudderstack/analytics-js";
@@ -119,7 +119,7 @@ it("sends Amplitude private properties using HTTP V2 event and profile semantics
   ).toEqual({ status: "queued" });
   expect(client.track).toHaveBeenCalledWith(
     expect.objectContaining({
-      event_type: "janitor identified",
+      event_type: "doorman identified",
       user_id: "agent-a",
       groups: { account: "team-a" },
       ip: "0.0.0.0",
@@ -150,8 +150,8 @@ it("routes identity events to RudderStack without raw browser data", async () =>
   );
   expect(client.track).toHaveBeenCalledWith({
     userId: "person-a",
-    event: "janitor identified",
-    properties: expect.objectContaining({ janitor_account_id: "team-a" }),
+    event: "doorman identified",
+    properties: expect.objectContaining({ doorman_account_id: "team-a" }),
   });
   expect(JSON.stringify(client.track.mock.calls)).not.toContain("private");
   await bridge.identifyUser("person-a", { plan: "pro" });
@@ -174,12 +174,12 @@ it("exports bounded flat JSONL, preserves stable event keys and rejects nested d
   expect(JSON.parse(lines[0]!)).toMatchObject({
     event_id: "event-a",
     authenticated_id: "person-a",
-    janitor_actor_kind: "unknown",
+    doorman_actor_kind: "unknown",
   });
   expect(lines[0]).not.toContain("secret");
   expect(() => [
     ...warehouseJSONL([
-      { ...row, janitor_account_id: { nested: true } } as never,
+      { ...row, doorman_account_id: { nested: true } } as never,
     ]),
   ]).toThrow("scalar");
   expect(() =>

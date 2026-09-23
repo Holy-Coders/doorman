@@ -1,10 +1,10 @@
 # Next.js and Vercel
 
-This example adds a Janitor endpoint to a Next.js App Router application. It uses Postgres through the standard `pg` client, so you can choose your database provider. The browser client identifies a visit; the route sets the cookie and stores history.
+This example adds a Doorman endpoint to a Next.js App Router application. It uses Postgres through the standard `pg` client, so you can choose your database provider. The browser client identifies a visit; the route sets the cookie and stores history.
 
 ## Run the example
 
-You need Node 22.12+, pnpm 9.12.0 and Docker for the supplied local Postgres. From the Janitor repository root:
+You need Node 22.12+, pnpm 9.12.0 and Docker for the supplied local Postgres. From the Doorman repository root:
 
 ```sh
 pnpm install
@@ -26,7 +26,7 @@ In an existing app, [install the packages](../../docs/LANGUAGES.md), apply their
 
 ```ts
 import { Pool } from "pg";
-import { createVercelVisitor } from "@janitor/adapters/vercel";
+import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 const visitor = createVercelVisitor({ db, evaluator: false });
@@ -41,7 +41,7 @@ Save it as `app/api/visitor/route.ts`. Keep the pool and adapter outside the req
 
 ## Create and clean up the client
 
-The [client component](app/identify.tsx) creates Janitor inside an effect and destroys it on unmount. Copy that lifecycle into your component rather than collecting during server rendering. The example enables optional extended behavior totals; the library’s default is event counts only.
+The [client component](app/identify.tsx) creates Doorman inside an effect and destroys it on unmount. Copy that lifecycle into your component rather than collecting during server rendering. The example enables optional extended behavior totals; the library’s default is event counts only.
 
 The response contains `visitorId` and `isReturning`. For private confidence or risk in server code, use `visitor.assess(request)` and return its `response`. See [private scores](../../docs/SECURITY.md).
 

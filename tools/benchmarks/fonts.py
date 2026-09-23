@@ -1,5 +1,5 @@
 """Descriptive audit of FP-Agent's existing FingerprintJS font component.
-This is NOT Janitor's local-12-v1 probe and has no verified person/device truth.
+This is NOT Doorman's local-12-v1 probe and has no verified person/device truth.
 Only aggregate results are written; font names and session identifiers stay local.
 """
 import hashlib
@@ -49,7 +49,7 @@ def main():
                 stable[label] += len(set(sets)) == 1
     human = families['Human']
     report = dict(version=1, sourceSha256=digest, sessionCount=sum(sessions.values()),
-                  collector='Published FingerprintJS component; different list and method from Janitor local-12-v1',
+                  collector='Published FingerprintJS component; different list and method from Doorman local-12-v1',
                   families={label: dict(sessions=sessions[label], measured=sum(counts.values()), missing=missing[label],
                                        empty=empty[label], distinctFontSets=len(counts), largestSetSessionCount=max(counts.values(), default=0),
                                        pairCollisionRate=collision_rate(counts.values()),

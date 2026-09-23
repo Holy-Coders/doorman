@@ -1,4 +1,4 @@
-import type { VisitorEvaluator } from "@janitor/core";
+import type { VisitorEvaluator } from "@aarondovturkel/doorman-core";
 import {
   createPostgresStorage,
   createPostgresIdentityStorage,
@@ -7,10 +7,10 @@ import {
   createPostgresEvidenceStorage,
   createPostgresActivityStorage,
   createPostgresOperatorStorage,
-} from "@janitor/storage-postgres";
-import type { PostgresDatabase } from "@janitor/storage-postgres";
-import { createJevEvaluator } from "@janitor/evaluator-jev";
-import type { JevOptions } from "@janitor/evaluator-jev";
+} from "@aarondovturkel/doorman-storage-postgres";
+import type { PostgresDatabase } from "@aarondovturkel/doorman-storage-postgres";
+import { createJevEvaluator } from "@aarondovturkel/doorman-evaluator-jev";
+import type { JevOptions } from "@aarondovturkel/doorman-evaluator-jev";
 import { createVisitorHandler } from "../handler.js";
 import type { AdapterOptions } from "../handler.js";
 export { createVisitorHandler } from "../handler.js";

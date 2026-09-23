@@ -2,15 +2,15 @@
 
 For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
 
-Use Janitor’s identity directory when your app needs to connect signed-in visits across devices or track an agent acting for a user. The directory is a set of records in your database: people, agents, verified lookup keys and permissions.
+Use Doorman’s identity directory when your app needs to connect signed-in visits across devices or track an agent acting for a user. The directory is a set of records in your database: people, agents, verified lookup keys and permissions.
 
 For example, Alex can sign in on a laptop and phone. Those browsers keep different visitor IDs, but your server registers the same person for both. If Alex authorizes an assistant, the assistant gets its own identity and a limited permission record.
 
-Your existing login or credential system verifies these identities. Janitor does not provide a login screen or discover a person from an anonymous fingerprint. If the terms are new, read [browsers, people and agents](CONCEPTS.md) first.
+Your existing login or credential system verifies these identities. Doorman does not provide a login screen or discover a person from an anonymous fingerprint. If the terms are new, read [browsers, people and agents](CONCEPTS.md) first.
 
 ## Understand the result
 
-| Question                                | Evidence                                                          | Janitor result                                        |
+| Question                                | Evidence                                                          | Doorman result                                        |
 | --------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------- |
 | Which browser environment is this?      | First-party cookie and bounded observation history                | `visitorId`, `confidence`, `isReturning`              |
 | Which account is authenticated?         | Your server-verified account context                              | `attribution.subject`                                 |
@@ -27,24 +27,24 @@ An authorized assistant can have high automation and valid delegation. An intrud
 Apply the storage package’s migrations in order through `0006_evidence.sql`. The directory uses the identity tables created by `0002_identity.sql`. Optional features stay disabled until you configure them. Add a secret and namespace to any high-level adapter:
 
 ```ts
-import { createNodeVisitor } from "@janitor/adapters/node";
+import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
 
-const janitor = createNodeVisitor({
+const doorman = createNodeVisitor({
   db,
   evaluator: { apiKey: process.env.JEV_API_KEY! },
   identity: {
-    secret: process.env.JANITOR_IDENTITY_SECRET!,
+    secret: process.env.DOORMAN_IDENTITY_SECRET!,
     namespace: "my-app-production",
   },
 });
-const identities = janitor.identities!;
+const identities = doorman.identities!;
 ```
 
 Cloudflare and Vercel accept the same `identity` option. Generate the secret with `openssl rand -hex 32`. Share it across application instances; keep it out of browser bundles. A namespace and secret define the identity/key lookup scope. Isolate applications in separate databases or schemas. Changing the secret or namespace changes derived IDs and key digests and requires a deliberate data migration; old records are not automatically relabeled.
 
 ## 2. Register a user and their verified keys
 
-These are **server-only management methods**. Authenticate and authorize the caller before calling them. Janitor does not send verification emails, run OAuth, verify public-key signatures, or provide login endpoints.
+These are **server-only management methods**. Authenticate and authorize the caller before calling them. Doorman does not send verification emails, run OAuth, verify public-key signatures, or provide login endpoints.
 
 ```ts
 // Run after your authentication provider verifies this account.
@@ -71,7 +71,7 @@ Key types are `email`, `external`, and `public-key`. For a public key, pass a ca
 
 Email domain case is normalized; local-part case, plus addressing, and dots are preserved. Use the same verified canonical representation on every call. `findSubject` performs a lookup, **not authentication**: knowing an email or key reference does not prove ownership.
 
-Subject updates are idempotent, and a subject's `kind` cannot change. A key belongs to at most one subject in the directory. A conflicting assignment fails atomically, including concurrent writes; Janitor never merges accounts based on a matching email or browser fingerprint. Each management call commits independently.
+Subject updates are idempotent, and a subject's `kind` cannot change. A key belongs to at most one subject in the directory. A conflicting assignment fails atomically, including concurrent writes; Doorman never merges accounts based on a matching email or browser fingerprint. Each management call commits independently.
 
 For an email change, verify and add the new key, then remove the old one:
 
@@ -83,7 +83,7 @@ await identities.removeKey(owner.id, {
 });
 ```
 
-An address can change owners. Your authentication system owns verification, account recovery, key lifecycle, and account merges. Revoke an old association when its ownership changes. The stored `verifiedAt` is the time your server registered the verified association, not an independent verification performed by Janitor.
+An address can change owners. Your authentication system owns verification, account recovery, key lifecycle, and account merges. Revoke an old association when its ownership changes. The stored `verifiedAt` is the time your server registered the verified association, not an independent verification performed by Doorman.
 
 ## 3. Give an agent limited permission
 
@@ -103,12 +103,12 @@ const grant = await identities.createDelegation({
 });
 ```
 
-Grants expire within 30 days, have at most 32 exact-match scopes, and are revocable. A grant ID is a database reference, **not a bearer credential**. Janitor does not mint agent authentication tokens. The application must authenticate the actor separately and authorize grant creation. Delegation is one hop; there is no implicit grant chaining or wildcard scope expansion.
+Grants expire within 30 days, have at most 32 exact-match scopes, and are revocable. A grant ID is a database reference, **not a bearer credential**. Doorman does not mint agent authentication tokens. The application must authenticate the actor separately and authorize grant creation. Delegation is one hop; there is no implicit grant chaining or wildcard scope expansion.
 
 At the request boundary, derive context from server-verified credentials and the target action:
 
 ```ts
-const { response, identity } = await janitor.assess(request, {
+const { response, identity } = await doorman.assess(request, {
   verified: {
     subjectId: owner.id,
     actorId: assistant.id,
@@ -160,7 +160,7 @@ Assessment is a point-in-time read, not a reservation or atomic authorization tr
 
 Register a family member as a separate `person` subject and issue a limited delegation for the shared account. Authenticate that member's credential and pass their ID as `actorId`. No biometric or behavioral guess is required.
 
-`actor.kind: "person"` means the authenticated credential is associated with a registered person principal. It does not prove live human operation; an agent or attacker may control that credential. If everyone shares one login, Janitor cannot reliably distinguish the people at the keyboard. If `actorId` is omitted, the actor is `unknown`, even when the account is verified.
+`actor.kind: "person"` means the authenticated credential is associated with a registered person principal. It does not prove live human operation; an agent or attacker may control that credential. If everyone shares one login, Doorman cannot reliably distinguish the people at the keyboard. If `actorId` is omitted, the actor is `unknown`, even when the account is verified.
 
 A subject may also be an agent account in its own right. Self-operated sessions can pass the same verified subject and actor ID without a delegation. That describes identity; it does not grant application permissions. Creating a delegation to oneself is rejected.
 
@@ -168,14 +168,14 @@ Treat possible account takeover as a reason to gather stronger evidence: reauthe
 
 ## Where Jev fits
 
-Jev is TypeSafe’s AI model for structured judgments. It evaluates browser history and returns numerical answers to focused questions. Janitor asks `sameVisitor`, `automation`, and `suspicious`. Deterministic evidence constrains browser identity restoration. Identity-directory records, email addresses, keys, and grants are not sent to Jev.
+Jev is TypeSafe’s AI model for structured judgments. It evaluates browser history and returns numerical answers to focused questions. Doorman asks `sameVisitor`, `automation`, and `suspicious`. Deterministic evidence constrains browser identity restoration. Identity-directory records, email addresses, keys, and grants are not sent to Jev.
 
-Keep credential evidence, inferred scores, and authorization results separate. Cryptographic validation stays in the authentication layer; grant scope/expiry/revocation checks are deterministic. A classifier cannot override them. Janitor's scores still need calibration against labeled data from the deploying application; typed output does not guarantee a correct judgment.
+Keep credential evidence, inferred scores, and authorization results separate. Cryptographic validation stays in the authentication layer; grant scope/expiry/revocation checks are deterministic. A classifier cannot override them. Doorman's scores still need calibration against labeled data from the deploying application; typed output does not guarantee a correct judgment.
 
 ## Erasure, retention, and validation
 
 `identities.deleteSubject(subjectId)` deletes its identity keys and all grants involving that subject through foreign-key cascades. Browser histories remain separate: use `deleteVisitor(visitorId)` for those and erase associations held by your application. Deletion does not revoke credentials in your authentication provider. Re-registering the same external ID with the same secret/namespace derives the same opaque ID; use an account-generation component if recreation must have a new identity.
 
-`janitor.cleanup()` prunes browser history and expired grants. Subject/key records remain until explicitly removed. Do not store identity associations longer than your application's account and credential lifecycle requires.
+`doorman.cleanup()` prunes browser history and expired grants. Subject/key records remain until explicitly removed. Do not store identity associations longer than your application's account and credential lifecycle requires.
 
 The real D1 and Postgres tests exercise conflicts, erasure, invalid scopes/audiences/actors, expiry, revocation, family-member delegation, unknown actors, and the HTTP trust boundary. The [browser benchmark](BENCHMARKS.md) measures controlled browser continuity. Neither test suite establishes account-takeover detection accuracy or Jev risk calibration; that requires a consented, labeled pilot in a real application.

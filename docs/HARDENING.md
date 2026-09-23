@@ -1,6 +1,6 @@
 # Request limits and trusted events
 
-Once Janitor is running, you may want to limit how much work its endpoint can start, especially when AI evaluation costs money. You may also want to record facts your server already knows, such as a failed login or a successful passkey check.
+Once Doorman is running, you may want to limit how much work its endpoint can start, especially when AI evaluation costs money. You may also want to record facts your server already knows, such as a failed login or a successful passkey check.
 
 This guide covers those optional features. **Protection** limits measurement requests and evaluator calls. **Evidence storage** records verified application events and device associations. They use your existing database and can be enabled separately.
 
@@ -15,7 +15,7 @@ const visitor = createNodeVisitor({
   db,
   evaluator: { apiKey: process.env.JEV_API_KEY! },
   protection: {
-    secret: process.env.JANITOR_PROTECTION_SECRET!, // Dedicated random server secret, at least 32 characters.
+    secret: process.env.DOORMAN_PROTECTION_SECRET!, // Dedicated random server secret, at least 32 characters.
     namespace: "my-app",
     requests: { global: 600, account: 60, session: 30, windowMs: 60_000 },
     evaluator: {
@@ -26,10 +26,10 @@ const visitor = createNodeVisitor({
       cooldownMs: 30_000,
     },
     onEvent: ({ kind, reason }) =>
-      metrics.increment(`janitor.${kind}.${reason}`),
+      metrics.increment(`doorman.${kind}.${reason}`),
   },
   identity: {
-    secret: process.env.JANITOR_IDENTITY_SECRET!,
+    secret: process.env.DOORMAN_IDENTITY_SECRET!,
     namespace: "my-app",
   },
   evidence: {
@@ -57,11 +57,11 @@ The example limits above are illustrative, not recommended values for every appl
 
 The TypeScript HTTP adapters also enforce `maxInFlightRequests` (default 64, range 1–1,024) per reusable handler instance, returning 503 with `Retry-After: 1` before database work when full. `onOverload` is an optional payload-free callback. Reuse the adapter across requests; configure framework and database timeouts independently. This gate covers measurement HTTP calls, not direct core/evidence management calls or other application endpoints. Native Phoenix uses the application's HTTP admission and DBConnection pool/queue controls.
 
-For native Node HTTP servers, use `createNodeRequestListener` from `@janitor/adapters/node/http`. It checks capacity **before** allocating Web Requests or reading bodies. It bounds body size and request duration, preserves multiple response cookies, and keeps a timed-out handler's slot until the underlying work settles. Register framework admission before its body parser; the Fastify example uses this listener in `onRequest`.
+For native Node HTTP servers, use `createNodeRequestListener` from `@aarondovturkel/doorman-adapters/node/http`. It checks capacity **before** allocating Web Requests or reading bodies. It bounds body size and request duration, preserves multiple response cookies, and keeps a timed-out handler's slot until the underlying work settles. Register framework admission before its body parser; the Fastify example uses this listener in `onRequest`.
 
 ```ts
 import { createServer } from "node:http";
-import { createNodeRequestListener } from "@janitor/adapters/node/http";
+import { createNodeRequestListener } from "@aarondovturkel/doorman-adapters/node/http";
 
 const server = createServer(
   createNodeRequestListener(visitor, {
@@ -86,7 +86,7 @@ For higher request volumes, `requests.shards` (default 1, maximum 128) divides t
 
 A measurement quota denial returns sanitized **429** and `Retry-After`, without identity or cookie creation. A protection-store request failure returns **503**. Inference denial, provider failure, malformed output and timeout preserve deterministic matching and return zero risk with `riskStatus: "unavailable"`. A successful evaluated zero is different from unavailable risk. Never treat unavailable risk as affirmative proof of safety; the application's sensitive-action policy chooses its existing verification path.
 
-The endpoint limiter does not protect your login/payment endpoints or absorb a network flood. Keep gateway and application admission controls in front of the database. A global quota protects resources but can itself be exhausted by an attacker; unavailable measurement must not grant permissions. Account/session limiter keys must come from authenticated accounts and application-issued sessions, not request body fields, arbitrary headers, or Janitor's fuzzy visitor ID. No raw IP address is collected.
+The endpoint limiter does not protect your login/payment endpoints or absorb a network flood. Keep gateway and application admission controls in front of the database. A global quota protects resources but can itself be exhausted by an attacker; unavailable measurement must not grant permissions. Account/session limiter keys must come from authenticated accounts and application-issued sessions, not request body fields, arbitrary headers, or Doorman's fuzzy visitor ID. No raw IP address is collected.
 
 ## Add facts your server has verified
 
@@ -120,7 +120,7 @@ For selected API routes, the separate [API activity middleware](API-ACTIVITY.md)
 import {
   createCloudflareVisitor,
   cloudflareRequestEvidence,
-} from "@janitor/adapters/cloudflare";
+} from "@aarondovturkel/doorman-adapters/cloudflare";
 
 const visitor = createCloudflareVisitor({ db: env.VISITORS, ai: env.AI });
 const assessment = await visitor.assess(request, {
@@ -129,7 +129,7 @@ const assessment = await visitor.assess(request, {
 return assessment.response;
 ```
 
-The helper accepts the **original inbound Worker Request**. It allowlists `request.cf.botManagement.score`, `verifiedBot` and `signedAgent`, according to the [official Workers variables](https://developers.cloudflare.com/bots/reference/bot-management-variables/). It ignores headers, IPs, location, JA3/JA4 and other metadata. Missing or malformed fields are omitted. The raw Cloudflare score remains on its 1–99 scale; it is not converted into a calibrated Janitor probability. A signed-agent flag is provider evidence, not a user's delegation grant or a Janitor implementation of Web Bot Auth.
+The helper accepts the **original inbound Worker Request**. It allowlists `request.cf.botManagement.score`, `verifiedBot` and `signedAgent`, according to the [official Workers variables](https://developers.cloudflare.com/bots/reference/bot-management-variables/). It ignores headers, IPs, location, JA3/JA4 and other metadata. Missing or malformed fields are omitted. The raw Cloudflare score remains on its 1–99 scale; it is not converted into a calibrated Doorman probability. A signed-agent flag is provider evidence, not a user's delegation grant or a Doorman implementation of Web Bot Auth.
 
 Do not reconstruct `request.cf` from incoming headers. If a Node/Phoenix origin receives evidence through a proxy, the application must authenticate that hop and prevent direct-origin/header spoofing before creating trusted context. No automatic header trust is installed. Edge evidence expires after 60 seconds, with five seconds of clock skew; session verification timestamps must be within 30 days. Adjust the application's actual authentication/step-up freshness policy independently.
 
@@ -142,12 +142,12 @@ await visitor.evidence!.record({
   id: loginAttempt.id, // Stable application event ID for retries.
   type: "login-failure",
   action: "sign-in",
-  subjectId: knownJanitorSubject.id, // Omit if the account is unknown.
+  subjectId: knownDoormanSubject.id, // Omit if the account is unknown.
   sessionId: serverSession.id,
 });
 
 const activity = await visitor.evidence!.velocity({
-  subjectId: knownJanitorSubject.id,
+  subjectId: knownDoormanSubject.id,
   action: "sign-in",
   windowMs: 15 * 60_000,
 });
@@ -164,7 +164,7 @@ A repeated event ID with the same semantic fields is idempotent, including concu
 
 ## Record a verified device association
 
-After a successful login or approved pairing flow, you can record how a browser was linked to a user. Janitor stores the verification source and expiry so the association can be reviewed or revoked later. This is a historical association, not a new login credential.
+After a successful login or approved pairing flow, you can record how a browser was linked to a user. Doorman stores the verification source and expiry so the association can be reviewed or revoked later. This is a historical association, not a new login credential.
 
 ```ts
 const link = await visitor.evidence!.linkDevice({
@@ -192,7 +192,7 @@ await visitor.evidence!.revokeDevice(link.id, {
 });
 ```
 
-Only call `linkDevice` after the application verifies the credential or explicit device-approval proof and binds it to this account/session. Janitor records provenance; it does not perform the password/passkey/OAuth ceremony. Methods are `password`, `passkey`, `mfa`, `oauth`, `email-link`, `recovery`, `admin-review`. Device-link verification must be at most five minutes old, with five seconds of clock skew, and the association expires within 90 days.
+Only call `linkDevice` after the application verifies the credential or explicit device-approval proof and binds it to this account/session. Doorman records provenance; it does not perform the password/passkey/OAuth ceremony. Methods are `password`, `passkey`, `mfa`, `oauth`, `email-link`, `recovery`, `admin-review`. Device-link verification must be at most five minutes old, with five seconds of clock skew, and the association expires within 90 days.
 
 The same issuer/event proof cannot be reused for another account/device association. Repeated matching calls preserve the original record and revocation. Revocation records its issuer, hashed event reference, reason and time; it cannot be undone by replaying the original proof. Reverification needs a new independently verified event. Supported reasons are `logout`, `device-removed`, `compromised`, `account-recovery`. `listDevices(subjectId, limit)` returns up to 100 recent associations, including retained revoked/expired records for review.
 
@@ -201,31 +201,31 @@ A shared browser can have separately verified associations with multiple account
 ## Native Elixir / Phoenix
 
 ```elixir
-config = Janitor.new(
+config = Doorman.new(
   repo: MyApp.Repo,
-  protection: [secret: System.fetch_env!("JANITOR_PROTECTION_SECRET"), namespace: "my-app"],
-  identity: [secret: System.fetch_env!("JANITOR_IDENTITY_SECRET"), namespace: "my-app"],
+  protection: [secret: System.fetch_env!("DOORMAN_PROTECTION_SECRET"), namespace: "my-app"],
+  identity: [secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"), namespace: "my-app"],
   evidence: [event_retention_days: 7, link_retention_days: 90, max_events_per_query: 1000]
 )
 
-Janitor.Evidence.record(config, %{
+Doorman.Evidence.record(config, %{
   id: attempt.id, type: "login-failure", action: "sign-in",
   subject_id: subject["id"], session_id: server_session.id
 })
-activity = Janitor.Evidence.velocity(config, %{subject_id: subject["id"], window_ms: 900_000})
-{:ok, assessment} = Janitor.assess(config, payload, %{
+activity = Doorman.Evidence.velocity(config, %{subject_id: subject["id"], window_ms: 900_000})
+{:ok, assessment} = Doorman.assess(config, payload, %{
   admission: %{account: authenticated_user.id, session: server_session.id},
   evidence: %{action: "payment"}
 })
 ```
 
-`Janitor.handle` stores private results in `conn.assigns.janitor_identity` and `conn.assigns.janitor_evidence`. Its measurement response is already sent: make sensitive-action decisions in your own action flow. `Janitor.Evidence.link_device`, `assess_device`, `list_devices`, `revoke_device`, `delete_session`, and `delete_subject_events` use atom input keys in snake_case and the same string-valued categories. Stored records and summaries use the same wire keys and HMAC scheme as TypeScript. Protection options use `window_ms`, `max_calls`, `max_concurrent`, `failure_threshold`, `cooldown_ms`, and `on_event`.
+`Doorman.handle` stores private results in `conn.assigns.doorman_identity` and `conn.assigns.doorman_evidence`. Its measurement response is already sent: make sensitive-action decisions in your own action flow. `Doorman.Evidence.link_device`, `assess_device`, `list_devices`, `revoke_device`, `delete_session`, and `delete_subject_events` use atom input keys in snake_case and the same string-valued categories. Stored records and summaries use the same wire keys and HMAC scheme as TypeScript. Protection options use `window_ms`, `max_calls`, `max_concurrent`, `failure_threshold`, `cooldown_ms`, and `on_event`.
 
-Existing Ecto installations add a migration calling `Janitor.Migration.upgrade_security()` with their configured prefix. Fresh `Janitor.Migration.up()` includes both migrations. The example apps apply them automatically through their documented migration commands. The new tables index their foreign keys so related records can be found efficiently during erasure.
+Existing Ecto installations add a migration calling `Doorman.Migration.upgrade_security()` with their configured prefix. Fresh `Doorman.Migration.up()` includes both migrations. The example apps apply them automatically through their documented migration commands. The new tables index their foreign keys so related records can be found efficiently during erasure.
 
 ## Retention, erasure and operational limits
 
-`visitor.cleanup()` / `Janitor.cleanup(config)` also delete one bounded page of expired quota/control rows and, when enabled, up to 100 expired events and 100 retired device links per call. Event retention defaults to seven days (1–30); link cleanup defaults to 90 days (1–365) after expiry or first revocation. Subject/visitor erasure, including expired-visitor cleanup, can remove related evidence earlier through cascading deletion. Repeat maintenance periodically; there is no scheduler. Evidence cleanup respects its namespace and configured retention. Existing optional learning/delegation cleanup retains its separately documented behavior.
+`visitor.cleanup()` / `Doorman.cleanup(config)` also delete one bounded page of expired quota/control rows and, when enabled, up to 100 expired events and 100 retired device links per call. Event retention defaults to seven days (1–30); link cleanup defaults to 90 days (1–365) after expiry or first revocation. Subject/visitor erasure, including expired-visitor cleanup, can remove related evidence earlier through cascading deletion. Repeat maintenance periodically; there is no scheduler. Evidence cleanup respects its namespace and configured retention. Existing optional learning/delegation cleanup retains its separately documented behavior.
 
 `deleteSession` removes a session's event records; `deleteSubjectEvents` removes events involving a subject as principal or actor. Deleting a subject or visitor through existing erasure APIs cascades its related events/links. Aggregate summaries are computed from retained events, so erased events immediately disappear from summaries. Hashed references and verified associations remain personal/linkable data. The implementer owns disclosure, collection policy and erasure authorization.
 

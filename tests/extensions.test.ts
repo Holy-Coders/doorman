@@ -3,18 +3,18 @@ import { SignJWT, EncryptJWT, generateKeyPair } from "jose";
 import {
   createResultReceipts,
   verifyAgentCredential,
-} from "@janitor/adapters/security";
+} from "@aarondovturkel/doorman-adapters/security";
 import {
   createAnalyticsBridge,
   analyticsProperties,
-} from "@janitor/adapters/analytics";
+} from "@aarondovturkel/doorman-adapters/analytics";
 import {
   createFeedbackExport,
   revokeFeedback,
   evaluateLearning,
   type EvaluationRow,
   type VisitorIdentity,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 const identity: VisitorIdentity = {
   visitorId: `vis_${"a".repeat(48)}`,
   confidence: 0.9,
@@ -92,7 +92,7 @@ it("rejects expired receipts, cross-purpose tokens and nonce storage failures", 
     .setProtectedHeader({
       alg: "dir",
       enc: "A256GCM",
-      typ: "janitor-result+jwe",
+      typ: "doorman-result+jwe",
     })
     .setIssuer("app")
     .setAudience("a")
@@ -142,7 +142,7 @@ it("rejects unencrypted legacy receipts and a different encryption key", async (
     consumeNonce,
   };
   const legacy = await new SignJWT(input)
-    .setProtectedHeader({ alg: "HS256", typ: "janitor-result+jwt" })
+    .setProtectedHeader({ alg: "HS256", typ: "doorman-result+jwt" })
     .setIssuer("app")
     .setAudience("a")
     .setIssuedAt()
@@ -232,7 +232,7 @@ it("analytics bridges export allowlisted properties and explicit authenticated p
     { $email: "user@example.test", plan: "pro", ip: "0" },
   ]);
   expect(analyticsProperties(identity)).toHaveProperty(
-    "janitor_risk_status",
+    "doorman_risk_status",
     "evaluated",
   );
 });

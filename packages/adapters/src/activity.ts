@@ -3,7 +3,7 @@ import {
   API_ACTIVITY_LIMITS,
   attemptEvaluation,
   isApiActivityRisk,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   ApiActivityAssessment,
   ApiActivityCorrelation,
@@ -13,7 +13,7 @@ import type {
   ApiActivityResult,
   ApiActivityStorage,
   VisitorEvaluator,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
 
@@ -83,7 +83,7 @@ export type {
   ApiActivityKey,
   ApiActivityResult,
   ApiActivityAssessment,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 /** Optional server telemetry. It never reads a body, URL, header or browser signal. */
 export function createApiActivity(

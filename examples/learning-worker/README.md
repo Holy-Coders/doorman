@@ -1,6 +1,6 @@
 # Run the learning service on Cloudflare
 
-This is a separate, authenticated pilot service. Installing Janitor does not enroll an application or enable uploads. D1 stores bounded summaries, feedback, evaluation leases and model reports. Workers AI is optional and spending starts disabled.
+This is a separate, authenticated pilot service. Installing Doorman does not enroll an application or enable uploads. D1 stores bounded summaries, feedback, evaluation leases and model reports. Workers AI is optional and spending starts disabled.
 
 From the repository root:
 
@@ -51,19 +51,19 @@ Replace the illustrative timestamps and IDs with your preselected split. The res
 Create your own D1 database and put its ID in a copy of `wrangler.jsonc`; do not use the repository's hosted pilot database ID for another application. Then:
 
 ```sh
-pnpm exec wrangler d1 create my-janitor-network
+pnpm exec wrangler d1 create my-doorman-network
 pnpm migrate:remote
 pnpm exec wrangler secret put OPERATOR_KEY_HASH
 pnpm run deploy
 ```
 
-Set a unique Worker name and your own binding/database name as well. The checked-in deployment has no automatic participant enrollment and no automatic contribution from the Janitor website.
+Set a unique Worker name and your own binding/database name as well. The checked-in deployment has no automatic participant enrollment and no automatic contribution from the Doorman website.
 
 To deliberately enable paid inference, set `JEV_ENABLED` to `"true"` and configure positive `MAX_EVALUATIONS_PER_DAY` and `MAX_EVALUATIONS_LIFETIME` caps. Reservations are persisted in D1 and not refunded on failure. Restarting or deploying does not reset the lifetime counter. Changing the configured cap changes the maximum, not the count already consumed. No TypeSafe API key is needed for Workers AI. Provider calls use the current `AI.run("typesafe/jev", {state, questions})` format.
 
 The example disables Workers observability logs to avoid retaining request metadata. If you enable infrastructure logs, review their contents and retention separately. Never log authorization headers, complete summaries, raw session IDs or operator API responses. Authenticated erasure remains available after the ingestion quota is exhausted. Hourly cleanup removes four bounded pages (up to 2,000 expired samples per run); larger installations must call `/operator/cleanup` often enough to clear their retention backlog. Discovery runs separately at 03:15 UTC when its holdout manifest is configured.
 
-This deployment is a bounded pilot, not a benchmark demonstrating hundreds of thousands of concurrent inference requests. Ordinary Janitor identity handling remains independent of it.
+This deployment is a bounded pilot, not a benchmark demonstrating hundreds of thousands of concurrent inference requests. Ordinary Doorman identity handling remains independent of it.
 
 ## Optional supervised classifier
 

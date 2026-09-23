@@ -2,7 +2,7 @@ import type {
   ApplicationEvent,
   DeviceLink,
   EvidenceStorage,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type { D1Database } from "./index.js";
 
 export function createD1EvidenceStorage(db: D1Database): EvidenceStorage {

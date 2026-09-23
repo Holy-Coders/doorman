@@ -1,6 +1,6 @@
 # Keep scores private
 
-Janitor returns the visitor ID to the browser and keeps confidence, risk and account attribution on your server by default. This lets your application use an assessment without showing visitors the numbers they could try to manipulate.
+Doorman returns the visitor ID to the browser and keeps confidence, risk and account attribution on your server by default. This lets your application use an assessment without showing visitors the numbers they could try to manipulate.
 
 Browser recognition is not authentication. A copied cookie or fabricated set of signals must not give someone access to an account.
 
@@ -27,9 +27,9 @@ The browser receives:
 { "visitorId": "vis_…", "isReturning": true }
 ```
 
-The example threshold is not a recommendation for production. Test the scores and false positives on your own traffic. Janitor never decides to block a request or show a CAPTCHA.
+The example threshold is not a recommendation for production. Test the scores and false positives on your own traffic. Doorman never decides to block a request or show a CAPTCHA.
 
-The same API works with Node, Vercel and Cloudflare. Native Phoenix puts the private result in `conn.assigns.janitor_identity`. `Janitor.handle` has already sent the measurement response when it returns, so use your own action handler for later access decisions.
+The same API works with Node, Vercel and Cloudflare. Native Phoenix puts the private result in `conn.assigns.doorman_identity`. `Doorman.handle` has already sent the measurement response when it returns, so use your own action handler for later access decisions.
 
 ## Distinguish zero risk from no assessment
 
@@ -49,7 +49,7 @@ A storage failure produces a controlled `503` without a new cookie. Invalid requ
 
 If checkout or another sensitive endpoint needs the assessment, store it in your existing server session with a short expiry and the operation it belongs to. Authenticate that endpoint normally and verify any CAPTCHA, passkey or MFA proof there.
 
-If you need to carry the assessment through the browser, Janitor provides an **encrypted result receipt**: a short-lived token whose contents the browser cannot read. It must be bound to the authenticated account and exact operation, and accepted only once. The [receipt guide](TRUST.md) shows the required checks.
+If you need to carry the assessment through the browser, Doorman provides an **encrypted result receipt**: a short-lived token whose contents the browser cannot read. It must be bound to the authenticated account and exact operation, and accepted only once. The [receipt guide](TRUST.md) shows the required checks.
 
 Neither a receipt nor a high confidence score proves that the browser measurements are truthful. Continue to authorize the underlying action using your application’s trusted account and permission state.
 
@@ -69,7 +69,7 @@ The TypeScript handler limits concurrent measurements per instance. Optional dat
 
 These controls protect measurement resources. Your gateway and application still need their normal limits for login, payments and network traffic. Use account/session keys verified by your server rather than identifiers supplied in arbitrary headers or browser JSON.
 
-If a trusted edge provider supplies a bot assessment, pass it only through a verified server path. Janitor does not infer trust from `X-Forwarded-For` or client-supplied bot-score headers. It does not collect raw IP addresses.
+If a trusted edge provider supplies a bot assessment, pass it only through a verified server path. Doorman does not infer trust from `X-Forwarded-For` or client-supplied bot-score headers. It does not collect raw IP addresses.
 
 ## Understand the remaining limits
 

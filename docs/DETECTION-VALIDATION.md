@@ -1,6 +1,6 @@
 # What the expanded tests found
 
-We tested the optional detection signals against controlled browsers, public research data and **live Jev** on September 23, 2026. Some results support collecting bounded evidence. They do **not** support claiming that Janitor can reliably identify a particular assistant, count distinct people from behavior, or detect screenshots.
+We tested the optional detection signals against controlled browsers, public research data and **live Jev** on September 23, 2026. Some results support collecting bounded evidence. They do **not** support claiming that Doorman can reliably identify a particular assistant, count distinct people from behavior, or detect screenshots.
 
 The most important result: **the current Jev operator prompt did not reliably separate humans from agents on our small public-data sample.** Keep inferred operator labels experimental and keep verified account and agent identities separate.
 
@@ -10,7 +10,7 @@ The [full verification summary](benchmarks/full-validation-2026-09-23.json) also
 
 The expanded panel covers 80 previously selected FP-Agent sessions, 18 browser fixtures, 16 single-feature or combined controls, 14 API-activity scenarios and eight lookup, candidate, cross-device and reference-method checks. Identical requests share a cached response. Across the two stages, we made **120 new provider calls**, all successful, with no automatic retries. The earlier identity/behavior pilot was also replayed from its cache.
 
-We used Cloudflare's documented `typesafe/jev` [REST endpoint](https://developers.cloudflare.com/ai/models/typesafe/jev/), through Janitor's production Workers AI response adapter and shared typed methods. Responses reported `jev-1.13.0`. This exercises real model inference and production parsing; it is not a live test of the separate direct-TypeSafe endpoint or a deployed application's Workers binding.
+We used Cloudflare's documented `typesafe/jev` [REST endpoint](https://developers.cloudflare.com/ai/models/typesafe/jev/), through Doorman's production Workers AI response adapter and shared typed methods. Responses reported `jev-1.13.0`. This exercises real model inference and production parsing; it is not a live test of the separate direct-TypeSafe endpoint or a deployed application's Workers binding.
 
 The call ledger recorded 210,000 input tokens and 7,331 output tokens. Median latency was 556 ms and p95 was 2,504 ms; **20 of 120 calls exceeded 1,200 ms**. The offline experiment allowed 20 seconds at the evaluator layer and 15 seconds at the HTTP layer. Production's shorter deadline can return unavailable/zero-risk fallback instead. Token usage is measured; the provider invoice was not inspected.
 
@@ -30,7 +30,7 @@ The panel contains 40 publisher-labeled human sessions and 40 agent sessions acr
 
 AUC near 0.5 means this score provided almost no separation in this sample. Zero false alerts is not a success when there are also zero detections. The earlier prompt scored 0.341 AUC on its five-feature input; both the prompt and inputs changed here, so their difference does not isolate a feature improvement. Neither panel establishes population accuracy.
 
-FP-Agent does not supply Janitor's new runtime, permission, target-alignment, focus or decoy probes. Those fields remain missing. Its browser grouping is a proxy, not a verified person label. The stronger supervised behavior-classifier results in the [external-data report](EXTERNAL-BENCHMARKS.md) are a different model and evaluation; they must not be presented as Jev accuracy.
+FP-Agent does not supply Doorman's new runtime, permission, target-alignment, focus or decoy probes. Those fields remain missing. Its browser grouping is a proxy, not a verified person label. The stronger supervised behavior-classifier results in the [external-data report](EXTERNAL-BENCHMARKS.md) are a different model and evaluation; they must not be presented as Jev accuracy.
 
 ### Linked activity is promising, with false-alert concerns
 
@@ -85,7 +85,7 @@ Notification permission grants and resets worked as test controls. WebKit report
 
 ### Public font data
 
-We also audit FP-Agent's existing FingerprintJS font component. Its font list and DOM measurement method differ from Janitor's fixed local `FontFace` probe. The audit reports session-level collisions and repeated-capture stability, without publishing font names or identifiers. A missing font result remains unknown; an empty measured set is counted separately. Fingerprint-derived grouping cannot serve as independent ground truth for a font-identity test.
+We also audit FP-Agent's existing FingerprintJS font component. Its font list and DOM measurement method differ from Doorman's fixed local `FontFace` probe. The audit reports session-level collisions and repeated-capture stability, without publishing font names or identifiers. A missing font result remains unknown; an empty measured set is counted separately. Fingerprint-derived grouping cannot serve as independent ground truth for a font-identity test.
 
 Across 7,728 sessions, the 546 human sessions contained only **26 distinct font sets**; 267 shared the most common set. The human session-pair collision rate was 25.46%, including repeat visitors. Every one of the 994 Atlas sessions shared its font set with at least one human session. Some other families had distinctive sets in this dataset, but that can reflect their test machines. It is not a durable brand signature or independent-person accuracy result. There were no repeated within-session font captures for the human group, so the audit cannot establish human longitudinal stability.
 

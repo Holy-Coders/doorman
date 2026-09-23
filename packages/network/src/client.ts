@@ -1,7 +1,7 @@
 import { classifierAssessmentSchema } from "./classifier-schema.js";
 import type { ClassifierAssessment } from "./classifier-schema.js";
-import { isIdentityAttribution } from "@janitor/core";
-import type { VisitorEvaluator, IdentityAttribution } from "@janitor/core";
+import { isIdentityAttribution } from "@aarondovturkel/doorman-core";
+import type { VisitorEvaluator, IdentityAttribution } from "@aarondovturkel/doorman-core";
 import { z } from "zod";
 import {
   contributionSchema,
@@ -245,7 +245,7 @@ export function createNetworkClient(options: NetworkClientOptions) {
     },
     evidenceReference: (localEvidenceId: string) =>
       reference(localEvidenceId, "evidence"),
-    /** Use only attribution freshly resolved by Janitor on your server, never request JSON.
+    /** Use only attribution freshly resolved by Doorman on your server, never request JSON.
      * A verified delegated assistant is a positive automation label, not a benign/abuse label.
      */
     async confirmAssistant(

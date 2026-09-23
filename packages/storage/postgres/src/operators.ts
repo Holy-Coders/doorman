@@ -1,5 +1,5 @@
-import type { OperatorStorage, OperatorWindow } from "@janitor/core";
-import { OPERATOR_LIMITS } from "@janitor/core";
+import type { OperatorStorage, OperatorWindow } from "@aarondovturkel/doorman-core";
+import { OPERATOR_LIMITS } from "@aarondovturkel/doorman-core";
 import type { PostgresDatabase } from "./index.js";
 const decode = (row: Record<string, unknown>) =>
   (typeof row.record === "string"

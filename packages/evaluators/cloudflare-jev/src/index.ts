@@ -1,6 +1,6 @@
-import type { VisitorEvaluator } from "@janitor/core";
-import { createJevMethods } from "@janitor/evaluator-jev";
-import type { JevRequest } from "@janitor/evaluator-jev";
+import type { VisitorEvaluator } from "@aarondovturkel/doorman-core";
+import { createJevMethods } from "@aarondovturkel/doorman-evaluator-jev";
+import type { JevRequest } from "@aarondovturkel/doorman-evaluator-jev";
 
 export interface WorkersAI {
   run(model: "typesafe/jev", input: JevRequest): Promise<unknown>;

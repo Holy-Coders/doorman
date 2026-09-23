@@ -711,17 +711,17 @@
     {
       "purpose": "scope",
       "value": "application",
-      "expected": "sub_71ba7f4d250df8969ed0c893619d01e7775a27b7e7c3602ffd7efdac8c4eb743"
+      "expected": "sub_76fd9dc291817336820e8d6aed452f5afe57289856040ca352addfa13fa33c72"
     },
     {
       "purpose": "event",
       "value": "event-משתמש",
-      "expected": "sub_bd7e997769b6e5ccacf41bb7947cc1e7b07a47037dc0abe981f0b81f9130b71a"
+      "expected": "sub_03da6ce1ec77aca8fd598c367e671ec469fd38a84a03931dab5be4dd23ec5407"
     },
     {
       "purpose": "session",
       "value": "session-123",
-      "expected": "sub_359fd514c12de9aa2939cfda65ff6fc9aa3507525e333c92bbb1ca75e3d4e79b"
+      "expected": "sub_0c6692fbda8af60ed310217cd9c2f058d377eb4ac4ab4ae23264ab6825c0cc77"
     },
     {
       "purpose": "verification",
@@ -729,25 +729,25 @@
         "auth",
         "proof-123"
       ],
-      "expected": "sub_6bbd80503043b01f82c778c6b903257869c25aa5d35996d42a38497d70af3f63"
+      "expected": "sub_82ed8a1159509a5abe83ea0fcffa658865f6eba0e0ef5102a7c640b6daa9d3d8"
     }
   ],
   "protectionLabels": [
     {
       "value": "global",
-      "expected": "sub_ace649205ec1f3a17e27be1f8d4ce96faa97d0caf1f9b3aed494dc97c418f819"
+      "expected": "sub_075ac3c025646083c849bd14de5d4c68bf456dd127a3b75adfe84bc9f7792224"
     },
     {
       "value": "evaluator",
-      "expected": "sub_ef231cbd96d67a6db34458bf37b7f3ba045d3b2df8b2d743ce6106c69238d619"
+      "expected": "sub_7c7c06fa878a81de6b87840cf0ffb56eb80e91ed6c86bde791350f077796f75e"
     },
     {
       "value": "[\"account\",\"account-123\"]",
-      "expected": "sub_3270e5c2f8f309ab0c42955bb143c499f10aad4f8b766ef1e6a107f17e5cde50"
+      "expected": "sub_4fdc6761733cc9bcfe3f999261cfb60b0f841359c8e9b153705ea5766500cc67"
     },
     {
       "value": "[\"global-shard-v1\",4,0]",
-      "expected": "sub_fc3f14500df49bf3b12708ca2f66c29177186d66118c6fed1fe1066167e49d31"
+      "expected": "sub_5a5aad5537c536bdd3e886620b2913532b78f4cc46de6d7f53a192de8f46e76c"
     }
   ],
   "activity": {
@@ -777,31 +777,31 @@
       }
     }
   },
-  "activityLabel": "sub_efe5f74cfc59b1dafbb7e8674a6e76ddbad8b0d2ece3d02d38de6edb72bd6574",
+  "activityLabel": "sub_ad2a76e5a94befd2de992f0975cbf50ba58206abf1a26cfb488de791cc63a56b",
   "subjects": [
     {
       "id": "account-123",
       "namespace": "fixture",
       "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "expected": "sub_ad5468c55bdc5ad66c5b0160c848079f3ca136d38735fd47687e0bb0c9f5dcd1"
+      "expected": "sub_b54b018544d33eb33bc9b8200a95c2d36097c2fa0ccf4812f6b457be7c9ac326"
     },
     {
       "id": "משתמש",
       "namespace": "fixture",
       "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "expected": "sub_bac61ea6dfcb9ef22dfee959b7c4627b9ad9551c1eee57b686940f4845175e19"
+      "expected": "sub_4a794da719f983a4e4036443a2a32a31179c7e7ae5f58998ec5693099019b0e4"
     },
     {
       "id": "é",
       "namespace": "fixture",
       "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "expected": "sub_836662bf609abcd6ce5bfa983c3461e636bcc654f5db61e4efb470e7c38177fa"
+      "expected": "sub_a88bab8e850c6d07c5506f02ba5fd3b82e8dbdced9a7559be4c4e3973e31bf1e"
     },
     {
       "id": "a\"b",
       "namespace": "fixture",
       "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "expected": "sub_4d8a131869ab41a8ad4246edeb4b17316bc10fdb3090113d10644dac00ec2bd6"
+      "expected": "sub_2fbfdad166392c11cc7631bd21e11b6c63a28b0c8b20737f6e9d0c89c53ec011"
     }
   ]
 }

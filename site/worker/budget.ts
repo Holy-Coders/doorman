@@ -1,8 +1,8 @@
-import type { D1Database } from "@janitor/storage-d1";
-import type { WorkersAI } from "@janitor/evaluator-cloudflare-jev";
-import { unwrapCloudflareJevResponse } from "@janitor/evaluator-cloudflare-jev";
-import type { JevRequest } from "@janitor/evaluator-jev";
-import { isProbability } from "@janitor/core";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
+import type { WorkersAI } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import { unwrapCloudflareJevResponse } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import type { JevRequest } from "@aarondovturkel/doorman-evaluator-jev";
+import { isProbability } from "@aarondovturkel/doorman-core";
 
 function readNoul(value: unknown, key: string): number {
   const answer = (
@@ -160,7 +160,7 @@ export function createBudgetedAI(options: {
       const serialized = JSON.stringify({
         model,
         input,
-        version: "janitor-demo-v1",
+        version: "doorman-demo-v1",
       });
       if (
         new TextEncoder().encode(serialized).byteLength > DEMO_LIMITS.inputBytes

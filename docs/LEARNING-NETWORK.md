@@ -1,6 +1,6 @@
 # Learn recurring assistant patterns
 
-An assistant may call the same operations in the same order, pause for similar amounts of time, or produce unusually regular interactions. Janitor can look for these recurring combinations in sessions that your application has independently identified as assistant-operated.
+An assistant may call the same operations in the same order, pause for similar amounts of time, or produce unusually regular interactions. Doorman can look for these recurring combinations in sessions that your application has independently identified as assistant-operated.
 
 The optional learning service turns those observations into small, readable rules and tests them on later sessions from different applications. It is a pilot for discovering useful evidence. It does not identify the human behind an account, authenticate an agent, or train Jev's weights.
 
@@ -16,7 +16,7 @@ If a human or an attacker reproduces all the same observed features, this detect
 
 Your application keeps its visitor database, account/device links and authentication. It decides which first-party operations to observe and which independent outcomes it can confirm.
 
-The separate learning service accepts bounded numeric summaries and returns private risk assessments. It can run on your infrastructure using Postgres or D1. An operator can provision participants in a shared deployment. Ordinary Janitor installations make no connection to that service.
+The separate learning service accepts bounded numeric summaries and returns private risk assessments. It can run on your infrastructure using Postgres or D1. An operator can provision participants in a shared deployment. Ordinary Doorman installations make no connection to that service.
 
 There are three independent choices:
 
@@ -39,11 +39,11 @@ The input schema accepts only versioned numeric features:
 | Ordered server session          | Transition frequencies between categories, repeated-transition ratio and rounded arrival-gap mean/variability |
 | Optional browser behavior       | Rounded mouse speed, turn/pause ratios and aggregate interaction interval mean/variability                    |
 
-`extractFeatures()` converts Janitor API activity and optional browser behavior into these fields. You map your static route templates to operation categories. Raw route templates, URLs, bodies, credentials, IPs, emails, device fingerprints and account identifiers are excluded.
+`extractFeatures()` converts Doorman API activity and optional browser behavior into these fields. You map your static route templates to operation categories. Raw route templates, URLs, bodies, credentials, IPs, emails, device fingerprints and account identifiers are excluded.
 
 `createSequenceTracker()` keeps counts for at most 256 operations in one server-owned session/window. It remembers only the previous category/time and bounded running statistics. Its snapshot contains no event trail or exact timestamps. Keep it with the session owner; do not use one global tracker across users or combine unrelated worker orderings. For a distributed application, derive the same summary from its existing ordered session stream. The pilot does not create a new distributed event pipeline.
 
-The server can observe requests received by your application. It cannot see an assistant's private outbound telemetry calls to another service. Janitor does not bypass browser restrictions or probe other applications to obtain those calls. Timing features describe observed requests and interactions; they are not measurements of an assistant's internal thinking time.
+The server can observe requests received by your application. It cannot see an assistant's private outbound telemetry calls to another service. Doorman does not bypass browser restrictions or probe other applications to obtain those calls. Timing features describe observed requests and interactions; they are not measurements of an assistant's internal thinking time.
 
 Missing or sparse browser behavior stays unknown. The collector requires at least 20 mouse movements or 10 interaction intervals before deriving those respective features. It never reads actual keys, absolute coordinates, text or form values. Browser summaries remain spoofable.
 
@@ -51,7 +51,7 @@ Missing or sparse browser behavior stays unknown. The collector requires at leas
 
 1. Your server prepares and optionally contributes an immutable summary. Inspect the exact JSON locally before enabling uploads.
 2. Later, it supplies an outcome for that sample ID. The service records when the feedback arrived.
-3. `confirmAssistant()` accepts attribution freshly verified by Janitor on your server: a verified agent credential, verified principal and currently valid delegation. It creates an assistant label only. It does not label the session harmless.
+3. `confirmAssistant()` accepts attribution freshly verified by Doorman on your server: a verified agent credential, verified principal and currently valid delegation. It creates an assistant label only. It does not label the session harmless.
 4. Other outcomes require an independently reviewed session or confirmed incident. The protocol rejects labels whose source is a Jev prediction, CAPTCHA result or login alone.
 5. Conflicting feedback marks the sample disputed and removes it from future discovery. It invalidates existing model evidence conservatively.
 
@@ -108,4 +108,4 @@ The first real evaluation should include multiple independently operated applica
 
 ## Train a supervised classifier
 
-The learning service also supports an offline classifier pipeline. Compare telemetry-only logistic/boosted-tree models with optional Jev features, using independently confirmed outcomes and a separate calibration window. Private `network.classify(features)` results describe assistant and abuse targets; they do not replace authentication or the existing risk result. Follow [Train a Janitor classifier](CLASSIFIER.md) for setup, validation, budgets and rollback.
+The learning service also supports an offline classifier pipeline. Compare telemetry-only logistic/boosted-tree models with optional Jev features, using independently confirmed outcomes and a separate calibration window. Private `network.classify(features)` results describe assistant and abuse targets; they do not replace authentication or the existing risk result. Follow [Train a Doorman classifier](CLASSIFIER.md) for setup, validation, budgets and rollback.

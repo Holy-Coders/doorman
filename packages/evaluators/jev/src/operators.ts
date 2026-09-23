@@ -1,9 +1,9 @@
-import { OPERATOR_FEATURE_NAMES, OPERATOR_LIMITS } from "@janitor/core";
+import { OPERATOR_FEATURE_NAMES, OPERATOR_LIMITS } from "@aarondovturkel/doorman-core";
 import type {
   OperatorEvidence,
   OperatorEvaluationInput,
   OperatorEvaluation,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { readNoul } from "./intelligence.js";
 import type { JevRequest } from "./intelligence.js";
 

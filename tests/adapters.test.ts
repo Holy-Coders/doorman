@@ -5,11 +5,11 @@ import { Miniflare } from "miniflare";
 import {
   createNodeVisitor,
   createVisitorHandler,
-} from "@janitor/adapters/node";
-import { createVercelVisitor } from "@janitor/adapters/vercel";
-import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
-import type { D1Database } from "@janitor/storage-d1";
-import type { VisitorIdentity } from "@janitor/core";
+} from "@aarondovturkel/doorman-adapters/node";
+import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
+import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
+import type { VisitorIdentity } from "@aarondovturkel/doorman-core";
 import { createMemoryStorage } from "./helpers/memory.js";
 import { evaluation, signals } from "./helpers/fixtures.js";
 function request(

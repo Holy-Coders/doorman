@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Operator training artifacts and private /v1/classify response. Additional semantic constraints are enforced by Janitor.",
+  "description": "Operator training artifacts and private /v1/classify response. Additional semantic constraints are enforced by Doorman.",
   "dataset": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
@@ -1201,7 +1201,7 @@
         "properties": {
           "version": {
             "type": "string",
-            "const": "janitor-jev-features-v1"
+            "const": "doorman-jev-features-v1"
           },
           "providerModel": {
             "type": "string",

@@ -68,7 +68,7 @@ const server = createServer((req, res) => {
     res
       .writeHead(200, { "Content-Type": "text/html" })
       .end(
-        `<!doctype html><title>Janitor isolated runtime research</title><button>Test fixture</button><script type="module">${script}</script>`,
+        `<!doctype html><title>Doorman isolated runtime research</title><button>Test fixture</button><script type="module">${script}</script>`,
       );
 });
 await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
@@ -113,7 +113,7 @@ const rows: Row[] = [];
 try {
   for (let process = 0; process < 8; process++) {
     const headed = process >= 4;
-    const profile = await mkdtemp(join(tmpdir(), "janitor-cdp-validation-"));
+    const profile = await mkdtemp(join(tmpdir(), "doorman-cdp-validation-"));
     const child = spawn(
       chromium.executablePath(),
       [

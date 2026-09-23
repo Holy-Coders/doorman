@@ -2,18 +2,18 @@
 
 If you enable [login feedback](LEARNING.md), you can test a predictor against visits whose users later signed in. The goal is to find out how often it guesses correctly, how often it links the wrong user, and how often it declines to guess.
 
-The evaluation runs locally on an export from your database. It only calls an external AI service if your predictor does. Start with Janitor’s built-in similarity baseline so you have something to compare another model against.
+The evaluation runs locally on an export from your database. It only calls an external AI service if your predictor does. Start with Doorman’s built-in similarity baseline so you have something to compare another model against.
 
 ## Prepare labeled examples
 
-A useful cross-device test needs an independently verified device label for each session, such as a label from device enrollment or a consented pilot. Do not use Janitor’s own guessed visitor identity as the answer you are testing against.
+A useful cross-device test needs an independently verified device label for each session, such as a label from device enrollment or a consented pilot. Do not use Doorman’s own guessed visitor identity as the answer you are testing against.
 
 ```ts
 import {
   createFeedbackExport,
   evaluateLearning,
   revokeFeedback,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 const reports = await visitor.learning!.reports(100);
 const rows = reports.map((row) => ({
@@ -28,7 +28,7 @@ const report = await evaluateLearning(dataset, {
 });
 ```
 
-`lookupIndependentlyVerifiedDevice` and `myPredictor` are your application functions. Device IDs must come from verified pilot labels or explicit device enrollment, not Janitor's own fuzzy browser prediction. Do not invent labels for unverified people. Native Elixir `Janitor.Learning.reports/2` returns the same wire keys, so a privileged export can use this evaluator without running a TypeScript identity server.
+`lookupIndependentlyVerifiedDevice` and `myPredictor` are your application functions. Device IDs must come from verified pilot labels or explicit device enrollment, not Doorman's own fuzzy browser prediction. Do not invent labels for unverified people. Native Elixir `Doorman.Learning.reports/2` returns the same wire keys, so a privileged export can use this evaluator without running a TypeScript identity server.
 
 ## Keep the test honest
 

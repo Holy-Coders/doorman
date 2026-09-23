@@ -11,9 +11,9 @@ const app = createApp(db, {
   apiKey: process.env.JEV_API_KEY,
   origin: process.env.APP_ORIGIN,
   activity:
-    process.env.JANITOR_API_ACTIVITY === "1"
+    process.env.DOORMAN_API_ACTIVITY === "1"
       ? {
-          secret: process.env.JANITOR_IDENTITY_SECRET ?? "",
+          secret: process.env.DOORMAN_IDENTITY_SECRET ?? "",
           apiToken: process.env.EXAMPLE_API_TOKEN ?? "",
         }
       : undefined,

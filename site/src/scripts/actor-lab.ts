@@ -1,10 +1,10 @@
-import { assessIdentity } from "@janitor/core";
+import { assessIdentity } from "@aarondovturkel/doorman-core";
 import type {
   Delegation,
   IdentityStorage,
   IdentitySubject,
   VerifiedIdentityContext,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 const people: IdentitySubject[] = [
   { id: "sub_" + "a".repeat(64), kind: "person", updatedAt: 0 },
@@ -19,13 +19,13 @@ const copy: Record<string, string> = {
   family:
     "A separately authenticated family member has a limited grant on the shared account. The account stays the same; the actor is distinct.",
   revoked:
-    "The agent credential still identifies the actor, but the owner revoked this grant. Janitor reports the invalid delegation; your app decides what to do.",
+    "The agent credential still identifies the actor, but the owner revoked this grant. Doorman reports the invalid delegation; your app decides what to do.",
   scope:
     "The agent has calendar:read, but this action needs calendar:write. Familiar identity does not expand permission.",
   expired:
     "The grant's expiry has passed. The agent is still recognizable; its old delegation is no longer valid.",
   unknown:
-    "The account context is verified, but there is no separately verified actor. Janitor leaves the actor unknown instead of guessing human, agent, or intruder.",
+    "The account context is verified, but there is no separately verified actor. Doorman leaves the actor unknown instead of guessing human, agent, or intruder.",
 };
 const readOnly = async () => {
   throw new Error("The actor lab is read-only");

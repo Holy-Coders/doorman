@@ -201,7 +201,7 @@ export async function sealClassifierManifest(
     "HMAC",
     key,
     new TextEncoder().encode(
-      "janitor-classifier-export-v1:" +
+      "doorman-classifier-export-v1:" +
         canonicalJSON(classifierManifestSchema.parse(manifest)),
     ),
   );

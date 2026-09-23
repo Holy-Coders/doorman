@@ -1,75 +1,130 @@
-<section class="identity-hero" aria-labelledby="hero-title" data-motion-scene>
-  <div class="container hero-composition">
-    <div class="hero-copy">
-      <a class="hero-announcement" href="/docs/introduction/">
-        Open-source identity for people and agents
+---
+const actors = [
+  { id: "human", label: "A human", color: "pink" },
+  { id: "another", label: "Another human", color: "lime" },
+  { id: "robot", label: "A robot", color: "amber" },
+  { id: "assistant", label: "An AI assistant", color: "lavender" },
+];
+---
+
+<section
+  class="doorway-hero container"
+  aria-labelledby="hero-title"
+  data-motion-scene
+>
+  <div class="doorway-introduction">
+    <div>
+      <a class="doorway-announcement" href="/docs/introduction/">
+        Open-source identity for people & agents
       </a>
       <h1 id="hero-title">
         Know who’s
         <br />
         behind the request.
       </h1>
-      <p class="hero-description">
-        First-party identity. Private agent classification. Keep your analytics;
-        let Janitor add the context.
+    </div>
+    <div class="doorway-intro-copy">
+      <p>
+        One account can have a whole cast of characters. Doorman connects
+        verified people, browsers and agents, and adds private activity
+        estimates to the analytics you already use.
       </p>
       <div class="hero-actions">
         <a href="/docs/getting-started/" class="button button-primary">
           Start building <span aria-hidden="true">↗</span>
         </a>
-        <a href="#browser-demo" class="button button-subtle">
-          See how it works
+        <a href="/playground/" class="button button-subtle">
+          Try the playground
         </a>
       </div>
-      <p class="hero-footnote">
-        Open source. Your database. Optional intelligence from Jev.
+      <p class="doorway-preview">
+        Developer preview. Inferred labels are experimental.
       </p>
     </div>
-    <div class="hero-art">
-      <div class="hero-film" aria-hidden="true">
-        <img
-          class="hero-poster"
-          src="/media/continuity-poster.webp"
-          width="1920"
-          height="1080"
-          alt=""
-          fetchpriority="high"
-        />
-        <video
-          data-hero-video
-          muted
-          loop
-          playsinline
-          preload="none"
-          disablepictureinpicture
-          tabindex="-1"
-        >
-          <source data-src="/media/continuity.webm" type="video/webm" />
-          <source data-src="/media/continuity.mp4" type="video/mp4" />
-        </video>
-      </div>
-      <img
-        class="hero-mark"
-        src="/janitor-mark.svg"
-        width="180"
-        height="180"
-        alt="Janitor"
-      />
-      <div class="hero-film-note">
-        <span class="film-label">One account. More than one kind of user.</span>
-        <button
-          class="motion-toggle"
-          data-motion-toggle
-          aria-pressed="false"
-          hidden
-        >
-          Play motion
-        </button>
+  </div>
+  <div class="doorway-stage" data-doorway>
+    <div class="doorway-toolbar">
+      <span class="doorway-toolbar-label">Who’s coming in?</span>
+      <div
+        class="doorway-actors"
+        role="group"
+        aria-label="Choose an illustrated operator"
+      >
+        {actors.map((actor, i) => (
+          <button
+            data-doorway-actor={actor.id}
+            data-color={actor.color}
+            aria-pressed={i === 0}
+            disabled
+          >
+            <span aria-hidden="true"></span>
+            {actor.label}
+          </button>
+        ))}
       </div>
     </div>
+    <div class="doorway-canvas-wrap">
+      <div class="doorway-outline" aria-hidden="true">
+        DOORMAN
+      </div>
+      <svg
+        class="doorway-fallback"
+        viewBox="0 0 1000 500"
+        role="img"
+        aria-label="A person approaching an open door, illustrated in coloured pixels"
+      >
+        <g fill="#f5aacb">
+          <rect x="251" y="138" width="74" height="74" rx="24" />
+          <path d="M244 229h88l29 120h-44v87h-27v-99h-10v99h-28v-87h-36Z" />
+        </g>
+        <path
+          d="M714 406V112h152v294M700 408h181M731 126l101 22v230l-101 20Z"
+          fill="none"
+          stroke="#d9f35c"
+          stroke-width="5"
+        />
+        <circle cx="810" cy="270" r="5" fill="#ffae42" />
+        <g fill="#ffae42">
+          <rect x="177" y="187" width="8" height="8" />
+          <rect x="362" y="276" width="8" height="8" />
+          <rect x="396" y="208" width="8" height="8" />
+        </g>
+        <g fill="#baaff2">
+          <rect x="351" y="151" width="8" height="8" />
+          <rect x="192" y="324" width="8" height="8" />
+        </g>
+      </svg>
+      <canvas
+        data-doorway-canvas
+        role="img"
+        aria-label="Coloured pixels form a human, another human, a robot or an AI assistant, then approach the same doorway"
+      ></canvas>
+      <span class="doorway-person-label" data-doorway-label>
+        A human
+      </span>
+      <span class="doorway-account-label">
+        One account.
+        <br />
+        <strong>Different operators.</strong>
+      </span>
+    </div>
+    <div class="doorway-caption">
+      <span>
+        A little illustration of a bigger identity question. No tracking in this
+        animation.
+      </span>
+      <button
+        class="motion-toggle"
+        data-motion-toggle
+        aria-pressed="false"
+        hidden
+      >
+        Pause motion
+      </button>
+    </div>
   </div>
-  <div class="platform-strip container" aria-label="Supported environments">
-    <span>Build with your stack</span>
+  <div class="platform-strip" aria-label="Supported environments">
+    <span>At home in your stack</span>
     <a href="/docs/cloudflare/">Cloudflare</a>
     <a href="/docs/nextjs/">Next.js</a>
     <a href="/docs/node/">Node.js</a>
@@ -79,3 +134,4 @@
   </div>
 </section>
 <script src="../scripts/motion.ts"></script>
+<script src="../scripts/doorway.ts"></script>

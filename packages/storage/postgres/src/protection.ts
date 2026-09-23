@@ -1,4 +1,4 @@
-import type { EvaluationControl, ProtectionStorage } from "@janitor/core";
+import type { EvaluationControl, ProtectionStorage } from "@aarondovturkel/doorman-core";
 import type { PostgresDatabase } from "./index.js";
 
 export function createPostgresProtectionStorage(

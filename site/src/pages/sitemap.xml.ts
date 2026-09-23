@@ -13,7 +13,7 @@ export function GET() {
       urls
         .map(
           (path) =>
-            `<url><loc>https://janitor.holycoders.io${path}</loc></url>`,
+            `<url><loc>https://doorman.holycoders.io${path}</loc></url>`,
         )
         .join("") +
       "</urlset>",

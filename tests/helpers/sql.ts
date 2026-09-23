@@ -8,7 +8,7 @@ import {
   createPostgresIdentityStorage,
   createPostgresActivityStorage,
   createPostgresOperatorStorage,
-} from "@janitor/storage-postgres";
+} from "@aarondovturkel/doorman-storage-postgres";
 import {
   createD1Storage,
   createD1ProtectionStorage,
@@ -16,8 +16,8 @@ import {
   createD1IdentityStorage,
   createD1ActivityStorage,
   createD1OperatorStorage,
-} from "@janitor/storage-d1";
-import type { D1Database } from "@janitor/storage-d1";
+} from "@aarondovturkel/doorman-storage-d1";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
 
 export async function sqlBackend(kind: "postgres" | "d1") {
   const dir = new URL(

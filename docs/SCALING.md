@@ -1,14 +1,14 @@
 # Scale your database
 
-Janitor can search a large visitor database without comparing every stored browser on each visit. It uses database indexes to find a limited set of plausible matches, then spends more work only on that shortlist.
+Doorman can search a large visitor database without comparing every stored browser on each visit. It uses database indexes to find a limited set of plausible matches, then spends more work only on that shortlist.
 
 Use Postgres when you expect a large amount of retained history. D1 remains an option for Cloudflare deployments within its storage and query limits. The right size depends on visits, retention and request frequency—not just the number of registered users.
 
 ## Does a limit of ten miss the rest of the database?
 
-Ten is the number of visitors sent to the matching engine, not the number of visitors the database can contain. Several indexed lookups first return a larger pool. Janitor ranks that pool before selecting ten visitors and asking Jev about that shortlist in one batched request.
+Ten is the number of visitors sent to the matching engine, not the number of visitors the database can contain. Several indexed lookups first return a larger pool. Doorman ranks that pool before selecting ten visitors and asking Jev about that shortlist in one batched request.
 
-This keeps request work predictable, but it is not an exhaustive search. An older match can fall outside the lookup windows. When a group is too crowded to distinguish safely, Janitor can decline to restore an ID rather than force a match.
+This keeps request work predictable, but it is not an exhaustive search. An older match can fall outside the lookup windows. When a group is too crowded to distinguish safely, Doorman can decline to restore an ID rather than force a match.
 
 Local tests include two million visitors and six million observations. Candidate lookup p95 was 47.40 ms in the latest repeat, versus 6.46 ms in the earlier recorded run. These are shared-host measurements, not a latency guarantee. The methodology and limits are below. For open connections and requests per second, see the separate [capacity report](CAPACITY.md), including its latest failed burst runs.
 
@@ -32,7 +32,7 @@ The common identical-profile case abstained, and the selected missing-cookie cas
 
 ## How the lookup stays limited
 
-A **probe** is an indexed lookup using one combination of browser signals. Each eligible probe returns at most 101 retained observations. The extra row tells Janitor when the result was truncated because the group was crowded:
+A **probe** is an indexed lookup using one combination of browser signals. Each eligible probe returns at most 101 retained observations. The extra row tells Doorman when the result was truncated because the group was crowded:
 
 | Probe                                                         | Intended tolerance                      |
 | ------------------------------------------------------------- | --------------------------------------- |
@@ -94,16 +94,16 @@ As in the first run, both the selected ambiguous tail example and common-profile
 
 ## Reproduce
 
-Use a disposable **local** Postgres database. The script only accepts localhost and creates/replaces its own `janitor_scale_benchmark` schema. Do not use that schema for application data. Plan disk space for JSON, all indexes, WAL and index-build temporary files; the first run occupied approximately 2.74 GB including its two tables and indexes.
+Use a disposable **local** Postgres database. The script only accepts localhost and creates/replaces its own `doorman_scale_benchmark` schema. Do not use that schema for application data. Plan disk space for JSON, all indexes, WAL and index-build temporary files; the first run occupied approximately 2.74 GB including its two tables and indexes.
 
 ```sh
-JANITOR_BENCHMARK_DATABASE_URL=postgres://visitor:visitor@localhost:55433/visitors \
-JANITOR_BENCHMARK_VISITORS=2000000 \
-JANITOR_BENCHMARK_HISTORY=1 \
+DOORMAN_BENCHMARK_DATABASE_URL=postgres://visitor:visitor@localhost:55433/visitors \
+DOORMAN_BENCHMARK_VISITORS=2000000 \
+DOORMAN_BENCHMARK_HISTORY=1 \
 pnpm benchmark:scale
 ```
 
-`JANITOR_BENCHMARK_HISTORY` accepts 1–10; increase only with sufficient disk. The script writes raw metrics and the plan to `docs/benchmarks/scale-<visitors>x<history>.json`. Historical observations repeat synthetic profiles: this stresses storage, not browser drift. It leaves only its isolated schema for inspection; drop that schema when finished. No external Jev calls, paid infrastructure, real accounts or analytics events are involved.
+`DOORMAN_BENCHMARK_HISTORY` accepts 1–10; increase only with sufficient disk. The script writes raw metrics and the plan to `docs/benchmarks/scale-<visitors>x<history>.json`. Historical observations repeat synthetic profiles: this stresses storage, not browser drift. It leaves only its isolated schema for inspection; drop that schema when finished. No external Jev calls, paid infrastructure, real accounts or analytics events are involved.
 
 ## Migration and deployment
 
@@ -111,7 +111,7 @@ Fresh examples apply `0004_candidate_lookup.sql` after the existing migrations. 
 
 For an existing large Postgres database, create the three new indexes **concurrently**, outside a transaction, before rolling out the new code. For example, copy the three statements from [the migration](../packages/storage/postgres/migrations/0004_candidate_lookup.sql), replace `CREATE INDEX IF NOT EXISTS` with `CREATE INDEX CONCURRENTLY IF NOT EXISTS`, qualify the application's schema, and run each separately. Verify all indexes are valid and run `ANALYZE observations`. A failed concurrent build can leave an invalid index; resolve it before retrying. Ordinary index creation is appropriate for a fresh/empty database, but blocks writes on an existing table. [Postgres CREATE INDEX](https://www.postgresql.org/docs/current/sql-createindex.html)
 
-Native Phoenix: fresh `Janitor.Migration.up()` includes these indexes. Existing apps create a new Ecto migration calling `Janitor.Migration.upgrade_lookup()`. For large live databases, prebuild valid concurrent indexes outside Ecto's transaction first; the migration's `IF NOT EXISTS` statements then record the upgrade without rebuilding them. Use the same `prefix` configured in `Janitor.new`.
+Native Phoenix: fresh `Doorman.Migration.up()` includes these indexes. Existing apps create a new Ecto migration calling `Doorman.Migration.upgrade_lookup()`. For large live databases, prebuild valid concurrent indexes outside Ecto's transaction first; the migration's `IF NOT EXISTS` statements then record the upgrade without rebuilding them. Use the same `prefix` configured in `Doorman.new`.
 
 ## Cloudflare with Postgres
 
@@ -140,7 +140,7 @@ const page = await visitor.cleanup({ batchSize: 100, afterVisitorId: cursor });
 // batches while page?.hasMoreExpired is true. Start a new sweep periodically.
 ```
 
-Elixir uses `Janitor.cleanup(config, batch_size: 100, after_visitor_id: cursor)` and returns `%{next_visitor_id: ..., has_more_expired: ...}`. Count repair only examines selected visitor histories; it no longer ranks the whole observations table in one window operation. Each observation save still prunes that visitor. Reads enforce expiry even before physical cleanup.
+Elixir uses `Doorman.cleanup(config, batch_size: 100, after_visitor_id: cursor)` and returns `%{next_visitor_id: ..., has_more_expired: ...}`. Count repair only examines selected visitor histories; it no longer ranks the whole observations table in one window operation. Each observation save still prunes that visitor. Reads enforce expiry even before physical cleanup.
 
 The optional identity/delegation and learning modules have their own maintenance; those workloads are not covered by the browser-lookup benchmark. Profile their cleanup separately before a large rollout. They are disabled unless configured.
 

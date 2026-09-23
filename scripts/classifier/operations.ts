@@ -60,7 +60,7 @@ export async function trainClassifier(
       ? undefined
       : classifierEnrichmentSchema.parse(enrichmentInput);
   const jev = enrichmentMap(dataset, enrichment);
-  const temporary = await mkdtemp(resolve(tmpdir(), "janitor-train-"));
+  const temporary = await mkdtemp(resolve(tmpdir(), "doorman-train-"));
   try {
     const input = resolve(temporary, "input.json"),
       output = resolve(temporary, "output.json");

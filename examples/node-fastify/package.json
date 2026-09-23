@@ -1,5 +1,5 @@
 {
-  "name": "@janitor/example-node",
+  "name": "@aarondovturkel/doorman-example-node",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,9 +10,9 @@
     "migrate": "node --env-file=.env --import tsx scripts/migrate.ts"
   },
   "dependencies": {
-    "@janitor/adapters": "workspace:^",
-    "@janitor/browser": "workspace:^",
-    "@janitor/storage-postgres": "workspace:^",
+    "@aarondovturkel/doorman-adapters": "workspace:^",
+    "@aarondovturkel/doorman-browser": "workspace:^",
+    "@aarondovturkel/doorman-storage-postgres": "workspace:^",
     "fastify": "^5.12.5",
     "pg": "^8.16.0"
   },

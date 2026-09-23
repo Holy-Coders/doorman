@@ -2,15 +2,15 @@ import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { Miniflare } from "miniflare";
-import { createD1Storage } from "@janitor/storage-d1";
-import type { D1Database } from "@janitor/storage-d1";
-import { createPostgresStorage } from "@janitor/storage-postgres";
+import { createD1Storage } from "@aarondovturkel/doorman-storage-d1";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
+import { createPostgresStorage } from "@aarondovturkel/doorman-storage-postgres";
 import {
   DAY_MS,
   normalizeObservation,
   createVisitorEngine,
-} from "@janitor/core";
-import type { ManagedVisitorStorage } from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
+import type { ManagedVisitorStorage } from "@aarondovturkel/doorman-core";
 import { signals } from "./helpers/fixtures.js";
 
 for (const backend of ["postgres", "d1"] as const) {

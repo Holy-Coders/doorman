@@ -14,17 +14,17 @@ import {
   createJevMethods,
   createActivityInput,
   API_ACTIVITY_QUESTIONS,
-} from "@janitor/evaluator-jev";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
-import { createJevEvaluator } from "@janitor/evaluator-jev";
+} from "@aarondovturkel/doorman-evaluator-jev";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import { createJevEvaluator } from "@aarondovturkel/doorman-evaluator-jev";
 import type {
   ApiActivityContext,
   ApiActivityInput,
   VisitorEvaluator,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { sqlBackend } from "./helpers/sql.js";
 import { createApp } from "../examples/node-fastify/src/app.js";
-import type { PostgresDatabase } from "@janitor/storage-postgres";
+import type { PostgresDatabase } from "@aarondovturkel/doorman-storage-postgres";
 import { createSubjectLinker } from "../packages/adapters/src/subject.js";
 
 const route = "GET /api/orders/:id";

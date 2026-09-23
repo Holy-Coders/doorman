@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
 export default defineConfig({
-  site: "https://janitor.holycoders.io",
+  site: "https://doorman.holycoders.io",
   output: "static",
   trailingSlash: "always",
   markdown: {

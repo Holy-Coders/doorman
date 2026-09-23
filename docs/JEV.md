@@ -1,6 +1,6 @@
 # Jev & risk scoring
 
-Jev is an AI model from TypeSafe that answers structured questions. Janitor uses it as an optional second opinion on browser history and as a source of technical risk estimates. You do not need Jev to assign visitor IDs or match browsers with the built-in comparison rules.
+Jev is an AI model from TypeSafe that answers structured questions. Doorman uses it as an optional second opinion on browser history and as a source of technical risk estimates. You do not need Jev to assign visitor IDs or match browsers with the built-in comparison rules.
 
 ## Where Jev participates
 
@@ -10,13 +10,13 @@ Jev is an AI model from TypeSafe that answers structured questions. Janitor uses
 | Browser matching and risk      | Every plausible candidate's history, plus current automation and suspicious signals. | One call for up to ten candidates, with up to five observations each. |
 | Optional cross-device learning | Whether the current session fits a person’s separately login-confirmed sessions.     | One call for up to ten people, three examples each.                   |
 
-Cookie visits skip lookup planning and global candidate search. Set `lookupPlanning: false` (`lookup_planning: false` in Elixir) to skip the planning call while retaining batch matching. If a restricted lookup finds nothing, Janitor retries the standard indexed lookup. If the planner fails, it uses the standard lookup immediately.
+Cookie visits skip lookup planning and global candidate search. Set `lookupPlanning: false` (`lookup_planning: false` in Elixir) to skip the planning call while retaining batch matching. If a restricted lookup finds nothing, Doorman retries the standard indexed lookup. If the planner fails, it uses the standard lookup immediately.
 
 Turn on [learning](LEARNING.md) to use the built-in cross-device predictor. No custom callback is needed. It starts suggesting after confirmed history exists and abstains when evidence is missing, crowded or ambiguous. It never turns a prediction into a verified login or an analytics profile merge.
 
 ## What the three scores mean
 
-| Score         | Question Janitor asks                                                    | How Janitor uses it                                                       |
+| Score         | Question Doorman asks                                                    | How Doorman uses it                                                       |
 | ------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | `sameVisitor` | Does this browser fit its recent history, allowing for ordinary changes? | Combines it with the built-in similarity score when recovering a lost ID. |
 | `automation`  | How consistent are the available signals with browser automation?        | Returns it privately to your server. It never changes identity matching.  |
@@ -48,21 +48,21 @@ const visitor = createCloudflareVisitor({
 });
 ```
 
-The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Janitor.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request normally makes one planning call, one identity batch call and one separate risk call; learning can add one more. A known cookie uses an identity/risk pair, plus learning when enabled. Both calls are reserved against shared budget and concurrency limits before the pair starts; allow at least two concurrent provider calls to use these Jev methods. Configure a shared [inference budget](HARDENING.md) for all stages.
+The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Doorman.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request normally makes one planning call, one identity batch call and one separate risk call; learning can add one more. A known cookie uses an identity/risk pair, plus learning when enabled. Both calls are reserved against shared budget and concurrency limits before the pair starts; allow at least two concurrent provider calls to use these Jev methods. Configure a shared [inference budget](HARDENING.md) for all stages.
 
 ## Data sent to the model
 
-For browser matching, Janitor sends a compact current observation and up to five historical observations for each of at most ten candidates. This identity request excludes automation flags, behavior and runtime/environment probes, including the similarity feature `webdriverDetected`. A separate risk request receives only the current observation, with those signals included; it never receives identity history or similarity. Learning sends at most three confirmed examples for each of ten people. Requests exceeding 64 KiB are declined locally and fall back. Account IDs, email keys, permissions and trusted server evidence are not sent to Jev. The model sees browser-signal strings as untrusted input rather than instructions.
+For browser matching, Doorman sends a compact current observation and up to five historical observations for each of at most ten candidates. This identity request excludes automation flags, behavior and runtime/environment probes, including the similarity feature `webdriverDetected`. A separate risk request receives only the current observation, with those signals included; it never receives identity history or similarity. Learning sends at most three confirmed examples for each of ten people. Requests exceeding 64 KiB are declined locally and fall back. Account IDs, email keys, permissions and trusted server evidence are not sent to Jev. The model sees browser-signal strings as untrusted input rather than instructions.
 
-Janitor keeps the final matching decision in code. Sparse or contradictory evidence can cap the result even when Jev returns a high score. See [matching rules](MATCHING.md).
+Doorman keeps the final matching decision in code. Sparse or contradictory evidence can cap the result even when Jev returns a high score. See [matching rules](MATCHING.md).
 
 ## When evaluation fails
 
-Timeouts, rate limits, network errors and malformed answers do not stop browser identification. Janitor falls back to its built-in matching rules and returns zero risk with `riskStatus: "unavailable"`. With no evaluator configured, the status is `"disabled"`.
+Timeouts, rate limits, network errors and malformed answers do not stop browser identification. Doorman falls back to its built-in matching rules and returns zero risk with `riskStatus: "unavailable"`. With no evaluator configured, the status is `"disabled"`.
 
 Always read the status before using a score. An unavailable zero means “not assessed.” The library does not automatically retry or block anyone.
 
-The direct API request can be aborted. A Workers AI timeout stops Janitor waiting, but the provider call may still complete and incur usage. Use [request and inference limits](HARDENING.md) if needed.
+The direct API request can be aborted. A Workers AI timeout stops Doorman waiting, but the provider call may still complete and incur usage. Use [request and inference limits](HARDENING.md) if needed.
 
 ## API activity evaluation
 
@@ -72,7 +72,7 @@ The optional [API activity middleware](API-ACTIVITY.md) adds `evaluateActivity(i
 
 The following details are for people replacing or inspecting the evaluator. Normal integrations only need the adapter configuration above.
 
-Both implementations use TypeSafe's **Noul** question type: a yes/no judgment expressed as a number from 0 to 1. Janitor batches related questions in one request and reads each answer's `noul` field. The single-history identity request asks only `sameVisitor`; batch identity matching asks `candidate0` through `candidate9` as needed. The separate current-only risk request asks `automation` and `suspicious`. Both transports run the pair concurrently and validate every required answer. If either fails, the engine uses its existing deterministic fallback and marks risk unavailable. Lookup uses `graphics` and `locale`; learning uses `person0` through `person9`. The exact questions are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts) and [intelligence.ts](../packages/evaluators/jev/src/intelligence.ts).
+Both implementations use TypeSafe's **Noul** question type: a yes/no judgment expressed as a number from 0 to 1. Doorman batches related questions in one request and reads each answer's `noul` field. The single-history identity request asks only `sameVisitor`; batch identity matching asks `candidate0` through `candidate9` as needed. The separate current-only risk request asks `automation` and `suspicious`. Both transports run the pair concurrently and validate every required answer. If either fails, the engine uses its existing deterministic fallback and marks risk unavailable. Lookup uses `graphics` and `locale`; learning uses `person0` through `person9`. The exact questions are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts) and [intelligence.ts](../packages/evaluators/jev/src/intelligence.ts).
 
 Verified against the official [TypeSafe API](https://docs.typesafe.ai/api), [Noul documentation](https://docs.typesafe.ai/primitives/noul) and [Cloudflare Jev model](https://developers.cloudflare.com/ai/models/typesafe/jev/) on September 23, 2026.
 

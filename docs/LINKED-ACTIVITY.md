@@ -2,15 +2,15 @@
 
 An attacker can rotate IP addresses and sessions. The useful evidence is often the sequence of attempted actions: repeated denied access, attempts against sensitive operations, and reuse of a distinctive request pattern or application identifier.
 
-Janitor can now assess that activity across **probabilistically linked groups** without merging user identities. This is optional, server-side correlation in the TypeScript activity service. It uses the existing D1/Postgres activity tables and does not collect IP addresses or inspect request bodies automatically.
+Doorman can now assess that activity across **probabilistically linked groups** without merging user identities. This is optional, server-side correlation in the TypeScript activity service. It uses the existing D1/Postgres activity tables and does not collect IP addresses or inspect request bodies automatically.
 
 ## Configure and supply evidence
 
 ```ts
-const janitor = createNodeVisitor({
+const doorman = createNodeVisitor({
   db,
   identity: {
-    secret: process.env.JANITOR_IDENTITY_SECRET!,
+    secret: process.env.DOORMAN_IDENTITY_SECRET!,
     namespace: "my-app",
   },
   evaluator: { apiKey: process.env.JEV_API_KEY! },
@@ -22,7 +22,7 @@ const janitor = createNodeVisitor({
 
 // Your server selects a canonical, non-sensitive shape label and a reviewed
 // stable reference. Do not pass raw bodies, passwords, tokens or IP addresses.
-const correlation = await janitor.activity!.correlation({
+const correlation = await doorman.activity!.correlation({
   basis: "request-pattern",
   confidence: 0.92, // Your measured linkage estimate, not a default for every shape.
   parts: [
@@ -35,7 +35,7 @@ const context = {
   route: "POST /api/orders",
   correlations: [correlation],
 };
-const { response, activity } = await janitor.activity!.handle(
+const { response, activity } = await doorman.activity!.handle(
   request,
   context,
   handleOrderWithExistingAuthorization,
@@ -44,7 +44,7 @@ const { response, activity } = await janitor.activity!.handle(
 return response;
 ```
 
-The application functions and references in this example are yours. Janitor does not invent a campaign ID or confidence from an arbitrary JSON body. Use canonical schema variants or allowlisted operation categories for shapes, plus an independently useful reference. A shared endpoint or shape alone is rejected as a correlation key. A shape plus a common target can still group unrelated people; keep that confidence low or omit the link. Avoid grouping all failed logins to one victim as one attacker.
+The application functions and references in this example are yours. Doorman does not invent a campaign ID or confidence from an arbitrary JSON body. Use canonical schema variants or allowlisted operation categories for shapes, plus an independently useful reference. A shared endpoint or shape alone is rejected as a correlation key. A shape plus a common target can still group unrelated people; keep that confidence low or omit the link. Avoid grouping all failed logins to one victim as one attacker.
 
 Other bases are `browser-match`, using a browser reference from your screening and its measured confidence, and `verified-identifier`, using an application-verified reference. Browser matching is fallible. Never treat a browser body, claimed email, copied cookie or model guess as verified authentication. Distinct values receive distinct application-scoped HMAC references; raw components are neither stored nor sent to Jev. Identical components in different application namespaces produce different references.
 
@@ -54,7 +54,7 @@ A completed request updates its own session/actor aggregate and at most three ad
 
 The evaluator receives the group's action summaries, link basis, current-link confidence and the minimum confidence admitted for earlier contributions. Groups and cached assessments are scoped to that admission threshold; raising it cannot reuse weaker historical groups. Repeated denials against sensitive operations can increase `suspicious`; similar request shapes, legitimate automation, retries and shared targets alone should not. The Jev prompt explicitly distinguishes these cases. `automation` remains separate. Model outputs are experimental scores, not calibrated attacker probabilities, and application policy owns any response.
 
-Groups can overlap each other and the primary session. Janitor marks them as related summaries and instructs the evaluator not to add their counts or regard them as independent witnesses. It never reports a group as a verified common person, merges analytics identities, or changes permissions.
+Groups can overlap each other and the primary session. Doorman marks them as related summaries and instructs the evaluator not to add their counts or regard them as independent witnesses. It never reports a group as a verified common person, merges analytics identities, or changes permissions.
 
 ## Bounds, privacy and failure behavior
 

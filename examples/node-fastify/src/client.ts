@@ -1,4 +1,4 @@
-import { createVisitorClient } from "@janitor/browser";
+import { createVisitorClient } from "@aarondovturkel/doorman-browser";
 const visitor = createVisitorClient({
   endpoint: "/api/visitor",
   behavior: "extended",

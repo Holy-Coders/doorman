@@ -1,10 +1,10 @@
 # Node and Fastify
 
-Janitor’s Node adapter uses standard Web Request/Response objects. This example shows the small translation needed to mount it in Fastify. You can use the same adapter in another Node framework without adding that framework to Janitor itself.
+Doorman’s Node adapter uses standard Web Request/Response objects. This example shows the small translation needed to mount it in Fastify. You can use the same adapter in another Node framework without adding that framework to Doorman itself.
 
 ## Run the example
 
-You need Node 22.12+, pnpm 9.12.0 and Docker for the supplied Postgres database. From the Janitor repository root:
+You need Node 22.12+, pnpm 9.12.0 and Docker for the supplied Postgres database. From the Doorman repository root:
 
 ```sh
 pnpm install
@@ -33,7 +33,7 @@ Open **http://localhost:3001** and select **Identify** twice. The second respons
 
 ```ts
 import { Pool } from "pg";
-import { createNodeVisitor } from "@janitor/adapters/node";
+import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const visitor = createNodeVisitor({ db, evaluator: false });
@@ -48,7 +48,7 @@ Mount `/api/visitor` on your application’s origin and add the [browser client]
 
 ## Try API activity
 
-Set `JANITOR_API_ACTIVITY=1` in `.env`, and set `JANITOR_IDENTITY_SECRET` and `EXAMPLE_API_TOKEN` to separate random values of at least 32 characters (`openssl rand -hex 32`). Restart the server after applying all migrations. Keep `JEV_API_KEY` blank for a local run without provider calls.
+Set `DOORMAN_API_ACTIVITY=1` in `.env`, and set `DOORMAN_IDENTITY_SECRET` and `EXAMPLE_API_TOKEN` to separate random values of at least 32 characters (`openssl rand -hex 32`). Restart the server after applying all migrations. Keep `JEV_API_KEY` blank for a local run without provider calls.
 
 ```sh
 curl -H 'Authorization: Bearer YOUR_EXAMPLE_API_TOKEN' \

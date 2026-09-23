@@ -6,8 +6,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import assert from "node:assert/strict";
 import { chromium, firefox, webkit } from "@playwright/test";
-import type { BrowserBehavior, BrowserObservation } from "@janitor/core";
-import { calculateSimilarity } from "@janitor/core";
+import type { BrowserBehavior, BrowserObservation } from "@aarondovturkel/doorman-core";
+import { calculateSimilarity } from "@aarondovturkel/doorman-core";
 
 type Sample = {
   signals: BrowserObservation;
@@ -119,21 +119,21 @@ try {
         "keyboard clicks are not mouse alignment samples",
       );
       assert.equal(
-        await page.locator("[data-janitor-decoy]").isVisible(),
+        await page.locator("[data-doorman-decoy]").isVisible(),
         false,
       );
       assert(
         !(await page.locator("body").ariaSnapshot()).includes(
-          "Janitor diagnostic",
+          "Doorman diagnostic",
         ),
       );
       assert.equal(keyboard.behavior.decoyActivationCount, 0);
       await page
-        .locator("[data-janitor-decoy]")
+        .locator("[data-doorman-decoy]")
         .evaluate((node) => (node as HTMLElement).click());
       assert.equal((await capture()).behavior.decoyActivationCount, 1);
       await page.evaluate(async () => {
-        const font = new FontFace("JanitorWebFont", "url(/missing.woff2)");
+        const font = new FontFace("DoormanWebFont", "url(/missing.woff2)");
         document.fonts.add(font);
         try {
           await font.load();
@@ -187,7 +187,7 @@ try {
         (window as unknown as Harness).tracker.snapshot(),
       );
       assert.equal(after.targetSampleCount, stopped.targetSampleCount);
-      assert.equal(await page.locator("[data-janitor-decoy]").count(), 0);
+      assert.equal(await page.locator("[data-doorman-decoy]").count(), 0);
       assert.equal(nonlocalRequests, 0);
       rows.push({
         engine: name,
@@ -226,7 +226,7 @@ try {
   }
   // Same Chromium executable without a debugging port/pipe or Playwright connection.
   // Still headless, not a human baseline or evidence of an uninstrumented physical user.
-  const profile = await mkdtemp(join(tmpdir(), "janitor-no-cdp-"));
+  const profile = await mkdtemp(join(tmpdir(), "doorman-no-cdp-"));
   const native: Sample[] = [];
   let timer: ReturnType<typeof setTimeout> | undefined;
   const received = new Promise<void>((resolve, reject) => {

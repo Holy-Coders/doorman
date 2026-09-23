@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { createVisitorEngine, normalizeObservation } from "@janitor/core";
-import type { LearningExample } from "@janitor/core";
-import { createJevMethods } from "@janitor/evaluator-jev";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
+import { createVisitorEngine, normalizeObservation } from "@aarondovturkel/doorman-core";
+import type { LearningExample } from "@aarondovturkel/doorman-core";
+import { createJevMethods } from "@aarondovturkel/doorman-evaluator-jev";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
 import { createMemoryStorage } from "./helpers/memory.js";
 import { signals, phone } from "./helpers/fixtures.js";
 

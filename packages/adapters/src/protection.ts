@@ -6,13 +6,13 @@ import {
   isCrossDevicePrediction,
   isApiActivityRisk,
   isOperatorEvaluation,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   EvaluationControl,
   EvaluationLease,
   ProtectionStorage,
   VisitorEvaluator,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
 

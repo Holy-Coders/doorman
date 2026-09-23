@@ -14,7 +14,7 @@ import {
   createVisitorEngine,
   isVisitorId,
   normalizeObservation,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type {
   LearningStorage,
   LearningPrediction,
@@ -32,7 +32,7 @@ import type {
   RequestEvidence,
   ApiActivityStorage,
   OperatorStorage,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import { readPayload, RequestError } from "./validation.js";
 const EVALUATOR_STORAGE_GRACE_MS = 1000;
 export type AdapterOptions = RetentionOptions &

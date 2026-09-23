@@ -3,28 +3,28 @@ import {
   createAnalyticsBridge,
   operatorWindowProperties,
   operatorSummaryProperties,
-} from "@janitor/adapters/analytics";
+} from "@aarondovturkel/doorman-adapters/analytics";
 import {
   warehouseOperatorReport,
   warehouseOperatorWindow,
   warehouseJSONL,
-} from "@janitor/adapters/warehouse";
-import { summarizeOperators } from "@janitor/core";
+} from "@aarondovturkel/doorman-adapters/warehouse";
+import { summarizeOperators } from "@aarondovturkel/doorman-core";
 import { window } from "./helpers/operators.js";
 const range = { since: 0, until: 1000 };
 const context = { accountId: "account-example", revisionId: "revision-1" };
 it("exports private inference fields without browser measurements or credential attribution", () => {
   const w = window("sample");
   const properties = operatorWindowProperties(w, context);
-  expect(properties.janitor_operator_assistant_score).toBe(0.97);
-  expect(properties.janitor_operator_abuse_score).toBe(0.02);
-  expect(properties).not.toHaveProperty("janitor_actor_id");
+  expect(properties.doorman_operator_assistant_score).toBe(0.97);
+  expect(properties.doorman_operator_abuse_score).toBe(0.02);
+  expect(properties).not.toHaveProperty("doorman_actor_id");
   expect(JSON.stringify(properties)).not.toMatch(
     /api_gap_cv|api_request_count|sessionKey|inputDigest|browserKey/,
   );
   expect(
     operatorWindowProperties({ ...w, status: "unavailable" }, context),
-  ).not.toHaveProperty("janitor_operator_human_score");
+  ).not.toHaveProperty("doorman_operator_human_score");
 });
 it("sends summaries and profiles through PostHog and Mixpanel without identify or profile merges", async () => {
   const summary = summarizeOperators([window("sample")], range);
@@ -58,17 +58,17 @@ it("sends summaries and profiles through PostHog and Mixpanel without identify o
   }
   expect(posthog.capture.mock.calls[1]![0]).toMatchObject({
     distinctId: "authenticated-user",
-    event: "janitor operators summarized",
+    event: "doorman operators summarized",
     groups: { account: "account-example" },
     properties: {
-      janitor_resolution_revision: "revision-1",
-      janitor_estimated_assistant_profiles: 1,
+      doorman_resolution_revision: "revision-1",
+      doorman_estimated_assistant_profiles: 1,
     },
   });
   expect(mixpanel.track.mock.calls[2]![1]).toMatchObject({
     distinct_id: "authenticated-user",
-    janitor_operator_basis: "model-inference",
-    janitor_inferred_operator_id: "op_sample",
+    doorman_operator_basis: "model-inference",
+    doorman_inferred_operator_id: "op_sample",
   });
   expect(posthog.identify).not.toHaveBeenCalled();
   expect(mixpanel.people.set).not.toHaveBeenCalled();
@@ -88,10 +88,10 @@ it("projects versioned warehouse rows and omits unavailable totals", () => {
     ]),
   ].join("");
   expect(rows).toHaveLength(2);
-  expect(json).toContain('"janitor_resolution_revision":"revision-1"');
+  expect(json).toContain('"doorman_resolution_revision":"revision-1"');
   expect(json).not.toContain("api_gap_cv");
   const incomplete = summarizeOperators([window("a"), window("b")], range);
   expect(operatorSummaryProperties(incomplete, context)).not.toHaveProperty(
-    "janitor_estimated_assistant_profiles",
+    "doorman_estimated_assistant_profiles",
   );
 });

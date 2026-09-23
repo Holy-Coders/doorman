@@ -3,7 +3,7 @@ import type {
   OperatorEvidence,
   OperatorKind,
   OperatorWindow,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 export const evidence: OperatorEvidence = {
   source: "server",
   features: {

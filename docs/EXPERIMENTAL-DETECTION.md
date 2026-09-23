@@ -1,13 +1,13 @@
 # Optional detection signals
 
-Janitor can collect more evidence about a browser environment and how it is operated. Enable the probes you need; every option below is **off by default**. They add measurements to your existing identity and risk pipeline, not automatic blocking rules.
+Doorman can collect more evidence about a browser environment and how it is operated. Enable the probes you need; every option below is **off by default**. They add measurements to your existing identity and risk pipeline, not automatic blocking rules.
 
 These are current source features. The browser collector works with every backend that accepts the updated HTTP schema. Native Phoenix preserves the new fields and sends them to Jev; configurable deterministic font weighting and linked API activity currently run in the TypeScript server packages. Python and Go can call that server. Older published packages do not contain these additions.
 
 ## Enable a collection profile
 
 ```ts
-import { createVisitorClient } from "@janitor/browser";
+import { createVisitorClient } from "@aarondovturkel/doorman-browser";
 
 const visitor = createVisitorClient({
   endpoint: "/api/visitor",
@@ -33,12 +33,12 @@ Use `enabled: false` and `setEnabled(true)` when your application's collection p
 
 `fonts: true` tests these 12 families, in this fixed order: Arial, Times New Roman, Courier New, Verdana, Georgia, Trebuchet MS, Helvetica Neue, Menlo, Segoe UI, Consolas, Roboto, Noto Sans.
 
-Each test loads an unattached `FontFace` with a **local-only** source. It does not download a font, add a face to your page, request Local Font Access permission or enumerate installed fonts. The result is `{ version: "local-12-v1", available: "111000000000" }`: a bounded bit string, not a hash of rendered pixels. A browser may expose only a restricted set. Janitor accepts that result and does not try to recover hidden fonts. If nothing is available, the font comparison stays unknown.
+Each test loads an unattached `FontFace` with a **local-only** source. It does not download a font, add a face to your page, request Local Font Access permission or enumerate installed fonts. The result is `{ version: "local-12-v1", available: "111000000000" }`: a bounded bit string, not a hash of rendered pixels. A browser may expose only a restricted set. Doorman accepts that result and does not try to recover hidden fonts. If nothing is available, the font comparison stays unknown.
 
 Two nonempty sets are compared using their intersection divided by their union. Set `scoring.similarity.fontSimilarity` on the TypeScript server to give this evidence a small weight:
 
 ```ts
-const janitor = createNodeVisitor({
+const doorman = createNodeVisitor({
   db,
   scoring: { similarity: { fontSimilarity: 0.05 } },
 });
@@ -67,13 +67,13 @@ Many unrelated people share the same font set. The same person can have differen
 ## Trusted transport evidence
 
 ```ts
-import { cloudflareRequestEvidence } from "@janitor/adapters/cloudflare";
+import { cloudflareRequestEvidence } from "@aarondovturkel/doorman-adapters/cloudflare";
 const edge = cloudflareRequestEvidence(request, { transport: true });
-const assessment = await janitor.assess(request, { evidence: { edge } });
+const assessment = await doorman.assess(request, { evidence: { edge } });
 return assessment.response;
 ```
 
-This explicitly includes an available, validated JA4 string from the original Worker's `request.cf.botManagement.ja4`. It ignores client headers and browser JSON. Missing metadata remains absent. Availability depends on Cloudflare's Bot Management plan and request path. JA4 describes a transport client configuration shared by many devices; it is not a unique device or person and is not immune to imitation. Janitor keeps it in the private evidence envelope, without automatic persistence, identity matching or transmission to Jev.
+This explicitly includes an available, validated JA4 string from the original Worker's `request.cf.botManagement.ja4`. It ignores client headers and browser JSON. Missing metadata remains absent. Availability depends on Cloudflare's Bot Management plan and request path. JA4 describes a transport client configuration shared by many devices; it is not a unique device or person and is not immune to imitation. Doorman keeps it in the private evidence envelope, without automatic persistence, identity matching or transmission to Jev.
 
 ## From measurements to a useful model
 
@@ -86,7 +86,7 @@ Run `pnpm benchmark:detection` for the local browser experiments. The [aggregate
 ## Primary sources
 
 - [CSS Font Loading specification](https://drafts.csswg.org/css-font-loading/): local font sources and asynchronous loading.
-- [Local Font Access specification](https://wicg.github.io/local-font-access/): permission-controlled font enumeration, which Janitor does not invoke.
+- [Local Font Access specification](https://wicg.github.io/local-font-access/): permission-controlled font enumeration, which Doorman does not invoke.
 - [Permissions specification](https://www.w3.org/TR/permissions/): read-only state queries and browser policy.
 - [Pointer Events specification](https://www.w3.org/TR/pointerevents/): event delivery and coalescing; missing intermediate motion is not physical proof.
 - [Chrome headless documentation](https://developer.chrome.com/docs/automation-and-testing/headless): shared browser implementation, undermining simplistic environment assumptions.

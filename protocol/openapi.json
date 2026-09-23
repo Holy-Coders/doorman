@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Janitor first-party browser protocol",
+    "title": "Doorman first-party browser protocol",
     "version": "0.9.0",
     "description": "Self-hosted by each implementer. Measurements never establish authenticated account claims."
   },

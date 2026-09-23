@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import { parseArgs } from "node:util";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { normalizeObservation, calculateSimilarity } from "@janitor/core";
-import type { BrowserObservation, BrowserBehavior } from "@janitor/core";
+import { normalizeObservation, calculateSimilarity } from "@aarondovturkel/doorman-core";
+import type { BrowserObservation, BrowserBehavior } from "@aarondovturkel/doorman-core";
 import {
   createJevInput,
   createRiskInput,
   type JevRequest,
-} from "@janitor/evaluator-jev";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
+} from "@aarondovturkel/doorman-evaluator-jev";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
 import { createPilotTransport, requestDigest } from "./jev-transport.js";
 import { digest } from "./io.js";
 const { values } = parseArgs({

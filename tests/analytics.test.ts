@@ -1,10 +1,10 @@
 import { expect, it, vi } from "vitest";
-import { createIdentityAnalytics } from "@janitor/browser";
+import { createIdentityAnalytics } from "@aarondovturkel/doorman-browser";
 import {
   analyticsProperties,
   createAnalyticsBridge,
-} from "@janitor/adapters/analytics";
-import type { ApiActivityAssessment, VisitorIdentity } from "@janitor/core";
+} from "@aarondovturkel/doorman-adapters/analytics";
+import type { ApiActivityAssessment, VisitorIdentity } from "@aarondovturkel/doorman-core";
 
 function browser() {
   const calls: string[] = [];
@@ -164,13 +164,13 @@ it("exports API risk separately through existing SDKs without route history or m
   const assessment = { attribution: identity.attribution!, apiActivity };
   const properties = analyticsProperties(assessment, { accountId: "account" });
   expect(properties).toMatchObject({
-    janitor_actor_kind: "agent",
-    janitor_api_risk_status: "evaluated",
-    janitor_api_automation: 0.9,
-    janitor_api_requests: 10,
+    doorman_actor_kind: "agent",
+    doorman_api_risk_status: "evaluated",
+    doorman_api_automation: 0.9,
+    doorman_api_requests: 10,
   });
-  expect(properties).not.toHaveProperty("janitor_automation");
-  expect(properties).not.toHaveProperty("janitor_visitor_id");
+  expect(properties).not.toHaveProperty("doorman_automation");
+  expect(properties).not.toHaveProperty("doorman_visitor_id");
   expect(JSON.stringify(properties)).not.toContain("/private");
   const ph = { capture: vi.fn(), identify: vi.fn() };
   const mp = { track: vi.fn(), people: { set: vi.fn() } };
@@ -189,28 +189,28 @@ it("exports API risk separately through existing SDKs without route history or m
   );
   for (const client of [ph.capture, mp.track, sg.track])
     expect(JSON.stringify(client.mock.calls)).toContain(
-      "janitor_api_automation",
+      "doorman_api_automation",
     );
   expect(
     analyticsProperties({
       ...assessment,
       apiActivity: { ...apiActivity, riskStatus: "unavailable" },
     }),
-  ).not.toHaveProperty("janitor_api_automation");
+  ).not.toHaveProperty("doorman_api_automation");
 });
 it("exports independent account, actor and browser dimensions without inferring a human from low risk", () => {
   expect(
     analyticsProperties(identity, { accountId: "workspace-a" }),
   ).toMatchObject({
-    janitor_account_id: "workspace-a",
-    janitor_actor_id: identity.attribution!.actor.id,
-    janitor_actor_kind: "agent",
-    janitor_schema_version: 1,
+    doorman_account_id: "workspace-a",
+    doorman_actor_id: identity.attribution!.actor.id,
+    doorman_actor_kind: "agent",
+    doorman_schema_version: 1,
   });
   const unknown = analyticsProperties({ ...identity, attribution: undefined });
-  expect(unknown.janitor_actor_kind).toBe("unknown");
-  expect(unknown).not.toHaveProperty("janitor_actor_id");
-  expect(unknown).not.toHaveProperty("janitor_account_id");
+  expect(unknown.doorman_actor_kind).toBe("unknown");
+  expect(unknown).not.toHaveProperty("doorman_actor_id");
+  expect(unknown).not.toHaveProperty("doorman_account_id");
 });
 it("attaches account groups per event without changing the actor's analytics distinct ID", async () => {
   const capture = vi.fn(),
@@ -234,7 +234,7 @@ it("attaches account groups per event without changing the actor's analytics dis
     }),
   );
   expect(track).toHaveBeenCalledWith(
-    "janitor identified",
+    "doorman identified",
     expect.objectContaining({
       distinct_id: "agent:a",
       $user_id: "agent:a",
@@ -259,7 +259,7 @@ it("supports original Mixpanel projects and refuses reserved group keys", async 
     "distinct_id",
     "token",
     "time",
-    "janitor_actor_kind",
+    "doorman_actor_kind",
     "$user_id",
   ])
     expect(() =>
@@ -273,13 +273,13 @@ it("records a server agent without manufacturing browser identity or a zero risk
     { attribution: identity.attribution! },
     { accountId: "workspace-a" },
   );
-  expect(properties.janitor_actor_kind).toBe("agent");
-  expect(properties.janitor_actor_id).toBe(identity.attribution!.actor.id);
+  expect(properties.doorman_actor_kind).toBe("agent");
+  expect(properties.doorman_actor_id).toBe(identity.attribution!.actor.id);
   for (const field of [
-    "janitor_visitor_id",
-    "janitor_confidence",
-    "janitor_automation",
-    "janitor_risk_status",
+    "doorman_visitor_id",
+    "doorman_confidence",
+    "doorman_automation",
+    "doorman_risk_status",
   ])
     expect(properties).not.toHaveProperty(field);
 });

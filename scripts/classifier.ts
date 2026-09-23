@@ -43,8 +43,8 @@ async function operator(path: string, body: unknown) {
         .object({ endpoint: z.string(), operatorToken: z.string() })
         .parse(await read(values.config))
     : {
-        endpoint: process.env.JANITOR_NETWORK_ENDPOINT ?? "",
-        operatorToken: process.env.JANITOR_OPERATOR_TOKEN ?? "",
+        endpoint: process.env.DOORMAN_NETWORK_ENDPOINT ?? "",
+        operatorToken: process.env.DOORMAN_OPERATOR_TOKEN ?? "",
       };
   if (!/^[A-Za-z0-9_-]{32,256}$/.test(config.operatorToken))
     throw new Error(

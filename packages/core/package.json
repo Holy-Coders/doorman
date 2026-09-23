@@ -1,6 +1,6 @@
 {
-  "name": "@janitor/core",
-  "version": "0.9.0",
+  "name": "@aarondovturkel/doorman-core",
+  "version": "0.12.0",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -21,11 +21,16 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Holy-Coders/janitor.git",
+    "url": "git+https://github.com/Holy-Coders/doorman.git",
     "directory": "packages/core"
   },
-  "homepage": "https://janitor.holycoders.io",
+  "homepage": "https://doorman.holycoders.io",
   "bugs": {
-    "url": "https://github.com/Holy-Coders/janitor/issues"
+    "url": "https://github.com/Holy-Coders/doorman/issues"
+  },
+  "description": "Provider-independent browser identity, similarity matching and private risk assessment.",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

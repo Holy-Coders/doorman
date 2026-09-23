@@ -2,16 +2,19 @@
 
 Use the learning service from your server. Keep its API key out of browser bundles and analytics events. Ordinary visitor identification continues to work without this service.
 
-`@janitor/network` is currently available from the repository source. Clone the repository, run `pnpm install && pnpm build`, and use a workspace dependency or `pnpm pack:all` to produce local installable archives. The existing v0.9.0 release archives do not contain this new package.
+Install the client with `npm install @aarondovturkel/doorman-network` (or use `pnpm add` or `bun add`). The network package is included in Doorman v0.12.0.
 
 ## Get a private assessment
 
 ```ts
-import { createNetworkClient, extractFeatures } from "@janitor/network";
+import {
+  createNetworkClient,
+  extractFeatures,
+} from "@aarondovturkel/doorman-network";
 
 const network = createNetworkClient({
-  endpoint: process.env.JANITOR_NETWORK_URL!,
-  apiKey: process.env.JANITOR_NETWORK_KEY!,
+  endpoint: process.env.DOORMAN_NETWORK_URL!,
+  apiKey: process.env.DOORMAN_NETWORK_KEY!,
 });
 
 // `assessment` comes from visitor.activity.assess() on your server.
@@ -35,13 +38,13 @@ If you want the existing visitor engine to use these risk assessments, `withNetw
 
 ```ts
 const contributor = createNetworkClient({
-  endpoint: process.env.JANITOR_NETWORK_URL!,
-  apiKey: process.env.JANITOR_NETWORK_KEY!,
+  endpoint: process.env.DOORMAN_NETWORK_URL!,
+  apiKey: process.env.DOORMAN_NETWORK_KEY!,
   contribution: {
     enabled: true,
     training: true,
     sampleRate: 0.01,
-    referenceSecret: process.env.JANITOR_NETWORK_REFERENCE_SECRET!,
+    referenceSecret: process.env.DOORMAN_NETWORK_REFERENCE_SECRET!,
   },
 });
 
@@ -92,7 +95,7 @@ Allowed sources are `verified-delegation` (positive assistant only), `confirmed-
 ## Operation sequences
 
 ```ts
-import { createSequenceTracker } from "@janitor/network";
+import { createSequenceTracker } from "@aarondovturkel/doorman-network";
 const sequence = createSequenceTracker(); // Owned by one session/window.
 sequence.observe("telemetry", performance.now());
 sequence.observe("tool", performance.now());
@@ -116,4 +119,4 @@ See [how discovery and validation work](LEARNING-NETWORK.md) before using a patt
 
 ## Train a supervised classifier
 
-The learning service also supports an offline classifier pipeline. Compare telemetry-only logistic/boosted-tree models with optional Jev features, using independently confirmed outcomes and a separate calibration window. Private `network.classify(features)` results describe assistant and abuse targets; they do not replace authentication or the existing risk result. Follow [Train a Janitor classifier](CLASSIFIER.md) for setup, validation, budgets and rollback.
+The learning service also supports an offline classifier pipeline. Compare telemetry-only logistic/boosted-tree models with optional Jev features, using independently confirmed outcomes and a separate calibration window. Private `network.classify(features)` results describe assistant and abuse targets; they do not replace authentication or the existing risk result. Follow [Train a Doorman classifier](CLASSIFIER.md) for setup, validation, budgets and rollback.

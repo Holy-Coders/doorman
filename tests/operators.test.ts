@@ -5,7 +5,7 @@ import {
   isOperatorEvaluation,
   operatorLabel,
   summarizeOperators,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 import { evidence, evaluation, window } from "./helpers/operators.js";
 const range = { since: 0, until: 1000 };

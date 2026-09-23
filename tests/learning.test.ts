@@ -2,17 +2,17 @@ import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { Miniflare } from "miniflare";
-import { createNodeVisitor } from "@janitor/adapters/node";
-import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
-import { createD1LearningStorage, type D1Database } from "@janitor/storage-d1";
-import { createPostgresLearningStorage } from "@janitor/storage-postgres";
+import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
+import { createD1LearningStorage, type D1Database } from "@aarondovturkel/doorman-storage-d1";
+import { createPostgresLearningStorage } from "@aarondovturkel/doorman-storage-postgres";
 import {
   normalizeObservation,
   type LearningOptions,
   type LearningStorage,
   type LearningSession,
-} from "@janitor/core";
-import { createJevMethods } from "@janitor/evaluator-jev";
+} from "@aarondovturkel/doorman-core";
+import { createJevMethods } from "@aarondovturkel/doorman-evaluator-jev";
 import { signals } from "./helpers/fixtures.js";
 
 const request = (cookie = "", observation = signals, extra = {}) =>

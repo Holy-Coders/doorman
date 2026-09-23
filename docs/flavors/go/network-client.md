@@ -1,6 +1,6 @@
 # Connect Go to the learning service
 
-Call the learning service from your Go backend using a fixed HTTPS URL and a private participant key. Your existing Janitor identity endpoint remains independent. The service's participant preferences default to disabled.
+Call the learning service from your Go backend using a fixed HTTPS URL and a private participant key. Your existing Doorman identity endpoint remains independent. The service's participant preferences default to disabled.
 
 Enable evaluation explicitly with `POST /v1/preferences` and `{"evaluation":true,"contribution":false,"training":false}`. The operator must also configure an evaluator and budget. A remote assessment never contributes its inputs to training automatically.
 

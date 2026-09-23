@@ -4,9 +4,9 @@ import {
   createJevMethods,
   createOperatorInput,
   OPERATOR_PROMPT_VERSION,
-} from "@janitor/evaluator-jev";
-import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
-import type { OperatorEvaluationInput } from "@janitor/core";
+} from "@aarondovturkel/doorman-evaluator-jev";
+import { createCloudflareJevEvaluator } from "@aarondovturkel/doorman-evaluator-cloudflare-jev";
+import type { OperatorEvaluationInput } from "@aarondovturkel/doorman-core";
 import { evidence } from "./helpers/operators.js";
 const input: OperatorEvaluationInput = {
   current: evidence,

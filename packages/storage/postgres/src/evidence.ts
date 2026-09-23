@@ -2,7 +2,7 @@ import type {
   ApplicationEvent,
   DeviceLink,
   EvidenceStorage,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 import type { PostgresDatabase } from "./index.js";
 
 export function createPostgresEvidenceStorage(

@@ -11,7 +11,7 @@ const answer = {
 };
 describe("budgeted real-provider pilot", () => {
   it("reuses a validated response without another paid call, including after restart", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "janitor-pilot-")),
+    const dir = await mkdtemp(join(tmpdir(), "doorman-pilot-")),
       path = join(dir, "ledger.json");
     const fetcher = vi.fn<typeof fetch>(async () =>
       Response.json({
@@ -60,7 +60,7 @@ describe("budgeted real-provider pilot", () => {
     }
   });
   it("reserves failures and rejects concurrent ledger writers", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "janitor-pilot-")),
+    const dir = await mkdtemp(join(tmpdir(), "doorman-pilot-")),
       path = join(dir, "ledger.json");
     const fetcher = vi.fn<typeof fetch>(
       async () => new Response("failed", { status: 500 }),

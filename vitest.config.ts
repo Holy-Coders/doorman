@@ -5,37 +5,37 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: "@janitor/core",
+        find: "@aarondovturkel/doorman-core",
         replacement: fileURLToPath(
           new URL("./packages/core/src/index.ts", import.meta.url),
         ),
       },
       {
-        find: "@janitor/browser",
+        find: "@aarondovturkel/doorman-browser",
         replacement: fileURLToPath(
           new URL("./packages/browser/src/index.ts", import.meta.url),
         ),
       },
       {
-        find: "@janitor/storage-d1",
+        find: "@aarondovturkel/doorman-storage-d1",
         replacement: fileURLToPath(
           new URL("./packages/storage/d1/src/index.ts", import.meta.url),
         ),
       },
       {
-        find: "@janitor/storage-postgres",
+        find: "@aarondovturkel/doorman-storage-postgres",
         replacement: fileURLToPath(
           new URL("./packages/storage/postgres/src/index.ts", import.meta.url),
         ),
       },
       {
-        find: "@janitor/evaluator-jev",
+        find: "@aarondovturkel/doorman-evaluator-jev",
         replacement: fileURLToPath(
           new URL("./packages/evaluators/jev/src/index.ts", import.meta.url),
         ),
       },
       {
-        find: "@janitor/evaluator-cloudflare-jev",
+        find: "@aarondovturkel/doorman-evaluator-cloudflare-jev",
         replacement: fileURLToPath(
           new URL(
             "./packages/evaluators/cloudflare-jev/src/index.ts",
@@ -44,13 +44,13 @@ export default defineConfig({
         ),
       },
       {
-        find: "@janitor/adapters/node/http",
+        find: "@aarondovturkel/doorman-adapters/node/http",
         replacement: fileURLToPath(
           new URL("./packages/adapters/src/node/http.ts", import.meta.url),
         ),
       },
       ...["node", "vercel", "cloudflare"].map((name) => ({
-        find: "@janitor/adapters/" + name,
+        find: "@aarondovturkel/doorman-adapters/" + name,
         replacement: fileURLToPath(
           new URL(
             "./packages/adapters/src/" + name + "/index.ts",

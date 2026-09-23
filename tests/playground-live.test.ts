@@ -16,10 +16,10 @@ import {
   DEMO_LIMITS,
   rows,
 } from "../site/worker/budget.js";
-import type { D1Database } from "@janitor/storage-d1";
+import type { D1Database } from "@aarondovturkel/doorman-storage-d1";
 import { sqlBackend } from "./helpers/sql.js";
 import { signals } from "./helpers/fixtures.js";
-import type { JevRequest } from "@janitor/evaluator-jev";
+import type { JevRequest } from "@aarondovturkel/doorman-evaluator-jev";
 
 const input: JevRequest = {
   state: { current: { platform: "macos" } },
@@ -88,7 +88,7 @@ describe("public live playground", () => {
       headers: {
         origin: "https://demo.test",
         "content-type": "application/json",
-        "x-janitor-playground": "1",
+        "x-doorman-playground": "1",
         cookie,
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -98,7 +98,7 @@ describe("public live playground", () => {
     expect(response.status).toBe(200);
     return response.headers
       .getSetCookie()
-      .find((c) => c.startsWith("__janitor_playground_session="))!
+      .find((c) => c.startsWith("__doorman_playground_session="))!
       .split(";")[0]!;
   }
   async function seedSession(id = "test") {
@@ -200,7 +200,7 @@ describe("public live playground", () => {
     const first = await app.fetch(request("identify", a, { signals }));
     const id = ((await first.json()) as { visitorId: string }).visitorId;
     const second = await app.fetch(
-      request("identify", b + "; __janitor_playground=" + id, { signals }),
+      request("identify", b + "; __doorman_playground=" + id, { signals }),
     );
     expect(((await second.json()) as { visitorId: string }).visitorId).not.toBe(
       id,

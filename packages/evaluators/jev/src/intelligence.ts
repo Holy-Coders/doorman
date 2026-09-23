@@ -1,7 +1,7 @@
-import { INTELLIGENCE_LIMITS, isProbability } from "@janitor/core";
+import { INTELLIGENCE_LIMITS, isProbability } from "@aarondovturkel/doorman-core";
 import { createOperatorInput, parseOperatorResponse } from "./operators.js";
 import { createActivityInput } from "./activity.js";
-import type { VisitorEvaluator, CrossDeviceInput } from "@janitor/core";
+import type { VisitorEvaluator, CrossDeviceInput } from "@aarondovturkel/doorman-core";
 import {
   compactIdentity,
   createRiskInput,

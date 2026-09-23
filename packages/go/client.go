@@ -1,6 +1,6 @@
-// Package janitor calls an application-owned Janitor endpoint. Matching stays in
+// Package doorman calls an application-owned Doorman endpoint. Matching stays in
 // your TypeScript or Elixir service; this client never collects server fingerprints.
-package janitor
+package doorman
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 const MaxBodyBytes = 32768
 const maxResponseBytes = 65536
 
-var ErrUnavailable = errors.New("janitor endpoint unavailable")
+var ErrUnavailable = errors.New("doorman endpoint unavailable")
 
 // Client can be shared across requests. It has no shared cookie jar.
 type Client struct {
@@ -47,7 +47,7 @@ type Result struct {
 func NewClient(endpoint string, options Options) (*Client, error) {
 	u, err := url.Parse(endpoint)
 	if err != nil || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || (u.Scheme != "https" && u.Scheme != "http") {
-		return nil, errors.New("expected absolute Janitor endpoint without credentials or query")
+		return nil, errors.New("expected absolute Doorman endpoint without credentials or query")
 	}
 	if u.Scheme == "http" && u.Hostname() != "localhost" && u.Hostname() != "127.0.0.1" && u.Hostname() != "::1" {
 		return nil, errors.New("use HTTPS except for loopback development")
@@ -56,7 +56,7 @@ func NewClient(endpoint string, options Options) (*Client, error) {
 		options.Timeout = 3 * time.Second
 	}
 	if options.Timeout < 0 || options.Timeout > 30*time.Second || !header(options.BearerToken, 8192) {
-		return nil, errors.New("invalid Janitor options")
+		return nil, errors.New("invalid Doorman options")
 	}
 	return &Client{endpoint, options.BearerToken, &http.Client{Timeout: options.Timeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@janitor/example-nextjs",
+  "name": "@aarondovturkel/doorman-example-nextjs",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,8 +10,8 @@
     "migrate": "node --env-file=.env.local --import tsx scripts/migrate.ts"
   },
   "dependencies": {
-    "@janitor/adapters": "workspace:^",
-    "@janitor/browser": "workspace:^",
+    "@aarondovturkel/doorman-adapters": "workspace:^",
+    "@aarondovturkel/doorman-browser": "workspace:^",
     "next": "^16.3.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

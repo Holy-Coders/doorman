@@ -30,7 +30,7 @@ writeFileSync(
   `${output}/package.json`,
   JSON.stringify(
     {
-      name: "janitor-packed-consumer",
+      name: "doorman-packed-consumer",
       private: true,
       type: "module",
       packageManager: "pnpm@9.12.0",

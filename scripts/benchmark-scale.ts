@@ -1,20 +1,20 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { cpus, totalmem } from "node:os";
 import pg from "pg";
-import { createPostgresStorage } from "@janitor/storage-postgres";
-import { createVisitorEngine, type NormalizedObservation } from "@janitor/core";
+import { createPostgresStorage } from "@aarondovturkel/doorman-storage-postgres";
+import { createVisitorEngine, type NormalizedObservation } from "@aarondovturkel/doorman-core";
 
 // Explicit local opt-in. Only this script's isolated schema is created/dropped.
-const connectionString = process.env.JANITOR_BENCHMARK_DATABASE_URL;
+const connectionString = process.env.DOORMAN_BENCHMARK_DATABASE_URL;
 if (!connectionString)
   throw new Error(
-    "Set JANITOR_BENCHMARK_DATABASE_URL to a disposable local Postgres database.",
+    "Set DOORMAN_BENCHMARK_DATABASE_URL to a disposable local Postgres database.",
   );
 const address = new URL(connectionString);
 if (!["localhost", "127.0.0.1", "[::1]"].includes(address.hostname))
   throw new Error("The scale benchmark only runs against a local database.");
 const observationsPerVisitor = Number(
-  process.env.JANITOR_BENCHMARK_HISTORY ?? 1,
+  process.env.DOORMAN_BENCHMARK_HISTORY ?? 1,
 );
 if (
   !Number.isInteger(observationsPerVisitor) ||
@@ -22,13 +22,13 @@ if (
   observationsPerVisitor > 10
 )
   throw new Error("Choose 1–10 observations per visitor.");
-const count = Number(process.env.JANITOR_BENCHMARK_VISITORS ?? 2_000_000);
+const count = Number(process.env.DOORMAN_BENCHMARK_VISITORS ?? 2_000_000);
 if (!Number.isSafeInteger(count) || count < 1000 || count > 5_000_000)
   throw new Error("Choose 1000–5000000 visitors.");
 const pool = new pg.Pool({
   connectionString,
   max: 10,
-  options: "-c search_path=janitor_scale_benchmark -c statement_timeout=600000",
+  options: "-c search_path=doorman_scale_benchmark -c statement_timeout=600000",
 });
 const query = (text: string, values?: unknown[]) => pool.query(text, values);
 const root = new URL("../", import.meta.url);
@@ -44,8 +44,8 @@ const summarize = (samples: number[]) => {
   return { samples: s.length, p50Ms: at(0.5), p95Ms: at(0.95), maxMs: at(1) };
 };
 try {
-  await query("DROP SCHEMA IF EXISTS janitor_scale_benchmark CASCADE");
-  await query("CREATE SCHEMA janitor_scale_benchmark");
+  await query("DROP SCHEMA IF EXISTS doorman_scale_benchmark CASCADE");
+  await query("CREATE SCHEMA doorman_scale_benchmark");
   await query(
     await readFile(
       new URL("packages/storage/postgres/migrations/0001_visitors.sql", root),

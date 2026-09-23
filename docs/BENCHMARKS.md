@@ -1,6 +1,6 @@
 # Browser benchmarks
 
-This benchmark asks whether Janitor can preserve a browser ID through controlled changes such as a reload, window resize or timezone change. It also tests where recovery fails.
+This benchmark asks whether Doorman can preserve a browser ID through controlled changes such as a reload, window resize or timezone change. It also tests where recovery fails.
 
 The signals come from real browser engines driven by automation. They do not represent a population of real people. Use the results to reproduce behavior, then evaluate accuracy separately on independently labeled visits from your application.
 
@@ -31,7 +31,7 @@ Chromium 153.0.8010.12, Firefox 155.0 and WebKit 26.6 on one macOS host. Six log
 
 The last row is a known false-match case under a **browser-profile** definition of identity. The profiles share the same physical host and browser build, so it is not evidence about false matches between different physical machines. It nevertheless demonstrates that equal browser signals cannot distinguish isolated profiles or prove person identity. Confidence near 1 is an algorithm score, not a measured probability of correctness. Raising the threshold cannot distinguish two exactly equal observations.
 
-When multiple equal candidates are already stored, the ambiguity margin avoids choosing between them. When only one is stored, Janitor cannot tell whether an identical observation belongs to a new profile. Do not use this result to advertise 100% recognition. The benchmark deliberately includes this failure instead of averaging it away into one score.
+When multiple equal candidates are already stored, the ambiguity margin avoids choosing between them. When only one is stored, Doorman cannot tell whether an identical observation belongs to a new profile. Do not use this result to advertise 100% recognition. The benchmark deliberately includes this failure instead of averaging it away into one score.
 
 Risk accuracy is **not measured**. All sessions are automated and no human ground truth is present. Risk outputs remain zero because the evaluator is disabled. Extra motion summaries do not by themselves solve identity collisions or establish intent. Cross-device person/account continuity needs [verified account linking](./EXTENSIONS.md).
 
@@ -43,11 +43,11 @@ The new aggregate collectors were exercised again in all three engines on Septem
 
 ## Public research datasets
 
-Janitor has now run FP-Stalker, FP-Agent and Balabit with its existing signals. The [public dataset report](EXTERNAL-BENCHMARKS.md) documents the projections, held-out groups, source checksums and reproducible commands. The historical cookie-loss replay produced 1,258 correct restores and 2,303 wrong restores. Agent timing features showed useful separation but incomplete coverage and substantial human false positives in some folds. A separate 120-case pilot made 103 real Jev calls: fewer false restores came with more missed restores, and behavior-only automation scores detected no agents at the preset threshold. No research model was promoted to production.
+Doorman has now run FP-Stalker, FP-Agent and Balabit with its existing signals. The [public dataset report](EXTERNAL-BENCHMARKS.md) documents the projections, held-out groups, source checksums and reproducible commands. The historical cookie-loss replay produced 1,258 correct restores and 2,303 wrong restores. Agent timing features showed useful separation but incomplete coverage and substantial human false positives in some folds. A separate 120-case pilot made 103 real Jev calls: fewer false restores came with more missed restores, and behavior-only automation scores detected no agents at the preset threshold. No research model was promoted to production.
 
 Additional datasets remain candidates:
 
-- [CERTH Web Bot Detection Dataset](https://m4d.iti.gr/web-bot-detection-dataset/) includes human and bot sessions with mouse behavior and web logs. Its stated license is CC BY-NC-SA; check applicability before using it for a commercial benchmark. Raw paths, coordinates and logs would need to be reduced to Janitor's permitted summaries, not added to the library's collection surface.
+- [CERTH Web Bot Detection Dataset](https://m4d.iti.gr/web-bot-detection-dataset/) includes human and bot sessions with mouse behavior and web logs. Its stated license is CC BY-NC-SA; check applicability before using it for a commercial benchmark. Raw paths, coordinates and logs would need to be reduced to Doorman's permitted summaries, not added to the library's collection surface.
 
 ## What a production evaluation still needs
 

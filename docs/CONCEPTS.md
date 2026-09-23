@@ -1,6 +1,6 @@
 # Browsers, people & agents
 
-Janitor keeps a few kinds of identity separate. Understanding the difference will help you choose the right ID for a browser, a user profile or an account report.
+Doorman keeps a few kinds of identity separate. Understanding the difference will help you choose the right ID for a browser, a user profile or an account report.
 
 ## One example, three IDs
 
@@ -8,7 +8,7 @@ Alex and Sam work in a shared design workspace. Alex uses a laptop and a phone, 
 
 | Thing you want to identify | Example | What identifies it |
 | --- | --- | --- |
-| A browser | Alex’s laptop browser | Janitor’s `visitorId` |
+| A browser | Alex’s laptop browser | Doorman’s `visitorId` |
 | A person or agent | Alex, Sam, or Alex’s assistant | A verified identity registered by your server |
 | A shared workspace | The design studio | Your application’s existing account or workspace ID |
 
@@ -16,15 +16,15 @@ Alex’s phone gets its own browser ID. It can still belong to the same signed-i
 
 ## Visitor
 
-A **visitor** is a browser environment with a stored history. Janitor assigns it an opaque, random ID beginning with `vis_`. A cookie usually preserves that ID. Browser-signal matching is the fallback when the cookie is missing.
+A **visitor** is a browser environment with a stored history. Doorman assigns it an opaque, random ID beginning with `vis_`. A cookie usually preserves that ID. Browser-signal matching is the fallback when the cookie is missing.
 
-`isReturning` means Janitor found an existing visitor record. It does not mean the current user has an account, is authenticated, or is the same person who used the browser previously.
+`isReturning` means Doorman found an existing visitor record. It does not mean the current user has an account, is authenticated, or is the same person who used the browser previously.
 
 ## Observation
 
-An **observation** is a small snapshot of browser signals, such as browser family, language, screen size and timezone. All fields are optional. A visitor has several recent observations, which lets Janitor tolerate ordinary changes.
+An **observation** is a small snapshot of browser signals, such as browser family, language, screen size and timezone. All fields are optional. A visitor has several recent observations, which lets Doorman tolerate ordinary changes.
 
-Janitor stores observations in your database. They are never encoded into the visitor ID. See the [signal inventory](../PRIVACY.md).
+Doorman stores observations in your database. They are never encoded into the visitor ID. See the [signal inventory](../PRIVACY.md).
 
 ## Subject and actor
 
@@ -38,7 +38,7 @@ For a particular request, the **subject** is the identity being represented and 
 | Alex’s assistant reads that calendar | Alex | Alex’s assistant |
 | Sam uses permission Alex granted | Alex | Sam |
 
-An actor is not inferred from a low automation score. If your server has not established who is acting, Janitor reports the actor as unknown.
+An actor is not inferred from a low automation score. If your server has not established who is acting, Doorman reports the actor as unknown.
 
 Some references use **principal** for a registered identity, especially the identity granting permission. It is an identity record, not another kind of browser ID.
 
@@ -46,7 +46,7 @@ Some references use **principal** for a registered identity, especially the iden
 
 A **delegation** is permission for one actor to act for another identity. It names the allowed service, actions and expiry time.
 
-For example, Alex can let the assistant perform `events:read` for `calendar-api` for one hour. Janitor checks that the stored permission matches the request and has not expired or been revoked. Your application uses that result to allow or reject the action.
+For example, Alex can let the assistant perform `events:read` for `calendar-api` for one hour. Doorman checks that the stored permission matches the request and has not expired or been revoked. Your application uses that result to allow or reject the action.
 
 A delegation ID is a reference to a permission record. The assistant still needs its own authenticated credential.
 
@@ -63,6 +63,6 @@ These are separate scores. An authorized AI assistant can be automated. A famili
 
 ## Which ID should analytics use?
 
-Use your authenticated **user ID** to identify a person in PostHog or Mixpanel. Use your **workspace ID** to group shared-account activity. Keep Janitor’s **visitor ID** as browser context rather than replacing a person’s analytics identity with it.
+Use your authenticated **user ID** to identify a person in PostHog or Mixpanel. Use your **workspace ID** to group shared-account activity. Keep Doorman’s **visitor ID** as browser context rather than replacing a person’s analytics identity with it.
 
 The [analytics guide](ANALYTICS.md) shows login, user switching, logout and reports. The [people and agents guide](AGENTIC-IDENTITY.md) shows how to register identities and permissions.

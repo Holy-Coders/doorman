@@ -1,8 +1,8 @@
-import { createVisitorId } from "@janitor/core";
+import { createVisitorId } from "@aarondovturkel/doorman-core";
 import type {
   ManagedVisitorStorage,
   NormalizedObservation,
-} from "@janitor/core";
+} from "@aarondovturkel/doorman-core";
 
 export function createMemoryStorage(): ManagedVisitorStorage & {
   rows: Map<
