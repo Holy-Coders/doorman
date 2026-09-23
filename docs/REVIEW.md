@@ -1,60 +1,54 @@
-# Product and implementation review
+# Compare Janitor with other tools
 
-Reviewed 2026-09-23 against the repository and current official product documentation. Janitor remains a prelaunch library with experimental scores. This review is an engineering assessment, not an independent security audit or accuracy certification.
+Janitor is a small library you run in your application. It adds browser continuity, optional AI risk estimates and records connecting verified people and agents. It does not replace an analytics platform, login system or managed fraud service.
 
-## Recommended position
+This guide explains where those tools overlap and where you would use them together. The comparison is based on documented capabilities reviewed on September 23, 2026, not a head-to-head accuracy or cost benchmark.
 
-**First-party identity context for humans and their agents, with Jev-assisted browser continuity and risk.** Keep the runtime small and the data in the implementer's database. Integrate with analytics and authentication products rather than reproducing their infrastructure.
+## Analytics and customer data
 
-Separate five things in the product and API: browser continuity, verified account identity, credential-backed actor attribution, explicit delegation, and inferred risk. An authorized agent can be automated; a valid human credential can be stolen. Neither browser behavior nor an AI score proves who is physically at the keyboard.
+| Tool | What it is useful for | How Janitor fits alongside it |
+| --- | --- | --- |
+| Segment | Collecting events from sources, sending them to destinations and linking customer identifiers. | Send verified identity and private assessment events through your existing Segment server client. |
+| RudderStack | Event pipelines and identity resolution in SDKs or a data warehouse. | Keep that pipeline and add Janitor context to the events you choose to export. |
+| PostHog | Product analytics, connecting anonymous visits to known users, experiments and other product tools. | Use Janitor’s login/reset helper and optional server events while PostHog continues to own analytics. |
+| Mixpanel | Analyzing user journeys, retention and account activity. | Keep the person’s analytics ID and add separate browser, actor and account properties. |
 
-## Comparison
+You do not need Janitor merely to call an analytics SDK’s `identify()` method. Those products already support known-user identification. Janitor is useful when you also want browser history, private technical assessments or explicit agent/account relationships in your own runtime.
 
-| Product     | Documented role                                                                                                                                                                                | Implication for Janitor                                                                                                                                                                                       |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Segment     | Unify joins identifiers from multiple sources into customer profiles, with configurable resolution rules and merge protection. `identify` supplies a stable ID and traits.                     | Segment is stronger at customer-data integration and activation. Janitor should supply application-authorized identity/risk events to it, preserving uncertain guesses separately from verified IDs.          |
-| RudderStack | SDK identity resolution associates anonymous IDs with later known IDs; its open-source dbt model also resolves identifiers in a warehouse.                                                     | Use the existing event pipeline. A Janitor adapter can emit a compact event without building destinations, warehouse jobs or queues.                                                                          |
-| PostHog     | `identify` joins an anonymous session's prior events to a person profile; consistent IDs connect authenticated activity across devices. Reset creates a fresh anonymous identity after logout. | Account stitching after login is established functionality. Janitor's opportunity is runtime identity/risk context, while PostHog handles analytics and experimentation.                                      |
-| Fingerprint | Visitor identification plus device-risk Smart Signals. Its agent detection verifies signed requests using Web Bot Auth and returns agent identity metadata.                                    | This is the closest comparison for browser/risk intelligence. Agent detection alone is not a unique differentiator. Janitor offers a small inspectable, self-hosted composition; accuracy parity is unproven. |
+Follow the [analytics integration guide](ANALYTICS.md) for the working PostHog, Mixpanel and Segment APIs. It includes shared-browser behavior and reports that count distinct verified people or agents per account.
 
-Sources: [Segment identity resolution](https://www.twilio.com/docs/segment/unify/identity-resolution), [Segment Identify spec](https://www.twilio.com/docs/segment/connections/spec/identify), [RudderStack SDK identity](https://www.rudderstack.com/product/sdk-identity-resolution/), [RudderStack dbt model](https://github.com/rudderlabs/dbt-id-resolution), [PostHog official people documentation](https://github.com/PostHog/posthog.com/blob/master/contents/docs/data/persons.mdx), [PostHog anonymous/reset documentation](https://github.com/PostHog/posthog.com/blob/master/contents/docs/data/anonymous-vs-identified-events.mdx), [Fingerprint Smart Signals](https://docs.fingerprint.com/docs/smart-signals-reference), [Fingerprint signed AI agents](https://docs.fingerprint.com/docs/ai-agents).
+## Browser and risk intelligence
 
-These are documented capabilities, not head-to-head measurements. We have not run competitors on Janitor's benchmark or compared costs at a production workload.
+Fingerprint offers visitor identification and separate device-risk signals. This is closer to Janitor’s browser/risk role than a product analytics platform. Fingerprint also documents signed-agent detection; recognizing agents is not unique to Janitor.
 
-## Changes made in this review
+Janitor’s tradeoff is control and inspectability: you operate its database, can read the matching rules, and can replace the evaluator. It does not come with a large network’s reputation data, a proven fraud-detection model or established accuracy parity with a managed product. Read [the matching limitations](MATCHING.md) and [recorded benchmarks](VALIDATION.md) before choosing it for a risk-sensitive workload.
 
-| Finding                                                                           | Change                                                                                                                            | Verification                                                                                      |
-| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Zero risk was indistinguishable from evaluator failure                            | `riskStatus: "evaluated" \| "unavailable" \| "disabled"` accompanies risk. Numeric fallback remains zero.                         | Evaluated zero, missing evaluator, exceptions and browser response validation.                    |
-| Future learning could accidentally treat fuzzy browser matches as verified people | Dedicated opt-in short session cookie; labels require a server-verified self-person login.                                        | Both SQL backends: cookie restoration cannot label an account; post-login snapshots stay frozen.  |
-| Predictions could reinforce themselves or leak accounts to anonymous clients      | Shadow predictions use only verified examples, omit prior predictions, and stay in server reports.                                | Cold-start abstention, output limits, timeout/malformed/unknown-ID fallback, no response leakage. |
-| Shared devices and conflicting logins can contaminate examples                    | Exclude known conflicting labels, agents and delegated actors; no automatic subject merge.                                        | Concurrent conflicting accounts, unknown actor, agent and family scenarios.                       |
-| Optional collection needs independent erasure and bounds                          | Implementer-selected collection policy, fixed expiry, 30-day default, 20 examples/subject, bounded reports, cleanup and cascades. | Real D1/Postgres retention, permission withdrawal, deletion and isolation tests.                  |
-| A slow streamed request could hold the handler indefinitely                       | Overall body-read deadline, default five seconds; sanitized HTTP 408 and stream cancellation.                                     | Never-ending request body terminates without creating an identity.                                |
+## Authentication and permissions
 
-## Remaining gaps, in priority order
+Keep your existing authentication provider or application login. It verifies passwords, passkeys, tokens and recovery flows. Janitor accepts verified identity from that system; it does not perform those checks from browser signals.
 
-1. **Accuracy and calibration are not established.** The controlled dataset already shows identical-profile false matches after cookie loss. Jev and anonymous cross-device predictions need consented, labeled holdouts before claims about fraud or human identification. Prioritize false associations over maximizing recovery. Keep an explicit abstention path and compare deterministic-only, Jev-assisted and custom-classifier baselines.
-2. **Client measurements and continuity cookies are not security proof.** Payloads can be fabricated and cookies replayed. The preview now provides short-lived encrypted result receipts bound to operation, action, audience, expiry and a nonce consumed atomically by the application. See [trust helpers](TRUST.md). Authenticated encryption protects the receipt, not the truth of a browser claim. Keep authorization in existing authentication. Fingerprint's [server integration guidance](https://docs.fingerprint.com/docs/protecting-from-client-side-tampering) documents the same general trust boundary.
-3. **Consent and logout ergonomics need a simpler integration.** The new learning gate is explicit; browser tracking still starts at client creation. The preview now provides `enabled`, `setEnabled()`, `reset()` and framework CSRF headers, plus native Phoenix logout integration guidance. Never let a fuzzy restored browser ID reconnect an opted-out account.
-4. **Inference cost and failure visibility need workload evidence.** v0.7.0 adds shared measurement quotas, evaluator call budgets/concurrency leases, circuit recovery and structured fallback reasons without Redis or queues. Provider response decoding is bounded. Validate limits and p95 latency under the application's traffic; call-count budgets do not guarantee a currency cap, and a timeout does not forcibly cancel arbitrary remote work. See [controls and evidence](HARDENING.md).
-5. **Identity links need operational provenance before richer merges.** Store who/what verified an association and when, support revocation, and make any future merge reversible. The current verified-key uniqueness checks deliberately reject account collisions. Do not add automatic probabilistic account merging.
+An AI assistant needs its own authenticated identity and the user’s permission. Janitor can store a limited delegation and check its scope, expiry and revocation. Your application still enforces access. See [people and agents](AGENTIC-IDENTITY.md).
 
-## Preview implementations and next validation
+## When Janitor may fit
 
-| Priority | Feature                         | Smallest useful scope                                                                                                                                                                                       |
-| -------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| First    | Evaluation runner               | Replay exported consented feedback with chronological/device holdouts; compare false-match rate, abstention, calibration and latency. Generate a static report, not a dashboard.                            |
-| First    | Signed agent credential recipes | Verify an existing provider's credential or signed HTTP request, map it to a Janitor actor, then assess scoped delegation. A recognized agent vendor is distinct from a user's grant to access one account. |
-| Next     | Segment/PostHog bridge          | A callback/example emitting verified account/actor, visitor continuity and risk status. Export no full fingerprints and never identify a user using a shadow prediction.                                    |
-| Next     | Action-specific context         | Optional application-verified action categories such as sign-in or payment; separate unusual activity from malicious intent and leave step-up policy to the app.                                            |
-| Next     | Explicit device pairing         | QR/link or passkey-authenticated association for two devices where the application verifies possession, giving stronger cross-device evidence than behavioral resemblance.                                  |
-| Later    | Revocable learning export       | Versioned datasets and deletion lineage for separately trained classifiers; deleting database rows alone does not untrain a model trained elsewhere.                                                        |
+Janitor is worth evaluating when you want an open-source component inside your existing app, are comfortable operating Postgres or D1, and can test browser matching and risk thresholds against your own traffic. Optional Jev evaluation can be replaced without changing the browser API.
 
-Keep Jev prominent as the replaceable evaluator with bounded typed outputs. Do not market it as a self-training identity oracle. Learn from verified outcomes, publish uncertainty, and preserve the small-library design.
+Choose an established service when you need managed operations, supported detection guarantees or intelligence Janitor does not provide. No synthetic benchmark can close the gap in real-user accuracy evidence.
 
-The v0.5 implementation adds the [evaluation runner and revocable export manifest](EVALUATION.md), [JWT agent verification and action-bound result receipts](TRUST.md), [PostHog/Mixpanel/Segment bridges](ANALYTICS.md), and [native Phoenix integration](../packages/elixir/README.md). Explicit device pairing is provided as a recipe using existing application authentication and one-time challenges, not a new authentication protocol. Provider response decoding is bounded to 64 KiB for direct HTTP transports. Model quality, provider latency/cost and real-user calibration still require a labeled pilot; no simulated test result closes that gap.
+## What to verify before relying on it
 
-The v0.6 review adds [private score responses and encrypted receipts](SECURITY.md), [selective lookup and large Postgres benchmarks](SCALING.md), and a [research-driven full-funnel roadmap](RESEARCH.md). Public browser scores are now an explicit server opt-in; this changes the v0.5 preview default.
+- Measure false browser associations and missed returns, including common identical profiles.
+- Test risk scores on ordinary users, privacy browsers, assistive technology, authorized agents and actual automation.
+- Keep unavailable risk distinct from an evaluated low score.
+- Verify login, user switching and logout in your analytics project.
+- Measure database latency, AI costs and overload behavior under your workload.
 
-v0.7.0 implements shared abuse controls, a private source-labeled evidence envelope, idempotent server-owned funnel events, bounded activity counts, and verified device-association provenance/revocation in TypeScript and native Elixir. These remain application evidence, not automatic account-takeover detection. The [guide](HARDENING.md) documents migrations, privacy bounds and remaining deployment responsibilities. These features ship as GitHub artifacts; application integration remains separate.
+The [evaluation guide](EVALUATION.md), [capacity report](CAPACITY.md) and [security guide](SECURITY.md) explain the tools and limits available for these checks.
+
+## Sources
+
+- [Segment identity resolution](https://www.twilio.com/docs/segment/unify/identity-resolution) and [Identify specification](https://www.twilio.com/docs/segment/connections/spec/identify).
+- [RudderStack SDK identity resolution](https://www.rudderstack.com/product/sdk-identity-resolution/) and [warehouse identity model](https://github.com/rudderlabs/dbt-id-resolution).
+- [PostHog identification](https://posthog.com/docs/product-analytics/identify).
+- [Mixpanel user identification](https://docs.mixpanel.com/docs/tracking-methods/id-management/identifying-users-simplified).
+- [Fingerprint Smart Signals](https://docs.fingerprint.com/docs/smart-signals-reference) and [AI agent detection](https://docs.fingerprint.com/docs/ai-agents).

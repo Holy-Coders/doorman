@@ -1,11 +1,13 @@
-# Native Phoenix example
+# Run the Phoenix example
 
-A working Phoenix 1.8 endpoint, Ecto Postgres repo and browser UI. Janitor runs in the BEAM application; no Node companion service. See the [Elixir installation and integration guide](../../packages/elixir/README.md) for an existing Phoenix/LiveView app, PostHog, Mixpanel and verified users.
+This is a small Phoenix application with a page, a visitor endpoint and a Postgres database. Janitor runs inside the Elixir application. Use it to see the full flow before following the [installation guide for an existing Phoenix app](../../packages/elixir/README.md).
 
-From the repository root:
+## Start the app
+
+You need Elixir, Erlang/OTP and Postgres. The example can use Docker for a disposable local Postgres instance. From the repository root:
 
 ```sh
-# Skip if you already have a local Postgres database.
+# Skip this command if you already have a local Postgres database.
 docker run --name janitor-example-pg -e POSTGRES_USER=visitor -e POSTGRES_PASSWORD=visitor -e POSTGRES_DB=visitors -p 127.0.0.1:55433:5432 -d postgres:17-alpine
 cd examples/phoenix
 export DATABASE_URL=postgres://visitor:visitor@localhost:55433/visitors
@@ -13,8 +15,22 @@ mix setup
 mix phx.server
 ```
 
-Open http://localhost:4000 and click Identify twice. The second response should reuse the first-party cookie. Jev is disabled unless `JEV_API_KEY` is set; inference can incur provider charges. No analytics export is configured in this local example. `mix test` verifies the page, client asset and CSRF boundary. Use `PORT=4001` for another port.
+Open **http://localhost:4000** and select **Identify** twice. The second call should reuse the cookie and keep the same visitor ID. Set `PORT=4001` if you need another port.
 
-Local-only defaults bind loopback and allow an insecure cookie on localhost. For production use a proper Phoenix release, TLS, strong `SECRET_KEY_BASE` and `JANITOR_IDENTITY_SECRET`, database TLS/pool settings, and `Janitor.new(environment: :production, secure_cookie: true, ...)`. Set collection policy explicitly for your application; the demo enables application-wide session collection and supplies no authenticated account labels.
+The package already includes its browser JavaScript, so running the example does not require pnpm. After changing that browser code in the monorepo, contributors regenerate it with `pnpm protocol:sync`.
 
-The packaged client is committed. After changing browser code in this monorepo, regenerate it with `pnpm install && pnpm protocol:sync`. An app installing Janitor through Mix does not need pnpm.
+## What is enabled
+
+Jev is off unless you set `JEV_API_KEY`. Enabling it makes provider calls that can incur charges. No PostHog or Mixpanel export is configured in this example; the [analytics guide](../../docs/ANALYTICS.md) shows how to connect your existing setup.
+
+The demo enables application-wide [learning-session collection](../../docs/LEARNING.md) but supplies no authenticated user labels. This is an optional demonstration setting, not a requirement for browser recognition. Choose the appropriate collection policy when adding Janitor to your app.
+
+## Adapt it for production
+
+The local example binds to loopback and permits a non-Secure cookie on localhost. Production needs HTTPS, strong `SECRET_KEY_BASE` and `JANITOR_IDENTITY_SECRET` values, suitable database TLS/pool settings, and `Janitor.new(environment: :production, secure_cookie: true, ...)`.
+
+Keep the existing Phoenix session and CSRF boundary. The browser response contains only the visitor ID and returning status; private results are available to server code. See [the native setup](../../packages/elixir/README.md) for controller code, cleanup, account updates and LiveView lifecycle.
+
+## Run the example test
+
+With the database available, run `mix test`. It checks the page, packaged client and rejection of a request without the required CSRF token. It does not call Jev or send analytics events.

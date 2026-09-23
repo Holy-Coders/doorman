@@ -1,8 +1,10 @@
-# Opt-in learning from verified logins
+# Learn from later logins
 
-Janitor can collect a small set of anonymous-session snapshots and associate them with a later, server-verified login. The records stay in **each implementer's database**. Holy Coders operates no shared identity graph or training service.
+Suppose a visitor browses your app anonymously and then signs in. That login gives you a verified account label for the short session leading up to it. Janitor can optionally save those examples in your database so you can study whether past visits help predict later logins.
 
-This is an experimental feedback collection path, with an optional shadow predictor. It is not an automatically trained cross-device identification model. A login establishes an account association for that session; it does not prove who physically used the browser before login. The same verified subject can accumulate examples from different devices without merging their browser IDs.
+This feature collects feedback. It does not train Jev automatically or identify anonymous people across devices out of the box. You can supply a predictor and compare its guesses with actual logins without using those guesses to change access. This is called **shadow mode**.
+
+Browser recognition, user updates and risk scoring all work with this feature off. Enable it only if you want to run this experiment. First set up the [identity directory](AGENTIC-IDENTITY.md); it supplies the verified user labels.
 
 ## Enable collection explicitly
 
@@ -26,7 +28,7 @@ const visitor = createNodeVisitor({
 
 Cloudflare and Vercel accept the same options. Omitting `learning`, or setting it to `false`, disables the feature: no learning queries, collection cookie, or predictor calls. The browser observation and risk library remains independent.
 
-Choose the policy in server configuration. `collectionPolicy: "application"` collects without a per-request consent flag; `learningConsent: false` still opts that request out. The default `"per-request"` requires `learningConsent: true`. This is an implementer policy switch, not a built-in consent UI. Identity, account updates and risk work regardless of learning being enabled.
+Choose when collection is allowed in your server configuration. `collectionPolicy: "application"` collects without a per-request consent flag; `learningConsent: false` still opts that request out. The default `"per-request"` requires `learningConsent: true`. This is an implementer policy switch, not a built-in consent UI. Identity, account updates and risk work regardless of learning being enabled.
 
 ```ts
 learning: { enabled: true, collectionPolicy: "application" }
@@ -55,7 +57,7 @@ return visitor.handle(request, {
 });
 ```
 
-Call the endpoint during the anonymous visit and again after login, before the learning cookie expires. The library cannot discover a login that your application never reports. Do not copy consent, subject or actor claims from untrusted JSON or headers. In the default per-request policy, requests without `learningConsent: true` do not collect learning data. Application policy needs no such flag. The HTTP body accepts browser measurements only.
+Call the endpoint during the anonymous visit and again after login, before the learning cookie expires. The library cannot discover a login that your application never reports. Do not copy consent, subject or actor claims from untrusted JSON or headers. In the default per-request policy, requests without `learningConsent: true` do not collect learning data. The application-wide policy does not need this per-request flag. The HTTP body accepts browser measurements only.
 
 Browser tracking has its own lifecycle. Instantiate the browser client only when your application permits collection, and call `destroy()` when permission is withdrawn. Enabling learning does not enable extended movement/timing summaries; those require the separate `behavior: "extended"` browser option.
 
@@ -67,7 +69,7 @@ Browser tracking has its own lifecycle. Instantiate the browser client only when
 4. Repeated confirmation for the same account is harmless. Conflicting account confirmations mark the flow disputed and exclude it from feedback. This cannot eliminate shared-browser ambiguity; it prevents known conflicting evidence from being used.
 5. A restored `visitorId` is never enough to label a session. Cookie loss ends continuity for this learning flow. A new learning cookie starts a new flow even when browser matching restores an older visitor ID.
 
-The short cookie bounds the association; it is not an authentication credential. A stolen/replayed cookie is not physical-user proof. Use HTTPS and your application's authenticated route boundary. Different application namespaces scope learning lookups, but the complete Janitor database is not a general multi-tenant service: keep a dedicated database/schema per application.
+The short-lived cookie connects measurements within one learning session. It does not authenticate the visitor. A stolen/replayed cookie is not physical-user proof. Use HTTPS and your application's authenticated route boundary. Different application namespaces scope learning lookups, but the complete Janitor database is not a general multi-tenant service: keep a dedicated database/schema per application.
 
 ## Inspect feedback on your server
 
@@ -95,7 +97,7 @@ learning: {
 }
 ```
 
-The predictor receives at most 100 recent verified examples, with at most 20 retained examples per subject. Previous predictions are removed from its input. Without examples, it abstains without calling the predictor. This bounded recent cohort is not a search across every account, and will miss accounts outside it.
+The predictor receives at most 100 recent examples whose users later signed in. Janitor keeps up to 20 examples for each user. Previous predictions are removed from its input. Without examples, it abstains without calling the predictor. This is a small recent sample, so an account outside that sample cannot be predicted.
 
 Predictions are recorded before login and compared with the subsequently verified account in `reports()`. They never populate browser responses, authenticate a person, merge subjects, affect visitor matching, change risk scores, or grant permissions. Scores are uncalibrated. Unknown subject IDs, out-of-range values, exceptions and timeout produce `prediction.status: "unavailable"`; returning `{}` produces `"abstained"`. Collection mode records `"not-run"`.
 
@@ -112,6 +114,6 @@ Repeated calls to Jev do **not** retrain it. Keeping verified examples can suppo
 
 ## Measure before acting on predictions
 
-Evaluate on consented real sessions with verified accounts, including multiple physical devices, shared devices, privacy browsers and accounts absent from the candidate set. Freeze inputs and predictions before login. Use chronological and device holdouts: near-duplicate snapshots from one flow must not appear in both training and evaluation. Report false associations, precision, recall, abstention, coverage, calibration and cost/latency together. Login-only feedback is selection-biased and says nothing about sessions that never authenticate. It also does not label bot activity or malicious intent.
+Evaluate on consented real sessions with verified accounts, including multiple physical devices, shared devices, privacy browsers and accounts absent from the candidate set. Freeze inputs and predictions before login. Test with visits that occur after the training examples and with devices excluded from those examples. These are called chronological and device holdouts. Near-duplicate snapshots from the same session must not appear on both sides of the test. Report false associations, precision, recall, abstention, coverage, calibration and cost/latency together. Login-only feedback is selection-biased and says nothing about sessions that never authenticate. It also does not label bot activity or malicious intent.
 
 Janitor's automated tests verify these collection and trust boundaries. They do not establish anonymous cross-device accuracy. The existing generated browser dataset is useful for regression testing, not evidence that unrelated devices can be attributed to a person.

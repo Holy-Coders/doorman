@@ -1,85 +1,80 @@
 <section class="identity-hero" aria-labelledby="hero-title" data-motion-scene>
-  <div class="hero-film" aria-hidden="true">
-    <img
-      class="hero-poster"
-      src="/media/continuity-poster.webp"
-      width="1920"
-      height="1080"
-      alt=""
-      fetchpriority="high"
-    />
-    <video
-      data-hero-video
-      muted
-      loop
-      playsinline
-      preload="none"
-      disablepictureinpicture
-      tabindex="-1"
-    >
-      <source data-src="/media/continuity.webm" type="video/webm" />
-      <source data-src="/media/continuity.mp4" type="video/mp4" />
-    </video>
-  </div>
   <div class="container hero-composition">
     <div class="hero-copy">
-      <a class="hero-announcement" href="/docs/evaluators/">
-        <span class="version-dot"></span> Identity intelligence, powered by Jev{" "}
-        <span aria-hidden="true">↗</span>
+      <a class="hero-announcement" href="/docs/introduction/">
+        Open-source visitor identity
       </a>
       <h1 id="hero-title">
-        Know who’s
-        <br />
-        behind the
-        <br />
-        request.
+        A familiar browser.
+        <br />A clearer picture.
       </h1>
       <p class="hero-description">
-        A returning browser. A verified person. An agent acting on their behalf.
-        Give your application the context to tell them apart.
+        Janitor is a library that helps your app recognize returning browsers,
+        even after a cookie disappears. Add AI-assisted risk scores and connect
+        visits to the people and agents who sign in.
       </p>
       <div class="hero-actions">
         <a href="/docs/getting-started/" class="button button-primary">
           Start building <span aria-hidden="true">↗</span>
         </a>
-        <a href="#actor-lab" class="button button-subtle">
-          Try the actor lab <span aria-hidden="true">→</span>
+        <a href="#browser-demo" class="button button-subtle">
+          See how it works
         </a>
       </div>
       <p class="hero-footnote">
-        Open source <span aria-hidden="true">/</span> Your database{" "}
-        <span aria-hidden="true">/</span> Your rules
+        Runs on your server. Stores history in your database.
       </p>
     </div>
-    <div class="hero-film-note">
-      <span class="film-label">
-        <span class="version-dot"></span> Signals change. Context stays.
-      </span>
-      <button
-        class="motion-toggle"
-        data-motion-toggle
-        aria-pressed="false"
-        hidden
-      >
-        Play motion
-      </button>
+    <div class="hero-art">
+      <div class="hero-film" aria-hidden="true">
+        <img
+          class="hero-poster"
+          src="/media/continuity-poster.webp"
+          width="1920"
+          height="1080"
+          alt=""
+          fetchpriority="high"
+        />
+        <video
+          data-hero-video
+          muted
+          loop
+          playsinline
+          preload="none"
+          disablepictureinpicture
+          tabindex="-1"
+        >
+          <source data-src="/media/continuity.webm" type="video/webm" />
+          <source data-src="/media/continuity.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <img
+        class="hero-mark"
+        src="/janitor-mark.svg"
+        width="180"
+        height="180"
+        alt="Janitor"
+      />
+      <div class="hero-film-note">
+        <span class="film-label">A little history. A lasting connection.</span>
+        <button
+          class="motion-toggle"
+          data-motion-toggle
+          aria-pressed="false"
+          hidden
+        >
+          Play motion
+        </button>
+      </div>
     </div>
   </div>
-  <div class="hero-index container">
-    <a href="/docs/matching/">
-      <span class="index-number">01 /</span>
-      <span>Browser continuity</span>
-      <span aria-hidden="true">↗</span>
-    </a>
-    <a href="/docs/agentic-identity/">
-      <span class="index-number">02 /</span>
-      <span>Humans & agents</span>
-      <span aria-hidden="true">↗</span>
-    </a>
-    <a href="/docs/trust/">
-      <span class="index-number">03 /</span>
-      <span>Private risk signals</span>
-      <span aria-hidden="true">↗</span>
-    </a>
+  <div class="platform-strip container" aria-label="Supported environments">
+    <span>Build with your stack</span>
+    <a href="/docs/cloudflare/">Cloudflare</a>
+    <a href="/docs/nextjs/">Next.js</a>
+    <a href="/docs/node/">Node.js</a>
+    <a href="/docs/elixir/">Elixir & Phoenix</a>
+    <a href="/docs/languages/">npm / pnpm / Bun / Mix</a>
   </div>
 </section>
+<script src="../scripts/motion.ts"></script>

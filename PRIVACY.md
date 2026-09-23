@@ -1,6 +1,10 @@
-# Privacy and data inventory
+# Privacy and collected signals
 
-Janitor is first-party browser recognition software. A stable opaque ID links a small history of browser observations within one application's database. If a cookie disappears, retained observations can be used to infer continuity. This behavior must be disclosed; deleting a cookie alone is not erasure of stored history.
+Janitor collects a small set of signals from a browser visiting your application so it can recognize that browser later. It stores a random visitor ID and a short history in your database. “First-party” means the client talks to an endpoint on your application’s own origin.
+
+If a cookie disappears, Janitor can use retained history to recover the ID. Explain this behavior in your disclosure: deleting the cookie alone does not delete stored observations.
+
+Basic browser recognition, optional AI evaluation, verified user links and learning feedback have different data flows. This page lists them so you can choose what to enable and provide a complete deletion path.
 
 ## What is collected
 
@@ -24,7 +28,7 @@ Every browser observation field is optional. Each collector is guarded independe
 
 There is no canvas-derived hash. A temporary canvas is used only to request an ordinary WebGL context. No image is rendered or read back. The unmasking/debug-renderer extension is never requested. The context is released if the standard context-loss extension is available. No attempt is made to defeat anti-fingerprinting, infer intentionally hidden hardware values, probe fonts, or access persistent storage beyond the server-set cookie.
 
-The browser client counts events from creation until `destroy()`:
+While enabled, the browser client counts events from its creation until collection is paused or the client is destroyed:
 
 - elapsed milliseconds since tracker creation (bounded to seven days);
 - mouse-move, pointer-down, key-down, scroll and visibility-change counts (each capped at one million).
@@ -79,6 +83,8 @@ Risk scores do not establish that a person is a bot, malicious, or identifiable.
 
 ## Optional verified cross-device labels
 
+An HMAC is a hash computed with a secret key. It lets Janitor derive a stable label without storing the original value; the resulting label is still linkable data, not anonymous data.
+
 When an application explicitly enables `subjectLinking` and passes a verified `authenticatedSubject` to the server handler, it returns an application-scoped HMAC `subjectId`. The account identifier is received only from the application's trusted server code. It is not collected from the browser, read from request headers/body, placed in cookies, stored in Janitor's database, sent to the evaluator, or logged. The subject label is returned only on requests where the application supplies verified identity. Anonymous requests never retrieve an old account association from a browser cookie.
 
 The label is deterministic for a given account, namespace and secret. The `subjectLinking` option alone stores no account-to-browser graph. If your application saves relationships, or enables the separate evidence storage described below, include those records in disclosure and erasure. Rotating the secret/namespace changes all derived labels; using an account-specific generation identifier lets your authentication system retire one account's prior label. Signing into the same account establishes an account link, not proof that the same physical person operates every session.
@@ -87,7 +93,7 @@ The label is deterministic for a given account, namespace and secret. The `subje
 
 With the `identity` option, the application supplies server-verified subject and actor references. Janitor stores opaque subject IDs, person/agent kind, and update time. Verified email, external-ID and public-key-reference associations are stored as application-scoped HMAC digests with type, issuer, and registration time. Raw alias values, private keys and API secrets are not stored. These digests are pseudonymous identity data, not anonymous data; protect the database and HMAC secret.
 
-The application verifies email/key ownership and authorizes every association or grant change. Grants store account and actor references, audience, exact scopes, expiry, and revocation time. None of these directory fields are sent to Jev or captured by the browser collector. The optional response exposes opaque references and attribution to the same-origin application; authorize that endpoint appropriately.
+The application verifies email/key ownership and authorizes every association or grant change. Grants store account and actor references, audience, exact scopes, expiry, and revocation time. None of these directory fields are sent to Jev or captured by the browser collector. The private server result includes opaque references and attribution. They are included in browser JSON only if the application explicitly enables score and attribution disclosure.
 
 `identities.removeKey` erases an association. `identities.deleteSubject` cascades to its keys and all grants involving it; erase browser observations separately with `deleteVisitor`. Subjects/keys are retained until explicit removal, so tie deletion to your account/credential lifecycle. `cleanup()` deletes expired grants; active/revoked grants remain until expiry or subject erasure. Also remove application-side logs, cached links and backups under your retention policy. Identity-label secrets and namespace rotation require a planned data migration.
 
@@ -105,9 +111,9 @@ Server analytics bridges export only browser ID, continuity, risk status/scores,
 
 Encrypted result receipts contain compact browser/risk results, operation ID, action category, audience, expiry and nonce. They omit observations, debug payloads, identity keys and raw account IDs. Current receipts use authenticated JWE encryption; older readable signed receipts are rejected. Keep all receipts out of URLs and logs. Learning exports are sensitive pseudonymous datasets: manage their retention/deletion lineage wherever copied, including outside Janitor.
 
-## Unreleased: optional protection and application evidence
+## Optional protection and application evidence
 
-The current checkout adds optional database-backed protection. Request counters contain application-scoped HMAC keys for the global budget and any server-supplied account/session, counts and window expiry. Evaluator control records contain call counts, circuit state and short-lived random leases, without observations or account identifiers. Cleanup deletes up to 100 expired rows from each table per call. These controls do not read raw IPs or client identity headers.
+Optional database-backed protection limits measurement requests and evaluator work. Request counters contain application-scoped HMAC keys for the global budget and any server-supplied account/session, counts and window expiry. Evaluator control records contain call counts, circuit state and short-lived random leases, without observations or account identifiers. Cleanup deletes up to 100 expired rows from each table per call. These controls do not read raw IPs or client identity headers.
 
 Optional trusted request context can contain an authentication method/time, an allowlisted action, and Cloudflare's available bot score, verified-bot and signed-agent flags with observation time. It is returned privately by `assess()` or Phoenix assigns, never in browser JSON, even when public scores are enabled. Janitor does not persist this envelope or send it to Jev. Applications decide whether to retain it. The Cloudflare helper only reads the original Worker's available metadata; it does not collect IP addresses, location, JA3/JA4 or forwarded headers.
 
@@ -115,7 +121,7 @@ With `evidence` enabled, server management APIs can record nine narrow login, ve
 
 Explicit verified device associations store opaque subject/visitor IDs, the verification method, verifier name, HMAC proof reference, verification/creation/expiry times and optional revocation reason/time/verifier/HMAC reference. Verifier names should identify the authentication system, not a person or email. Associations expire within 90 days. Revoked/expired records remain for a configurable 1–365 days (default 90) for audit, then cleanup removes up to 100 per call. They are historical associations, not physical-device authentication or automatic anonymous account links. No added field is sent to Jev or analytics automatically.
 
-Use `evidence.deleteSession` / `Janitor.Evidence.delete_session` for session events and `deleteSubjectEvents` / `delete_subject_events` for events involving a subject as principal or actor. Existing subject/visitor erasure cascades related events and device links. Evidence cleanup respects the application's namespace and retention. HMAC references remain linkable personal data; include them, backups and any separate application exports in disclosure/erasure. Disabling collection does not erase old records. See [the guide](docs/HARDENING.md) for configuration and bounded maintenance. These additions are not yet in the public v0.6.0 artifacts.
+Use `evidence.deleteSession` / `Janitor.Evidence.delete_session` for session events and `deleteSubjectEvents` / `delete_subject_events` for events involving a subject as principal or actor. Existing subject/visitor erasure cascades related events and device links. Evidence cleanup respects the application's namespace and retention. HMAC references remain linkable personal data; include them, backups and any separate application exports in disclosure/erasure. Disabling collection does not erase old records. See [the guide](docs/HARDENING.md) for configuration and bounded maintenance. These options are available in v0.7.0.
 
 ## Score disclosure
 

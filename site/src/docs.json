@@ -1,0 +1,200 @@
+[
+  {
+    "title": "Start here",
+    "pages": [
+      {
+        "slug": "introduction",
+        "title": "What is Janitor?",
+        "description": "Recognize a returning browser, understand risk and connect verified users.",
+        "source": "docs/INTRODUCTION.md"
+      },
+      {
+        "slug": "getting-started",
+        "title": "Your first visitor ID",
+        "description": "Run a local example and see what changes between visits.",
+        "source": "docs/GETTING-STARTED.md"
+      },
+      {
+        "slug": "languages",
+        "title": "Install Janitor",
+        "description": "Use npm, pnpm, Bun or Mix, or call Janitor from another language.",
+        "source": "docs/LANGUAGES.md"
+      },
+      {
+        "slug": "concepts",
+        "title": "Browsers, people & agents",
+        "description": "The different identities in your app, explained with one example.",
+        "source": "docs/CONCEPTS.md"
+      }
+    ]
+  },
+  {
+    "title": "Choose your framework",
+    "pages": [
+      {
+        "slug": "cloudflare",
+        "title": "Cloudflare Workers",
+        "description": "Run the example with local D1, then connect Workers AI if needed.",
+        "source": "examples/cloudflare-worker/README.md"
+      },
+      {
+        "slug": "nextjs",
+        "title": "Next.js & Vercel",
+        "description": "Add a visitor endpoint and browser client to a Next.js application.",
+        "source": "examples/nextjs/README.md"
+      },
+      {
+        "slug": "node",
+        "title": "Node & Fastify",
+        "description": "Run the example or mount Janitor in your existing Node server.",
+        "source": "examples/node-fastify/README.md"
+      },
+      {
+        "slug": "elixir",
+        "title": "Elixir & Phoenix",
+        "description": "Add Janitor to an existing Phoenix application with Ecto and Postgres.",
+        "source": "packages/elixir/README.md"
+      },
+      {
+        "slug": "phoenix-example",
+        "title": "Run the Phoenix example",
+        "description": "Start a small Phoenix app and identify a browser locally.",
+        "source": "examples/phoenix/README.md"
+      }
+    ]
+  },
+  {
+    "title": "Add features",
+    "pages": [
+      {
+        "slug": "matching",
+        "title": "How browser matching works",
+        "description": "How Janitor remembers a browser and handles a missing cookie.",
+        "source": "docs/MATCHING.md"
+      },
+      {
+        "slug": "evaluators",
+        "title": "Jev & risk scoring",
+        "description": "What Jev is, what the scores mean and how to enable it.",
+        "source": "docs/JEV.md"
+      },
+      {
+        "slug": "agentic-identity",
+        "title": "Connect people & agents",
+        "description": "Link authenticated users across devices and give an agent limited permission.",
+        "source": "docs/AGENTIC-IDENTITY.md"
+      },
+      {
+        "slug": "analytics",
+        "title": "PostHog, Mixpanel & Segment",
+        "description": "Connect anonymous visits to logins and report on people, agents and accounts.",
+        "source": "docs/ANALYTICS.md"
+      },
+      {
+        "slug": "extensions",
+        "title": "Behavior & cross-device links",
+        "description": "Collect optional activity summaries and connect devices after login.",
+        "source": "docs/EXTENSIONS.md"
+      }
+    ]
+  },
+  {
+    "title": "Run in production",
+    "pages": [
+      {
+        "slug": "security",
+        "title": "Keep scores private",
+        "description": "Read risk on your server and protect the actions your app performs.",
+        "source": "docs/SECURITY.md"
+      },
+      {
+        "slug": "storage",
+        "title": "Storage & retention",
+        "description": "Choose a database, apply migrations and delete old visitor history.",
+        "source": "site/content/storage.md"
+      },
+      {
+        "slug": "hardening",
+        "title": "Request limits & trusted events",
+        "description": "Limit measurement costs and record events your server has verified.",
+        "source": "docs/HARDENING.md"
+      },
+      {
+        "slug": "scaling",
+        "title": "Scale your database",
+        "description": "How candidate lookup works across a large visitor database.",
+        "source": "docs/SCALING.md"
+      },
+      {
+        "slug": "capacity",
+        "title": "Connection capacity & load",
+        "description": "Read the load-test results and plan a benchmark for your own deployment.",
+        "source": "docs/CAPACITY.md"
+      },
+      {
+        "slug": "privacy",
+        "title": "Privacy & collected signals",
+        "description": "What Janitor collects, where it goes and how to erase it.",
+        "source": "PRIVACY.md"
+      }
+    ]
+  },
+  {
+    "title": "Explore & evaluate",
+    "pages": [
+      {
+        "slug": "learning",
+        "title": "Learn from later logins",
+        "description": "Optionally label anonymous visits when a user signs in.",
+        "source": "docs/LEARNING.md"
+      },
+      {
+        "slug": "evaluation",
+        "title": "Test a learning model",
+        "description": "Check predictions against later logins before using them in your app.",
+        "source": "docs/EVALUATION.md"
+      },
+      {
+        "slug": "benchmarks",
+        "title": "Browser benchmarks",
+        "description": "Results from controlled browser visits, including known false matches.",
+        "source": "docs/BENCHMARKS.md"
+      },
+      {
+        "slug": "validation",
+        "title": "Testing & limitations",
+        "description": "What the test suite verifies and what still needs real-world evaluation.",
+        "source": "docs/VALIDATION.md"
+      },
+      {
+        "slug": "review",
+        "title": "Compare with other tools",
+        "description": "Where Janitor fits alongside analytics, authentication and fingerprinting products.",
+        "source": "docs/REVIEW.md"
+      },
+      {
+        "slug": "research",
+        "title": "Identity research",
+        "description": "What browser-identity studies and other security products can teach us.",
+        "source": "docs/RESEARCH.md"
+      }
+    ]
+  },
+  {
+    "title": "Reference",
+    "pages": [
+      {
+        "slug": "api",
+        "title": "API reference",
+        "description": "Configuration options, response types and server methods.",
+        "source": "docs/API.md"
+      },
+      {
+        "slug": "trust",
+        "title": "Credentials & result receipts",
+        "description": "Verify an agent credential or carry an encrypted assessment between requests.",
+        "source": "docs/TRUST.md"
+      }
+    ]
+  }
+]

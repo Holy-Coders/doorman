@@ -1,10 +1,15 @@
-# Signed credentials, actions and device pairing
+# Credentials and result receipts
 
-Janitor separates browser continuity from authenticated accounts, actors and grants. Scores cannot establish that an account is being used by its owner, a family member or an attacker. Explicit credentials and delegation provide stronger evidence; the application authorizes every action.
+This guide covers two optional server utilities. You do not need either one for basic browser identification.
+
+- **Agent credential verification** checks an existing signed token from an issuer you trust, such as your authentication provider.
+- **Result receipts** let a browser carry an encrypted, short-lived Janitor assessment to a later request without reading or changing the scores.
+
+Both complement your existing authentication. They do not turn a browser match into proof of account ownership. For the terms used below, see [browsers, people and agents](CONCEPTS.md).
 
 ## Verify an agent's existing credential
 
-`@janitor/adapters/security` uses the maintained `jose` implementation for JWT verification. Pin the issuer, audience, accepted asymmetric algorithms and trusted public key/JWKS URL. Never use a token's `jku`/`x5u` header or an unverified issuer to choose where to fetch keys.
+Janitor’s `verifyAgentCredential` helper uses `jose` to verify a JSON Web Token (JWT). Configure which issuer you trust, which service the token is for (its audience), the accepted signature algorithms, and a trusted public key or key-set URL (JWKS). Never use a token's `jku`/`x5u` header or an unverified issuer to choose where to fetch keys.
 
 ```ts
 import { createRemoteJWKSet } from "jose";
@@ -35,7 +40,7 @@ A recognized agent is not automatically authorized by a user. Retrieve the indep
 
 ## Short-lived result receipts
 
-Use receipts when a subsequent operation must consume a result computed on your server. They encrypt and authenticate selected evidence, not the truth of browser measurements. They omit debug and fingerprint data. Always retain normal authentication and verify that the operation belongs to the authenticated account.
+For example, your measurement endpoint may assess a visit before the checkout endpoint receives a payment request. A receipt can carry that earlier assessment to checkout. Receipts encrypt and authenticate selected evidence, not the truth of browser measurements. They omit debug and fingerprint data. Always retain normal authentication and verify that the operation belongs to the authenticated account.
 
 ```ts
 import { createResultReceipts } from "@janitor/adapters/security";
@@ -66,7 +71,7 @@ const evidence = await receipts.verify(token, {
 
 `appConsumeNonce` is application code, not a Janitor API. A Postgres implementation can use `INSERT ... ON CONFLICT DO NOTHING RETURNING nonce` in your operation transaction. Bind `operationId` to the authenticated account, immutable amount/destination/request hash and idempotency state; do not choose it from an unchecked header. A mismatch, expired token, tampering, replay or nonce-store failure returns `undefined`. Only a fully verified receipt invokes nonce consumption. Treat failed downstream operations as a separate idempotency/retry decision. Clean expired nonces with existing maintenance. Never use a per-process Set as production replay protection.
 
-Action categories are supplied by server code and bound to the receipt; they do not alter identity matching or automatically label an action malicious. Current risk questions remain technical browser questions. Keep receipts out of URLs/logs. Receipts use JWE `dir` / `A256GCM` through `jose`, with authenticated encryption and randomized IVs. Browser recipients cannot read the scores. v0.5 signed plaintext receipts are not accepted. Use distinct keys per environment/purpose; rotation invalidates outstanding receipts, which expire within five minutes. Both holders of the symmetric key can issue and decrypt receipts; use an existing asymmetric token service if verifiers must not issue.
+Action categories are supplied by server code and bound to the receipt; they do not alter identity matching or automatically label an action malicious. Current risk questions remain technical browser questions. Keep receipts out of URLs/logs. Receipts use JWE `dir` / `A256GCM` through `jose`, with authenticated encryption and randomized IVs. Browser recipients cannot read the scores. Older signed-only plaintext receipts are not accepted. Use distinct keys per environment/purpose; rotation invalidates outstanding receipts, which expire within five minutes. Both holders of the symmetric key can issue and decrypt receipts; use an existing asymmetric token service if verifiers must not issue.
 
 ## Explicit cross-device pairing
 

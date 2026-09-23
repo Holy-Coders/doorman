@@ -11,8 +11,8 @@ interface Props {
   docs?: boolean;
 }
 const {
-  title = "Janitor — Identity context for humans and agents.",
-  description = "First-party browser identity, verified account links, and Jev-powered risk scoring. A small TypeScript library for identity context in the agentic era.",
+  title = "Janitor — Visitor identity, with context.",
+  description = "An open-source library for recognizing returning browsers, assessing risk with Jev, and connecting authenticated people and agents. Runs on your server.",
   docs = false,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -26,7 +26,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="icon" href="/janitor-mark.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#080c0c" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -45,7 +45,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         janitor<span class="brand-period">.</span>
       </a>
       <nav aria-label="Main navigation" class="desktop-nav">
-        <a href="/docs/getting-started/" class:list={[docs && "active"]}>
+        <a href="/docs/introduction/" class:list={[docs && "active"]}>
           Documentation
         </a>
         <a
@@ -93,7 +93,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           <span></span>
         </summary>
         <nav aria-label="Mobile navigation">
-          <a href="/docs/getting-started/">Documentation</a>
+          <a href="/docs/introduction/">Documentation</a>
           <a href="/playground/">Playground</a>
           <a href={REPO}>GitHub ↗</a>
           <button data-search>Search docs</button>
@@ -108,9 +108,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           janitor.
         </a>
         <p>
-          Identity context for
+          Visitor identity.
           <br />
-          the agentic era.
+          Your server, your rules.
         </p>
         <span>
           Built by <a href="https://github.com/Holy-Coders">Holy Coders</a>
@@ -137,7 +137,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           The playground uses synthetic data.
         </p>
         <a href={REPO}>Read the source ↗</a>
-        <a href="/janitor-logo.png" download>
+        <a href="/janitor-mark.svg" download>
           Download the logo ↗
         </a>
       </div>
@@ -160,7 +160,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       />
       <div id="search-results" aria-live="polite">
         <p class="search-empty">
-          Search the API, guides, and implementation notes.
+          Search setup instructions, examples and the API reference.
         </p>
       </div>
       <div class="search-bottom">

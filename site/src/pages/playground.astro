@@ -13,18 +13,24 @@ import Playground from "../components/Playground.astro";
       <a href="/">Janitor</a>
       <span>/</span>Playground
     </div>
-    <ActorLab />
+    <h1>Try Janitor in your browser</h1>
+    <p class="playground-intro">
+      Explore how a visitor ID survives browser changes, then see how people and
+      agents share an account. Both examples use made-up data and run entirely
+      on this page.
+    </p>
     <Playground />
+    <ActorLab />
     <div class="experiment-note">
-      <h2>An experiment you can inspect.</h2>
+      <h2>What this demo shows</h2>
       <p>
-        The labs run <code>@janitor/core</code> in your browser against
-        synthetic history and simulated credential records. It does not use a
-        real cookie, collect browser signals, call Jev, or send observations to
-        a server. The same matching and delegation logic powers the library.
+        The labs run <code>@janitor/core</code> in your browser against made-up
+        browser history and example login records. It does not use a real
+        cookie, collect browser signals, call Jev, or send observations to a
+        server. The same matching and delegation logic powers the library.
       </p>
       <p>
-        This local simulator deliberately shows experimental scores. Production
+        The example shows scores so you can see how matching works. Production
         HTTP responses keep scores private by default. Identity confidence is an
         experimental matching score. It is not authentication or proof that two
         people are the same person.

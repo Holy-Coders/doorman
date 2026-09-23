@@ -1,18 +1,30 @@
-# Identify people, accounts and agents in analytics
+# PostHog, Mixpanel and Segment
 
-Janitor enriches your existing PostHog or Mixpanel setup. A visitor is a browser environment; a person or agent is an actor; an account/workspace is the context they are using. Keep these IDs separate. One browser can have several verified users, one user can have several browsers, and one account can have several people and agents.
+Use Janitor alongside your existing analytics to connect anonymous visits to login, keep user profiles correct on shared browsers, and report on the people and agents using an account.
 
-**Available in the v0.7.0 GitHub release.** The lifecycle helper and account/actor export fields ship in the JavaScript archives and the bundled Phoenix client. Registry publication remains separate; use the [release installation instructions](LANGUAGES.md). No provider events or project changes are enabled automatically.
+There are two parts: a browser helper calls your SDK’s identify/reset methods when authentication changes; a server helper can send private Janitor assessments as analytics events. You can use either part independently. Nothing is exported until you configure and call it.
+
+If you are new to Janitor, set up [browser identification](GETTING-STARTED.md) first. For agent or shared-account reports, also configure the [identity directory](AGENTIC-IDENTITY.md).
+
+## Keep three IDs separate
+
+| ID | Example | Use it for |
+| --- | --- | --- |
+| Your authenticated user or agent ID | `user_123`, `agent_456` | The analytics person’s distinct ID. |
+| Your account or workspace ID | `studio_789` | Grouping activity within a shared account. |
+| Janitor’s visitor ID | `vis_…` | Browser context on an event. |
+
+One person can use several browsers, and several people can share one browser. Do not use a visitor ID as the analytics person ID. See [the identity terms](CONCEPTS.md) for a worked example.
 
 ## What the user experiences
 
-The normal visit, signup and login screens stay the same. A background measurement runs when your application permits collection. It does not hold up rendering or authentication, show a score, or present a CAPTCHA. Authenticated users retain their existing profile across devices. On logout, analytics starts a fresh anonymous identity for whoever uses that browser next.
+Your existing signup and login screens stay the same. In the example below, measurement runs in the background when your application allows collection. A failed measurement does not interrupt navigation or sign-in, and Janitor does not show a score or CAPTCHA. Authenticated users retain their existing profile across devices. On logout, analytics starts a fresh anonymous identity for whoever uses that browser next.
 
 A shared family browser can therefore show two verified users in analytics without merging their profiles. Two humans using the same credential remain one authenticated actor: browser differences alone cannot establish how many physical people are present. Janitor can report uncertainty and risk, not secretly authenticate the operator.
 
 If the application decides a sensitive operation requires extra verification, its normal passkey/MFA/CAPTCHA flow appears there. The server verifies that proof. Janitor never selects or renders that UI.
 
-## Browser integration: initialize once, then hook authentication
+## Connect login and logout in the browser
 
 Use the PostHog/Mixpanel instances your application already initializes. Do not install a second instance, turn on replay, or change their collection settings to use Janitor. Installing SDKs is only needed if the application does not have them:
 
@@ -59,15 +71,21 @@ function loggedOut() {
 
 Create this bridge once per browser application lifecycle, outside frequently remounted LiveView hooks. Call `authenticated` from your existing auth completion/session bootstrap flow and `loggedOut` on logout, account/session expiry, and relevant cross-tab auth changes. After a full reload the application must still reset a stale identified SDK state if the session has expired. A hook owns any client it creates and calls `visitor.destroy()` on teardown; never reuse a destroyed client.
 
+### Update profiles and switch users
+
 `identifyUser(id, { name?, email?, plan? })` also supports explicit, allowlisted profile updates. Choose one owner for profile updates, usually the server; do not redundantly update from both places. Repeated identical calls on one bridge return `skipped`. A switch to another user resets each SDK before identification. A failed reset prevents that provider from identifying the new user until a reset succeeds; the other provider proceeds independently. Calls return per-provider `queued`, `skipped`, or `unavailable`. `queued` means the synchronous SDK call completed, not that ingestion was confirmed. Invalid IDs/traits are programming errors and throw before any provider call.
 
+### What the helper calls
+
 The bridge calls PostHog `identify`, Mixpanel `identify` followed by one `janitor user identified` event, and the providers' own `reset` functions. The extra Mixpanel event completes its Simplified ID Merge transition. No arbitrary alias or visitor ID is used as a person's ID. The helper never receives scores, raw signals or inferred account IDs. It does not load SDKs, enable collection, subscribe to auth, retry requests or manage a server session.
+
+### Preserve the anonymous visit
 
 Do not reset provider anonymous IDs immediately before the first successful login: that would discard the link to the current anonymous journey. Janitor's `visitor.reset()` only clears aggregate behavior and stale requests; it does not delete the HttpOnly browser cookie or log out your application. Clear the learning cookie server-side on logout as described in the [Phoenix guide](../packages/elixir/README.md). Collection withdrawal also requires the application's provider opt-out/reset policy; `visitor.setEnabled(false)` pauses only Janitor.
 
 Sources: [PostHog identification semantics](https://github.com/PostHog/posthog.com/blob/master/contents/docs/product-analytics/identify.mdx), [Mixpanel identification and merge](https://docs.mixpanel.com/docs/tracking-methods/id-management/identifying-users-simplified), [Mixpanel profile updates](https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript#storing-user-profiles).
 
-## Phoenix: one private measurement endpoint
+## Send server events from Phoenix
 
 Apply Janitor's migration and serve `/janitor/janitor.js` using the [native setup](../packages/elixir/README.md). Configure only the providers you use:
 
@@ -128,7 +146,7 @@ Janitor.Analytics.identify_user(:mixpanel, to_string(user.id),
 
 Only pass profile values the application is allowed to disclose. Verified email keys in Janitor's identity directory are a separate HMAC-based lookup feature; changing an email must not change the analytics person's ID. Account updates and analytics work with learning disabled.
 
-## TypeScript server integration
+## Send server events from TypeScript
 
 The bridge adds no provider dependency. Supply an existing `posthog-node`, `mixpanel`, or `@segment/analytics-node` client:
 
@@ -168,7 +186,7 @@ await analytics.capture({ attribution }, "agent:123", {
 
 These use the same event and actor dimensions; browser/risk fields are absent. Missing risk remains unmeasured. Resolve `verified_context` from authenticated credentials and server-owned authorization, never from an agent's self-description.
 
-## Data model and reports
+## Understand the exported fields
 
 The server event remains `janitor identified`. Its event properties describe the assessment at that moment; they are not persistent account membership or a permanent fraud label.
 
@@ -187,6 +205,10 @@ The server event remains `janitor identified`. Its event properties describe the
 There is no raw fingerprint, behavior summary, debug record, IP, secret, email key or anonymous learning prediction in these events. Actor/subject fields come from the private credential assessment. Low automation never turns an unknown actor into a verified person. Stable actor IDs allow distinct counting without merging users who share a browser/account. Use the same actor ID conventions throughout the application; prefix separately managed agent IDs to prevent collisions with human IDs.
 
 Actor counting starts when events contain these new fields; older exports cannot retroactively supply missing actor IDs. Analytics is a reporting system, not the source of authentication or membership. Projects that accept events using public browser tokens can receive fabricated events, so reports alone must never grant access or serve as an authoritative security audit.
+
+## Count people and agents per account
+
+These examples count identities whose credentials your app verified. They cannot count different physical people who all share the same login.
 
 | Question                                                                   | Aggregation and filter                                                                                 |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -249,8 +271,8 @@ Once events are ingested, give the provider's assistant this metric definition a
 
 The library prepares the event schema; it does not add an AI query agent or a new dashboard. These prompts require the analytics product's query/assistant capability and your access permissions. Do not feed browser scores into a frontend AI assistant; use authorized access to the server-ingested analytics dataset.
 
-## Rollout and validation
+## Check the integration in a development project
 
 Connect one provider first, then the other if needed. In a development project, verify: anonymous visit → login → second device login to the same user → logout → different user on the original browser → delegated agent with its own ID. Confirm one profile per actor, two profiles for two people sharing a browser, the intended account on every event, and no private scores in browser requests. Check rejected/late events and regional ingestion hosts. Analytics deletion and consent withdrawal must follow your provider's own lifecycle as well as Janitor erasure.
 
-The repository tests the actual installed PostHog and Mixpanel browser SDKs with all analytics requests intercepted locally, and native HTTP payloads with mocked transports. No live provider profile merge, dashboard count, project setting or Open Calls deployment is claimed. Transport acceptance does not establish a report's accuracy; review ingestion and distinct-count results in your own project before using them operationally.
+The repository tests the actual installed PostHog and Mixpanel browser SDKs with all analytics requests intercepted locally, and native HTTP payloads with mocked transports. The tests do not verify live provider profile merging or dashboard counts. Transport acceptance does not establish a report's accuracy; review ingestion and distinct-count results in your own project before using them operationally.

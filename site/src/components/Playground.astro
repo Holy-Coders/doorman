@@ -6,7 +6,7 @@
 >
   <div class="lab-heading">
     <div>
-      <span class="section-kicker">The identity lab</span>
+      <span class="section-kicker">Try it with an example browser</span>
       <h2 id="lab-title">
         Change a signal.
         <br />
@@ -14,8 +14,8 @@
       </h2>
     </div>
     <p>
-      Try the real matching engine with a synthetic browser. Everything runs
-      here, in memory.
+      Choose a change below and watch the visitor ID. This demo uses made-up
+      browser data; it does not collect yours.
     </p>
   </div>
   <div class="lab-workspace">
@@ -125,7 +125,7 @@
         </div>
         <div class="meter-note">
           <span>0</span>
-          <span>Restore threshold 0.90</span>
+          <span>Match needed: 0.90</span>
           <span>1</span>
         </div>
       </div>
@@ -135,16 +135,17 @@
       ><code data-result-json>// Run a scenario to inspect the response.</code></pre>
       <div class="lab-footer">
         <span>
-          <span class="version-dot"></span>Actual @janitor/core
+          <span class="version-dot"></span>Real matching code
         </span>
-        <span>Evaluator disabled · risk defaults to 0</span>
+        <span>AI off · risk not assessed</span>
       </div>
     </div>
   </div>
   <p class="lab-note">
-    Every scenario starts from the same saved history. Only “Return with cookie”
-    retains the simulated cookie. These scores illustrate the algorithm, not
-    measured accuracy. <a href="/docs/matching/">How matching works ↗</a>
+    Each option starts from the same example history. All except “Return with
+    cookie” remove the cookie first. The scores shown here normally stay on your
+    server; they demonstrate the matching rules, not real-world accuracy.{" "}
+    <a href="/docs/matching/">How matching works ↗</a>
   </p>
 </section>
 <script src="../scripts/playground.ts"></script>

@@ -1,65 +1,81 @@
-# Private scores and server-side decisions
+# Keep scores private
 
-Janitor keeps scores on the implementer's server by default. Browser identity is context, never an account credential. A copied cookie or fabricated fingerprint must not grant access to another person's account.
+Janitor returns the visitor ID to the browser and keeps confidence, risk and account attribution on your server by default. This lets your application use an assessment without showing visitors the numbers they could try to manipulate.
 
-## Public response versus private evidence
+Browser recognition is not authentication. A copied cookie or fabricated set of signals must not give someone access to an account.
 
-`handle(request)` responds with only:
+## Read the full result on your server
+
+Use `handle()` when you only need the endpoint response. Use `assess()` when your server needs the assessment too:
+
+```ts
+const { response, identity } = await visitor.assess(request);
+if (!identity) return response; // A request-validation or storage error.
+
+const needsExtraVerification =
+  identity.riskStatus === "evaluated" &&
+  identity.risk.automation > 0.85;
+
+// Your application can record this decision in its existing server session.
+// Keep identity and the raw browser observation out of the public response.
+return response;
+```
+
+The browser receives:
 
 ```json
 { "visitorId": "vis_…", "isReturning": true }
 ```
 
-`assess(request, context)` runs the same validation, matching, persistence and cookie handling, but also returns a private `identity` to server code:
+The example threshold is not a recommendation for production. Test the scores and false positives on your own traffic. Janitor never decides to block a request or show a CAPTCHA.
 
-```ts
-const { response, identity } = await visitor.assess(request);
-if (!identity) return response; // Controlled HTTP validation/storage error.
+The same API works with Node, Vercel and Cloudflare. Native Phoenix puts the private result in `conn.assigns.janitor_identity`. `Janitor.handle` has already sent the measurement response when it returns, so use your own action handler for later access decisions.
 
-// Server-only evidence for your application policy or server analytics.
-const automation = identity.risk.automation;
-const evaluated = identity.riskStatus === "evaluated";
-// Persist what your policy needs in your existing short-lived server session.
-// Never return identity, put it in page props, or log the full observation.
-return response; // Scores, account/actor attribution and debug are omitted.
-```
+## Distinguish zero risk from no assessment
 
-This works with Node, Vercel and Cloudflare adapters. The core `engine.identify()` always returns the full server result. Phoenix `Janitor.handle` stores it in `conn.assigns.janitor_identity` while sending the minimal body; use `Janitor.identify` directly for an application-owned action flow, with your existing request validation, session and CSRF boundary. The Plug response has already been sent when `handle` returns: perform access decisions before sending your action response, not after this measurement endpoint.
+Always read `riskStatus` alongside the numbers:
 
-A deliberate `exposeClientScores: true` (`expose_client_scores: true` in Elixir) restores the full public result, including any configured account attribution. This is a disclosure opt-in, not an authentication feature. Normal production integrations should leave it off. Browser query parameters, headers and payload fields cannot enable it. Debug still additionally requires non-production server configuration and a debug request. Even configured debug stays private unless public scores are enabled. The browser SDK accepts either response, with optional score fields in `VisitorClientIdentity`.
+| Status | Meaning | What to do |
+| --- | --- | --- |
+| `evaluated` | The evaluator returned a valid result. | Treat the scores as estimates and apply your own policy. |
+| `disabled` | No evaluator is configured. | Use your existing controls; there is no AI risk assessment. |
+| `unavailable` | Evaluation failed, timed out or was prevented by a configured budget. | Use the fallback your application has chosen. |
 
-## Avoid a feedback oracle
+For disabled or unavailable evaluation, both numeric risk values are zero. Those zeros do not certify safety. Browser matching can still succeed through the cookie or built-in similarity rules.
 
-Returning a number on every probe lets an attacker search for inputs that lower it. Hiding the DOM is insufficient: JSON, headers, hydration props, analytics requests, browser logs and base64-encoded JWT claims are visible. Send risk events through **server** PostHog/Mixpanel/Segment integrations. Do not send a private score to a browser analytics SDK just because it is absent from the UI.
+A storage failure produces a controlled `503` without a new cookie. Invalid requests receive an appropriate HTTP error. The browser client rejects failed identification, so catch that error if measurement should not interrupt navigation or login.
 
-If a later action needs an assessment, keep it in the existing server session or transport it with an encrypted result receipt. `createResultReceipts` uses `jose` JWE with `dir` / `A256GCM`, a dedicated **32-byte random key**, protected type, expiry, audience, operation, action and a one-use nonce. The browser cannot read the evidence in the token. The application must bind the operation to its authenticated account and immutable action details and consume nonces atomically. See [receipts](TRUST.md). v0.5 plaintext signed receipts are intentionally rejected; outstanding receipts expire within five minutes. Reissue with v0.6 and update keys if necessary.
+## Keep later actions tied to the right request
 
-Encryption protects token contents and integrity. It does not attest browser measurements, prove human presence, stop a stolen token from being attempted once, or replace authorization. Avoid placing tokens in URLs or logs. Response sizes, timing, continuity IDs and eventual allow/challenge outcomes still reveal information; this release does not claim to eliminate side channels. Janitor is open source: deterministic rules and weights are public, so keeping a response private does not make the matching algorithm secret.
+If checkout or another sensitive endpoint needs the assessment, store it in your existing server session with a short expiry and the operation it belongs to. Authenticate that endpoint normally and verify any CAPTCHA, passkey or MFA proof there.
 
-## Protect the actual action
+If you need to carry the assessment through the browser, Janitor provides an **encrypted result receipt**: a short-lived token whose contents the browser cannot read. It must be bound to the authenticated account and exact operation, and accepted only once. The [receipt guide](TRUST.md) shows the required checks.
 
-The browser may render an application-selected CAPTCHA or step-up flow. Your server must verify its proof against the correct session/action before executing the operation. A client flag such as `captchaPassed: true`, a low browser-submitted score or a matching visitor ID must never be sufficient. Janitor returns evidence and does not make the access decision.
+Neither a receipt nor a high confidence score proves that the browser measurements are truthful. Continue to authorize the underlying action using your application’s trusted account and permission state.
 
-Use existing gateway/application controls for network floods and admission to the actual login/payment endpoint. v0.7.0 also supports [shared measurement quotas, inference budgets and circuit breaking](HARDENING.md) in the implementer's database. These opt-in controls bound measurement requests and evaluator starts across replicas; they are not a DDoS service or automatic authorization policy. Do not key limits solely by spoofable client headers or an attacker-controlled visitor ID. v0.6.0 artifacts provide only per-request work bounds.
+## Avoid leaking scores through another route
 
-Only accept edge assessments from a trusted provider binding or authenticated origin path. Ignore arbitrary `X-Forwarded-For`, bot-score or JA4 headers sent directly to an origin. Network similarity can corroborate evidence; shared NAT, corporate proxies, VPNs and privacy tools are not proof of abuse. Janitor does not currently collect IP addresses or implement JA4/IP reputation.
+Keep private assessments out of browser JSON, HTML props, client logs, URLs and browser analytics calls. A signed but unencrypted JWT can still be read by its holder; signing alone does not hide a score.
 
-Keep account and actor identities separate. A verified agent vendor is not permission to use a particular user's account; require the user's scoped, expiring, revocable delegation. A family member needs their own authenticated actor context. An anonymous fingerprint cannot determine whether the operator is the owner, their relative, or an attacker.
+Use the [server analytics integration](ANALYTICS.md) for PostHog, Mixpanel or Segment risk events. The browser analytics helper accepts user identity updates, not private scores.
 
-## Focused review findings — 2026-09-23
+`exposeClientScores: true` deliberately includes the full assessment in the browser response. The Elixir option is `expose_client_scores: true`. Leave it off unless that disclosure is part of your application’s design. Browser input cannot turn it on.
 
-This is a focused engineering review, not an independent audit or penetration test.
+Debug output has an additional gate: non-production server configuration and explicit client/server debug opt-in. It remains private unless client scores are also exposed. Do not retain raw debug observations in logs.
 
-| ID     | Severity                                  | Finding and status                                                                                                                                                                                                                                                                       |
-| ------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SEC-01 | High for a fraud integration              | HTTP responses previously exposed risk/confidence for every probe. Fixed: allowlisted minimal default; private `assess()` and Phoenix assigns; explicit server disclosure option.                                                                                                        |
-| SEC-02 | High when receipts pass through a browser | Signed receipts carried readable scores. Fixed: authenticated encrypted JWE; strict algorithm/type checks; legacy plaintext rejection.                                                                                                                                                   |
-| SEC-03 | High if misused for authorization         | Cookies and browser observations remain copyable. Existing authentication, action binding and one-time nonce consumption are mandatory in protected app flows. Janitor does not manufacture authentication from similarity.                                                              |
-| SEC-04 | Medium operational                        | Anonymous callers can generate repeated requests and AI calls. v0.7.0 mitigation: database-shared measurement quotas, call budgets, concurrency leases and recovery probes. Gateway protection, application action limits and provider billing caps remain implementer responsibilities. |
-| SEC-05 | Medium data quality                       | Crowded lookup buckets can hide competing identities. Fixed: selective indexes, ranking before truncation, and abstention when every bucket containing the selected visitor is saturated. Similarity still requires real-world calibration.                                              |
+## Limit measurement work
 
-Additional v0.7.0 protections preserve retained history when a cookie is replayed with contradictory or insufficient signals. Compatible fabricated signals and gradual poisoning remain possible. Server-owned event/device records are idempotent, namespace-scoped, expiring and revocable; replaying an old verification cannot undo revocation. These records establish application-verified associations, not possession of a device-bound credential. Trusted source evidence never enters browser JSON or Jev's input.
+The TypeScript handler limits concurrent measurements per instance. Optional database-backed protection adds request quotas, AI call budgets and temporary pauses after repeated provider failures. See [request limits and trusted events](HARDENING.md).
 
-Evidence: [HTTP disclosure and private assessment](../packages/adapters/src/handler.ts), [receipt encryption and validation](../packages/adapters/src/security.ts), [native Plug boundary](../packages/elixir/lib/janitor/plug.ex), [saturated lookup guard](../packages/core/src/candidates.ts), [shared protection](../packages/adapters/src/protection.ts), [trusted evidence](../packages/adapters/src/evidence.ts), [abuse regressions](../tests/protection.test.ts), [evidence regressions](../tests/evidence.test.ts), [response regressions](../tests/adapters.test.ts), [crowded database regressions](../tests/storage.test.ts).
+These controls protect measurement resources. Your gateway and application still need their normal limits for login, payments and network traffic. Use account/session keys verified by your server rather than identifiers supplied in arbitrary headers or browser JSON.
 
-References: [OWASP automated threats](https://owasp.org/www-project-automated-threats-to-web-applications/), [jose encrypted JWTs](https://github.com/panva/jose/blob/main/docs/jwt/encrypt/classes/EncryptJWT.md), [Fingerprint client-tampering guidance](https://docs.fingerprint.com/docs/protecting-from-client-side-tampering), and the [research review](RESEARCH.md).
+If a trusted edge provider supplies a bot assessment, pass it only through a verified server path. Janitor does not infer trust from `X-Forwarded-For` or client-supplied bot-score headers. It does not collect raw IP addresses.
+
+## Understand the remaining limits
+
+- A matching browser can be used by another person, an agent or an attacker.
+- An agent credential identifies an agent; it does not grant permission to use a user’s account. Check the [user’s delegation](AGENTIC-IDENTITY.md).
+- Client measurements and cookies can be copied. History protection reduces some poisoning attempts but cannot make those inputs unforgeable.
+- Typed AI output can still be wrong. Treat it as one input to policy rather than a replacement for authentication.
+
+The repository tests response privacy, tampering, expiry, replay, conflicting identities and provider failures. These are engineering checks, not an independent security audit or a measured account-takeover detection rate. See [testing and limitations](VALIDATION.md) and [OWASP’s automated-threat guidance](https://owasp.org/www-project-automated-threats-to-web-applications/).

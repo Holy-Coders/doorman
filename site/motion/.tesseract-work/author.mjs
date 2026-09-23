@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { URL } from "node:url";
-import process from "node:process";
 // Run after checkout/import. Preserve document fields and packaged resources.
 const path = new URL("./editable.json", import.meta.url);
 const doc = JSON.parse(fs.readFileSync(path, "utf8"));
@@ -30,7 +29,7 @@ doc.composition.layers = [
           type: "customShader",
           name: "janitorContinuityField",
           description:
-            "48 fine historical traces, three continuity orbits and one scanning light. A twelve-second closed loop; decorative, not live user data.",
+            "18 clear historical traces, three continuity orbits and one scanning light. A twelve-second closed loop; decorative, not live user data.",
           wgsl: fs.readFileSync(
             new URL("./field.wgsl", import.meta.url),
             "utf8",
@@ -63,36 +62,4 @@ doc.composition.layers = [
     ],
   },
 ];
-if (process.argv.includes("--logo")) {
-  doc.composition.layers.unshift({
-    type: "Image",
-    id: 2,
-    name: "Janitor sweep mark",
-    blendMode: "normal",
-    activeRange: { start: 0, duration: 12000 },
-    transform: {
-      ...transform,
-      anchorPoint: [627, 627],
-      position: [1325, 518],
-      scale: [24, 24],
-    },
-    source: { assetId: "janitor-mark", fit: "contain" },
-    effects: [
-      {
-        id: 2,
-        effect: {
-          type: "customShader",
-          name: "darkMatteComposite",
-          description:
-            "Composite the generated opaque logo onto the signal field using its luminance; preserve antialiased mint edges.",
-          wgsl: fs.readFileSync(
-            new URL("./logo-matte.wgsl", import.meta.url),
-            "utf8",
-          ),
-          params: [],
-        },
-      },
-    ],
-  });
-}
 fs.writeFileSync(path, JSON.stringify(doc, null, 2) + "\n");

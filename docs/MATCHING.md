@@ -1,14 +1,30 @@
-# Matching and calibration
+# How browser matching works
 
-The experiment is whether a small history plus deterministic evidence and a narrow classifier can recover useful browser continuity without a fingerprinting platform. This repository implements the mechanism and tests its invariants. It does not establish real-world accuracy, unique device identification, or bot-detection quality.
+Janitor remembers a browser with a cookie and a small history of observations. An observation is a snapshot of the signals the browser makes available, such as its browser family, language and screen size.
 
-## Normalization
+## A normal return visit
+
+If a request contains a valid `__visitor` cookie and its history is still retained, Janitor uses that visitor ID immediately. It loads up to five recent observations, assesses current risk if Jev is enabled, and saves the visit. It does not search other visitors.
+
+The result has `isReturning: true` and `confidence: 1`. That confidence means the cookie identifies an existing visitor record. It is not proof of the person using it.
+
+## When the cookie is missing
+
+Janitor looks up a small number of plausible visitors, compares their recent observations, and optionally asks Jev whether the current visit fits each history. It restores an ID only when the best match is strong and sufficiently different from the alternatives. Otherwise it creates a new ID.
+
+For example, rotating a phone keeps the same physical screen dimensions. Resizing a window has little effect on matching. A completely different platform is much stronger evidence against a match. Missing WebGL information is treated as missing data rather than a mismatch.
+
+The rest of this page explains the rules and constants. They are deliberately inspectable and still need calibration against independently labeled visits from your application.
+
+## Make observations comparable
+
+Normalization makes ordinary formatting differences comparable. It does not reconstruct values that a browser hides.
 
 Whitespace-only strings become absent. Browser user agents are classified into Chrome, Firefox, Safari, Edge and Opera families, leaving unknown families absent. Raw user agent is retained in normalized JSON but omitted from evaluator state. Browser patch/minor changes do not change family. Platform aliases normalize to iOS, Android, macOS, Windows and Linux (lowercase values); Android/iOS tokens already exposed in the user agent take precedence over generic platform strings. No hidden value is reconstructed. Languages are lowercased, deduplicated and sorted. Timezone spelling is preserved. Graphics strings are trimmed and lowercased. Screen width/height are ordered short-to-long. Viewport comparison also tolerates rotation. Zero/invalid display dimensions and CPU/memory measurements are treated as absent; zero touch points remains a valid capability. Inputs are not mutated.
 
-## Similarity
+## Compare available signals
 
-Missing pairs are excluded from the denominator; they are not mismatches. An empty observation scores zero. Compared weight must total at least `0.55` before a perfect score is possible, and the same coverage cap is applied after evaluator blending.
+Janitor gives each comparable feature a weight, then averages the results. If either observation is missing a feature, that pair is left out of the comparison. An empty observation scores zero. Compared weight must total at least `0.55` before a perfect score is possible, and the same coverage cap is applied after evaluator blending.
 
 | Feature                    | Weight |
 | -------------------------- | -----: |
@@ -28,7 +44,7 @@ Dimensions use the mean ratio of corresponding short and long sides. Other featu
 
 All weights live in `SIMILARITY_WEIGHTS`; confidence constants live in `MATCHING_DEFAULTS`. These values are heuristics requiring calibration.
 
-## Retrieval and decisions
+## Look up candidates and choose a match
 
 1. A cookie is accepted only if its opaque ID has retained observations. Unknown/expired cookies fall through to lookup.
 2. Cookie hits load at most five recent observations and preserve ID regardless of drift. No global search runs. Risk is freshly evaluated and the observation is saved.
@@ -51,7 +67,7 @@ The lookup window deliberately trades recall for bounded database work. A matchi
 
 The three candidates cause at most three model calls per request, including cookie requests (one) and first visits without candidates (one). A Workers AI timeout stops waiting but the binding does not expose a cancellation mechanism here; the upstream inference may finish or incur usage. Direct fetch uses an abort signal, including during response body consumption. Retries are intentionally absent from the request path. Applications should apply their existing endpoint rate limits and operational budgets.
 
-## Evaluate the experiment
+## Test matching on your traffic
 
 Use consented, independently labeled returning-browser visits with deliberate cookie deletion, browser/OS updates, resizing, timezone drift and privacy settings. Include distinct browsers with the same common configuration. Compare deterministic-only against AI-assisted operation on the same held-out visits. Measure false merges, missed restorations, ambiguity frequency, latency, evaluator failure rates and calls per visit. For risk, label actual automation and ordinary humans, including mobile/touch, keyboard-only and privacy-focused usage. Measure false positives before choosing any CAPTCHA threshold.
 

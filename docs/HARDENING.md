@@ -1,8 +1,12 @@
-# Abuse controls and trusted application evidence
+# Request limits and trusted events
 
-**Available in the v0.7.0 GitHub release.** Use the [release archives or Git tag](LANGUAGES.md), and apply the migrations below when upgrading. Application integration is a separate step. Nothing here enables automatic blocking, CAPTCHA display, account merging, or model training.
+Once Janitor is running, you may want to limit how much work its endpoint can start, especially when AI evaluation costs money. You may also want to record facts your server already knows, such as a failed login or a successful passkey check.
 
-## Configure shared protection
+This guide covers those optional features. **Protection** limits measurement requests and evaluator calls. **Evidence storage** records verified application events and device associations. They use your existing database and can be enabled separately.
+
+Start with [basic setup](GETTING-STARTED.md) and [private assessments](SECURITY.md). Evidence storage also needs the [identity directory](AGENTIC-IDENTITY.md). None of these features decides whether to allow a login or payment; your app still owns those decisions.
+
+## Limit requests and AI calls
 
 Node and Vercel use Postgres; Cloudflare supports D1 or Postgres. Apply `0005_protection.sql` and `0006_evidence.sql` after the existing migrations. Protection and event storage are optional and create no tables at runtime.
 
@@ -47,17 +51,23 @@ const visitor = createNodeVisitor({
 | Timeout/crash              | Timed-out calls retain their lease until the provider deadline plus five seconds. Abandoned leases expire; there is no worker or scheduler. This cannot guarantee that a remote provider or arbitrary custom evaluator stopped running or billing.                                    |
 | History protection         | A cookie-bearing observation is saved only when retained history has sufficient, non-contradictory deterministic evidence. Sparse or contradictory submissions leave useful history intact; cookie continuity remains separate from authentication.                                   |
 
-The defaults above are starting limits, not traffic recommendations. Request windows and evaluator budget windows accept 1 second to 1 hour; concurrency is 1–32. Protected evaluator deadlines are 1–5,000 ms. The engine allows one additional second for the guard to persist its outcome before its outer fallback deadline. Configure database pool/statement timeouts in the application: these controls do not cancel arbitrary storage queries.
+The example limits above are illustrative, not recommended values for every application. Request windows and evaluator budget windows accept 1 second to 1 hour; concurrency is 1–32. Protected evaluator deadlines are 1–5,000 ms. The engine allows one additional second for the guard to persist its outcome before its outer fallback deadline. Configure database pool/statement timeouts in the application: these controls do not cancel arbitrary storage queries.
+
+### Limit work inside each server instance
 
 The TypeScript HTTP adapters also enforce `maxInFlightRequests` (default 64, range 1–1,024) per reusable handler instance, returning 503 with `Retry-After: 1` before database work when full. `onOverload` is an optional payload-free callback. Reuse the adapter across requests; configure framework and database timeouts independently. This gate covers measurement HTTP calls, not direct core/evidence management calls or other application endpoints. Native Phoenix uses the application's HTTP admission and DBConnection pool/queue controls.
 
+### Spread a shared quota across rows
+
 For higher request volumes, `requests.shards` (default 1, maximum 128) divides the global allowance across database rows with epoch-aligned windows. Per-shard limits sum to the global maximum; there is no borrowing, so uneven traffic may be denied early. All replicas must agree on configuration. Changing the shard count changes counter keys: drain the old configuration and wait out its window before switching. Elixir supports the same `shards` option and HMAC keys. See [measured capacity, configuration and limits](CAPACITY.md).
+
+### Handle denied or unavailable measurements
 
 A measurement quota denial returns sanitized **429** and `Retry-After`, without identity or cookie creation. A protection-store request failure returns **503**. Inference denial, provider failure, malformed output and timeout preserve deterministic matching and return zero risk with `riskStatus: "unavailable"`. A successful evaluated zero is different from unavailable risk. Never treat unavailable risk as affirmative proof of safety; the application's sensitive-action policy chooses its existing verification path.
 
 The endpoint limiter does not protect your login/payment endpoints or absorb a network flood. Keep gateway and application admission controls in front of the database. A global quota protects resources but can itself be exhausted by an attacker; unavailable measurement must not grant permissions. Account/session limiter keys must come from authenticated accounts and application-issued sessions, not request body fields, arbitrary headers, or Janitor's fuzzy visitor ID. No raw IP address is collected.
 
-## Keep evidence on the server
+## Add facts your server has verified
 
 ```ts
 const { response, identity, evidence } = await visitor.assess(request, {
@@ -77,7 +87,7 @@ const { response, identity, evidence } = await visitor.assess(request, {
 return response;
 ```
 
-The evidence envelope distinguishes browser claims, authenticated session context, edge assessments and application actions. Browser measurements always carry `authenticated: false`; that describes the measurements, not whether the session has an authenticated account. All browser payload fields purporting to be trusted evidence are rejected. Missing evidence stays missing, never a manufactured low-risk probability.
+The returned `evidence` object keeps browser measurements, authenticated session facts, trusted edge-provider assessments and application actions separate. Browser measurements always carry `authenticated: false`; that describes the measurements, not whether the session has an authenticated account. All browser payload fields purporting to be trusted evidence are rejected. Missing evidence stays missing, never a manufactured low-risk probability.
 
 This evidence is returned separately by `assess()` and is **never included in `handle()` JSON**, even with `exposeClientScores: true`. It is not added to browser histories or sent to Jev. Jev's narrow technical risk questions and deterministic identity matching remain unchanged. Activity and edge judgments are independent inputs for application policy, not unexplained adjustments to identity confidence. Application code must also keep them out of hydration props, browser analytics and logs.
 
@@ -100,9 +110,9 @@ The helper accepts the **original inbound Worker Request**. It allowlists `reque
 
 Do not reconstruct `request.cf` from incoming headers. If a Node/Phoenix origin receives evidence through a proxy, the application must authenticate that hop and prevent direct-origin/header spoofing before creating trusted context. No automatic header trust is installed. Edge evidence expires after 60 seconds, with five seconds of clock skew; session verification timestamps must be within 30 days. Adjust the application's actual authentication/step-up freshness policy independently.
 
-## Record narrow funnel events
+## Count login and action events
 
-After your application observes the actual authentication or business outcome:
+Use event storage to answer questions such as “How many failed logins has this account had in the last 15 minutes?” Record an event only after your application observes the outcome:
 
 ```ts
 await visitor.evidence!.record({
@@ -127,9 +137,11 @@ Recording requires at least one subject, actor or application session. Subject/a
 
 A repeated event ID with the same semantic fields is idempotent, including concurrent delivery. Reusing it for different data throws an error. Deduplication lasts while the event is retained; after erasure/expiry cleanup, the application must prevent unwanted replay from its source system. There is no public ingestion endpoint or automatic forwarding to analytics vendors.
 
-Velocity selects exactly one subject, session or actor and optionally an action. The window is 1 second to 24 hours, default 15 minutes. Indexed reads return at most `maxEventsPerQuery + 1` rows. When `saturated: true`, reported counts and `total` are **lower bounds**, not exact totals; do not interpret the cap as low activity. This bounds the returned data, not every physical database read. The [capacity report](CAPACITY.md) includes one million synthetic application events on local Postgres; a production event workload is still unmeasured.
+`velocity()` is a count over a recent time window. Select exactly one subject, session or actor, and optionally an action. The window is 1 second to 24 hours, default 15 minutes. Indexed reads return at most `maxEventsPerQuery + 1` rows. When `saturated: true`, reported counts and `total` are **lower bounds**, not exact totals; do not interpret the cap as low activity. This bounds the returned data, not every physical database read. The [capacity report](CAPACITY.md) includes one million synthetic application events on local Postgres; a production event workload is still unmeasured.
 
-## Auditable device associations
+## Record a verified device association
+
+After a successful login or approved pairing flow, you can record how a browser was linked to a user. Janitor stores the verification source and expiry so the association can be reviewed or revoked later. This is a historical association, not a new login credential.
 
 ```ts
 const link = await visitor.evidence!.linkDevice({
@@ -186,7 +198,7 @@ activity = Janitor.Evidence.velocity(config, %{subject_id: subject["id"], window
 
 `Janitor.handle` stores private results in `conn.assigns.janitor_identity` and `conn.assigns.janitor_evidence`. Its measurement response is already sent: make sensitive-action decisions in your own action flow. `Janitor.Evidence.link_device`, `assess_device`, `list_devices`, `revoke_device`, `delete_session`, and `delete_subject_events` use atom input keys in snake_case and the same string-valued categories. Stored records and summaries use the same wire keys and HMAC scheme as TypeScript. Protection options use `window_ms`, `max_calls`, `max_concurrent`, `failure_threshold`, `cooldown_ms`, and `on_event`.
 
-Existing Ecto installations add a migration calling `Janitor.Migration.upgrade_security()` with their configured prefix. Fresh `Janitor.Migration.up()` includes both migrations. The example apps apply them automatically through their documented migration commands. The new tables use indexed foreign keys for erasure; no production database is changed by working on this checkout.
+Existing Ecto installations add a migration calling `Janitor.Migration.upgrade_security()` with their configured prefix. Fresh `Janitor.Migration.up()` includes both migrations. The example apps apply them automatically through their documented migration commands. The new tables index their foreign keys so related records can be found efficiently during erasure.
 
 ## Retention, erasure and operational limits
 

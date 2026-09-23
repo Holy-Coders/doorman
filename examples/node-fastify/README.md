@@ -1,6 +1,10 @@
-# Node / Fastify example
+# Node and Fastify
 
-Requires Node 22.12+, pnpm and Postgres. From the root:
+Janitor’s Node adapter uses standard Web Request/Response objects. This example shows the small translation needed to mount it in Fastify. You can use the same adapter in another Node framework without adding that framework to Janitor itself.
+
+## Run the example
+
+You need Node 22.12+, pnpm 9.12.0 and Docker for the supplied Postgres database. From the Janitor repository root:
 
 ```sh
 pnpm install
@@ -12,10 +16,38 @@ pnpm migrate
 pnpm dev
 ```
 
-Open http://localhost:3001 and select Identify. `DATABASE_URL` is required. `JEV_API_KEY` is optional: blank means deterministic-only matching with zero risk defaults; a real key enables paid TypeSafe inference. `PORT` defaults to 3001; if changing it, also set `APP_ORIGIN` to the corresponding public origin. Production should use the canonical HTTPS origin behind your proxy.
+Open **http://localhost:3001** and select **Identify** twice. The second response should use the cookie and return the same visitor ID. `pnpm dev` builds the browser client before starting Fastify.
 
-`pnpm migrate` is idempotent and applies the shared SQL in a transaction. `pnpm dev` builds the browser bundle before starting Fastify. `src/app.ts` translates Fastify into the standard Request/Response adapter; the library never imports Fastify. Request logging is disabled, bodies are limited to 16 KiB, and the pool is closed on process shutdown.
+## Environment variables
 
-The cookie defaults to Secure, including local operation (supported on localhost by Chromium). For other local browsers, use the explicit development/loopback exception documented in the root README. Do not disable Secure in production.
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Required Postgres connection URL. The example file points to the supplied local database. |
+| `JEV_API_KEY` | Optional TypeSafe key. Blank means no AI calls; a real key enables Jev and can incur provider charges. |
+| `PORT` | Server port, default `3001`. |
+| `APP_ORIGIN` | Your app’s public origin. Update it if you change the port; use the canonical HTTPS origin in production. |
 
-The two local examples share one identity database. In production, isolate each application in its own database or Postgres schema/search_path. Stop it with `docker compose -f examples/compose.yaml down` from the root; omit `-v` to preserve your local test history. Call `visitor.cleanup()` from your application's existing maintenance path.
+## Mount it in your application
+
+[Install the packages](../../docs/LANGUAGES.md) and apply the Postgres migrations, then create a reusable adapter:
+
+```ts
+import { Pool } from "pg";
+import { createNodeVisitor } from "@janitor/adapters/node";
+
+const db = new Pool({ connectionString: process.env.DATABASE_URL });
+const visitor = createNodeVisitor({ db, evaluator: false });
+
+// In the route, after translating the framework request:
+const response = await visitor.handle(request);
+```
+
+The [Fastify bridge](src/app.ts) shows request-body handling and copying the response status, headers and body back to Fastify. The example limits bodies to 16 KiB, disables request logging and closes the pool on shutdown.
+
+Mount `/api/visitor` on your application’s origin and add the [browser client](../../docs/GETTING-STARTED.md). Replace `handle()` with `assess()` when your server needs [private scores](../../docs/SECURITY.md).
+
+## Cookies and maintenance
+
+Use HTTPS in production. The cookie is Secure by default; Chromium accepts it on localhost. For a local browser that does not, use the explicit development-only option `environment: "development", cookie: { secure: false }`. The adapter rejects that exception outside loopback or in production mode.
+
+Run `visitor.cleanup()` from your existing maintenance task. Use a dedicated production database or schema per application. The local Node and Next.js examples share the supplied test database. Stop it with `docker compose -f examples/compose.yaml down` from the repository root; omit `-v` to keep local history.

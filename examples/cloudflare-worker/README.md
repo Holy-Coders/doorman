@@ -1,6 +1,10 @@
-# Cloudflare Worker example
+# Cloudflare Workers
 
-From the repository root:
+This example runs Janitor in a Cloudflare Worker with D1, Cloudflare’s SQL database. It serves a small page and a `/api/visitor` endpoint. Local development uses a database on your machine and starts with AI disabled.
+
+## Run the example
+
+You need Node 22.12+, pnpm 9.12.0 and a checkout of the [Janitor repository](https://github.com/Holy-Coders/janitor). From its root:
 
 ```sh
 pnpm install
@@ -10,10 +14,33 @@ pnpm exec wrangler d1 migrations apply VISITORS --local
 pnpm dev
 ```
 
-Open http://localhost:8787 and select Identify. Wrangler uses a local D1 database. `migrations_dir` points to the shipped D1 migration. Browser JavaScript is bundled locally with esbuild; no CDN dependency.
+Open **http://localhost:8787** and select **Identify** twice. The first call creates a browser ID; the second should return the same ID using the cookie. The page’s JavaScript is bundled locally, with no CDN dependency.
 
-`JEV_ENABLED` defaults to `false`, so local boot makes no AI requests and returns conservative zero risk. The default `pnpm dev` uses `wrangler dev --local`, disabling remote bindings entirely. To opt into real Workers AI evaluation locally, run `pnpm dev:ai`; for deployment, set `JEV_ENABLED` to `true` in Wrangler variables. The `AI` binding then invokes `typesafe/jev`; no TypeSafe API key is needed. Workers AI inference uses the remote service even during local development and may incur charges. No live inference is performed by tests.
+## Add it to an existing Worker
 
-For deployment, create your D1 database, replace the placeholder `database_id`, apply the migration remotely, configure the AI binding/variable, and deploy using your application's normal release process. `pnpm build` only bundles and runs `wrangler deploy --dry-run`; it does not deploy anything.
+Apply the [D1 migrations](../../packages/storage/d1/migrations) to your database, bind it as `VISITORS`, and mount the handler at your chosen route:
 
-The endpoint is `/api/visitor`; other requests serve the tiny static browser example. Cleanup is intentionally not scheduled. Call `createCloudflareVisitor({ db: env.VISITORS }).cleanup()` from existing maintenance when appropriate. Use HTTPS for deployed cookies.
+```ts
+import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
+
+const visitor = createCloudflareVisitor({ db: env.VISITORS });
+return visitor.handle(request);
+```
+
+Use that response for `/api/visitor`; continue serving your other routes normally. Keep a reusable adapter per binding configuration, as the [example Worker](src/index.ts) does, so per-instance limits can apply across requests. Add the [browser client](../../docs/GETTING-STARTED.md) to your app and keep the endpoint on the same origin.
+
+## Enable Jev when you need risk scores
+
+Jev is TypeSafe’s AI model for structured judgments. On Cloudflare, it runs through the Workers AI `AI` binding without a separate TypeSafe API key:
+
+```ts
+createCloudflareVisitor({ db: env.VISITORS, ai: env.AI });
+```
+
+The example’s `JEV_ENABLED` variable defaults to `false`. To try real Workers AI during local development, run `pnpm dev:ai`. This uses the remote provider and can incur charges. Plain `pnpm dev` uses local bindings and makes no AI calls. Read [the scores and failure behavior](../../docs/JEV.md) before acting on a result.
+
+## Deploy and maintain
+
+Create your D1 database, replace the placeholder `database_id` in the Wrangler config, and apply the migrations remotely. Set `JEV_ENABLED=true` only if you want AI evaluation, then deploy through your normal Worker release process. `pnpm build` bundles and performs a dry run; it does not deploy.
+
+Use HTTPS for cookies. Call `visitor.cleanup()` from existing maintenance to remove expired history. Use `visitor.assess(request)` if server code needs the private scores; `handle()` returns only the public visitor result. See [storage](../../site/content/storage.md) and [private assessments](../../docs/SECURITY.md).

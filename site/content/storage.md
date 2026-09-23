@@ -1,80 +1,95 @@
-# Storage & retention
+# Storage and retention
 
-Janitor stores a stable ID and a short history of normalized observations. Use a dedicated database or schema per application; sharing these tables shares the identity namespace.
+Janitor stores a random visitor ID and a short history of browser observations in your database. Use Postgres for Node, Next.js or Elixir, or D1 for a Cloudflare Worker. Cloudflare can also use the shared Postgres adapter.
 
-## Two tables
+Each application should have its own database or schema. Sharing these tables makes visitor history available to every application using them.
 
-`visitors` contains the opaque ID, creation time and last-seen time. `observations` contains the visitor link, timestamp, coarse candidate lookup fields and full normalized JSON.
+## Apply the migrations
 
-| Field                 | Purpose                                  |
-| --------------------- | ---------------------------------------- |
-| `platform`, `browser` | Coarse device/browser lookup             |
-| `timezone`            | Additional coarse candidate retrieval    |
-| `webgl_renderer`      | Graphics environment candidate retrieval |
-| `signals_json`        | The complete normalized observation      |
-| `seen_at`             | Recency and retention                    |
-
-D1 uses integer timestamps and JSON text. Postgres uses bigint timestamps and JSONB. Both index the candidate fields and visitor observation recency, with cascading observation deletion.
-
-## Apply a migration
-
-Cloudflare D1, from the example directory:
+For local Cloudflare development, run this from the example directory:
 
 ```sh
 pnpm exec wrangler d1 migrations apply VISITORS --local
 ```
 
-For Postgres, the examples include an idempotent migration command:
+The Node and Next.js examples include a migration command:
 
 ```sh
 pnpm migrate
 ```
 
-For an existing application, apply the SQL from the [D1 migration](../../packages/storage/d1/migrations/0001_visitors.sql) or [Postgres migration](../../packages/storage/postgres/migrations/0001_visitors.sql) with your migration runner, then apply `0004_candidate_lookup.sql` for selective lookup indexes.
+For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.7.0 release includes all six:
 
-## Keep a small history
+| Migration | Creates or changes |
+| --- | --- |
+| `0001_visitors.sql` | Visitor records and browser observations. |
+| `0002_identity.sql` | People, agents, verified keys and delegations. |
+| `0003_learning.sql` | Optional pre-login feedback sessions. |
+| `0004_candidate_lookup.sql` | Indexes for finding plausible previous visitors efficiently. |
+| `0005_protection.sql` | Shared request counters and evaluator budgets. |
+| `0006_evidence.sql` | Verified application events and device associations. |
+
+Creating an optional feature’s tables does not enable that feature. For an existing large Postgres installation, read the [index migration instructions](../../docs/SCALING.md) before applying lookup indexes to a busy table.
+
+Native Elixir applications use `Janitor.Migration.up()` for a fresh installation. Existing installations use the upgrade functions in the [Phoenix guide](../../packages/elixir/README.md).
+
+## What the browser tables contain
+
+`visitors` holds the random ID, creation time and last-seen time. `observations` holds the normalized browser signals, timestamp and visitor ID. A few columns are indexed so Janitor can find candidates without comparing every visitor:
+
+| Field | Purpose |
+| --- | --- |
+| `platform`, `browser` | Find broadly compatible browser environments. |
+| `timezone`, `webgl_renderer` | Narrow the lookup when these values are available. |
+| `signals_json` | Keep the complete normalized observation, including optional behavior totals. |
+| `seen_at` | Select recent history and enforce retention. |
+
+D1 stores JSON as text. Postgres uses JSONB. Both delete a visitor’s observations when the visitor record is erased.
+
+## Choose how much history to keep
+
+The defaults are 90 days and at most ten observations per visitor. Matching reads only the latest five retained observations. You can shorten retention:
 
 ```ts
 const visitor = createNodeVisitor({
   db,
-  observationRetentionDays: 90,
+  observationRetentionDays: 30,
   maxObservationsPerVisitor: 10,
 });
-
-const page = await visitor.cleanup({ batchSize: 100 });
-// Pass page?.nextVisitorId as afterVisitorId on the next batch.
 ```
 
-Each save prunes that visitor's history. Matching reads only the last five retained observations. Expired history is excluded from matching even before cleanup physically removes it. Cleanup is paged; persist its cursor and continue expiration batches while `hasMoreExpired` is true. See [scale and maintenance](../../docs/SCALING.md). Run cleanup from your existing maintenance task; Janitor installs no scheduler, worker or queue.
+Expired observations stop participating in matching immediately, even if cleanup has not physically deleted them yet. Each saved visit also prunes that visitor’s old history.
 
-D1 batches insertion and pruning atomically. Postgres performs separate committed insertion and pruning statements; cleanup or the next save repairs interrupted pruning.
+## Run cleanup from existing maintenance
+
+Janitor does not install a scheduler. Call cleanup from a maintenance task you already run:
+
+```ts
+const page = await visitor.cleanup({ batchSize: 100 });
+
+// Save this cursor for the next maintenance batch.
+const nextVisitorId = page?.nextVisitorId;
+// Next call: visitor.cleanup({ batchSize: 100, afterVisitorId: nextVisitorId })
+```
+
+Continue through visitor pages using `nextVisitorId`, and run further expiration batches while `hasMoreExpired` is true. This limits work per call. [Scale and maintenance](../../docs/SCALING.md) covers cursor handling in more detail.
+
+D1 inserts and prunes in one atomic batch. Postgres uses separate committed statements; cleanup or a later visit repairs interrupted pruning. Include database backups and exports in your own retention process.
 
 ## Delete a visitor
 
+From a server operation your application has authorized:
+
 ```ts
-// In an application-authorized server operation:
 await visitor.deleteVisitor(visitorId);
 ```
 
-Deletion cascades through that visitor's observations. Also clear the cookie, stop the browser client with `destroy()`, and respect the application's opt-out on later visits. Do not expose an unauthenticated endpoint accepting arbitrary visitor IDs for deletion.
+Also stop browser collection and clear the visitor cookie. Keep the application’s opt-out active on later visits so a new observation is not immediately collected. See [the complete deletion procedure](../../PRIVACY.md).
 
-See [Privacy & signals](/docs/privacy/) for the complete erasure procedure and data inventory.
+## Optional data has its own lifecycle
 
-## Optional identity directory
+- **Identity directory:** subjects and verified keys remain until you remove them. Deleting a subject removes its keys and delegations. Browser history is separate.
+- **Learning:** pre-login feedback defaults to 30 days, with up to 20 verified sessions per subject. Collection must be enabled and allowed by the chosen [collection policy](../../docs/LEARNING.md).
+- **Application events:** default retention is seven days. Verified device links have their own expiry and revocation records. See [trusted events and device associations](../../docs/HARDENING.md).
 
-Enable `identity: { secret, namespace }` to add verified subjects, identity-key associations and delegation. Apply the storage package's `0002_identity.sql` migration after `0001_visitors.sql`. This checkout's example migration commands apply all six migrations, including optional learning, protection and evidence tables. The public v0.6.0 artifacts include the first four. Creating optional tables does not enable collection.
-
-The directory adds three tables: `identity_subjects`, `identity_keys`, and `identity_delegations`. Key digests are unique; references cascade on subject erasure. Grant expiry, principal and actor columns are indexed. Full records use JSONB in Postgres and JSON text in D1.
-
-- [D1 identity migration](../../packages/storage/d1/migrations/0002_identity.sql)
-- [Postgres identity migration](../../packages/storage/postgres/migrations/0002_identity.sql)
-
-`cleanup()` removes expired grants alongside browser-history maintenance. Subject/key records require explicit removal and should follow the application's account lifecycle. Deleting a subject removes its keys and grants but leaves browser histories independent. See [the identity directory guide](../../docs/AGENTIC-IDENTITY.md).
-
-## Optional learning data
-
-`0003_learning.sql` adds `learning_sessions` with an opaque session ID, application scope, fixed expiry, latest normalized snapshot, verified account label, disputed flag and optional shadow prediction. Foreign keys cascade for both labeled and predicted subjects. Default retention is 30 days, with 20 completed sessions per subject. Feature configuration and per-request collection permission are both required; creating the table alone does not enable collection. See [opt-in learning](../../docs/LEARNING.md).
-
-## Unreleased protection and application evidence
-
-`0005_protection.sql` adds short-lived quota and evaluator-control rows shared across replicas. `0006_evidence.sql` adds indexed server-owned events and device associations, with cascading subject/visitor erasure. The features are opt-in and store data in the implementer's database. Evidence cleanup uses bounded pages and namespace-specific retention. Existing Phoenix installations call `Janitor.Migration.upgrade_security()` in a new migration. See [configuration and lifecycle](../../docs/HARDENING.md).
+`cleanup()` handles the enabled modules’ expired rows as documented in those guides. Account deletion should also remove your application’s own associations and any copies exported to analytics.

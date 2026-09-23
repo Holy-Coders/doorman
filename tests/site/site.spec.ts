@@ -81,6 +81,8 @@ for (const width of [390, 1440]) {
     for (const path of [
       "/",
       "/playground/",
+      "/docs/introduction/",
+      "/docs/concepts/",
       "/docs/getting-started/",
       "/docs/api/",
       "/docs/learning/",
@@ -138,6 +140,7 @@ test("every internal navigation link and asset on the landing page resolves", as
     "/sitemap.xml",
     "/llms.txt",
     "/robots.txt",
+    "/janitor-mark.svg",
     "/janitor-logo.png",
     "/social.png",
     "/janitor-mark.webp",
@@ -258,9 +261,13 @@ for (const mode of ["reduced motion", "save data"] as const) {
     await page.goto("/");
     await expect(page.locator(".hero-poster")).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Know who’s behind the request." }),
+      page.getByRole("heading", {
+        name: /A familiar browser\.\s*A clearer picture\./,
+      }),
     ).toBeVisible();
-    await page.getByRole("link", { name: "Browser continuity" }).hover();
+    await page
+      .getByRole("link", { name: "Understand browser matching" })
+      .hover();
     expect(videoRequests).toEqual([]);
     await expect(page.locator("[data-hero-video]")).not.toHaveAttribute(
       "data-loaded",
@@ -315,10 +322,76 @@ test("the hero stays readable without JavaScript", async ({ browser }) => {
   });
   await page.goto("http://127.0.0.1:4357/");
   await expect(
-    page.getByRole("heading", { name: "Know who’s behind the request." }),
+    page.getByRole("heading", {
+      name: /A familiar browser\.\s*A clearer picture\./,
+    }),
   ).toBeVisible();
   await expect(page.locator(".hero-poster")).toBeVisible();
   expect(videos).toEqual([]);
   await expect(page.locator("[data-motion-toggle]")).toBeHidden();
   await context.close();
+});
+
+test("new readers can follow introduction, first example and identity concepts", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .getByRole("link", { name: "Documentation", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/docs\/introduction\/$/);
+  await expect(
+    page.getByRole("heading", { name: "What is Janitor?", exact: true }),
+  ).toBeVisible();
+  await page
+    .locator(".sidebar-section")
+    .getByRole("link", { name: "Your first visitor ID", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "1. Get the example", exact: true }),
+  ).toBeVisible();
+  await page
+    .locator(".sidebar-section")
+    .getByRole("link", { name: "Browsers, people & agents", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "One example, three IDs", exact: true }),
+  ).toBeVisible();
+});
+
+test("all documentation links and local section anchors resolve", async ({
+  page,
+  request,
+}) => {
+  const index = (await (await request.get("/search-index.json")).json()) as {
+    url: string;
+  }[];
+  const destinations = new Map<string, Set<string>>();
+  for (const entry of index) {
+    await page.goto(entry.url);
+    const links = await page.locator("a[href]").evaluateAll((anchors) =>
+      anchors
+        .map((a) => new URL(a.getAttribute("href")!, location.href))
+        .filter((url) => url.origin === location.origin)
+        .map((url) => ({ path: url.pathname, hash: url.hash })),
+    );
+    for (const { path, hash } of links) {
+      const hashes = destinations.get(path) ?? new Set<string>();
+      if (hash) hashes.add(decodeURIComponent(hash.slice(1)));
+      destinations.set(path, hashes);
+    }
+  }
+  for (const [path, hashes] of destinations) {
+    expect((await request.get(path)).status(), path).toBe(200);
+    if (hashes.size) {
+      await page.goto(path);
+      for (const hash of hashes) {
+        expect(
+          await page.evaluate((id) => !!document.getElementById(id), hash),
+          `${path}#${hash}`,
+        ).toBe(true);
+      }
+    }
+  }
 });

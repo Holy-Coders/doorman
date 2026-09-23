@@ -1,6 +1,18 @@
-# Connection capacity and workload benchmarks
+# Connection capacity and load
 
-These are local engineering measurements from 2026-09-23, using the implementation shipped in v0.7.0. They establish bounded behavior and specific observed capacities, not a production SLA, identification accuracy or Jev provider capacity. All data is synthetic; no real users, analytics exports, paid inference or production infrastructure were involved.
+This page helps you distinguish open connections from successful identity requests. Janitor is a request handler; it does not create a long-lived connection for each browser. Your hosting stack handles connections, while your database and optional AI provider determine how much identity work can run at once.
+
+## How to read the results
+
+The local benchmark kept 200,000 HTTP connections open and recovered after overload without dropped connections. That does not mean it completed 200,000 identifications simultaneously: most requests in the simultaneous burst received a controlled `503` response.
+
+Three measurements matter separately:
+
+- **Connections:** sockets kept open by the HTTP server.
+- **Throughput:** successful identifications completed per second.
+- **Latency:** how long a request took. For example, p95 is the duration below which 95% of the measured requests completed.
+
+The measurements below were recorded on September 23, 2026 with the v0.7.0 implementation. They use generated data and mocked inference on a local developer machine. Use them to understand the design and reproduce workloads, not as a production capacity guarantee or a claim about Jev’s service capacity.
 
 ## One million application events
 
@@ -19,7 +31,7 @@ Each workload uses closed-loop concurrency 1, 16, 64 and 256; normally 1,000 ope
 
 Changes: the hot activity query now retrieves only event types instead of full JSON records, and the global request quota can distribute its fixed allowance across 32 rows. Neither change alters risk/confidence or associates anonymous browsers with accounts. Indexes and the ten-candidate matching limit stay unchanged. Both captured activity plans use `idx_events_subject_action`, without sequential scans; the hot plan returns exactly 1,001 rows, including the saturation sentinel. Saturated counts remain lower bounds.
 
-The baseline used production code from `04236ce`; the optimized run used this checkout's changes. Runs were sequential, warm-cache, on a shared developer machine; the second began while the idle HTTP harness initialized its small visitor fixture. Normal benchmark writes grew the event population to 1,004,001 before the second run. This is a diagnostic comparison, not a controlled statistical performance study. The event insert rate did not improve. The first seed's explicit vacuum hit its short lock timeout while maintenance was active; the completed baseline reused the successfully seeded data. The harness now grants maintenance its own bounded, longer deadline.
+The baseline used production code from `04236ce`; the optimized run used the v0.7.0 implementation. Runs were sequential, warm-cache, on a shared developer machine; the second began while the idle HTTP harness initialized its small visitor fixture. Normal benchmark writes grew the event population to 1,004,001 before the second run. This is a diagnostic comparison, not a controlled statistical performance study. The event insert rate did not improve. The first seed's explicit vacuum hit its short lock timeout while maintenance was active; the completed baseline reused the successfully seeded data. The harness now grants maintenance its own bounded, longer deadline.
 
 [Raw baseline and plans](benchmarks/security-baseline.json) · [Raw optimized result and plans](benchmarks/security-optimized.json)
 
@@ -70,9 +82,9 @@ The higher-rate repeat with **200,000 connections still open** produced the foll
 
 All connections remained open and all 100 recovery requests succeeded. This repeat's simultaneous burst returned 43 identities and 199,957 controlled 503s in 7.56 seconds. The generator again reported scheduling jitter (163 and 7,835 misses). Higher connection residency consumed most of the server container's memory allowance; the results show that the successful 10,000-connection throughput cannot simply be assumed at 200,000 connections. A longer soak and resource/worker tuning against an explicit rejection/latency target remain necessary. [Raw active 200,000-connection run](benchmarks/connections-200000-active.json)
 
-## Configure bounded work
+## Configure request and database limits
 
-Create one reusable adapter per application instance. The TypeScript HTTP adapters now admit at most 64 measurements at once by default (`maxInFlightRequests`, allowed 1–1,024). Excess calls get 503 with `Retry-After: 1` before body parsing, quota SQL or matching. Slots are released after success, invalid input and failures. No request queue is installed. `onOverload` emits a callback without payload data. The benchmark deliberately used eight slots and one pool connection per process, rather than the defaults.
+Create one reusable adapter per application instance. The TypeScript HTTP adapters admit at most 64 measurements at once by default (`maxInFlightRequests`, allowed 1–1,024). Excess calls get 503 with `Retry-After: 1` before body parsing, quota SQL or matching. Slots are released after success, invalid input and failures. No request queue is installed. `onOverload` emits a callback without payload data. The benchmark deliberately used eight slots and one pool connection per process, rather than the defaults.
 
 ```ts
 const pool = new Pool({
@@ -93,13 +105,13 @@ const visitor = createNodeVisitor({
 });
 ```
 
-These values illustrate separate limits; tune them from workload measurements. A handler constructed anew per request cannot share a local concurrency limit. The Cloudflare example now reuses its adapter inside the isolate. A hung storage call continues occupying its slot until the driver resolves it; arbitrary database operations are not canceled by returning from another promise. Set actual driver/server deadlines. Direct core calls, evidence management APIs and the application's other endpoints require their own admission boundary. The caller must drain or close unread request bodies when its framework streams them into the adapter.
+These values illustrate separate limits; tune them from workload measurements. A handler constructed anew per request cannot share a local concurrency limit. The Cloudflare example reuses its adapter inside the isolate. A hung storage call continues occupying its slot until the driver resolves it; arbitrary database operations are not canceled by returning from another promise. Set actual driver/server deadlines. Direct core calls, evidence management APIs and the application's other endpoints require their own admission boundary. The caller must drain or close unread request bodies when its framework streams them into the adapter.
 
 `requests.shards` defaults to one and accepts 1–128. With more than one shard, allowances sum to the configured global maximum, distributed by integer division/remainder, and all windows align to Unix-epoch boundaries. A request uses one shard and never borrows from another. This reduces contention but can reject early when one slice is exhausted; capacity is conservative. Account/session counters remain exact independent counters. The global key, secret, shard count, limit and clock configuration must agree across replicas and languages. Changing shards/namespace/secret starts different counters: drain the old fleet and let its old window expire before switching. Do not mix configurations to evade or accidentally double a budget. Fixed windows can burst at boundaries; this is not a sliding-window guarantee.
 
 Native Elixir uses the same sharded SQL/HMAC contract and smaller event projection. Phoenix connection capacity was **not** measured by the Node test. Its application owns Bandit/Cowboy admission and Ecto's bounded connection pool/queue settings. DBConnection already sheds work when checkout waits exceed its configured queue policy; configure query deadlines and measure that deployment separately. [DBConnection queue controls](https://hexdocs.pm/db_connection/DBConnection.html#start_link/2)
 
-## Deployment target and remaining evidence
+## Plan a test for your deployment
 
 Support hundreds of thousands of **connected application sessions** through a connection-handling tier and multiple stateless application instances, each with a small database pool and explicit measurement admission. HTTP keep-alive sockets and Phoenix LiveView/WebSocket sessions are different workloads. Janitor itself does not create long-lived browser connections. Spread browser collection over time and avoid a coordinated identify-on-every-render or retry storm. Honor Retry-After with bounded randomized backoff at the application; do not treat an unavailable measurement as authentication.
 

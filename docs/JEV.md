@@ -1,16 +1,66 @@
-# Jev integration contract
+# Jev & risk scoring
 
-Verified against official documentation on 2026-09-23:
+Jev is an AI model from TypeSafe that answers structured questions. Janitor uses it as an optional second opinion on browser history and as a source of technical risk estimates. You do not need Jev to assign visitor IDs or match browsers with the built-in comparison rules.
 
-- [TypeSafe HTTP API](https://docs.typesafe.ai/api)
-- [TypeSafe Noul primitive](https://docs.typesafe.ai/primitives/noul)
-- [Cloudflare Jev model](https://developers.cloudflare.com/ai/models/typesafe/jev/)
-- [Cloudflare input schema](https://developers.cloudflare.com/ai/models/typesafe/jev/schema-input.json)
-- [Cloudflare output schema](https://developers.cloudflare.com/ai/models/typesafe/jev/schema-output.json)
+## What the three scores mean
 
-Both transports share `createJevInput` and `parseJevResponse`. The full questions and state conversion are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts). Three independent yes/no Noul judgments are batched in one request: `sameVisitor`, `automation`, `suspicious`. Noul probabilities are read from `noul`, not `score`, `value`, a generated JSON string, or a chat completion.
+| Score | Question Janitor asks | How Janitor uses it |
+| --- | --- | --- |
+| `sameVisitor` | Does this browser fit its recent history, allowing for ordinary changes? | Combines it with the built-in similarity score when recovering a lost ID. |
+| `automation` | How consistent are the available signals with browser automation? | Returns it privately to your server. It never changes identity matching. |
+| `suspicious` | Are the technical signals inconsistent or unusual? | Returns it privately to your server for your own policy. |
 
-## Direct TypeSafe
+Each score is between 0 and 1. A high automation score is not a verdict that a visitor is malicious: an authorized assistant may be automated. Missing mouse movement, unavailable browser APIs and privacy settings are not, by themselves, evidence of abuse.
+
+The scores are estimates that need testing on your traffic. There is no universal safe CAPTCHA threshold. Read [how to use private assessments](SECURITY.md) before connecting a score to an action.
+
+## Turn Jev on
+
+For Node or Vercel, give the adapter your TypeSafe API key:
+
+```ts
+const visitor = createNodeVisitor({
+  db,
+  evaluator: { apiKey: process.env.JEV_API_KEY! },
+  evaluatorTimeoutMs: 1200,
+});
+```
+
+For Cloudflare, supply your Workers AI binding:
+
+```ts
+const visitor = createCloudflareVisitor({
+  db: env.VISITORS,
+  ai: env.AI,
+  evaluatorTimeoutMs: 1200,
+});
+```
+
+The Cloudflare binding needs no separate TypeSafe key. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Janitor.new`. Keep credentials on the server. Provider calls may incur charges; one measurement can make up to three evaluations.
+
+## Data sent to the model
+
+Janitor sends a compact current observation, up to five historical observations, and the built-in comparison results. Account IDs, email keys, permissions and trusted server evidence are not sent to Jev. The model sees browser-signal strings as untrusted input rather than instructions.
+
+Janitor keeps the final matching decision in code. Sparse or contradictory evidence can cap the result even when Jev returns a high score. See [matching rules](MATCHING.md).
+
+## When evaluation fails
+
+Timeouts, rate limits, network errors and malformed answers do not stop browser identification. Janitor falls back to its built-in matching rules and returns zero risk with `riskStatus: "unavailable"`. With no evaluator configured, the status is `"disabled"`.
+
+Always read the status before using a score. An unavailable zero means “not assessed.” The library does not automatically retry or block anyone.
+
+The direct API request can be aborted. A Workers AI timeout stops Janitor waiting, but the provider call may still complete and incur usage. Use [request and inference limits](HARDENING.md) if needed.
+
+## Provider API reference
+
+The following details are for people replacing or inspecting the evaluator. Normal integrations only need the adapter configuration above.
+
+Both implementations use TypeSafe's **Noul** question type: a yes/no judgment expressed as a number from 0 to 1. Janitor sends its three questions in one request and reads each answer's `noul` field. The exact questions are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts).
+
+Verified against the official [TypeSafe API](https://docs.typesafe.ai/api), [Noul documentation](https://docs.typesafe.ai/primitives/noul) and [Cloudflare Jev model](https://developers.cloudflare.com/ai/models/typesafe/jev/) on September 23, 2026.
+
+### Direct TypeSafe
 
 ```ts
 const response = await fetch("https://api.typesafe.ai/v1/systemone", {
@@ -29,7 +79,7 @@ const response = await fetch("https://api.typesafe.ai/v1/systemone", {
 
 The model alias is configurable. `JEV_API_KEY` is an application/example environment variable; the library receives `apiKey` explicitly. There is no SDK, retry dependency, or environment lookup inside the library.
 
-## Cloudflare Workers AI
+### Cloudflare Workers AI
 
 ```ts
 const response = await env.AI.run(
@@ -40,9 +90,7 @@ const response = await env.AI.run(
 
 The binding takes `{ state, questions }` directly. It requires no TypeSafe API key and does not receive a direct-API `model: 'jev-latest'` field. The official REST example instead uses `/ai/run` with `{ model: 'typesafe/jev', input: { state, questions } }`; that REST wrapper is **not** used with the binding.
 
-The current model page is under `/ai/models/typesafe/jev/`, rather than the older guessed `/workers-ai/models/jev/` path. The invocation in the original product brief remains correct.
-
-## Request and response shapes
+### Request and response shapes
 
 ```ts
 {

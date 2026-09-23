@@ -1,8 +1,12 @@
-# Humans, agents & authority
+# Connect people and agents
 
-Janitor provides **identity context for the agentic era**: browser continuity, verified account and actor references, explicit delegation, and Jev risk scores. It is a small library that runs with your database and authentication system. It never grants access or automatically blocks a request.
+Use Janitor’s identity directory when your app needs to connect signed-in visits across devices or track an agent acting for a user. The directory is a set of records in your database: people, agents, verified lookup keys and permissions.
 
-## Separate questions, separate evidence
+For example, Alex can sign in on a laptop and phone. Those browsers keep different visitor IDs, but your server registers the same person for both. If Alex authorizes an assistant, the assistant gets its own identity and a limited permission record.
+
+Your existing login or credential system verifies these identities. Janitor does not provide a login screen or discover a person from an anonymous fingerprint. If the terms are new, read [browsers, people and agents](CONCEPTS.md) first.
+
+## Understand the result
 
 | Question                                | Evidence                                                          | Janitor result                                        |
 | --------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------- |
@@ -16,9 +20,9 @@ An authorized assistant can have high automation and valid delegation. An intrud
 
 `confidence` measures browser continuity, not the likelihood that a particular human is at the keyboard. Verified credentials have explicit provenance, not a fabricated probability. Unknown actors stay unknown. Risk defaults to zero if evaluation fails; zero is not evidence of safety.
 
-## Configure the identity directory
+## 1. Enable the directory
 
-Apply both `0001_visitors.sql` and `0002_identity.sql` from your storage package. The example migration commands also apply `0003_learning.sql`; learning remains disabled unless explicitly configured. Add a secret and namespace to any high-level adapter:
+Apply the storage package’s migrations in order through `0006_evidence.sql`. The directory uses the identity tables created by `0002_identity.sql`. Optional features stay disabled until you configure them. Add a secret and namespace to any high-level adapter:
 
 ```ts
 import { createNodeVisitor } from "@janitor/adapters/node";
@@ -36,7 +40,7 @@ const identities = janitor.identities!;
 
 Cloudflare and Vercel accept the same `identity` option. Generate the secret with `openssl rand -hex 32`. Share it across application instances; keep it out of browser bundles. A namespace and secret define the identity/key lookup scope. Isolate applications in separate databases or schemas. Changing the secret or namespace changes derived IDs and key digests and requires a deliberate data migration; old records are not automatically relabeled.
 
-## Update subjects and verified email/key associations
+## 2. Register a user and their verified keys
 
 These are **server-only management methods**. Authenticate and authorize the caller before calling them. Janitor does not send verification emails, run OAuth, verify public-key signatures, or provide login endpoints.
 
@@ -79,9 +83,9 @@ await identities.removeKey(owner.id, {
 
 An address can change owners. Your authentication system owns verification, account recovery, key lifecycle, and account merges. Revoke an old association when its ownership changes. The stored `verifiedAt` is the time your server registered the verified association, not an independent verification performed by Janitor.
 
-## Register an agent and delegate explicitly
+## 3. Give an agent limited permission
 
-An agent is a separate principal with its own credential. After the account owner authorizes a grant:
+Register the assistant as a separate identity with its own credential. A **delegation** records permission to act for another identity. After the account owner authorizes that permission:
 
 ```ts
 const assistant = await identities.updateSubject({
@@ -102,7 +106,7 @@ Grants expire within 30 days, have at most 32 exact-match scopes, and are revoca
 At the request boundary, derive context from server-verified credentials and the target action:
 
 ```ts
-return janitor.handle(request, {
+const { response, identity } = await janitor.assess(request, {
   verified: {
     subjectId: owner.id,
     actorId: assistant.id,
@@ -111,11 +115,13 @@ return janitor.handle(request, {
     requiredScopes: ["events:read"],
   },
 });
+// identity?.attribution is available to server code.
+return response;
 ```
 
 Never copy these fields from an unverified request body, headers, or a client claim saying `onBehalfOf`. Audience and required scopes must come from the target endpoint/action. Without `requiredScopes`, assessment checks grant validity but makes no claim about an action's scope. A valid grant does not establish that every action is benign.
 
-The additional response field looks like this (IDs are shortened for illustration):
+The private `identity.attribution` field looks like this. It stays on your server; the default browser response still contains only `visitorId` and `isReturning`. IDs below are shortened:
 
 ```json
 {
@@ -160,14 +166,9 @@ Treat possible account takeover as a reason to gather stronger evidence: reauthe
 
 ## Where Jev fits
 
-Jev evaluates state against narrow questions and returns bounded typed answers. Janitor asks `sameVisitor`, `automation`, and `suspicious`. Deterministic evidence constrains browser identity restoration. Identity-directory records, email addresses, keys, and grants are not sent to Jev.
+Jev is TypeSafe’s AI model for structured judgments. It evaluates browser history and returns numerical answers to focused questions. Janitor asks `sameVisitor`, `automation`, and `suspicious`. Deterministic evidence constrains browser identity restoration. Identity-directory records, email addresses, keys, and grants are not sent to Jev.
 
 Keep credential evidence, inferred scores, and authorization results separate. Cryptographic validation stays in the authentication layer; grant scope/expiry/revocation checks are deterministic. A classifier cannot override them. Janitor's scores still need calibration against labeled data from the deploying application; typed output does not guarantee a correct judgment.
-
-TypeSafe introduced Jev as a structured decision model on September 15, 2026. LangChain's September 17 agent-harness article demonstrates the broader integration pattern. These sources explain the model category; they are not endorsements or measurements of Janitor.
-
-- [TypeSafe: Introducing System One Models & Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
-- [LangChain: Building a Harness with Jev](https://www.langchain.com/blog/building-a-harness-with-jev)
 
 ## Erasure, retention, and validation
 

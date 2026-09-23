@@ -1,6 +1,10 @@
-# Installation and other languages
+# Install Janitor
 
-Janitor v0.7 is a public developer preview. JavaScript archives and the native Elixir package are available from GitHub. **The `@janitor/*` packages are not published to npm, and `janitor` is not published to Hex.** The commands below install real release artifacts rather than relying on nonexistent registry packages.
+Choose the package for the code that runs on your server. TypeScript applications use `@janitor/*`; Phoenix applications use the native `janitor` Mix dependency. Both can serve the same browser client.
+
+Janitor v0.7.0 is a developer preview distributed through GitHub. The packages are not yet published to npm or Hex, so use the release archive or Git dependency below. You do not need a Janitor API key. An optional Jev evaluation uses credentials for your chosen AI provider.
+
+Want to try it before adding dependencies to an existing app? Follow [your first visitor ID](GETTING-STARTED.md).
 
 ## npm, Bun or pnpm
 
@@ -14,7 +18,12 @@ npm install
 # pnpm install
 ```
 
-The bundle includes seven compiled ESM archives and a consumer `package.json`. npm/Bun use its `overrides`; pnpm uses `pnpm.overrides`. Both maps point all Janitor sibling dependencies at local archives. In an existing app, copy the archives into a vendor directory and merge `dependencies` plus the matching override map into your existing manifest, updating **every** `file:` path. Keep your application's own scripts/dependencies. Do not run `npm install @janitor/browser` against the public registry yet. These managers install the distributed packages; the source monorepo itself uses pnpm.
+The archive extracts seven compiled JavaScript packages and a ready-to-use `package.json`. The commands above create a small standalone project where you can import Janitor.
+
+### Add it to an existing app
+
+The bundled packages depend on each other. Until they are on npm, your package manager needs local overrides for those dependencies. The supplied manifest already contains them.
+ npm/Bun use its `overrides`; pnpm uses `pnpm.overrides`. Both maps point all Janitor sibling dependencies at local archives. In an existing app, copy the archives into a vendor directory and merge `dependencies` plus the matching override map into your existing manifest, updating **every** `file:` path. Keep your application's own scripts/dependencies. Do not run `npm install @janitor/browser` against the public registry yet. These managers install the distributed packages; the source monorepo itself uses pnpm.
 
 Use Node 22.12+ for Node/Next.js examples. Bun can install and import the same Web API packages. This is not a claim that all third-party hosting frameworks are tested on Bun. `pg` remains the application's connection pool, and its supported runtime applies.
 
@@ -66,4 +75,4 @@ resp, err := client.Do(req)
 
 Empty observations make these transport checks, not useful identity benchmarks. Phoenix's browser route additionally requires its session and CSRF token. For actual website integration use the browser client, which collects signals, carries same-origin cookies and supports CSRF headers. The TypeScript adapters use standard Web Request/Response and can also be mounted on a host/framework that supports those APIs.
 
-Recommended future native ports, in order: Python/FastAPI for risk services, Go/net-http for gateways, then Ruby/Rails and PHP/Laravel for existing apps. Reuse the schema, exact Jev question fixture, HMAC vectors, SQL migrations and matching conformance vectors in `protocol/` when adding them. They are documented extension points, not shipped native packages. Phoenix is the native non-JavaScript implementation in this release.
+Native matching engines currently exist for TypeScript and Elixir. Python, Go, Ruby and PHP applications can use the HTTP contract, but there are no native Janitor packages for those languages yet. If you build a port, the schemas, Jev questions and shared test vectors in `protocol/` describe the behavior to preserve.

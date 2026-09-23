@@ -1,14 +1,20 @@
-# Scale, candidate retrieval and Postgres
+# Scale your database
 
-**Ten is the final shortlist, not the search population.** The previous three coarse, recency-only queries could lose an older returning browser behind a busy group of new visitors. The current storage adapters rank a bounded pool from selective indexes before choosing up to ten visitors and at most three Jev evaluations.
+Janitor can search a large visitor database without comparing every stored browser on each visit. It uses database indexes to find a limited set of plausible matches, then spends more work only on that shortlist.
 
-For a large deployment, use Postgres in the implementer's infrastructure. D1 remains available for smaller installations. A database containing millions of visitors is different from serving millions of requests per second; the latter is not a claim made here.
+Use Postgres when you expect a large amount of retained history. D1 remains an option for Cloudflare deployments within its storage and query limits. The right size depends on visits, retention and request frequency—not just the number of registered users.
 
-The new [connection and workload benchmark](CAPACITY.md) tests one million application events, database-shared protection, 200,000 live HTTP connections, overload recovery and a sustained identity-rate sweep. It includes raw results and reproducible local commands. Connection capacity, successful identity throughput and inference capacity are reported separately.
+## Does a limit of ten miss the rest of the database?
 
-## Bounded retrieval
+Ten is the number of visitors sent to the matching engine, not the number of visitors the database can contain. Several indexed lookups first return a larger pool. Janitor ranks that pool before selecting ten visitors and asking Jev about at most three.
 
-Each eligible probe returns at most 101 retained observation rows. The extra row identifies a crowded/truncated bucket:
+This keeps request work predictable, but it is not an exhaustive search. An older match can fall outside the lookup windows. When a group is too crowded to distinguish safely, Janitor can decline to restore an ID rather than force a match.
+
+Local tests include two million visitors and six million observations, with candidate lookup p95 of 6.46 ms in that recorded run. The methodology and limits are below. For open connections and requests per second, see the separate [capacity report](CAPACITY.md).
+
+## How the lookup stays limited
+
+A **probe** is an indexed lookup using one combination of browser signals. Each eligible probe returns at most 101 retained observations. The extra row tells Janitor when the result was truncated because the group was crowded:
 
 | Probe                                                         | Intended tolerance                      |
 | ------------------------------------------------------------- | --------------------------------------- |
@@ -27,7 +33,7 @@ If every bucket containing a selected candidate was saturated, restoration absta
 
 The 606-row bound is the **returned pool**, not a guarantee that every database plan physically reads only 606 rows. Maintain indexes/statistics and inspect `EXPLAIN (ANALYZE, BUFFERS)` for your traffic distribution. Composite leading equality keys allow selective index scans; distribution and planner choices still matter. [Postgres multicolumn indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html)
 
-## Local evidence
+## Recorded database benchmarks
 
 The reproducible benchmark uses the production Postgres storage and matching engine, a fixed synthetic population, 80% identical common-profile traffic, and 20% a varied synthetic tail. It deliberately queries 100 older tail profiles to expose recency crowding. It does not sample real people or establish identification accuracy.
 
@@ -101,13 +107,13 @@ const visitor = createCloudflareVisitor({
 return visitor.handle(request);
 ```
 
-The application owns driver setup and connection lifecycle. Configure Workers `nodejs_compat` and your chosen Postgres/Hyperdrive integration according to [Cloudflare's driver guidance](https://developers.cloudflare.com/hyperdrive/examples/connect-to-postgres/postgres-drivers-and-libraries/node-postgres/). Use a [cache-disabled Hyperdrive configuration](https://developers.cloudflare.com/hyperdrive/concepts/query-caching/) for mutable identity/history reads and delegation revocation checks. No hosted database was provisioned by Janitor. Node/Vercel and native Phoenix already use Postgres.
+The application owns driver setup and connection lifecycle. Configure Workers `nodejs_compat` and your chosen Postgres/Hyperdrive integration according to [Cloudflare's driver guidance](https://developers.cloudflare.com/hyperdrive/examples/connect-to-postgres/postgres-drivers-and-libraries/node-postgres/). Use a [cache-disabled Hyperdrive configuration](https://developers.cloudflare.com/hyperdrive/concepts/query-caching/) for mutable identity/history reads and delegation revocation checks. Node/Vercel and native Phoenix already use Postgres.
 
 A single D1 database is limited to 10 GB on the paid plan, and processes queries one at a time. That does not make D1 unsuitable for every sizable application, but one D1 database is not our default recommendation for millions of visitors with retained history. D1 sharding also requires a stable routing strategy; casually splitting by a changing fingerprint would break lookup. [D1 limits](https://developers.cloudflare.com/d1/platform/limits/)
 
 ## Maintenance and capacity
 
-`cleanup()` now performs one bounded maintenance page, default 100 visitors/expired rows and maximum 1,000. It returns progress:
+`cleanup()` performs one bounded maintenance page, default 100 visitors/expired rows and maximum 1,000. It returns progress:
 
 ```ts
 const page = await visitor.cleanup({ batchSize: 100, afterVisitorId: cursor });

@@ -1,6 +1,12 @@
-# Evaluate verified feedback
+# Test a learning model
 
-The offline evaluation runner consumes an implementer-owned export. It runs locally, creates no dashboard, and makes no remote inference calls unless your supplied predictor does. Janitor ships a deterministic baseline and allows a Jev/custom predictor for a separately budgeted experiment.
+If you enable [login feedback](LEARNING.md), you can test a predictor against visits whose users later signed in. The goal is to find out how often it guesses correctly, how often it links the wrong user, and how often it declines to guess.
+
+The evaluation runs locally on an export from your database. It only calls an external AI service if your predictor does. Start with Janitor’s built-in similarity baseline so you have something to compare another model against.
+
+## Prepare labeled examples
+
+A useful cross-device test needs an independently verified device label for each session, such as a label from device enrollment or a consented pilot. Do not use Janitor’s own guessed visitor identity as the answer you are testing against.
 
 ```ts
 import {
@@ -24,9 +30,21 @@ const report = await evaluateLearning(dataset, {
 
 `lookupIndependentlyVerifiedDevice` and `myPredictor` are your application functions. Device IDs must come from verified pilot labels or explicit device enrollment, not Janitor's own fuzzy browser prediction. Do not invent labels for unverified people. Native Elixir `Janitor.Learning.reports/2` returns the same wire keys, so a privileged export can use this evaluator without running a TypeScript identity server.
 
-Each replay trial exposes only examples **verified before** its observation timestamp. Device holdout additionally excludes the current physical device from those examples. Duplicate sessions, invalid chronology and missing device labels are rejected. At most 100 recent examples reach a prediction; up to 10,000 trials may be loaded. Prior prediction fields and account labels for the current trial never enter predictor input. Input data is cloned so a predictor cannot mutate the dataset. Cold starts abstain; invalid/out-of-cohort predictions and timeout count as unavailable.
+## Keep the test honest
 
-The report contains counts, precision, false associations per trial, coverage, abstention, recall among trials with the account in the available cohort, conditional Brier score, calibration bins and p95 callback latency. Null rates mean no denominator. The Brier score covers non-abstained predictions only and must be read with coverage. Latency excludes cold-start trials and includes failures/timeouts. This runner measures no provider billing; record actual provider usage separately.
+For each visit in the test, the predictor can see only examples **verified before** that visit. With `deviceHoldout: true`, it also cannot see earlier examples from the same physical device. This tests whether it can recognize a known user on a different device rather than remember the browser it just saw. Duplicate sessions, invalid chronology and missing device labels are rejected. At most 100 recent examples reach a prediction; up to 10,000 trials may be loaded. Prior prediction fields and account labels for the current trial never enter predictor input. Input data is cloned so a predictor cannot mutate the dataset. Cold starts abstain; invalid/out-of-cohort predictions and timeout count as unavailable.
+
+## Read the report
+
+The report includes:
+
+- **Precision:** how often a returned prediction was correct.
+- **False associations:** how often a visit was linked to the wrong user.
+- **Coverage and abstention:** how often the predictor answered or declined.
+- **Recall:** how often it found the user when that user appeared among the available examples.
+- **Calibration:** how reported confidence compares with observed correctness, including a Brier score for answered predictions.
+- **p95 latency:** the duration below which 95% of predictor calls completed.
+ Null rates mean no denominator. The Brier score covers non-abstained predictions only and must be read with coverage. Latency excludes cold-start trials and includes failures/timeouts. This runner measures no provider billing; record actual provider usage separately.
 
 ## Command-line deterministic baseline
 

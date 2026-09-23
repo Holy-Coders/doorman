@@ -1,6 +1,8 @@
 # Browser benchmarks
 
-We can generate real browser measurements in a controlled environment. That provides repeatable regression evidence, not a substitute for a consented real-user population.
+This benchmark asks whether Janitor can preserve a browser ID through controlled changes such as a reload, window resize or timezone change. It also tests where recovery fails.
+
+The signals come from real browser engines driven by automation. They do not represent a population of real people. Use the results to reproduce behavior, then evaluate accuracy separately on independently labeled visits from your application.
 
 ## Reproduce
 
