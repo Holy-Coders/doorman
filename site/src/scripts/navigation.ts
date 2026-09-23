@@ -24,6 +24,7 @@ async function search() {
         score: words.reduce(
           (score, word) =>
             score +
+            (entry.url.split("/").includes(word) ? 16 : 0) +
             (entry.title.toLowerCase().includes(word) ? 12 : 0) +
             (entry.description.toLowerCase().includes(word) ? 5 : 0) +
             (entry.text.toLowerCase().includes(word) ? 1 : 0),
@@ -36,6 +37,8 @@ async function search() {
           words.every((word) =>
             (
               item.entry.title +
+              " " +
+              item.entry.url +
               " " +
               item.entry.description +
               " " +

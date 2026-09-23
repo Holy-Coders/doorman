@@ -56,6 +56,10 @@ test("search, documentation navigation, keyboard tabs and copy controls work", a
   await page
     .getByRole("button", { name: "Search documentation", exact: true })
     .click();
+  await page.getByRole("searchbox").fill("learning");
+  await expect(page.locator("#search-results a").first()).toContainText(
+    "Learn from later logins",
+  );
   await page.getByRole("searchbox").fill("retention");
   await page
     .locator("#search-results")
