@@ -588,6 +588,40 @@ it("Workers AI uses documented typed Jev requests and rejects malformed response
       }),
     }),
   );
+  const result = {
+    model: "jev-provider-version",
+    answers: {
+      automation: { type: "noul", noul: 0.9 },
+      suspicious: { type: "noul", noul: 0.1 },
+    },
+  };
+  expect(
+    await createWorkersNetworkEvaluator({
+      run: async () => ({ state: "Completed", result }),
+    })({ features: { api_request_count: 20 }, patterns: [] }),
+  ).toEqual({
+    automation: 0.9,
+    suspicious: 0.1,
+    providerModel: "jev-provider-version",
+  });
+  for (const response of [
+    { state: "Pending", result },
+    { state: "Failed", result },
+    { state: "Completed", result: {} },
+    {
+      state: "Completed",
+      result: {
+        answers: { ...result.answers, automation: { type: "noul", noul: 9 } },
+      },
+    },
+  ]) {
+    await expect(
+      createWorkersNetworkEvaluator({ run: async () => response })({
+        features: { api_request_count: 20 },
+        patterns: [],
+      }),
+    ).rejects.toThrow();
+  }
   await expect(
     createNetworkJevMethods(async () => ({}))({ features: {}, patterns: [] }),
   ).rejects.toThrow();

@@ -93,7 +93,16 @@ export function createNetworkJevEvaluator(options: {
 export function createWorkersNetworkEvaluator(ai: {
   run(model: string, input: unknown): Promise<unknown>;
 }): NetworkEvaluator {
-  return createNetworkJevMethods((input) => ai.run("typesafe/jev", input));
+  return createNetworkJevMethods(async (input) => {
+    const response = await ai.run("typesafe/jev", input);
+    // The live third-party transport also returns a Completed/result envelope.
+    // Pending or failed envelopes must never be accepted, even if they contain answers.
+    if (response && typeof response === "object" && "state" in response)
+      return z
+        .object({ state: z.literal("Completed"), result: z.unknown() })
+        .parse(response).result;
+    return response;
+  });
 }
 export function parseRisk(
   value: unknown,
