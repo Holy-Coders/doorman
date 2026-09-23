@@ -4,7 +4,26 @@ This page helps you distinguish open connections from successful identity reques
 
 ## How to read the results
 
-The local benchmark kept 200,000 HTTP connections open and recovered after overload without dropped connections. That does not mean it completed 200,000 identifications simultaneously: most requests in the simultaneous burst received a controlled `503` response.
+Earlier local runs kept 200,000 HTTP connections open and recovered after overload without dropped connections. **The latest validation did not reproduce that burst stability:** two repeat runs lost connections. Keeping idle sockets open does not establish safe handling of 200,000 simultaneous identifications. The latest failures are reported below, followed by the historical measurements.
+
+## Latest validation: the large burst failed
+
+The September 23 expanded validation reused the eight-worker, 2 GiB server-container configuration. Both runs reached 200,000 open connections and completed all 1,500 scheduled identifications at 100 requests/second. The simultaneous burst then failed:
+
+| Run               | Unexpected connection closes | Burst outcome                                                            | Recovery            |
+| ----------------- | ---------------------------: | ------------------------------------------------------------------------ | ------------------- |
+| First             |                       25,000 | Stats transport failed; the original harness did not retain burst totals | Not reached         |
+| Diagnostic repeat |                       50,000 | 14 identities, 150,831 controlled 503s, 49,155 transport errors          | 75 / 100 successful |
+
+The diagnostic repeat recorded two worker exits with `SIGKILL`. The exact kill cause was not captured before restart; these results do not prove a particular memory or library defect. The host also ran unrelated workloads, so this is not an isolated comparison against the earlier run. We did not change those workloads.
+
+The harness now retains partial burst/recovery outcomes when a stats endpoint fails, saves worker logs before cleanup and runs the smaller throughput sweep even after a failed large burst. A failing stage still makes the command fail. These are measurement fixes, not an application-capacity fix.
+
+Do not size production from the historical success alone. Bound connections and bursts at ingress, provision and measure memory under active request load, then validate recovery and sustained useful throughput on the actual deployment. These tests use deterministic identity evaluation; they do not measure live Jev at this concurrency.
+
+[First failed run](benchmarks/connections-validation-first-2026-09-23.json) · [Diagnostic repeat](benchmarks/connections-validation-repeat-2026-09-23.json) · [Detection and live Jev validation](DETECTION-VALIDATION.md)
+
+The independent **10,000-connection** sweep completed all 1,500 requests at 100/sec, all 7,500 at 500/sec, and all 15,000 at 1,000/sec. At 2,000/sec it completed 29,758 identities and returned 242 controlled 503s. Its 10,000-request burst returned 68 identities and 9,932 controlled 503s, with 100/100 successful recovery and no unexpected socket closes. This smaller run passed; it does not cancel the larger run's failures. [Latest throughput report](benchmarks/throughput-validation-2026-09-23.json) · [Latest security/storage workload](benchmarks/security-validation-2026-09-23.json)
 
 Three measurements matter separately:
 

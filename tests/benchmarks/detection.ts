@@ -20,10 +20,10 @@ type Harness = Window & {
 };
 const token = crypto.randomUUID();
 let deliver: ((sample: Sample) => void) | undefined;
-const script = `import {collectDetectionSignals,createBehaviorTracker} from '/collector.js';
+const script = `import {collectBrowserSignals,collectDetectionSignals,createBehaviorTracker} from '/collector.js';
 const detection={fonts:true,pageFonts:true,runtime:true,permissions:true,targets:true,focus:true,decoy:true};
 window.tracker=createBehaviorTracker({extended:true,detection});
-window.capture=async()=>{const start=performance.now();for(let i=0;i<1000;i++)Object.getOwnPropertyDescriptor(navigator,'webdriver');const timingMs=Math.round((performance.now()-start)*10)/10;return {signals:await collectDetectionSignals(detection),behavior:tracker.snapshot(),timingMs};};
+window.capture=async()=>{const start=performance.now();for(let i=0;i<1000;i++)Object.getOwnPropertyDescriptor(navigator,'webdriver');const timingMs=Math.round((performance.now()-start)*10)/10;return {signals:{...collectBrowserSignals(),...await collectDetectionSignals(detection)},behavior:tracker.snapshot(),timingMs};};
 if(location.pathname==='/native')for(let i=0;i<5;i++){await fetch('/native-result?token=${token}',{method:'POST',body:JSON.stringify(await capture())});}`;
 const server = createServer((req, res) => {
   if (req.url === `/native-result?token=${token}` && req.method === "POST") {
@@ -60,6 +60,7 @@ assert(address && typeof address !== "string");
 const origin = `http://127.0.0.1:${address.port}`;
 const rows: Record<string, unknown>[] = [];
 const versions: Record<string, string> = {};
+const jevCases: { engine: string; scenario: string; sample: Sample }[] = [];
 try {
   for (const [name, type] of Object.entries({ chromium, firefox, webkit })) {
     const browser = await type.launch(
@@ -84,10 +85,11 @@ try {
         return page.evaluate(() => (window as unknown as Harness).capture());
       };
       const baseline = await capture();
+      jevCases.push({ engine: name, scenario: "baseline", sample: baseline });
       await page.reload();
       const repeated = await capture();
       const beforeScreenshot = repeated.behavior;
-      for (let i = 0; i < 5; i++) await page.screenshot(); // Not saved; no real user page.
+      for (let i = 0; i < 20; i++) await page.screenshot(); // Not saved; no real user page.
       const afterScreenshot = await capture();
       const screenshotFocusChanges =
         (afterScreenshot.behavior.focusChangeCount ?? 0) -
@@ -97,10 +99,20 @@ try {
         beforeScreenshot.visibilityChangeCount;
       for (let i = 0; i < 12; i++) await page.locator("#visible").click();
       const centers = await capture();
+      jevCases.push({
+        engine: name,
+        scenario: "centered-script",
+        sample: centers,
+      });
       assert.equal(centers.behavior.targetSampleCount, 12);
       assert.equal(centers.behavior.targetCenterCount, 12);
       for (let i = 0; i < 12; i++) await page.keyboard.press("Enter");
       const keyboard = await capture();
+      jevCases.push({
+        engine: name,
+        scenario: "keyboard-script",
+        sample: keyboard,
+      });
       assert.equal(
         keyboard.behavior.targetSampleCount,
         12,
@@ -130,6 +142,11 @@ try {
         }
       });
       const failedDownload = await capture();
+      jevCases.push({
+        engine: name,
+        scenario: "failed-app-font",
+        sample: failedDownload,
+      });
       assert.equal(failedDownload.signals.environment?.pageFontsFailed, 1);
       await page.evaluate(() => {
         Object.defineProperty(window, "_phantom", {
@@ -139,17 +156,26 @@ try {
           },
         });
       });
-      assert.equal(
-        (await capture()).signals.environment?.runtimeMarkerCount,
-        1,
-      );
+      const marked = await capture();
+      jevCases.push({
+        engine: name,
+        scenario: "injected-test-marker",
+        sample: marked,
+      });
+      assert.equal(marked.signals.environment?.runtimeMarkerCount, 1);
       await page.evaluate(() => {
         Object.defineProperty(window, "FontFace", {
           value: undefined,
           configurable: true,
         });
       });
-      assert.equal((await capture()).signals.fonts, undefined);
+      const missing = await capture();
+      jevCases.push({
+        engine: name,
+        scenario: "unavailable-font-api",
+        sample: missing,
+      });
+      assert.equal(missing.signals.fonts, undefined);
       await page.evaluate(() =>
         (window as unknown as Harness).tracker.destroy(),
       );
@@ -172,7 +198,7 @@ try {
         matchedFontSimilarity:
           calculateSimilarity(baseline.signals, repeated.signals).features
             .fontSimilarity ?? null,
-        screenshotCaptures: 5,
+        screenshotCaptures: 20,
         screenshotFocusChanges,
         screenshotVisibilityChanges,
         centeredMouseSamples: centers.behavior.targetSampleCount,
@@ -290,7 +316,12 @@ const report = {
 };
 await mkdir("docs/benchmarks", { recursive: true });
 await writeFile(
-  "docs/benchmarks/experimental-probes-2026-09-23.json",
+  "artifacts/browser-benchmark/experimental-probes-validation.json",
   JSON.stringify(report, null, 2) + "\n",
+);
+await writeFile(
+  "artifacts/browser-benchmark/jev-cases.json",
+  JSON.stringify(jevCases),
+  { mode: 0o600 },
 );
 console.log(JSON.stringify(report, null, 2));

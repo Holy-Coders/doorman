@@ -67,3 +67,7 @@ Collection requires both `activity.correlation` configuration and server-supplie
 The storage and mocked-evaluator tests cover changing sessions, cross-replica accumulation, namespace isolation, weak-link exclusion, identifier projection and group deletion. They do **not** establish real-world attacker detection accuracy. Calibrate linkage and abuse separately using reviewed incidents and legitimate shared-device/shared-client controls.
 
 Correlation erasure uses the same admission-threshold configuration that recorded a group. If you change that threshold, earlier policy groups remain isolated and expire under their original retention; erase them using a service configured with the earlier threshold when immediate deletion is required.
+
+## Live model check
+
+In the [expanded live Jev fixtures](DETECTION-VALIDATION.md), a new session with one successful action scored 0.06 suspicious. Adding confidently linked repeated denials raised that to 0.75; an authorized agent with successful activity scored only 0.08 suspicious. These are synthetic scenarios. Two denials among five related requests also scored 0.47, so legitimate retries and shared-client controls still need calibration.

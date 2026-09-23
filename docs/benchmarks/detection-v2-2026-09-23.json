@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-23T19:17:04.053Z",
+  "generatedAt": "2026-09-23T20:00:52.153Z",
   "comparison": "behavior-v1 versus behavior-v2 on the same published groups and splits",
   "sourceDigests": {
     "packages/browser/src/behavior.ts": "ecd6579d99688e8f33747a681bdedd3a080dc4ba84df97e0c335aad5206cca8f",
@@ -23,8 +23,8 @@
   "identity": {
     "version": 1,
     "featureSet": "behavior-v1",
-    "generatedAt": "2026-09-23T19:12:42.231Z",
-    "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
+    "generatedAt": "2026-09-23T19:57:51.452Z",
+    "revision": "63ec3a3193101f825d8c67897c9c5bc4d69a7f31",
     "worktreeModified": true,
     "provenance": {
       "url": "https://github.com/Spirals-Team/FPStalker",
@@ -101,8 +101,8 @@
     "baseline": {
       "version": 1,
       "featureSet": "behavior-v1",
-      "generatedAt": "2026-09-23T19:13:30.009Z",
-      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
+      "generatedAt": "2026-09-23T19:58:39.325Z",
+      "revision": "63ec3a3193101f825d8c67897c9c5bc4d69a7f31",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/ethanbwang/fp-agent",
@@ -1481,8 +1481,8 @@
     "extended": {
       "version": 1,
       "featureSet": "behavior-v2",
-      "generatedAt": "2026-09-23T19:14:33.700Z",
-      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
+      "generatedAt": "2026-09-23T19:59:46.689Z",
+      "revision": "63ec3a3193101f825d8c67897c9c5bc4d69a7f31",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/ethanbwang/fp-agent",
@@ -2952,8 +2952,8 @@
     "baseline": {
       "version": 1,
       "featureSet": "behavior-v1",
-      "generatedAt": "2026-09-23T19:13:38.710Z",
-      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
+      "generatedAt": "2026-09-23T19:58:48.163Z",
+      "revision": "63ec3a3193101f825d8c67897c9c5bc4d69a7f31",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/balabit/Mouse-Dynamics-Challenge",
@@ -3084,8 +3084,8 @@
     "extended": {
       "version": 1,
       "featureSet": "behavior-v2",
-      "generatedAt": "2026-09-23T19:14:46.488Z",
-      "revision": "7df5af02a28c9eb5cbd27e4fa7c9ad10936acfd5",
+      "generatedAt": "2026-09-23T19:59:59.828Z",
+      "revision": "63ec3a3193101f825d8c67897c9c5bc4d69a7f31",
       "worktreeModified": true,
       "provenance": {
         "url": "https://github.com/balabit/Mouse-Dynamics-Challenge",
@@ -3221,7 +3221,7 @@
   },
   "jevReplay": {
     "version": 1,
-    "generatedAt": "2026-09-23T19:15:03.525Z",
+    "generatedAt": "2026-09-23T20:00:51.778Z",
     "model": "jev-1.13.0",
     "transport": "Cloudflare AI REST /ai/run; typesafe/jev; default gateway",
     "sampling": "Frozen hash-selected pilot; no prompt changes or threshold tuning on these cases",

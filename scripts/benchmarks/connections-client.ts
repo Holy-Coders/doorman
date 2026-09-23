@@ -18,6 +18,7 @@ if (
   throw Error("Invalid benchmark bounds");
 const sockets: Peer[] = [];
 let unexpectedCloses = 0,
+  statsFailures = 0,
   phase = "ramp",
   closing = false;
 const errors: Record<string, number> = {};
@@ -86,9 +87,17 @@ class Peer {
 const readStats = async () =>
   Promise.all(
     Array.from({ length: workers }, async (_, i) => {
-      const r = await fetch(`http://${host}:${3000 + i}/stats`);
-      if (!r.ok) throw Error("Stats unavailable");
-      return r.json();
+      try {
+        const r = await fetch(`http://${host}:${3000 + i}/stats`, {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!r.ok) throw Error("Stats unavailable");
+        return await r.json();
+      } catch {
+        // Preserve completed burst outcomes even if one worker's stats endpoint dies.
+        statsFailures++;
+        return { worker: i, unavailable: true };
+      }
     }),
   );
 const summary = (values: number[]) => {
@@ -241,11 +250,24 @@ try {
   await new Promise((r) => setTimeout(r, 1000));
   const recovery: Record<string, number> = {};
   for (const peer of sockets.slice(0, 100)) {
-    const status = await peer.request(post(peer.i));
-    recovery[status] = (recovery[status] ?? 0) + 1;
+    try {
+      const status = await peer.request(post(peer.i));
+      recovery[status] = (recovery[status] ?? 0) + 1;
+    } catch {
+      recovery.transportError = (recovery.transportError ?? 0) + 1;
+    }
   }
   stages.push({ phase, statuses: recovery, server: await readStats() });
   console.log(JSON.stringify(stages.at(-1)));
+  if (
+    statsFailures ||
+    unexpectedCloses ||
+    Object.keys(errors).length ||
+    Object.keys(recovery).some((status) => status !== "200")
+  )
+    throw Error(
+      "Capacity run lost connections, stats or recovery requests; inspect recorded stages",
+    );
 } catch (e) {
   failure = e instanceof Error ? e.message : String(e);
   console.error(failure);
@@ -260,6 +282,7 @@ try {
     phase,
     failure,
     unexpectedCloses,
+    statsFailures,
     errors,
     stages,
     limitations: [

@@ -8,6 +8,8 @@ Janitor is an open-source identity and activity-classification library. Recogniz
 
 [Introduction](https://janitor.holycoders.io/docs/introduction/) · [Quickstart](docs/GETTING-STARTED.md) · [Playground](https://janitor.holycoders.io/playground/) · [GitHub release](https://github.com/Holy-Coders/janitor/releases/tag/v0.9.0)
 
+**Classification is experimental.** Our [live Jev and detection results](docs/DETECTION-VALIDATION.md) include 120 real provider calls. Linked-activity fixtures showed useful risk responses, but the operator prompt did not reliably separate humans from agents in the public-data pilot. Verified identities and inferred labels stay separate.
+
 ## In the browser
 
 ```ts

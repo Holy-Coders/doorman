@@ -214,3 +214,7 @@ The source repositories' availability is not a blanket commercial training licen
 ## Experimental probe follow-up
 
 The September 23 font/runtime/linked-activity update reran the same public-data pipelines and cache-only Jev pilot (zero new calls). These datasets do not measure local-font probes, notification states, target alignment, trusted JA4 or correlated denied-operation groups, so the replay does not establish their accuracy. [Separate real-browser experiments](EXPERIMENTAL-DETECTION.md) report functional controls, including a separately launched no-CDP Chromium comparison. No detector or classifier was promoted from these results.
+
+## Expanded live Jev and font validation
+
+A separate [expanded validation report](DETECTION-VALIDATION.md) covers the current operator prompt, live API-activity judgments, one-feature controls, controlled browser probes and an audit of FP-Agent font collisions. The current operator prompt did not achieve useful separation in the 80-case panel. The earlier cached pilot and trained-classifier results above remain separate experiments.

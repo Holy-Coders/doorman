@@ -233,6 +233,12 @@
         "source": "docs/VALIDATION.md"
       },
       {
+        "slug": "detection-validation",
+        "title": "Live detection results",
+        "description": "What real Jev calls, public data and controlled browser probes actually showed.",
+        "source": "docs/DETECTION-VALIDATION.md"
+      },
+      {
         "slug": "review",
         "title": "Compare with other tools",
         "description": "Where Janitor fits alongside analytics, authentication and fingerprinting products.",

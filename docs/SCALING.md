@@ -10,7 +10,25 @@ Ten is the number of visitors sent to the matching engine, not the number of vis
 
 This keeps request work predictable, but it is not an exhaustive search. An older match can fall outside the lookup windows. When a group is too crowded to distinguish safely, Janitor can decline to restore an ID rather than force a match.
 
-Local tests include two million visitors and six million observations, with candidate lookup p95 of 6.46 ms in that recorded run. The methodology and limits are below. For open connections and requests per second, see the separate [capacity report](CAPACITY.md).
+Local tests include two million visitors and six million observations. Candidate lookup p95 was 47.40 ms in the latest repeat, versus 6.46 ms in the earlier recorded run. These are shared-host measurements, not a latency guarantee. The methodology and limits are below. For open connections and requests per second, see the separate [capacity report](CAPACITY.md), including its latest failed burst runs.
+
+## Latest six-million-observation repeat
+
+The expanded September 23 validation rebuilt the synthetic fixture on native Postgres 18.1: two million visitors, three observations each, 256 MiB shared buffers and a ten-connection pool. Seeding took 197.2 seconds and index creation took 91.4 seconds.
+
+| Measurement                                   |                                                Result |
+| --------------------------------------------- | ----------------------------------------------------: |
+| Target in old / indexed shortlist             |                                    0 / 100; 100 / 100 |
+| Indexed candidate lookup p50 / p95            |                                      20.54 / 47.40 ms |
+| Maximum database candidates returned          |                                                    10 |
+| Batched history p95                           |                                               4.42 ms |
+| Lookup + history at concurrency 10            |                      756.6 requests/sec; p95 20.76 ms |
+| Captured plan                                 | 514 rows; six intended indexes; zero sequential scans |
+| Cookie identification p95; evaluator disabled |                                               1.10 ms |
+
+The common identical-profile case abstained, and the selected missing-cookie case did not restore the expected ID. Retrieving a target among ten candidates is not the same as identifying it safely. This run validates bounded retrieval at this database size, not production identity accuracy. The isolated lookup latency was higher than the historical run; other host workloads were not controlled, so the cause and production latency remain unestablished.
+
+[Latest aggregate](benchmarks/scale-2000000x3-validation-2026-09-23.json) · [Latest plan](benchmarks/scale-2000000x3-plan-validation-2026-09-23.json)
 
 ## How the lookup stays limited
 

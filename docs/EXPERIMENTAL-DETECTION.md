@@ -60,7 +60,7 @@ Many unrelated people share the same font set. The same person can have differen
 
 `targets: true` briefly reads mouse pointer-down coordinates and the target element's rectangle. It retains three counters: eligible samples, clicks in the central 10% of both dimensions, and clicks in the top-left 5% of both dimensions. Targets smaller than 16 pixels, touch input and keyboard activations are excluded. Coordinates, rectangles, element names, text and selectors are never retained or sent. The feature extractor emits ratios only after ten eligible samples. Layout, assistive input and remote desktops can explain alignment.
 
-`focus: true` counts captured focus/blur events and input while `document.hasFocus()` is false. It records no screenshot information. Our local Chromium, Firefox and WebKit experiment took five screenshots per engine and observed **zero focus or visibility changes caused by those captures**. That finding does not cover every OS capture tool, but it rejects the assumption that ordinary browser screenshots necessarily blink focus.
+`focus: true` counts captured focus/blur events and input while `document.hasFocus()` is false. It records no screenshot information. Our local Chromium, Firefox and WebKit experiment took twenty screenshots per engine and observed **zero focus or visibility changes caused by those captures**. That finding does not cover every OS capture tool, but it rejects the assumption that ordinary browser screenshots necessarily blink focus.
 
 `decoy: true` adds a hidden, inert diagnostic button with no action, link or form submission. It is excluded from normal tab order and the accessibility tree. A programmatic `.click()` increments a counter. Keyboard activation of the real test button did not activate the decoy. That is a functional control, not a full assistive-technology study. Testing tools can activate the decoy; an activation does not prove an attack. You can also manage it separately with `createInteractionDecoy(container)` and its `snapshot()` / `destroy()` methods.
 
@@ -93,3 +93,7 @@ Run `pnpm benchmark:detection` for the local browser experiments. The [aggregate
 - [Chrome DevTools Page protocol](https://chromedevtools.github.io/devtools-protocol/tot/Page/): screenshot capture is a browser operation, not a guaranteed page focus event.
 - [Cloudflare Request metadata](https://developers.cloudflare.com/workers/runtime-apis/request/) and [JA4 availability](https://developers.cloudflare.com/bots/additional-configurations/ja3-ja4-fingerprint/).
 - [W3C fingerprinting guidance](https://www.w3.org/TR/fingerprinting-guidance/): combined signals can be identifying even when each is modest.
+
+## Latest validation
+
+The [expanded experiments](DETECTION-VALIDATION.md) include real Jev calls, same-process CDP controls, app-font downloads and a public font-data audit. The new operator prompt did not reliably distinguish humans from agents in its public-data sample. The default font weight remains zero and optional probes remain disabled unless configured.

@@ -12,6 +12,8 @@ Janitor adds private evidence about that activity to the identity context you al
 
 Classification cannot establish permission. An assistant can be legitimate; a human can be abusive. Inferred labels never replace your authenticated user ID or merge analytics profiles.
 
+Our [latest live Jev panel](DETECTION-VALIDATION.md) scored AUC 0.504 on 40 human and 40 agent sessions, with all 80 operator labels remaining unknown. This API exposes experimental assessments; reliable assistant or brand attribution has not been established.
+
 ## The new movement and timing evidence
 
 With `behavior: "extended"`, the browser computes a few additional summaries in constant memory. The default remains event counts.

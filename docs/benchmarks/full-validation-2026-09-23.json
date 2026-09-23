@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "date": "2026-09-23",
+  "baseRevision": "63ec3a3193101f825d8c67897c9c5bc4d69a7f31",
+  "worktreeModified": true,
+  "verification": {
+    "typescriptTests": 399,
+    "elixirTests": 67,
+    "phoenixTests": 2,
+    "siteBrowserTests": 17,
+    "browserAnalyticsTests": 3,
+    "pythonBenchmarkTests": 11,
+    "pythonSdkTests": 6,
+    "postgresNetworkTests": 38,
+    "postgresNetworkTestsAreSubsetOfTypeScriptSuite": true,
+    "typecheck": "passed",
+    "lint": "passed",
+    "protocolGeneration": "unchanged"
+  },
+  "benchmarks": {
+    "browser": "completed",
+    "runtimePhases": 128,
+    "localFontContexts": 18,
+    "externalDatasets": [
+      "FP-Stalker",
+      "FP-Agent",
+      "Balabit"
+    ],
+    "fpagentParityChecksPerVariant": 216384,
+    "fontAuditSessions": 7728,
+    "jevNewProviderRequests": 120,
+    "jevFinalCacheReplayNewRequests": 0,
+    "jevProviderFailures": 0,
+    "learningCli": "four synthetic labeled fixtures; all abstained; not accuracy evidence",
+    "scale": {
+      "visitors": 2000000,
+      "observations": 6000000,
+      "retrievalTrials": 100,
+      "retrievedTarget": 100,
+      "maxCandidates": 10,
+      "p95LookupMs": 47.4
+    },
+    "capacity200000": "FAILED both runs; unexpected socket closures; repeat recovery 75/100",
+    "capacity10000": "passed sweep and recovery; controlled 503s under overload"
+  },
+  "limitations": [
+    "Synthetic, public research and local service tests are separate evidence categories.",
+    "Shared developer host; not controlled production capacity or latency.",
+    "Jev operators-v3 AUC 0.504 in 80 existing pilot cases; no reliable attribution established.",
+    "No new model trained or promoted; no live direct-TypeSafe endpoint or new deployed Workers-binding test.",
+    "Application tests pass; classification quality and 200000-request burst resilience do not."
+  ]
+}

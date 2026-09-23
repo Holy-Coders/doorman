@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "sourceSha256": "e07847509a4851acb18e2390f5bf364c9b2f9c25588fce9f34929a872524cde3",
+  "sessionCount": 7728,
+  "collector": "Published FingerprintJS component; different list and method from Janitor local-12-v1",
+  "families": {
+    "Atlas Agent": {
+      "sessions": 994,
+      "measured": 994,
+      "missing": 0,
+      "empty": 0,
+      "distinctFontSets": 1,
+      "largestSetSessionCount": 994,
+      "pairCollisionRate": 1.0,
+      "sessionsWithRepeatedCaptures": 12,
+      "repeatStableSessions": 12,
+      "sessionsSharingSetWithHuman": 994
+    },
+    "Browser Use": {
+      "sessions": 1139,
+      "measured": 1139,
+      "missing": 0,
+      "empty": 1,
+      "distinctFontSets": 4,
+      "largestSetSessionCount": 472,
+      "pairCollisionRate": 0.34210010631223087,
+      "sessionsWithRepeatedCaptures": 113,
+      "repeatStableSessions": 112,
+      "sessionsSharingSetWithHuman": 472
+    },
+    "ChatGPT Agent": {
+      "sessions": 997,
+      "measured": 995,
+      "missing": 2,
+      "empty": 0,
+      "distinctFontSets": 1,
+      "largestSetSessionCount": 995,
+      "pairCollisionRate": 1.0,
+      "sessionsWithRepeatedCaptures": 325,
+      "repeatStableSessions": 325,
+      "sessionsSharingSetWithHuman": 0
+    },
+    "Claude": {
+      "sessions": 1002,
+      "measured": 1002,
+      "missing": 0,
+      "empty": 0,
+      "distinctFontSets": 2,
+      "largestSetSessionCount": 501,
+      "pairCollisionRate": 0.4995004995004995,
+      "sessionsWithRepeatedCaptures": 125,
+      "repeatStableSessions": 125,
+      "sessionsSharingSetWithHuman": 501
+    },
+    "Comet": {
+      "sessions": 1026,
+      "measured": 1026,
+      "missing": 0,
+      "empty": 0,
+      "distinctFontSets": 2,
+      "largestSetSessionCount": 525,
+      "pairCollisionRate": 0.49978605049208386,
+      "sessionsWithRepeatedCaptures": 1,
+      "repeatStableSessions": 1,
+      "sessionsSharingSetWithHuman": 525
+    },
+    "Human": {
+      "sessions": 546,
+      "measured": 546,
+      "missing": 0,
+      "empty": 0,
+      "distinctFontSets": 26,
+      "largestSetSessionCount": 267,
+      "pairCollisionRate": 0.25459555734785094,
+      "sessionsWithRepeatedCaptures": 0,
+      "repeatStableSessions": 0,
+      "sessionsSharingSetWithHuman": 546
+    },
+    "Manus": {
+      "sessions": 995,
+      "measured": 988,
+      "missing": 7,
+      "empty": 988,
+      "distinctFontSets": 1,
+      "largestSetSessionCount": 988,
+      "pairCollisionRate": 1.0,
+      "sessionsWithRepeatedCaptures": 84,
+      "repeatStableSessions": 84,
+      "sessionsSharingSetWithHuman": 0
+    },
+    "Skyvern": {
+      "sessions": 1029,
+      "measured": 1029,
+      "missing": 0,
+      "empty": 0,
+      "distinctFontSets": 2,
+      "largestSetSessionCount": 528,
+      "pairCollisionRate": 0.49985819786502705,
+      "sessionsWithRepeatedCaptures": 0,
+      "repeatStableSessions": 0,
+      "sessionsSharingSetWithHuman": 528
+    }
+  },
+  "limitations": [
+    "Session-level collisions include repeat visitors; not a false-person-match rate.",
+    "Published grouping includes fingerprint-derived identifiers; using them as font identity truth would be circular.",
+    "No claims about local-12-v1 accuracy, cross-device linking, malicious intent or assistant brand.",
+    "Font component errors and missing values stay unknown. Empty measured sets are reported separately."
+  ],
+  "productionPromoted": false
+}

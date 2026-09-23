@@ -1,0 +1,86 @@
+{
+  "recordedAt": "2026-09-23T20:12:17.824Z",
+  "postgres": "PostgreSQL 18.1 (Homebrew) on aarch64-apple-darwin25.2.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit",
+  "machine": {
+    "cpu": "Apple M2 Pro",
+    "logicalCpus": 12,
+    "hostMemoryBytes": 34359738368,
+    "database": "local PostgreSQL; shared_buffers=256MB; connection pool=10"
+  },
+  "data": {
+    "visitors": 2000000,
+    "initialObservations": 6000000,
+    "observationsPerVisitor": 3,
+    "commonProfilePercent": 80,
+    "source": "synthetic; not real-world identification accuracy",
+    "visitors_bytes": 402300928,
+    "observations_bytes": 7476551680
+  },
+  "seedSeconds": 197.2,
+  "indexBuildSeconds": 91.4,
+  "oldLookup": {
+    "samples": 100,
+    "p50Ms": 0.34,
+    "p95Ms": 7.06,
+    "maxMs": 35,
+    "targetFound": 0,
+    "outOf": 100
+  },
+  "indexedLookup": {
+    "samples": 100,
+    "p50Ms": 20.54,
+    "p95Ms": 47.4,
+    "maxMs": 152.45,
+    "targetFound": 100,
+    "outOf": 100,
+    "maxCandidates": 10
+  },
+  "batchedHistory": {
+    "samples": 100,
+    "p50Ms": 0.34,
+    "p95Ms": 4.42,
+    "maxMs": 41.44
+  },
+  "queryPlan": {
+    "executionMs": 0.198,
+    "returnedRows": 514,
+    "sequentialScans": 0,
+    "indexes": [
+      "idx_observation_screen_hardware",
+      "idx_observation_screen_timezone",
+      "idx_observation_graphics_timezone",
+      "idx_observation_platform_browser",
+      "idx_observation_webgl_renderer",
+      "idx_observation_timezone_browser"
+    ],
+    "sharedHitBlocks": 435,
+    "sharedReadBlocks": 0
+  },
+  "retrieval": {
+    "concurrency": 10,
+    "requests": 200,
+    "samples": 200,
+    "p50Ms": 11.64,
+    "p95Ms": 20.76,
+    "maxMs": 29.13,
+    "requestsPerSecond": 756.6
+  },
+  "engine": {
+    "missingCookieMs": 11.48,
+    "restoredExpectedId": false,
+    "cookie": {
+      "samples": 30,
+      "p50Ms": 0.64,
+      "p95Ms": 1.1,
+      "maxMs": 1.17
+    },
+    "commonProfileAbstained": true,
+    "evaluator": "disabled; no paid inference"
+  },
+  "limitations": [
+    "Single local database; warm-cache mixed reads; no production SLA or regional network latency.",
+    "Synthetic retrieval recall is not identity accuracy. Common identical profiles intentionally abstain.",
+    "Seeded history repeats each synthetic profile; it stresses storage, not real browser drift.",
+    "Does not measure AI provider capacity, D1 capacity, or authenticated-account and optional learning workloads."
+  ]
+}

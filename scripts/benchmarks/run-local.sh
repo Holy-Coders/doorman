@@ -14,7 +14,13 @@ if docker network inspect janitor-capacity-local >/dev/null 2>&1; then
 fi
 created=()
 network_created=0
+run_status=0
+mkdir -p artifacts/benchmarks/diagnostics
 cleanup() {
+  for name in ${created[@]+"${created[@]}"}; do
+    docker logs "$name" >"artifacts/benchmarks/diagnostics/$name.log" 2>&1 || true
+    docker inspect --format '{{json .State}}' "$name" >"artifacts/benchmarks/diagnostics/$name-state.json" 2>/dev/null || true
+  done
   for name in ${created[@]+"${created[@]}"}; do docker rm -fv "$name" >/dev/null 2>&1 || true; done
   if [ "$network_created" = 1 ]; then docker network rm janitor-capacity-local >/dev/null 2>&1 || true; fi
 }
@@ -55,7 +61,10 @@ docker run --name janitor-capacity-client --network janitor-capacity-local --cpu
   -e JANITOR_BENCHMARK_CONNECTIONS="${JANITOR_BENCHMARK_CONNECTIONS:-200000}" \
   -e JANITOR_BENCHMARK_RATES="${JANITOR_BENCHMARK_RATES:-100}" \
   -e JANITOR_BENCHMARK_OUTPUT=/results/connections-current.json \
-  node:22-alpine node --max-old-space-size=1300 /bench/client.mjs
+  node:22-alpine node --max-old-space-size=1300 /bench/client.mjs || run_status=1
+# Keep first-run diagnostics before restarting; the throughput sweep is independent.
+docker logs janitor-capacity-server >artifacts/benchmarks/diagnostics/server-before-restart.log 2>&1
+docker exec janitor-capacity-server cat /sys/fs/cgroup/memory.events >artifacts/benchmarks/diagnostics/memory-before-restart.txt 2>/dev/null || true
 docker restart janitor-capacity-server >/dev/null
 wait_for server_ready
 created+=(janitor-capacity-throughput)
@@ -64,4 +73,5 @@ docker run --name janitor-capacity-throughput --network janitor-capacity-local -
   --mount "type=bind,source=$PWD/docs/benchmarks,target=/results" \
   -e JANITOR_BENCHMARK_CONNECTIONS=10000 -e JANITOR_BENCHMARK_RATES=100,500,1000,2000 \
   -e JANITOR_BENCHMARK_OUTPUT=/results/throughput-current.json \
-  node:22-alpine node --max-old-space-size=512 /bench/client.mjs
+  node:22-alpine node --max-old-space-size=512 /bench/client.mjs || run_status=1
+exit "$run_status"

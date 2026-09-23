@@ -33,7 +33,10 @@
     "benchmark:jev": "pnpm build && tsx scripts/benchmarks/external/jev-pilot.ts",
     "test:external": "\"${CLASSIFIER_PYTHON:-tools/classifier/.venv/bin/python}\" -m unittest discover -s tools/benchmarks -p \"test_*.py\" -v",
     "benchmark:compare": "tsx scripts/benchmarks/external/compare.ts",
-    "benchmark:detection": "pnpm build && pnpm --filter @janitor/example-node exec esbuild ../../packages/browser/src/index.ts --bundle --format=esm --outfile=../../artifacts/browser-benchmark/collector.js && tsx tests/benchmarks/detection.ts"
+    "benchmark:detection": "pnpm build && pnpm --filter @janitor/example-node exec esbuild ../../packages/browser/src/index.ts --bundle --format=esm --outfile=../../artifacts/browser-benchmark/collector.js && tsx tests/benchmarks/detection.ts",
+    "benchmark:detection:full": "pnpm benchmark:detection && tsx tests/benchmarks/font-validation.ts && tsx tests/benchmarks/runtime-validation.ts",
+    "benchmark:jev:full": "pnpm build && tsx scripts/benchmarks/external/jev-validation.ts",
+    "benchmark:fonts": "\"${CLASSIFIER_PYTHON:-tools/classifier/.venv/bin/python}\" tools/benchmarks/fonts.py"
   },
   "devDependencies": {
     "@amplitude/analytics-browser": "^2.46.0",

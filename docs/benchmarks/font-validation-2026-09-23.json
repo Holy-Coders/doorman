@@ -1,0 +1,593 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-23T19:56:20.136Z",
+  "contexts": 18,
+  "hostCount": 1,
+  "rows": [
+    {
+      "engine": "chromium",
+      "context": 0,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "chromium",
+      "context": 1,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "chromium",
+      "context": 2,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "chromium",
+      "context": 3,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "chromium",
+      "context": 4,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "chromium",
+      "context": 5,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "chromium",
+      "contexts": 6,
+      "measuredFontMasks": 6,
+      "distinctFontMasks": 1,
+      "nonlocalRequests": 0
+    },
+    {
+      "engine": "firefox",
+      "context": 0,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "context": 1,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "context": 2,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "context": 3,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "context": 4,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "context": 5,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "granted",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "firefox",
+      "contexts": 6,
+      "measuredFontMasks": 6,
+      "distinctFontMasks": 1,
+      "nonlocalRequests": 0
+    },
+    {
+      "engine": "webkit",
+      "context": 0,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "context": 1,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "context": 2,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "context": 3,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "context": 4,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "context": 5,
+      "fontProbeAvailable": true,
+      "downloadedFontCount": 1,
+      "localFontsUnchangedAfterDownload": true,
+      "permissionGrantSupported": true,
+      "permissions": {
+        "initial": {
+          "pageFontsLoaded": 0,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        },
+        "granted": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "granted"
+        },
+        "reset": {
+          "pageFontsLoaded": 1,
+          "pageFontsLoading": 0,
+          "pageFontsFailed": 0,
+          "notificationPermission": "default",
+          "notificationQuery": "prompt"
+        }
+      }
+    },
+    {
+      "engine": "webkit",
+      "contexts": 6,
+      "measuredFontMasks": 6,
+      "distinctFontMasks": 1,
+      "nonlocalRequests": 0
+    }
+  ],
+  "limitations": [
+    "Same host and installed fonts; fresh contexts are not independent physical devices or people.",
+    "Successful permission overrides are test controls, not an enterprise-policy or real-user permission study.",
+    "No detection accuracy, cross-device identity or local-font inventory bypass established."
+  ],
+  "productionPromoted": false
+}

@@ -1,0 +1,566 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-23T19:57:52.318Z",
+  "manifest": {
+    "featuresSha256": "af0d826145879151d1976184dda126728d8f52540bcaad307bc625159118ac0c",
+    "selectionSha256": "eea1bce4df8a067c405ab315157742be4472153b7eae4e7b8df0e7a0c46f3352",
+    "browserCasesSha256": "938ad8084ffa8a6102b0192ec556ebcb65f2c39b6a7fec4f9288724f5ecf82ed",
+    "codeSha256": "1b919b4f81c8ed3b99fa87e26d22dd42cbe42ad51bda631ff37e6c57e2196d04",
+    "operatorThreshold": 0.75,
+    "operatorMargin": 0.15,
+    "riskThreshold": 0.85
+  },
+  "manifestDigest": "b4edca296205403d13e8ff8fd3082fb5eef8960982dc82d4448661885d6c2448",
+  "transport": "Real Cloudflare AI REST typesafe/jev via production Workers AI evaluator; 20s offline deadline",
+  "allowance": {
+    "maxCalls": 120,
+    "automaticRetries": 0,
+    "maxRequestBytes": 32768,
+    "gatewayPayloadLogging": false
+  },
+  "usage": {
+    "attempts": 120,
+    "completed": 120,
+    "inputBytes": 798271,
+    "inputTokens": 210000,
+    "outputTokens": 7331,
+    "p50LatencyMs": 556,
+    "p95LatencyMs": 2504,
+    "aboveDefault1200ms": 20
+  },
+  "newCalls": 16,
+  "failures": [],
+  "operators": {
+    "cases": 80,
+    "answered": 80,
+    "humanCases": 40,
+    "agentCases": 40,
+    "rocAuc": 0.5040625,
+    "aucDefinition": "max(assistant, automation); no tuning",
+    "scoreRange": [
+      0.11,
+      0.31
+    ],
+    "truePositiveAt085": 0,
+    "falsePositiveAt085": 0,
+    "labelCounts": {
+      "human": {
+        "human": 0,
+        "assistant": 0,
+        "automation": 0,
+        "unknown": 40
+      },
+      "agent": {
+        "human": 0,
+        "assistant": 0,
+        "automation": 0,
+        "unknown": 40
+      }
+    },
+    "evidenceSupported": 60
+  },
+  "browser": [
+    {
+      "engine": "chromium",
+      "scenario": "baseline",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.9,
+        "automation": 0.83,
+        "suspicious": 0.46
+      }
+    },
+    {
+      "engine": "chromium",
+      "scenario": "centered-script",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.94,
+        "automation": 0.84,
+        "suspicious": 0.64
+      }
+    },
+    {
+      "engine": "chromium",
+      "scenario": "keyboard-script",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.93,
+        "automation": 0.85,
+        "suspicious": 0.69
+      }
+    },
+    {
+      "engine": "chromium",
+      "scenario": "failed-app-font",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.93,
+        "automation": 0.85,
+        "suspicious": 0.69
+      }
+    },
+    {
+      "engine": "chromium",
+      "scenario": "injected-test-marker",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.84,
+        "suspicious": 0.72
+      }
+    },
+    {
+      "engine": "chromium",
+      "scenario": "unavailable-font-api",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.86,
+        "suspicious": 0.7
+      }
+    },
+    {
+      "engine": "firefox",
+      "scenario": "baseline",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.92,
+        "automation": 0.82,
+        "suspicious": 0.41
+      }
+    },
+    {
+      "engine": "firefox",
+      "scenario": "centered-script",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.94,
+        "automation": 0.84,
+        "suspicious": 0.61
+      }
+    },
+    {
+      "engine": "firefox",
+      "scenario": "keyboard-script",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.93,
+        "automation": 0.84,
+        "suspicious": 0.66
+      }
+    },
+    {
+      "engine": "firefox",
+      "scenario": "failed-app-font",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.93,
+        "automation": 0.83,
+        "suspicious": 0.66
+      }
+    },
+    {
+      "engine": "firefox",
+      "scenario": "injected-test-marker",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.85,
+        "suspicious": 0.7
+      }
+    },
+    {
+      "engine": "firefox",
+      "scenario": "unavailable-font-api",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.92,
+        "automation": 0.85,
+        "suspicious": 0.72
+      }
+    },
+    {
+      "engine": "webkit",
+      "scenario": "baseline",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.82,
+        "suspicious": 0.42
+      }
+    },
+    {
+      "engine": "webkit",
+      "scenario": "centered-script",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.92,
+        "automation": 0.85,
+        "suspicious": 0.67
+      }
+    },
+    {
+      "engine": "webkit",
+      "scenario": "keyboard-script",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.84,
+        "suspicious": 0.73
+      }
+    },
+    {
+      "engine": "webkit",
+      "scenario": "failed-app-font",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.83,
+        "suspicious": 0.71
+      }
+    },
+    {
+      "engine": "webkit",
+      "scenario": "injected-test-marker",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.89,
+        "automation": 0.84,
+        "suspicious": 0.75
+      }
+    },
+    {
+      "engine": "webkit",
+      "scenario": "unavailable-font-api",
+      "deterministicSimilarity": 1,
+      "result": {
+        "sameVisitor": 0.9,
+        "automation": 0.84,
+        "suspicious": 0.76
+      }
+    }
+  ],
+  "activity": [
+    {
+      "scenario": "sparse",
+      "result": {
+        "automation": 0.19,
+        "suspicious": 0.06
+      }
+    },
+    {
+      "scenario": "benign-volume",
+      "result": {
+        "automation": 0.65,
+        "suspicious": 0.07
+      }
+    },
+    {
+      "scenario": "server-errors",
+      "result": {
+        "automation": 0.44,
+        "suspicious": 0.11
+      }
+    },
+    {
+      "scenario": "authorized-agent",
+      "result": {
+        "automation": 0.88,
+        "suspicious": 0.08
+      }
+    },
+    {
+      "scenario": "local-denials",
+      "result": {
+        "automation": 0.59,
+        "suspicious": 0.58
+      }
+    },
+    {
+      "scenario": "linked-denials-080",
+      "result": {
+        "automation": 0.67,
+        "suspicious": 0.74
+      }
+    },
+    {
+      "scenario": "linked-denials-095",
+      "result": {
+        "automation": 0.67,
+        "suspicious": 0.75
+      }
+    },
+    {
+      "scenario": "linked-benign-095",
+      "result": {
+        "automation": 0.63,
+        "suspicious": 0.12
+      }
+    },
+    {
+      "scenario": "linked-retries",
+      "result": {
+        "automation": 0.37,
+        "suspicious": 0.47
+      }
+    },
+    {
+      "scenario": "linked-overlap-3",
+      "result": {
+        "automation": 0.69,
+        "suspicious": 0.74
+      }
+    },
+    {
+      "scenario": "delegated-denials",
+      "result": {
+        "automation": 0.77,
+        "suspicious": 0.76
+      }
+    },
+    {
+      "scenario": "linked-verified-denials",
+      "result": {
+        "automation": 0.7,
+        "suspicious": 0.77
+      }
+    },
+    {
+      "scenario": "linked-browser-denials",
+      "result": {
+        "automation": 0.64,
+        "suspicious": 0.76
+      }
+    },
+    {
+      "scenario": "non-sensitive-denials",
+      "result": {
+        "automation": 0.61,
+        "suspicious": 0.46
+      }
+    }
+  ],
+  "ablations": [
+    {
+      "scenario": "baseline",
+      "result": {
+        "sameVisitor": 0.94,
+        "automation": 0.09,
+        "suspicious": 0.1
+      }
+    },
+    {
+      "scenario": "missing-signals",
+      "result": {
+        "sameVisitor": 0.26,
+        "automation": 0.12,
+        "suspicious": 0.12
+      }
+    },
+    {
+      "scenario": "fonts-empty",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.1,
+        "suspicious": 0.17
+      }
+    },
+    {
+      "scenario": "fonts-present",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.1,
+        "suspicious": 0.18
+      }
+    },
+    {
+      "scenario": "own-webdriver",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.18,
+        "suspicious": 0.25
+      }
+    },
+    {
+      "scenario": "runtime-marker",
+      "result": {
+        "sameVisitor": 0.93,
+        "automation": 0.09,
+        "suspicious": 0.15
+      }
+    },
+    {
+      "scenario": "permission-mismatch",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.12,
+        "suspicious": 0.16
+      }
+    },
+    {
+      "scenario": "font-download-failed",
+      "result": {
+        "sameVisitor": 0.92,
+        "automation": 0.09,
+        "suspicious": 0.16
+      }
+    },
+    {
+      "scenario": "font-download-loaded",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.1,
+        "suspicious": 0.14
+      }
+    },
+    {
+      "scenario": "center-targets",
+      "result": {
+        "sameVisitor": 0.9,
+        "automation": 0.16,
+        "suspicious": 0.33
+      }
+    },
+    {
+      "scenario": "corner-targets",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.13,
+        "suspicious": 0.25
+      }
+    },
+    {
+      "scenario": "unfocused-input",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.14,
+        "suspicious": 0.27
+      }
+    },
+    {
+      "scenario": "focus-changes",
+      "result": {
+        "sameVisitor": 0.93,
+        "automation": 0.12,
+        "suspicious": 0.18
+      }
+    },
+    {
+      "scenario": "diagnostic-decoy",
+      "result": {
+        "sameVisitor": 0.91,
+        "automation": 0.13,
+        "suspicious": 0.26
+      }
+    },
+    {
+      "scenario": "webdriver",
+      "result": {
+        "sameVisitor": 0.78,
+        "automation": 0.86,
+        "suspicious": 0.46
+      }
+    },
+    {
+      "scenario": "combined-experimental",
+      "result": {
+        "sameVisitor": 0.87,
+        "automation": 0.27,
+        "suspicious": 0.51
+      }
+    }
+  ],
+  "smoke": {
+    "lookup0": {
+      "graphics": false,
+      "locale": false
+    },
+    "lookup1": {
+      "graphics": false,
+      "locale": true
+    },
+    "lookup2": {
+      "graphics": false,
+      "locale": false
+    },
+    "candidates0": [
+      {
+        "sameVisitor": 0.96,
+        "automation": 0.84,
+        "suspicious": 0.54
+      },
+      {
+        "sameVisitor": 0.05,
+        "automation": 0.84,
+        "suspicious": 0.54
+      }
+    ],
+    "candidates1": [
+      {
+        "sameVisitor": 0.42,
+        "automation": 0.5,
+        "suspicious": 0.12
+      },
+      {
+        "sameVisitor": 0.91,
+        "automation": 0.5,
+        "suspicious": 0.12
+      }
+    ],
+    "crossDevice": {},
+    "operatorReferences0": {
+      "modelVersion": "jev-1.13.0/operators-v3",
+      "scores": {
+        "human": 0.13,
+        "assistant": 0.08,
+        "automation": 0.12
+      },
+      "abuse": 0.11,
+      "families": [
+        {
+          "family": "synthetic-reference",
+          "score": 0.14
+        }
+      ],
+      "links": [
+        {
+          "windowId": "fixture-reference",
+          "score": 0.14
+        }
+      ]
+    },
+    "operatorReferences1": {
+      "modelVersion": "jev-1.13.0/operators-v3",
+      "scores": {
+        "human": 0.13,
+        "assistant": 0.1,
+        "automation": 0.51
+      },
+      "abuse": 0.15,
+      "families": [
+        {
+          "family": "synthetic-reference",
+          "score": 0.59
+        }
+      ],
+      "links": [
+        {
+          "windowId": "fixture-reference",
+          "score": 0.25
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "80 existing frozen pilot cases, not a fresh independent test population; no fitting on responses.",
+    "Operator prompt and feature set both changed; this does not isolate feature gain.",
+    "No runtime/font/permission/target/focus/decoy measurements are present in the third-party projection. Missing stays missing.",
+    "Browser fixtures are scripted on one host, not human or assistant-brand accuracy labels. Later fixture stages accumulate earlier actions.",
+    "Linked-activity fixtures are synthetic. Application-supplied link confidence is not independently validated here.",
+    "Reference-family and cross-device checks exercise APIs, not verified-person or brand attribution accuracy.",
+    "No live direct-TypeSafe endpoint test; Workers AI uses the shared production Jev methods.",
+    "No training, fine-tuning, automatic blocking or production model promotion."
+  ],
+  "productionPromoted": false
+}

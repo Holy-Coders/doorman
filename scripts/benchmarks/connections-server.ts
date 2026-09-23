@@ -43,9 +43,16 @@ if (cluster.isPrimary) {
   await db.end();
   for (let i = 0; i < workers; i++)
     cluster.fork({ JANITOR_BENCHMARK_WORKER: String(i) });
-  cluster.on("exit", (_worker, code) => {
-    if (code) {
-      console.error("Benchmark worker failed", code);
+  cluster.on("exit", (worker, code, signal) => {
+    if (code || signal) {
+      console.error(
+        JSON.stringify({
+          event: "benchmark-worker-exit",
+          worker: worker.id,
+          code,
+          signal,
+        }),
+      );
       process.exitCode = 1;
     }
   });
