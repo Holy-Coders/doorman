@@ -28,3 +28,9 @@ Reference review, September 23, 2026: https://resend.com for a direct product ex
 ## Review
 
 Check desktop and narrow-screen screenshots, keyboard navigation, all internal links, readable code blocks, reduced-motion/data-saving fallbacks and the absence of third-party requests. Keep scores described as estimates, explain Jev on first use, and distinguish a browser from a person throughout.
+
+## Theme and language refinement
+
+The hero now uses the social image's short headline, “Know who’s behind the request.” The broader agentic-era explanation belongs beside the analytics illustration below. Preserve the vector J in both modes: mint on ink, deep green on a light mineral surface. Light tokens use #f5f8f6, #ffffff, #eaf1ec, #152d22 and #12543b; theme follows the system until explicitly changed. The film remains secondary and masked into the page.
+
+A global language selector keeps the same documentation topic while changing setup, installation and API instructions. It uses shareable static language URLs and local-only preferences, without adding language sections to the sidebar. TypeScript and Elixir are native engines; Python and Go are transport clients. Shared engine reference material must say where it runs. Search results and global navigation retain the selected language.

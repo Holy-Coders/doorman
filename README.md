@@ -6,7 +6,7 @@ Durable first-party visitor identity from browser history, with optional AI-assi
 
 Janitor is an open-source library for recognizing returning browsers. It runs on your server, stores a small history in your database, and can use **Jev**, an AI model from TypeSafe, to help assess matches and technical risk.
 
-[Introduction](https://janitor.holycoders.io/docs/introduction/) · [Quickstart](docs/GETTING-STARTED.md) · [Playground](https://janitor.holycoders.io/playground/) · [GitHub release](https://github.com/Holy-Coders/janitor/releases/tag/v0.8.1)
+[Introduction](https://janitor.holycoders.io/docs/introduction/) · [Quickstart](docs/GETTING-STARTED.md) · [Playground](https://janitor.holycoders.io/playground/) · [GitHub release](https://github.com/Holy-Coders/janitor/releases/tag/v0.9.0)
 
 ## In the browser
 
@@ -96,7 +96,7 @@ The handler uses standard Web Request/Response APIs. The [Fastify example](examp
 
 ```elixir
 # mix.exs
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.1", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.9.0", sparse: "packages/elixir"}
 ```
 
 ```elixir
@@ -106,7 +106,7 @@ Janitor.handle(conn, janitor)
 
 This implementation runs natively in Elixir with Ecto/Postgres. The package includes the browser client. [Phoenix installation](packages/elixir/README.md).
 
-Apply the database migrations before using any adapter. The v0.8.1 JavaScript release includes migrations `0001` through `0007`; the Elixir package provides Ecto migration functions. Each app should use its own database or schema.
+Apply the database migrations before using any adapter. The v0.9.0 JavaScript release includes migrations `0001` through `0008`; the Elixir package provides Ecto migration functions. Each app should use its own database or schema.
 
 ## Read risk privately
 
@@ -133,11 +133,12 @@ Your existing authentication system verifies people and agents. Janitor can reco
 - [Understand browsers, people and agents](docs/CONCEPTS.md).
 - [Register users, verified keys and agent permissions](docs/AGENTIC-IDENTITY.md).
 - [Connect PostHog, Mixpanel or Segment](docs/ANALYTICS.md).
+- [Understand API activity with Phoenix or Web middleware](docs/API-ACTIVITY.md).
 - [Experiment with optional login feedback](docs/LEARNING.md).
 
 ## Install or run an example
 
-Janitor v0.8.1 is a developer preview. Packages are available as GitHub archives; they are not yet published to npm or Hex. [Installation instructions](docs/LANGUAGES.md) cover npm, pnpm, Bun, Mix and existing applications.
+Janitor v0.9.0 is a developer preview. Packages are available as GitHub archives; they are not yet published to npm or Hex. [Installation instructions](docs/LANGUAGES.md) cover npm, pnpm, Bun, Mix and existing applications.
 
 To work from source:
 
@@ -172,3 +173,5 @@ Janitor collects a modest set of browser-native signals and aggregate event coun
 Similar browser configurations can be indistinguishable, and client signals can be forged. The tests verify behavior and failure handling; they do not establish real-user matching accuracy or fraud-detection quality. Read the [validation record](docs/VALIDATION.md) before relying on the scores.
 
 The public website is an Astro app in `site/`. Run `pnpm site:dev`, `pnpm site:check` or `pnpm site:test` from the root. Its local playground examples use made-up data. An explicitly activated live demo uses Janitor itself, with isolated browser history, private scores, cached Jev calls and a shared lifetime allowance. [How the playground works](docs/PLAYGROUND.md).
+
+Optional [API activity middleware](docs/API-ACTIVITY.md) adds private Jev judgments from bounded server request aggregates. [Analytics bridges](docs/ANALYTICS.md) support PostHog, Mixpanel, Segment, Amplitude and RudderStack; [warehouse exports](docs/WAREHOUSES.md) feed Snowflake, BigQuery or an existing JSONL pipeline. [Python](packages/python/README.md) and [Go](packages/go/README.md) clients can mount first-party routes backed by your Janitor engine. Choose your language and theme in the [documentation](https://janitor.holycoders.io/docs/introduction/).

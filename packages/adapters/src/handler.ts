@@ -1,4 +1,6 @@
 import { createEvidence, requestEvidence } from "./evidence.js";
+import { createApiActivity } from "./activity.js";
+import type { ApiActivityOptions } from "./activity.js";
 import type { EvidenceOptions, TrustedRequestEvidence } from "./evidence.js";
 import { createLearning } from "./learning.js";
 import { createProtection } from "./protection.js";
@@ -26,6 +28,7 @@ import type {
   ProtectionStorage,
   EvidenceStorage,
   RequestEvidence,
+  ApiActivityStorage,
 } from "@janitor/core";
 import { readPayload, RequestError } from "./validation.js";
 const EVALUATOR_STORAGE_GRACE_MS = 1000;
@@ -35,6 +38,7 @@ export type AdapterOptions = RetentionOptions &
     exposeClientScores?: boolean;
     protection?: ProtectionOptions;
     evidence?: true | EvidenceOptions;
+    activity?: ApiActivityOptions;
     environment?: "production" | "development" | "test";
     cookie?: { name?: string; maxAgeDays?: number; secure?: boolean };
     maxBodyBytes?: number;
@@ -70,6 +74,7 @@ export function createVisitorHandler(
   learningStorage?: LearningStorage,
   protectionStorage?: ProtectionStorage,
   evidenceStorage?: EvidenceStorage,
+  activityStorage?: ApiActivityStorage,
 ) {
   const maxInFlight = options.maxInFlightRequests ?? 64;
   if (!Number.isInteger(maxInFlight) || maxInFlight < 1 || maxInFlight > 1024)
@@ -112,6 +117,33 @@ export function createVisitorHandler(
     );
   const guardedEvaluator =
     evaluator && protection ? protection.wrap(evaluator) : evaluator;
+  if (
+    options.activity &&
+    (!options.identity || !activityStorage || (evaluator && !protectionStorage))
+  )
+    throw new Error(
+      "API activity requires identity, activity storage and evaluator protection storage",
+    );
+  const activityProtection =
+    options.activity && !protection && options.identity && protectionStorage
+      ? createProtection(
+          protectionStorage,
+          { ...options.identity, evaluator: { maxCalls: 60 } },
+          options.evaluatorTimeoutMs ?? 1200,
+        )
+      : undefined;
+  const activity =
+    options.activity && options.identity && activityStorage
+      ? createApiActivity(
+          activityStorage,
+          options.identity,
+          options.activity,
+          evaluator && activityProtection
+            ? activityProtection.wrap(evaluator)
+            : guardedEvaluator,
+          (options.evaluatorTimeoutMs ?? 1200) + EVALUATOR_STORAGE_GRACE_MS,
+        )
+      : undefined;
   const learner =
     options.learning && options.identity && learningStorage
       ? createLearning(
@@ -360,6 +392,7 @@ export function createVisitorHandler(
       };
     },
     identities,
+    activity,
     evidence,
     learning: learner
       ? { reports: learner.reports, deleteSession: learner.deleteSession }
@@ -370,6 +403,8 @@ export function createVisitorHandler(
       await learner?.cleanup();
       await protection?.cleanup();
       await evidence?.cleanup();
+      await activity?.cleanup();
+      await activityProtection?.cleanup();
       return progress;
     },
     // Server-side only. Applications must authorize erasure and avoid automatic re-identification afterward.

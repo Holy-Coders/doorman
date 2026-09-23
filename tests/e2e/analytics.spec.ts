@@ -168,3 +168,68 @@ test("real analytics SDKs link login to their anonymous device, then separate an
   );
   expect(external).toEqual([]);
 });
+
+test("real Amplitude SDK receives Janitor identities and rotates device IDs at account boundaries", async ({
+  page,
+}) => {
+  const events: Record<string, unknown>[] = [];
+  const external: string[] = [];
+  await page.route("**/*", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.origin !== "http://127.0.0.1:4318") {
+      external.push(url.href);
+      return route.abort();
+    }
+    if (url.pathname === "/vendor/amplitude") {
+      events.push(...route.request().postDataJSON().events);
+      return route.fulfill({
+        json: {
+          code: 200,
+          events_ingested: 1,
+          payload_size_bytes: 100,
+          server_upload_time: Date.now(),
+        },
+      });
+    }
+    if (url.pathname.startsWith("/vendor/"))
+      return route.fulfill({ json: { status: 1 } });
+    return route.continue();
+  });
+  await page.goto("/analytics-test");
+  await page.waitForFunction(() => !!window.analyticsDemo);
+  await page.evaluate(() => window.analyticsDemo.amplitude.start());
+  const before = await page.evaluate(() =>
+    window.analyticsDemo.amplitude.snapshot(),
+  );
+  await page.evaluate(() =>
+    window.analyticsDemo.amplitude.identify("person-one"),
+  );
+  expect(
+    await page.evaluate(() => window.analyticsDemo.amplitude.snapshot()),
+  ).toEqual({ ...before, userId: "person-one" });
+  await expect
+    .poll(() =>
+      events.some(
+        (e) => e.event_type === "$identify" && e.user_id === "person-one",
+      ),
+    )
+    .toBe(true);
+  await page.evaluate(() =>
+    window.analyticsDemo.amplitude.identify("person-two"),
+  );
+  const second = await page.evaluate(() =>
+    window.analyticsDemo.amplitude.snapshot(),
+  );
+  expect(second.deviceId).not.toBe(before.deviceId);
+  expect(second.userId).toBe("person-two");
+  await page.evaluate(() => window.analyticsDemo.amplitude.reset());
+  const after = await page.evaluate(() =>
+    window.analyticsDemo.amplitude.snapshot(),
+  );
+  expect(after.userId).toBeUndefined();
+  expect(after.deviceId).not.toBe(second.deviceId);
+  expect(JSON.stringify(events)).not.toMatch(
+    /janitor_automation|collectedSignals/,
+  );
+  expect(external).toEqual([]);
+});

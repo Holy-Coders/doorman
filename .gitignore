@@ -21,3 +21,8 @@ site/public/llms.txt
 **/deps/
 **/erl_crash.dump
 packages/elixir/*.tar
+
+site/public/search-index-*.json
+.venv/
+__pycache__/
+*.egg-info/

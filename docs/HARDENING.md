@@ -91,6 +91,8 @@ The returned `evidence` object keeps browser measurements, authenticated session
 
 This evidence is returned separately by `assess()` and is **never included in `handle()` JSON**, even with `exposeClientScores: true`. It is not added to browser histories or sent to Jev. Jev's narrow technical risk questions and deterministic identity matching remain unchanged. Activity and edge judgments are independent inputs for application policy, not unexplained adjustments to identity confidence. Application code must also keep them out of hydration props, browser analytics and logs.
 
+For selected API routes, the separate [API activity middleware](API-ACTIVITY.md) can record aggregate request patterns and send bounded summaries to its own Jev risk questions. It reuses inference protection, has its own cache and never changes browser identity confidence or automatically grants access.
+
 ### Cloudflare evidence
 
 ```ts

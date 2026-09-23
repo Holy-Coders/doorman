@@ -2,7 +2,7 @@
 
 Choose the package for the code that runs on your server. TypeScript applications use `@janitor/*`; Phoenix applications use the native `janitor` Mix dependency. Both can serve the same browser client.
 
-Janitor v0.8.1 is a developer preview distributed through GitHub. The packages are not yet published to npm or Hex, so use the release archive or Git dependency below. You do not need a Janitor API key. An optional Jev evaluation uses credentials for your chosen AI provider.
+Janitor v0.9.0 is a developer preview distributed through GitHub. The packages are not yet published to npm or Hex, so use the release archive or Git dependency below. You do not need a Janitor API key. An optional Jev evaluation uses credentials for your chosen AI provider.
 
 Want to try it before adding dependencies to an existing app? Follow [your first visitor ID](GETTING-STARTED.md).
 
@@ -10,7 +10,7 @@ Want to try it before adding dependencies to an existing app? Follow [your first
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.8.1/janitor-0.8.1.tar.gz -o janitor.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.9.0/janitor-0.9.0.tar.gz -o janitor.tar.gz
 tar -xzf janitor.tar.gz
 # Choose your package manager:
 npm install
@@ -30,7 +30,7 @@ Use Node 22.12+ for Node/Next.js examples. Bun can install and import the same W
 ## Elixir / Mix / Phoenix
 
 ```elixir
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.1", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.9.0", sparse: "packages/elixir"}
 ```
 
 ```sh
@@ -75,4 +75,6 @@ resp, err := client.Do(req)
 
 Empty observations make these transport checks, not useful identity benchmarks. Phoenix's browser route additionally requires its session and CSRF token. For actual website integration use the browser client, which collects signals, carries same-origin cookies and supports CSRF headers. The TypeScript adapters use standard Web Request/Response and can also be mounted on a host/framework that supports those APIs.
 
-Native matching engines currently exist for TypeScript and Elixir. Python, Go, Ruby and PHP applications can use the HTTP contract, but there are no native Janitor packages for those languages yet. If you build a port, the schemas, Jev questions and shared test vectors in `protocol/` describe the behavior to preserve.
+Native matching engines exist for TypeScript and Elixir. Version 0.9.0 also includes packaged, tested [Python](../packages/python/README.md) and [Go](../packages/go/README.md) HTTP clients with runnable examples. They preserve per-request cookies, bound transport and project only public identity fields; they call your application-owned engine rather than duplicating matching or storage. Neither sends data to a central Janitor service.
+
+The documentation's global language selector keeps your installation, setup, API and analytics guides together. Shared matching, privacy and research concepts apply across languages; engine-specific reference code is labeled where relevant.

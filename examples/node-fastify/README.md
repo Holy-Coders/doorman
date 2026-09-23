@@ -20,12 +20,12 @@ Open **http://localhost:3001** and select **Identify** twice. The second respons
 
 ## Environment variables
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Required Postgres connection URL. The example file points to the supplied local database. |
-| `JEV_API_KEY` | Optional TypeSafe key. Blank means no AI calls; a real key enables Jev and can incur provider charges. |
-| `PORT` | Server port, default `3001`. |
-| `APP_ORIGIN` | Your app’s public origin. Update it if you change the port; use the canonical HTTPS origin in production. |
+| Variable       | Purpose                                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL` | Required Postgres connection URL. The example file points to the supplied local database.                 |
+| `JEV_API_KEY`  | Optional TypeSafe key. Blank means no AI calls; a real key enables Jev and can incur provider charges.    |
+| `PORT`         | Server port, default `3001`.                                                                              |
+| `APP_ORIGIN`   | Your app’s public origin. Update it if you change the port; use the canonical HTTPS origin in production. |
 
 ## Mount it in your application
 
@@ -45,6 +45,19 @@ const response = await visitor.handle(request);
 The [Fastify bridge](src/app.ts) shows request-body handling and copying the response status, headers and body back to Fastify. The example limits bodies to 16 KiB, disables request logging and closes the pool on shutdown.
 
 Mount `/api/visitor` on your application’s origin and add the [browser client](../../docs/GETTING-STARTED.md). Replace `handle()` with `assess()` when your server needs [private scores](../../docs/SECURITY.md).
+
+## Try API activity
+
+Set `JANITOR_API_ACTIVITY=1` in `.env`, and set `JANITOR_IDENTITY_SECRET` and `EXAMPLE_API_TOKEN` to separate random values of at least 32 characters (`openssl rand -hex 32`). Restart the server after applying all migrations. Keep `JEV_API_KEY` blank for a local run without provider calls.
+
+```sh
+curl -H 'Authorization: Bearer YOUR_EXAMPLE_API_TOKEN' \
+  http://localhost:3001/api/orders/123
+```
+
+The response is ordinary example JSON. The `onSend` hook records the static template `GET /api/orders/:id` for the authenticated example agent. It keeps the API token, order ID and risk assessment out of stored activity and browser responses. A missing/invalid token returns 401 without attaching an actor. With Jev enabled, volume milestones trigger bounded, cached assessments.
+
+This token authenticates a demonstration service, not an end user's delegation. In your app, resolve actor/session context through your own authentication. See [API activity](../../docs/API-ACTIVITY.md) for Web middleware, trusted session keys, analytics, retention and limits.
 
 ## Cookies and maintenance
 

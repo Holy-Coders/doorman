@@ -21,6 +21,7 @@ defmodule Janitor do
             learning: false,
             protection: nil,
             evidence: nil,
+            activity: nil,
             analytics: [],
             on_metrics: nil
 
@@ -89,7 +90,8 @@ defmodule Janitor do
     %{
       config
       | protection: Janitor.Protection.configure(config.protection),
-        evidence: Janitor.Evidence.configure(config.evidence, config.identity)
+        evidence: Janitor.Evidence.configure(config.evidence, config.identity),
+        activity: Janitor.Activity.configure(config.activity, config.identity)
     }
   end
 
@@ -127,6 +129,12 @@ defmodule Janitor do
     if config.learning, do: Janitor.Learning.cleanup(config)
     if config.protection, do: Janitor.Protection.cleanup(config)
     if config.evidence, do: Janitor.Evidence.cleanup(config)
+
+    if config.activity do
+      Janitor.Activity.cleanup(config)
+      if is_nil(config.protection), do: Janitor.Protection.cleanup(config)
+    end
+
     progress
   end
 

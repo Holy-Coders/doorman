@@ -6,6 +6,8 @@ There are two parts: a browser helper calls your SDK’s identify/reset methods 
 
 If you are new to Janitor, set up [browser identification](GETTING-STARTED.md) first. For agent or shared-account reports, also configure the [identity directory](AGENTIC-IDENTITY.md).
 
+For agents and other callers using your API, add optional [API activity middleware](API-ACTIVITY.md). Its private assessment can travel through the same server bridge as `apiActivity`, alongside verified actor/account attribution. The bridge exports selected aggregate fields with the `janitor_api_` prefix, keeping API risk separate from browser confidence. It never exports route history or treats an inferred risk score as an authenticated identity.
+
 ## One client for your identity lifecycle
 
 Use Janitor in application code instead of calling each provider's identify, profile-update and reset methods separately. Initialize your existing SDKs with your project configuration, then pass them to Janitor:
@@ -313,3 +315,34 @@ The library prepares the event schema; it does not add an AI query agent or a ne
 Connect one provider first, then the other if needed. In a development project, verify: anonymous visit → login → second device login to the same user → logout → different user on the original browser → delegated agent with its own ID. Confirm one profile per actor, two profiles for two people sharing a browser, the intended account on every event, and no private scores in browser requests. Check rejected/late events and regional ingestion hosts. Analytics deletion and consent withdrawal must follow your provider's own lifecycle as well as Janitor erasure.
 
 The repository tests the actual installed PostHog and Mixpanel browser SDKs with all analytics requests intercepted locally, and native HTTP payloads with mocked transports. The tests do not verify live provider profile merging or dashboard counts. Transport acceptance does not establish a report's accuracy; review ingestion and distinct-count results in your own project before using them operationally.
+
+## Amplitude and RudderStack
+
+Janitor also supports initialized Amplitude Browser SDK 2 and RudderStack JavaScript SDKs:
+
+```ts
+const janitor = createJanitorClient({
+  analytics: { amplitude, rudderstack },
+});
+await janitor.identify(currentUser.id, { plan: "pro" });
+await janitor.track("project opened");
+await janitor.reset();
+```
+
+Import `createJanitorClient` from `@janitor/browser`. Configure consent, region, autocapture and destinations in your provider's initialization first; Janitor does not load or enable those SDKs. Amplitude uses `setUserId`, the documented `$identify` event with `$set` traits, and `reset` to rotate its device ID. RudderStack explicitly rotates its anonymous ID and clears custom context on account changes and logout. Destination SDKs loaded independently still need their own reset lifecycle. These behaviors follow [Amplitude's browser contract](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2), [HTTP V2](https://amplitude.com/docs/apis/analytics/http-v2), and [RudderStack's reset contract](https://www.rudderstack.com/docs/sources/event-streams/sdks/rudderstack-javascript-sdk/supported-api/).
+
+The server bridge accepts `provider: "amplitude"` with the initialized `@amplitude/analytics-node` client, or `provider: "rudderstack"` with `@rudderstack/rudder-sdk-node`. The same `capture`, `identifyUser` and account context apply. Amplitude supports an optional configured `accountGroup`; group features depend on the customer's project. Use stable user IDs of at least five characters or explicitly configure Amplitude's `minIdLength` in the SDK. `queued` does not guarantee downstream ingestion. Flush the provider SDK during server shutdown.
+
+```ts
+const bridge = createAnalyticsBridge({
+  provider: "amplitude",
+  client: amplitude,
+});
+await bridge.capture(identity, authenticatedActor.id, {
+  accountId: account.id,
+});
+```
+
+Elixir has explicit `:amplitude` and `:rudderstack` HTTP exports too. Amplitude accepts `api_key:` and an optional regional `host:`. RudderStack requires `write_key:` and your HTTPS data-plane `host:`. The library follows the documented HTTP examples using Basic authentication with `write_key:` as the username and an empty password. No browser fingerprint or raw IP is sent.
+
+Prefer RudderStack when you already route events into several tools or a warehouse. Prefer Amplitude's direct bridge when it is the destination you use. Avoid sending the same event both ways to the same destination. See [Snowflake and warehouse setup](WAREHOUSES.md) for customer-owned delivery and the portable JSONL exporter.

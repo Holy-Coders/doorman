@@ -25,6 +25,19 @@ Jev is off unless you set `JEV_API_KEY`. Enabling it makes provider calls that c
 
 The demo enables application-wide [learning-session collection](../../docs/LEARNING.md) but supplies no authenticated user labels. This is an optional demonstration setting, not a requirement for browser recognition. Choose the appropriate collection policy when adding Janitor to your app.
 
+## Try the optional API Plug
+
+Start the app with `JANITOR_API_ACTIVITY=1 mix phx.server` after running `mix ecto.migrate`. Then make two requests with the same application session:
+
+```sh
+curl -c /tmp/janitor-example.cookies -b /tmp/janitor-example.cookies http://localhost:4000/api/example/orders/123
+curl -c /tmp/janitor-example.cookies -b /tmp/janitor-example.cookies http://localhost:4000/api/example/orders/456
+```
+
+Both responses contain only example order JSON. The Plug records two operations for `GET /api/example/orders/:id` under the same application-issued session key; it does not store either order ID. Its result remains in `conn.assigns.janitor_api_activity`. No actor identity is manufactured for this anonymous demo session. The example's new Ecto migration adds the counter/cache tables. Keep `JEV_API_KEY` unset to test without paid inference.
+
+Follow [API activity](../../docs/API-ACTIVITY.md) to mount the Plug after your real authentication, provide verified agent context, use the existing analytics bridge, or erase activity.
+
 ## Adapt it for production
 
 The local example binds to loopback and permits a non-Secure cookie on localhost. Production needs HTTPS, strong `SECRET_KEY_BASE` and `JANITOR_IDENTITY_SECRET` values, suitable database TLS/pool settings, and `Janitor.new(environment: :production, secure_cookie: true, ...)`.

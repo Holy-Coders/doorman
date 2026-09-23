@@ -322,7 +322,7 @@ export function createJanitorClient(
         Object.keys(properties).length > 50
       )
         throw new Error("Invalid analytics event");
-      const clean: Record<string, unknown> = {};
+      const clean: Record<string, string | number | boolean | null> = {};
       for (const [key, value] of Object.entries(properties)) {
         if (
           !/^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(key) ||

@@ -9,7 +9,7 @@ This guide assumes you already have a Phoenix app with Postgres. To try a comple
 Add Janitor to `deps` in `mix.exs`:
 
 ```elixir
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.1", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.9.0", sparse: "packages/elixir"}
 ```
 
 Then run `mix deps.get`. The developer preview is available through GitHub and is not yet published to Hex. It requires Elixir 1.17+, Ecto SQL 3.14+, Plug and PostgreSQL. Tests currently run on Elixir 1.20.2 / OTP 29 and Postgres 17; your app should resolve and keep its own dependency lockfile.
@@ -153,6 +153,7 @@ Follow [PostHog and Mixpanel integration](../../docs/ANALYTICS.md) for browser l
 Other features are opt-in:
 
 - [Login feedback](../../docs/LEARNING.md) saves anonymous session examples labeled by later verified logins. Choose an application-wide or per-request collection policy.
+- [API activity](../../docs/API-ACTIVITY.md) adds `Janitor.ActivityPlug` for selected API routes, bounded server-side counters and private Jev assessments. Upgrade an existing database with `Janitor.Migration.upgrade_activity()` before enabling it.
 - [Request limits and trusted events](../../docs/HARDENING.md) adds shared inference budgets and records your server’s verified outcomes.
 - [Credentials and receipts](../../docs/TRUST.md) explains signed agent credentials, delegation and operation-bound assessments.
 

@@ -2,6 +2,7 @@ import type { VisitorEvaluator } from "@janitor/core";
 import { createJevMethods } from "./intelligence.js";
 export { createJevMethods, INTELLIGENCE_QUESTIONS } from "./intelligence.js";
 export type { JevRequest } from "./intelligence.js";
+export { API_ACTIVITY_QUESTIONS, createActivityInput } from "./activity.js";
 export {
   createJevInput,
   parseJevResponse,

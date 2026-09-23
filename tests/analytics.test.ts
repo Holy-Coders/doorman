@@ -4,7 +4,7 @@ import {
   analyticsProperties,
   createAnalyticsBridge,
 } from "@janitor/adapters/analytics";
-import type { VisitorIdentity } from "@janitor/core";
+import type { ApiActivityAssessment, VisitorIdentity } from "@janitor/core";
 
 function browser() {
   const calls: string[] = [];
@@ -131,6 +131,73 @@ const identity: VisitorIdentity = {
     delegation: { status: "none" },
   },
 };
+it("exports API risk separately through existing SDKs without route history or model identity claims", async () => {
+  const apiActivity: ApiActivityAssessment = {
+    source: "application-api",
+    evaluatedAt: 100,
+    expiresAt: 200,
+    cached: false,
+    riskStatus: "evaluated",
+    risk: { automation: 0.9, suspicious: 0.1 },
+    summary: {
+      source: "application-api",
+      observedAt: 100,
+      windowMs: 60000,
+      truncated: false,
+      buckets: [
+        {
+          windowStart: 0,
+          route: "GET /private/:id",
+          requests: 10,
+          denied: 1,
+          clientErrors: 1,
+          serverErrors: 0,
+          durationTotalMs: 100,
+          durationMaxMs: 10,
+          firstSeenAt: 0,
+          lastSeenAt: 100,
+          shortGaps: 1,
+        },
+      ],
+    },
+  };
+  const assessment = { attribution: identity.attribution!, apiActivity };
+  const properties = analyticsProperties(assessment, { accountId: "account" });
+  expect(properties).toMatchObject({
+    janitor_actor_kind: "agent",
+    janitor_api_risk_status: "evaluated",
+    janitor_api_automation: 0.9,
+    janitor_api_requests: 10,
+  });
+  expect(properties).not.toHaveProperty("janitor_automation");
+  expect(properties).not.toHaveProperty("janitor_visitor_id");
+  expect(JSON.stringify(properties)).not.toContain("/private");
+  const ph = { capture: vi.fn(), identify: vi.fn() };
+  const mp = { track: vi.fn(), people: { set: vi.fn() } };
+  const sg = { track: vi.fn(), identify: vi.fn() };
+  await createAnalyticsBridge({ provider: "posthog", client: ph }).capture(
+    assessment,
+    "agent-id",
+  );
+  await createAnalyticsBridge({ provider: "mixpanel", client: mp }).capture(
+    assessment,
+    "agent-id",
+  );
+  await createAnalyticsBridge({ provider: "segment", client: sg }).capture(
+    assessment,
+    "agent-id",
+  );
+  for (const client of [ph.capture, mp.track, sg.track])
+    expect(JSON.stringify(client.mock.calls)).toContain(
+      "janitor_api_automation",
+    );
+  expect(
+    analyticsProperties({
+      ...assessment,
+      apiActivity: { ...apiActivity, riskStatus: "unavailable" },
+    }),
+  ).not.toHaveProperty("janitor_api_automation");
+});
 it("exports independent account, actor and browser dimensions without inferring a human from low risk", () => {
   expect(
     analyticsProperties(identity, { accountId: "workspace-a" }),

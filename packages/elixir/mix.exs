@@ -4,7 +4,7 @@ defmodule Janitor.MixProject do
   def project do
     [
       app: :janitor,
-      version: "0.8.1",
+      version: "0.9.0",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       description:

@@ -1,9 +1,10 @@
 defmodule Janitor.Analytics do
-  @moduledoc "Explicit, best-effort PostHog and Mixpanel exports. No raw observations or inferred account identifiers."
+  @moduledoc "Explicit, best-effort analytics exports. No raw observations or inferred account identifiers."
   def properties(identity, context \\ %{}) do
     actor = get_in(identity, ["attribution", "actor"]) || %{}
     subject = get_in(identity, ["attribution", "subject"]) || %{}
     verified_actor = actor["basis"] == "verified-credential" and is_binary(actor["id"])
+    api = identity["apiActivity"] || %{}
 
     %{
       "janitor_schema_version" => 1,
@@ -19,7 +20,19 @@ defmodule Janitor.Analytics do
       "janitor_suspicious" => get_in(identity, ["risk", "suspicious"]),
       "janitor_risk_status" => identity["riskStatus"],
       "janitor_actor_kind" => if(verified_actor, do: actor["kind"], else: "unknown"),
-      "janitor_delegation_status" => get_in(identity, ["attribution", "delegation", "status"])
+      "janitor_delegation_status" => get_in(identity, ["attribution", "delegation", "status"]),
+      "janitor_api_risk_status" => api["riskStatus"],
+      "janitor_api_automation" =>
+        if(api["riskStatus"] == "evaluated", do: get_in(api, ["risk", "automation"])),
+      "janitor_api_suspicious" =>
+        if(api["riskStatus"] == "evaluated", do: get_in(api, ["risk", "suspicious"])),
+      "janitor_api_evaluated_at" => api["evaluatedAt"],
+      "janitor_api_expires_at" => api["expiresAt"],
+      "janitor_api_cached" => api["cached"],
+      "janitor_api_window_ms" => get_in(api, ["summary", "windowMs"]),
+      "janitor_api_truncated" => get_in(api, ["summary", "truncated"]),
+      "janitor_api_requests" =>
+        if(api["summary"], do: Enum.sum(Enum.map(api["summary"]["buckets"], & &1["requests"])))
     }
     |> Janitor.Observation.clean()
   end
@@ -61,6 +74,21 @@ defmodule Janitor.Analytics do
         :posthog ->
           send_event(:posthog, "$identify", %{"$set" => traits}, distinct_id, opts)
 
+        :amplitude ->
+          send_event(:amplitude, "$identify", %{"$set" => traits}, distinct_id, opts)
+
+        :rudderstack ->
+          deliver(
+            :rudderstack,
+            "/v1/identify",
+            %{
+              "userId" => valid_id!(distinct_id),
+              "traits" => traits,
+              "context" => %{"ip" => "0.0.0.0"}
+            },
+            opts
+          )
+
         :mixpanel ->
           props =
             Map.new(traits, fn {k, v} ->
@@ -85,6 +113,45 @@ defmodule Janitor.Analytics do
     end
   rescue
     _ -> {:error, :unavailable}
+  end
+
+  defp send_event(:amplitude, event, props, id, opts) do
+    item = %{
+      "event_type" => event,
+      "user_id" => valid_id!(id),
+      "insert_id" => Janitor.random_id("evt_"),
+      "ip" => "0.0.0.0"
+    }
+
+    item =
+      Map.put(
+        item,
+        if(event == "$identify", do: "user_properties", else: "event_properties"),
+        props
+      )
+
+    deliver(
+      :amplitude,
+      "/2/httpapi",
+      %{"api_key" => Keyword.fetch!(opts, :api_key), "events" => [item]},
+      opts
+    )
+  end
+
+  defp send_event(:rudderstack, event, props, id, opts) do
+    deliver(
+      :rudderstack,
+      "/v1/track",
+      %{
+        "userId" => valid_id!(id),
+        "event" => event,
+        "properties" => props,
+        "messageId" => Janitor.random_id("evt_"),
+        "timestamp" => DateTime.to_iso8601(DateTime.utc_now()),
+        "context" => %{"ip" => "0.0.0.0"}
+      },
+      opts
+    )
   end
 
   defp send_event(:posthog, event, props, id, opts) do
@@ -159,7 +226,12 @@ defmodule Janitor.Analytics do
       Keyword.get(
         opts,
         :host,
-        if(provider == :posthog, do: "https://us.i.posthog.com", else: "https://api.mixpanel.com")
+        case provider do
+          :posthog -> "https://us.i.posthog.com"
+          :mixpanel -> "https://api.mixpanel.com"
+          :amplitude -> "https://api2.amplitude.com"
+          :rudderstack -> Keyword.fetch!(opts, :host)
+        end
       )
 
     unless URI.parse(host).scheme == "https" and is_nil(URI.parse(host).userinfo),
@@ -174,6 +246,15 @@ defmodule Janitor.Analytics do
                  [
                    url: String.trim_trailing(host, "/") <> path,
                    json: body,
+                   headers:
+                     if(provider == :rudderstack,
+                       do: [
+                         {"authorization",
+                          "Basic " <> Base.encode64(Keyword.fetch!(opts, :write_key) <> ":")}
+                       ],
+                       else: []
+                     ),
+                   plain_text_response: provider == :rudderstack,
                    retry: false,
                    redirect: false,
                    receive_timeout: timeout,

@@ -1,5 +1,14 @@
 # Historical validation records
 
+## v0.9.0 API activity, integrations and language support — 2026-09-23
+
+- Optional API activity middleware for Web/Node and Phoenix; atomic bounded aggregates, private Jev evaluation, cached results, shared budgets and explicit erasure. Migration 0008 adds two small tables.
+- Added browser/server Amplitude and RudderStack bridges, native Elixir exports, and scalar JSONL warehouse exports with Snowflake/BigQuery loading guides. New provider SDKs are test dependencies only.
+- Added stateless Python and Go HTTP clients, real transport tests, Flask and Go examples. Native matching remains TypeScript/Elixir; clients never forward private scores to the browser.
+- Validation: 277 TypeScript tests, 66 Elixir tests, two Phoenix tests, six Python tests plus Flask smoke checks, four Go test groups with race detection, three end-to-end browser tests and seventeen site tests. Next.js and Cloudflare example builds pass.
+- The website now uses the short OG headline, keeps the agentic-era message lower on the page, supports light/dark palettes and matching icons, and flavors setup/API docs through a global language selector. All four documentation link/anchor sets are checked.
+- All new external inference and analytics checks use mocks or intercepted transports. No customer data was exported, no new paid Jev call was made, and no warehouse ingestion was run. The shared learning service is a proposal, not an active collector.
+
 ## v0.8.1 live playground and Cloudflare transport — 2026-09-23
 
 - The public site now hosts an explicit opt-in endpoint backed by the actual Janitor collectors, core, HTTP handler and a dedicated Cloudflare D1 database. Ordinary page views and the original synthetic examples remain local and do not collect browser data.

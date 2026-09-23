@@ -6,6 +6,46 @@ defmodule Janitor.Jev do
   @intelligence Path.expand("../../priv/jev-intelligence.json", __DIR__)
                 |> File.read!()
                 |> Jason.decode!()
+  @external_resource Path.expand("../../priv/jev-activity.json", __DIR__)
+  @activity Path.expand("../../priv/jev-activity.json", __DIR__)
+            |> File.read!()
+            |> Jason.decode!()
+
+  def activity_input(input) do
+    activity = input["activity"]
+
+    buckets =
+      Enum.map(
+        Enum.take(activity["buckets"], 128),
+        &Map.take(
+          &1,
+          ~w(windowStart route requests denied clientErrors serverErrors durationTotalMs durationMaxMs firstSeenAt lastSeenAt shortGaps)
+        )
+      )
+
+    state =
+      input
+      |> Map.take(~w(route sensitive))
+      |> Map.put(
+        "activity",
+        activity
+        |> Map.take(~w(source observedAt windowMs truncated))
+        |> Map.put("buckets", buckets)
+      )
+
+    state =
+      if input["actor"],
+        do: Map.put(state, "actor", Map.take(input["actor"], ~w(kind delegated))),
+        else: state
+
+    %{"state" => state, "questions" => @activity}
+  end
+
+  def evaluate_activity(input, opts) do
+    response = request(activity_input(input), opts)
+    Map.new(~w(automation suspicious), &{&1, noul(response, &1)})
+  end
+
   def input(input) do
     history = Enum.take(input["history"], 5)
 

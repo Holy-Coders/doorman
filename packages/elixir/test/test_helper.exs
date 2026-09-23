@@ -41,3 +41,10 @@ defmodule Janitor.TestLearningMigration do
 end
 
 Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_304, Janitor.TestLearningMigration, log: false)
+
+defmodule Janitor.TestActivityMigration do
+  use Ecto.Migration
+  def up, do: Janitor.Migration.upgrade_activity(prefix: "janitor_test")
+end
+
+Ecto.Migrator.up(Janitor.TestRepo, 2_026_092_305, Janitor.TestActivityMigration, log: false)

@@ -4,22 +4,26 @@ Janitor’s tests check whether the implementation behaves as documented: matchi
 
 ## What is verified
 
-The v0.8.0 release passed these checks on September 23, 2026:
+The v0.9.0 implementation passed these checks on September 23, 2026:
 
-| Area                | Evidence                                                                                                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| TypeScript library  | 223 tests across thirteen files, plus strict typechecking and lint.                                                                                                                              |
-| Native Elixir       | 52 tests against Postgres, plus a Phoenix endpoint test.                                                                                                                                         |
-| Browser integration | Two Chromium tests, including real PostHog and Mixpanel browser SDKs with analytics traffic intercepted locally.                                                                                 |
-| Public site         | Browser tests cover matching demos, navigation, copy controls, mobile layout and motion fallbacks.                                                                                               |
-| Examples            | Next.js production build, Cloudflare dry-run build and native Phoenix migrations pass.                                                                                                           |
-| Installation        | All seven v0.8.0 JavaScript archives install in isolated npm, pnpm and Bun projects; new client/evaluator exports and migration 0007 resolve. The Elixir package builds as a Hex-format archive. |
+| Area                | Evidence                                                                                                                                                                           |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript library  | 277 tests across sixteen files, strict typechecking and lint.                                                                                                                      |
+| Native Elixir       | 66 tests against Postgres, plus two Phoenix endpoint tests.                                                                                                                        |
+| Python              | Six transport tests on Python 3.12 and 3.14; wheel installation and Flask route continuity/private-response checks.                                                                |
+| Go                  | Four test groups with the race detector on Go 1.26, plus a compiled HTTP example.                                                                                                  |
+| Browser integration | Three Chromium tests, including installed PostHog, Mixpanel and Amplitude SDKs with analytics traffic intercepted locally.                                                         |
+| Public site         | Seventeen browser tests; language navigation/search, both themes, consent controls, all documentation links/anchors, mobile layout and motion fallbacks. 127 generated HTML pages. |
+| Examples            | Next.js production build, Cloudflare dry-run, native Phoenix migration/tests and Python/Go transports pass.                                                                        |
+| Installation        | Seven compiled JavaScript packages, native Elixir archive, Python wheel/source archive and Go source module. Registry publication is separate.                                     |
+
+API activity checks use real Postgres and D1 SQL. They cover bounded aggregates, private outputs, leases/cache isolation, provider budgets, deadlines, malformed answers, deletion and repeated service instances. Analytics checks cover Amplitude/RudderStack protocols, account changes, logout and warehouse field projection. Warehouse SQL is documented against official provider contracts, but has not been executed in a paid Snowflake or BigQuery project. These are implementation checks, not evidence of bot-detection accuracy or API telemetry throughput at production scale.
 
 The database contract tests execute real SQL using embedded Postgres (PGlite) and Cloudflare’s local D1 runtime (Miniflare). Core matching is not mocked. External Jev and analytics responses are mocked or intercepted so automated tests do not make paid inference calls or send test users to analytics projects.
 
-New checks cover bounded lookup planning, ten-candidate batch matching, cold-start/ambiguity abstention, private Jev learning on both databases, shared inference budgets and asynchronous analytics logout races. The real SDK integration also exercises `createJanitorClient` events and identity transitions. External inference remains mocked; these checks establish implementation behavior, not cross-device or bot-detection accuracy.
+Earlier checks cover bounded lookup planning, ten-candidate batch matching, cold-start/ambiguity abstention, private Jev learning on both databases, shared inference budgets and asynchronous analytics logout races. The real SDK integration also exercises `createJanitorClient` events and identity transitions. External inference remains mocked; these checks establish implementation behavior, not cross-device or bot-detection accuracy.
 
-The September 23 live playground follow-up passed **243 TypeScript tests and 15 site browser tests**. New real-D1 checks cover session isolation, atomic call allowances, cache hits, erasure, billing rejection and the inference kill switch. The site produces 32 HTML pages, with navigation and internal documentation links checked in Chromium.
+The earlier September 23 live playground follow-up passed **243 TypeScript tests and 15 site browser tests**. New real-D1 checks cover session isolation, atomic call allowances, cache hits, erasure, billing rejection and the inference kill switch. The site produces 32 HTML pages, with navigation and internal documentation links checked in Chromium.
 
 The deployed [live playground](PLAYGROUND.md) passed real browser cookie continuity, controlled cookie-loss recovery, private-response, mobile-layout and erasure checks. After funding Cloudflare inference, a hosted flow received fresh Jev evaluations, reused a private cached answer without another model call, and restored its visitor cookie. The live response exposed a Cloudflare `Completed` envelope absent from the model documentation example; regression tests now cover it. The documented local HTTPS Worker flow also passed with local D1 and AI disabled.
 

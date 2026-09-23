@@ -1,3 +1,4 @@
+import * as amplitude from "@amplitude/analytics-browser";
 import { posthog } from "posthog-js";
 import mixpanel from "mixpanel-browser";
 import { createIdentityAnalytics, createJanitorClient } from "@janitor/browser";
@@ -27,7 +28,33 @@ const analytics = createIdentityAnalytics({ posthog, mixpanel });
 const janitor = createJanitorClient({ analytics: { posthog, mixpanel } });
 posthog.capture("demo viewed");
 mixpanel.track("demo viewed");
+const amplitudeIdentity = createIdentityAnalytics({ amplitude });
 const demo = {
+  amplitude: {
+    async start() {
+      await amplitude.init("local-amplitude-test", {
+        autocapture: false,
+        fetchRemoteConfig: false,
+        serverUrl: location.origin + "/vendor/amplitude",
+        flushQueueSize: 1,
+        flushIntervalMillis: 25,
+      }).promise;
+    },
+    async identify(id: string) {
+      amplitudeIdentity.identifyUser(id, { plan: "pro" });
+      await amplitudeIdentity.flush();
+    },
+    async reset() {
+      amplitudeIdentity.reset();
+      await amplitudeIdentity.flush();
+    },
+    snapshot() {
+      return {
+        userId: amplitude.getUserId(),
+        deviceId: amplitude.getDeviceId(),
+      };
+    },
+  },
   janitor,
   login(id: string) {
     return analytics.identifyUser(id, { plan: "test" });

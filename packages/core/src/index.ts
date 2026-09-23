@@ -12,3 +12,4 @@ export * from "./protection.js";
 export * from "./evidence.js";
 
 export * from "./intelligence.js";
+export * from "./activity.js";

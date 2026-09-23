@@ -1,21 +1,48 @@
 ---
 import type { GetStaticPaths, MarkdownInstance } from "astro";
 import Base from "../../layouts/Base.astro";
-import { pages, sections, REPO } from "../../content";
+import { sections as allSections, REPO } from "../../content";
+import { docURL, labels, type Language } from "../../languages";
 export const getStaticPaths = (async () => {
   const modules = import.meta.glob<
-    MarkdownInstance<{ title: string; description: string; source: string }>
+    MarkdownInstance<{
+      title: string;
+      description: string;
+      source: string;
+      language: Language;
+      slug: string;
+      shared: boolean;
+    }>
   >("../../generated/*.md");
   return Promise.all(
-    Object.entries(modules).map(async ([file, load]) => ({
-      params: { slug: file.split("/").pop()!.replace(".md", "") },
-      props: { document: await load() },
-    })),
+    Object.values(modules).map(async (load) => {
+      const document = await load();
+      const { language, slug } = document.frontmatter;
+      return {
+        params: {
+          path: language === "typescript" ? slug : `${language}/${slug}`,
+        },
+        props: { document },
+      };
+    }),
   );
 }) satisfies GetStaticPaths;
 const { document } = Astro.props;
 const { Content, frontmatter } = document;
-const slug = Astro.params.slug;
+const { slug, language, shared } = frontmatter;
+const sections = allSections
+  .map((section) => ({
+    ...section,
+    pages: section.pages.filter((page) => {
+      if (["elixir", "phoenix-example"].includes(page.slug)) return false;
+      if (["cloudflare", "nextjs", "node"].includes(page.slug))
+        return language === "typescript";
+      return true;
+    }),
+  }))
+  .filter((section) => section.pages.length);
+const pages = sections.flatMap((section) => section.pages);
+const url = (slug: string) => docURL(language, slug);
 const index = pages.findIndex((page) => page.slug === slug);
 const previous = pages[index - 1];
 const next = pages[index + 1];
@@ -28,11 +55,12 @@ const headings = document
   title={frontmatter.title + " — Janitor docs"}
   description={frontmatter.description}
   docs
+  language={language}
 >
   <div class="docs-shell">
     <aside class="docs-sidebar">
-      <a class="docs-home" href="/docs/introduction/">
-        Documentation <span>v0.8.1</span>
+      <a class="docs-home" href={url("introduction")}>
+        Documentation <span>v0.9.0</span>
       </a>
       {sections.map((section) => (
         <div class="sidebar-section">
@@ -40,7 +68,7 @@ const headings = document
           <nav aria-label={section.title}>
             {section.pages.map((page) => (
               <a
-                href={"/docs/" + page.slug + "/"}
+                href={url(page.slug)}
                 aria-current={page.slug === slug ? "page" : undefined}
               >
                 {page.title}
@@ -59,7 +87,7 @@ const headings = document
         <nav>
           {pages.map((page) => (
             <a
-              href={"/docs/" + page.slug + "/"}
+              href={url(page.slug)}
               aria-current={page.slug === slug ? "page" : undefined}
             >
               {page.title}
@@ -73,6 +101,16 @@ const headings = document
       </div>
       <h1>{frontmatter.title}</h1>
       <p class="doc-description">{frontmatter.description}</p>
+      {shared && language !== "typescript" && (
+        <p class="language-context">
+          These concepts apply to your {labels[language]} application.{" "}
+          {language === "elixir"
+            ? "Native setup and API examples are available in your selected language."
+            : "Matching and private risk evaluation run in your application-owned TypeScript or Elixir engine; this client handles the HTTP connection."}{" "}
+          <a href={url("getting-started")}>See your setup guide.</a> Code
+          labeled TypeScript describes the engine configuration.
+        </p>
+      )}
       <article class="prose">
         <Content />
       </article>
@@ -83,7 +121,7 @@ const headings = document
       </div>
       <nav class="doc-pagination" aria-label="Documentation pages">
         {previous ? (
-          <a href={"/docs/" + previous.slug + "/"}>
+          <a href={url(previous.slug)}>
             <span>Previous</span>
             <strong>← {previous.title}</strong>
           </a>
@@ -91,7 +129,7 @@ const headings = document
           <span></span>
         )}
         {next && (
-          <a href={"/docs/" + next.slug + "/"}>
+          <a href={url(next.slug)}>
             <span>Next</span>
             <strong>{next.title} →</strong>
           </a>

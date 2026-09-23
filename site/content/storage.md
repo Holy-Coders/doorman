@@ -18,7 +18,7 @@ The Node and Next.js examples include a migration command:
 pnpm migrate
 ```
 
-For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.8.1 release includes all seven:
+For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.9.0 release includes all eight:
 
 | Migration                   | Creates or changes                                              |
 | --------------------------- | --------------------------------------------------------------- |
@@ -29,6 +29,7 @@ For an existing application, use your migration runner to apply the SQL files in
 | `0005_protection.sql`       | Shared request counters and evaluator budgets.                  |
 | `0006_evidence.sql`         | Verified application events and device associations.            |
 | `0007_learning_lookup.sql`  | Indexed retrieval of login-confirmed sessions for Jev learning. |
+| `0008_api_activity.sql`     | Optional aggregate API counters and private assessment cache.   |
 
 Creating an optional feature’s tables does not enable that feature. For an existing large Postgres installation, read the [index migration instructions](../../docs/SCALING.md) before applying lookup indexes to a busy table.
 

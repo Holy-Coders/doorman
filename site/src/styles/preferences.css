@@ -1,0 +1,257 @@
+/* The same mint and ink palette, with contrast appropriate to each surface. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f8f6;
+  --surface: #eaf1ec;
+  --surface-soft: #ffffff;
+  --text: #152d22;
+  --muted: #425e4e;
+  --dim: #526c5c;
+  --line: #ccdcd1;
+  --accent: #12543b;
+  --coral: #8a4520;
+}
+.header-actions {
+  gap: 12px;
+}
+.language-control select,
+.theme-toggle {
+  font: 13px var(--body);
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-height: 38px;
+  padding: 8px 10px;
+}
+.language-control select {
+  max-width: 125px;
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.theme-toggle > span:first-child {
+  font-size: 18px;
+  line-height: 1;
+}
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.language-context {
+  border-left: 2px solid var(--accent);
+  padding: 10px 16px;
+  margin: 24px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.language-context a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+:root[data-theme="light"] .brand-symbol img,
+:root[data-theme="light"] .hero-mark {
+  content: url("/janitor-mark-dark.svg");
+}
+:root[data-theme="light"] .hero-film {
+  filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: multiply;
+}
+:root[data-theme="light"] .hero-announcement {
+  background: #e5f2e9;
+  border-color: #aecfba;
+}
+:root[data-theme="light"] .button-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: none;
+}
+:root[data-theme="light"] .button-secondary {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+:root[data-theme="light"]
+  :is(
+    .jev-terminal,
+    .actor-console,
+    .lab,
+    .code-demo,
+    #search-dialog,
+    .mobile-nav nav
+  ) {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+:root[data-theme="light"] .astro-code,
+:root[data-theme="light"] .astro-code span {
+  color: var(--shiki-light, #234e37) !important;
+  background-color: var(--shiki-light-bg, #f1f5f2) !important;
+}
+:root[data-theme="light"]
+  :is(
+    .prose pre,
+    .prose code,
+    .code-file,
+    .code-tabs,
+    .code-demo-footer,
+    .search-top,
+    .search-bottom,
+    .result-json,
+    .actor-response pre
+  ) {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--line);
+}
+:root[data-theme="light"]
+  :is(.scenario-list button, .actor-switcher button, .live-actions button) {
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+:root[data-theme="light"]
+  :is(
+    .scenario-list button[aria-pressed="true"],
+    .actor-switcher button[aria-pressed="true"],
+    .result-badge,
+    .actor-verdict
+  ) {
+  background: #e0f0e6;
+  color: #185536;
+  border-color: #94bba3;
+}
+:root[data-theme="light"]
+  :is(
+    .docs-sidebar a[aria-current="page"],
+    .code-tabs button[aria-selected="true"],
+    .search-result:hover,
+    .search-result:focus
+  ) {
+  background: #e4efe7;
+  color: var(--accent);
+}
+:root[data-theme="light"]
+  :is(
+    .prose blockquote,
+    .actor-switcher,
+    .lab-controls,
+    .device-snapshot,
+    .lab-output,
+    .live-controls,
+    .confidence-track
+  ) {
+  background: var(--surface);
+  border-color: var(--line);
+}
+:root[data-theme="light"]
+  :is(
+    .actor-diagram,
+    .actor-facts,
+    .actor-console-bottom,
+    .lab-footer,
+    .identity-result,
+    .confidence-meter,
+    .live-result
+  ) {
+  color: var(--text);
+  border-color: var(--line);
+}
+:root[data-theme="light"] #docs-search {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+:root[data-theme="light"] ::selection {
+  background: #b6f5ce;
+  color: #163d27;
+}
+@media (max-width: 1100px) {
+  .desktop-nav {
+    gap: 18px;
+  }
+  .search-trigger span,
+  .search-trigger kbd {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .site-header {
+    gap: 10px;
+  }
+  .header-actions {
+    margin-left: auto;
+    gap: 7px;
+  }
+  .language-control select {
+    max-width: 110px;
+    padding: 8px;
+  }
+  [data-theme-label] {
+    display: none;
+  }
+  .theme-toggle {
+    padding: 8px;
+  }
+}
+@media (max-width: 430px) {
+  .site-header {
+    padding-inline: 16px;
+  }
+  .site-header .brand {
+    font-size: 23px;
+    gap: 4px;
+  }
+  .site-header .brand-symbol {
+    width: 26px;
+  }
+  .header-actions .search-trigger {
+    display: none;
+  }
+}
+:root[data-theme="light"] .site-footer {
+  background: var(--surface);
+}
+:root[data-theme="light"] .actor-node {
+  background: #e2eee6;
+  border-color: #90b49c;
+}
+:root[data-theme="light"]
+  [data-verdict="invalid"]
+  .actor-authority
+  .actor-node {
+  background: #fff1e6;
+}
+:root[data-theme="light"] .person-avatar {
+  background: #dbe9df;
+}
+:root[data-theme="light"] .agent-avatar {
+  background: #dbe5ec;
+  color: #264963;
+}
+.hero-film {
+  mask-image: radial-gradient(
+    ellipse 64% 67% at center,
+    black 38%,
+    transparent 80%
+  );
+}
+:root[data-theme="light"] .prose,
+:root[data-theme="light"] .prose blockquote {
+  color: var(--muted);
+}
+:root[data-theme="light"] .prose .copy-code {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border-color: var(--line);
+}
+:root:not([data-theme="light"]) .astro-code,
+:root:not([data-theme="light"]) .astro-code span {
+  color: var(--shiki-dark, #c8d2cb);
+  background-color: var(--shiki-dark-bg, #101913);
+}
+
+:root[data-theme="light"] .docs-page .site-header {
+  background: #f5f8f6f5;
+}

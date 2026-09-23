@@ -1,6 +1,15 @@
+type AnalyticsProperties = Record<string, string | number | boolean | null>;
 export type Profile = { name?: string; email?: string; plan?: string };
 type Status = "queued" | "unavailable" | "skipped";
-type Provider = "posthog" | "mixpanel" | "segment";
+type Provider =
+  "posthog" | "mixpanel" | "segment" | "amplitude" | "rudderstack";
+const providers = [
+  "posthog",
+  "mixpanel",
+  "segment",
+  "amplitude",
+  "rudderstack",
+] as const;
 export type AnalyticsResult = Partial<Record<Provider, Status>>;
 
 /** Browser SDK lifecycle only. Private Janitor results never enter this bridge. */
@@ -9,21 +18,77 @@ export type IdentityAnalyticsOptions = {
   posthog?: {
     identify(id: string, properties?: Record<string, string>): unknown;
     reset(): unknown;
-    capture?(event: string, properties?: Record<string, unknown>): unknown;
+    capture?(event: string, properties?: AnalyticsProperties): unknown;
   };
   mixpanel?: {
     identify(id: string): unknown;
-    track(event: string, properties?: Record<string, unknown>): unknown;
+    track(event: string, properties?: AnalyticsProperties): unknown;
     reset(): unknown;
     people: { set(properties: Record<string, string>): unknown };
   };
   segment?: {
     identify(id: string, traits?: Record<string, string>): unknown;
-    track(event: string, properties?: Record<string, unknown>): unknown;
+    track(event: string, properties?: AnalyticsProperties): unknown;
     reset(): unknown;
+  };
+  /** Pass the initialized @amplitude/analytics-browser module or instance. */
+  amplitude?: {
+    setUserId(id: string): unknown;
+    reset(): unknown;
+    track(
+      event:
+        | string
+        | { event_type: string; user_properties: Record<string, unknown> },
+      properties?: AnalyticsProperties,
+    ): unknown;
+  };
+  rudderstack?: {
+    identify(id: string, traits?: Record<string, string>): unknown;
+    track(event: string, properties?: AnalyticsProperties): unknown;
+    reset(options: {
+      entries: {
+        anonymousId: true;
+        initialReferrer: true;
+        initialReferringDomain: true;
+      };
+    }): unknown;
+    clearCustomContext?(): unknown;
   };
 };
 export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
+  // Normalize the two concrete provider protocols without bundling their SDKs.
+  const clients = {
+    ...options,
+    amplitude: options.amplitude && {
+      identify(id: string, profile: Record<string, string> = {}) {
+        options.amplitude!.setUserId(id);
+        // HTTP V2's documented identify event; the SDK supplies device/session context.
+        return options.amplitude!.track({
+          event_type: "$identify",
+          user_properties: { $set: profile },
+        });
+      },
+      reset: () => options.amplitude!.reset(),
+      track: (event: string, properties: AnalyticsProperties) =>
+        options.amplitude!.track(event, properties),
+    },
+    rudderstack: options.rudderstack && {
+      identify: (id: string, traits: Record<string, string> = {}) =>
+        options.rudderstack!.identify(id, traits),
+      track: (event: string, properties: AnalyticsProperties) =>
+        options.rudderstack!.track(event, properties),
+      reset() {
+        options.rudderstack!.clearCustomContext?.();
+        return options.rudderstack!.reset({
+          entries: {
+            anonymousId: true,
+            initialReferrer: true,
+            initialReferringDomain: true,
+          },
+        });
+      },
+    },
+  };
   // One instance per app lifecycle. Providers retain their own anonymous IDs.
   const previous: Partial<Record<Provider, string>> = {};
   const profiles: Partial<Record<Provider, string>> = {};
@@ -37,10 +102,10 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
       /* Never interrupt authentication. */
     }
   };
-  let segmentQueue: Promise<void> = Promise.resolve();
-  const queueSegment = (run: () => Promise<void>) => {
-    segmentQueue = segmentQueue.then(run).catch(() => {
-      needsReset.add("segment");
+  let providerQueue: Promise<void> = Promise.resolve();
+  const queueProvider = (provider: Provider, run: () => Promise<void>) => {
+    providerQueue = providerQueue.then(run).catch(() => {
+      needsReset.add(provider);
     });
   };
   return {
@@ -68,27 +133,31 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
       userId = id;
       const signature = JSON.stringify(profile);
       const result: AnalyticsResult = {};
-      for (const provider of ["posthog", "mixpanel", "segment"] as const) {
-        const client = options[provider];
+      for (const provider of providers) {
+        const client = clients[provider];
         if (!client) continue;
-        if (provider === "segment") {
-          queueSegment(async () => {
+        if (
+          provider === "segment" ||
+          provider === "amplitude" ||
+          provider === "rudderstack"
+        ) {
+          queueProvider(provider, async () => {
             if (
-              needsReset.has("segment") ||
-              (previous.segment && previous.segment !== id)
+              needsReset.has(provider) ||
+              (previous[provider] && previous[provider] !== id)
             ) {
-              await options.segment!.reset();
-              delete previous.segment;
-              delete profiles.segment;
-              needsReset.delete("segment");
+              await sdkResult(client.reset());
+              delete previous[provider];
+              delete profiles[provider];
+              needsReset.delete(provider);
             }
-            if (previous.segment === id && profiles.segment === signature)
+            if (previous[provider] === id && profiles[provider] === signature)
               return;
-            await options.segment!.identify(id, profile);
-            previous.segment = id;
-            profiles.segment = signature;
+            await sdkResult(client.identify(id, profile));
+            previous[provider] = id;
+            profiles[provider] = signature;
           });
-          result.segment = "queued";
+          result[provider] = "queued";
           continue;
         }
         try {
@@ -133,16 +202,16 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
       }
       return result;
     },
-    flush: () => segmentQueue,
+    flush: () => providerQueue,
     async track(
       event: string,
-      properties: Record<string, unknown> = {},
+      properties: AnalyticsProperties = {},
     ): Promise<AnalyticsResult> {
       const current = generation;
-      await segmentQueue;
+      await providerQueue;
       const result: AnalyticsResult = {};
-      for (const provider of ["posthog", "mixpanel", "segment"] as const) {
-        const client = options[provider];
+      for (const provider of providers) {
+        const client = clients[provider];
         if (!client) continue;
         if (current !== generation) {
           result[provider] = "skipped";
@@ -161,7 +230,7 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
             await options.posthog!.capture(event, properties);
           } else if (provider === "mixpanel")
             await options.mixpanel!.track(event, properties);
-          else await options.segment!.track(event, properties);
+          else await sdkResult(clients[provider]!.track(event, properties));
           result[provider] = "queued";
         } catch {
           result[provider] = "unavailable";
@@ -174,18 +243,22 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
       resetVisitor();
       userId = undefined;
       const result: AnalyticsResult = {};
-      for (const provider of ["posthog", "mixpanel", "segment"] as const) {
-        const client = options[provider];
+      for (const provider of providers) {
+        const client = clients[provider];
         if (!client) continue;
-        if (provider === "segment") {
-          queueSegment(async () => {
-            needsReset.add("segment");
-            await options.segment!.reset();
-            delete previous.segment;
-            delete profiles.segment;
-            needsReset.delete("segment");
+        if (
+          provider === "segment" ||
+          provider === "amplitude" ||
+          provider === "rudderstack"
+        ) {
+          queueProvider(provider, async () => {
+            needsReset.add(provider);
+            await sdkResult(client.reset());
+            delete previous[provider];
+            delete profiles[provider];
+            needsReset.delete(provider);
           });
-          result.segment = "queued";
+          result[provider] = "queued";
           continue;
         }
         needsReset.add(provider);
@@ -209,4 +282,29 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
       return result;
     },
   };
+}
+
+async function sdkResult(value: unknown): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const pending =
+    value && typeof value === "object" && "promise" in value
+      ? value.promise
+      : value;
+  const result = await Promise.race([
+    Promise.resolve(pending),
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error("Analytics SDK timed out")),
+        1000,
+      );
+    }),
+  ]).finally(() => clearTimeout(timer));
+  if (
+    result &&
+    typeof result === "object" &&
+    "code" in result &&
+    typeof result.code === "number" &&
+    result.code >= 300
+  )
+    throw new Error("Analytics SDK rejected event");
 }

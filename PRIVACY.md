@@ -129,6 +129,22 @@ Explicit verified device associations store opaque subject/visitor IDs, the veri
 
 Use `evidence.deleteSession` / `Janitor.Evidence.delete_session` for session events and `deleteSubjectEvents` / `delete_subject_events` for events involving a subject as principal or actor. Existing subject/visitor erasure cascades related events and device links. Evidence cleanup respects the application's namespace and retention. HMAC references remain linkable personal data; include them, backups and any separate application exports in disclosure/erasure. Disabling collection does not erase old records. See [the guide](docs/HARDENING.md) for configuration and bounded maintenance. These options are available in v0.7.0.
 
+## Optional API activity
+
+When an implementer explicitly configures `activity`, server middleware can aggregate selected API operations for an application-issued session or authenticated actor. It stores an application-scoped HMAC key, a configured route template, window start and expiry, request/401–403/4xx/5xx counts, total/max handler duration, first/last completion times and the number of same-route completion gaps below 100ms. No body, header, credential, raw ID, raw IP, query value or actual resource URL is read by this middleware. Route templates must be static application configuration. There is no browser network interception or cross-application tracking.
+
+The default counter window is one minute and retention is one day, configurable from 1–30 days. Only up to 128 rows from the latest five windows are loaded for an assessment. With Jev enabled, that compact summary, configured route/sensitivity and optional verified actor kind/delegation status go to the evaluator. HMAC keys and underlying account/session IDs do not. This transfer is separate from browser observation and cross-device learning. Shared evaluation leases and a one-minute default cache limit repeated calls; cached records contain the private assessment and compact summary.
+
+Existing cleanup removes up to 100 expired rows from each new table per call. Stop collection and coordinate in-flight requests, then use `activity.deleteKey` / `Janitor.Activity.delete_key` to erase counters and caches for an actor or session. Browser/subject deletion does not automatically find these separately derived keys; applications must include them in account/session erasure. Disabling collection does not delete existing rows. These pseudonymous records remain linkable data; disclose collection, provider transfers, retention and erasure, and apply the application's collection policy before supplying middleware context.
+
+The explicit server analytics bridge can additionally export API risk status, evaluated scores, evaluation/expiry times, cache and truncation flags, window size and request totals. It excludes route history and does not export API activity automatically. Nothing is added to browser responses, even if browser-score disclosure is enabled. See [API activity](docs/API-ACTIVITY.md) for configuration and operational limits.
+
 ## Score disclosure
 
 HTTP responses omit risk, confidence, account attribution and diagnostics by default. These stay on the implementer's server. Applications can explicitly expose the full result, and should document that choice. Optional result receipts encrypt evidence rather than exposing readable JWT claims. Analytics containing private risk scores should be sent server-to-server. See [security configuration](docs/SECURITY.md).
+
+## New integrations and local preferences
+
+Amplitude and RudderStack receive only the explicit analytics fields described above, when the implementer connects them. Portable warehouse rows have the same allowlisted identity/risk summaries plus an application-owned actor ID, event ID and timestamp. These identifiers are pseudonymous, not anonymous; apply deletion, access and retention policies in downstream warehouses too. Janitor sends no telemetry to a central Janitor service. The proposed learning network is not enabled or implemented by these exports.
+
+Python and Go clients forward browser measurement payloads and that request's cookie/origin context only to the implementer's fixed, application-owned Janitor endpoint. They have no shared cookie jar, do not log payloads, and project only the public identity response. Website theme and documentation-language preferences are stored locally and are not analytics events.

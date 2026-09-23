@@ -73,6 +73,18 @@
     "title": "Add features",
     "pages": [
       {
+        "slug": "api-activity",
+        "title": "Understand API activity",
+        "description": "Add optional Phoenix or Web middleware, assess API behavior with Jev and enrich your existing analytics.",
+        "source": "docs/API-ACTIVITY.md"
+      },
+      {
+        "slug": "warehouses",
+        "title": "Snowflake & warehouses",
+        "description": "Send verified identity context to Snowflake, BigQuery and your existing data pipelines.",
+        "source": "docs/WAREHOUSES.md"
+      },
+      {
         "slug": "matching",
         "title": "How browser matching works",
         "description": "How Janitor remembers a browser and handles a missing cookie.",
@@ -92,8 +104,8 @@
       },
       {
         "slug": "analytics",
-        "title": "PostHog, Mixpanel & Segment",
-        "description": "Manage identify, profile updates, events and logout through one Janitor client.",
+        "title": "Connect your analytics",
+        "description": "Use PostHog, Mixpanel, Segment, Amplitude or RudderStack with Janitor.",
         "source": "docs/ANALYTICS.md"
       },
       {

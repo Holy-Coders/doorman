@@ -368,9 +368,12 @@ test("all documentation links and local section anchors resolve", async ({
   page,
   request,
 }) => {
-  const index = (await (await request.get("/search-index.json")).json()) as {
-    url: string;
-  }[];
+  const index: { url: string }[] = [];
+  for (const suffix of ["", "-elixir", "-python", "-go"]) {
+    index.push(
+      ...(await (await request.get(`/search-index${suffix}.json`)).json()),
+    );
+  }
   const destinations = new Map<string, Set<string>>();
   for (const entry of index) {
     await page.goto(entry.url);
@@ -399,3 +402,57 @@ test("all documentation links and local section anchors resolve", async ({
     }
   }
 });
+
+for (const theme of ["light", "dark"]) {
+  test(`theme ${theme} and language selection persist without changing unrelated controls`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({
+      colorScheme: theme as "light" | "dark",
+      reducedMotion: "reduce",
+    });
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await expect(page.locator("#hero-title")).toHaveText(
+      /Know who’s\s*behind the request/,
+    );
+    await expect(page.locator("#analytics-title")).toHaveText(
+      /Prepare your analytics/,
+    );
+    const next = theme === "light" ? "dark" : "light";
+    await page.getByRole("button", { name: `Switch to ${next} mode` }).click();
+    await page
+      .getByRole("combobox", { name: "Documentation language" })
+      .selectOption("elixir");
+    await expect(page).toHaveURL(/\/docs\/elixir\/getting-started\/$/);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", next);
+    await page.locator('.docs-sidebar a[href$="/api/"]').click();
+    await expect(page.locator("article")).toContainText("Janitor.new/1");
+    await page
+      .getByRole("combobox", { name: "Documentation language" })
+      .selectOption("python");
+    await expect(page).toHaveURL(/\/docs\/python\/api\/$/);
+    await expect(page.locator("article")).toContainText("Python client");
+    await page
+      .getByRole("button", { name: "Search documentation", exact: true })
+      .click();
+    await page.getByRole("searchbox").fill("cookie");
+    await expect(page.locator("#search-results a").first()).toHaveAttribute(
+      "href",
+      /^\/docs\/python\//,
+    );
+    await page.keyboard.press("Escape");
+    await page.setViewportSize({ width: 390, height: 850 });
+    await page.goto("/docs/go/languages/");
+    await expect(page.getByRole("combobox")).toHaveValue("go");
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await expect(page.locator("#theme-icon")).toHaveAttribute(
+      "href",
+      next === "light" ? "/janitor-mark-dark.svg" : "/janitor-mark.svg",
+    );
+  });
+}

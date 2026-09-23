@@ -2,6 +2,8 @@ defmodule Janitor.HTTP do
   @moduledoc false
   # Bound before decoding. No retries, redirects or raw-payload logging.
   def post_json(opts) do
+    {plain_text, opts} = Keyword.pop(opts, :plain_text_response, false)
+
     response =
       Req.post!(
         Keyword.merge(opts,
@@ -14,7 +16,11 @@ defmodule Janitor.HTTP do
         )
       )
 
-    body = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
+    body =
+      if is_binary(response.body) and not plain_text,
+        do: Jason.decode!(response.body),
+        else: response.body
+
     %{response | body: body}
   end
 end

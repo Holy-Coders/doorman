@@ -28,6 +28,8 @@
     "benchmark:capacity": "bash scripts/benchmarks/run-local.sh"
   },
   "devDependencies": {
+    "@amplitude/analytics-browser": "^2.46.0",
+    "@amplitude/analytics-node": "^1.5.73",
     "@electric-sql/pglite": "^0.3.0",
     "@eslint/js": "^9.0.0",
     "@janitor/adapters": "workspace:^",
@@ -38,6 +40,8 @@
     "@janitor/storage-d1": "workspace:^",
     "@janitor/storage-postgres": "workspace:^",
     "@playwright/test": "^1.63.0",
+    "@rudderstack/analytics-js": "^3.34.1",
+    "@rudderstack/rudder-sdk-node": "^3.0.13",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.15.0",
     "eslint": "^9.0.0",

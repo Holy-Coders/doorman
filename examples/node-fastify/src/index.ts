@@ -10,6 +10,13 @@ const db = new Pool({
 const app = createApp(db, {
   apiKey: process.env.JEV_API_KEY,
   origin: process.env.APP_ORIGIN,
+  activity:
+    process.env.JANITOR_API_ACTIVITY === "1"
+      ? {
+          secret: process.env.JANITOR_IDENTITY_SECRET ?? "",
+          apiToken: process.env.EXAMPLE_API_TOKEN ?? "",
+        }
+      : undefined,
 });
 const port = Number(process.env.PORT ?? 3001);
 await app.listen({ port, host: "127.0.0.1" });

@@ -119,6 +119,9 @@ export interface VisitorEvaluator {
   planLookup?(current: NormalizedObservation): Promise<LookupScope>;
   evaluateCandidates?(input: CandidateEvaluationInput): Promise<Evaluation[]>;
   predictIdentity?(input: CrossDeviceInput): Promise<CrossDevicePrediction>;
+  evaluateActivity?(
+    input: import("./activity.js").ApiActivityInput,
+  ): Promise<import("./activity.js").ApiActivityRisk>;
 }
 
 export type RetentionOptions = {

@@ -64,6 +64,10 @@ Always read the status before using a score. An unavailable zero means “not as
 
 The direct API request can be aborted. A Workers AI timeout stops Janitor waiting, but the provider call may still complete and incur usage. Use [request and inference limits](HARDENING.md) if needed.
 
+## API activity evaluation
+
+The optional [API activity middleware](API-ACTIVITY.md) adds `evaluateActivity(input)` to the evaluator interface. It asks two typed Noul questions about automation and potentially abusive API activity, using server-side aggregates and optional verified actor context. These questions are independent of browser matching and cross-device learning. Calls use the same documented transports below, plus shared inference admission, per-context caching and a bounded history. No account/session identifiers or request bodies are sent.
+
 ## Provider API reference
 
 The following details are for people replacing or inspecting the evaluator. Normal integrations only need the adapter configuration above.

@@ -12,7 +12,12 @@ let pendingIndex: Promise<SearchEntry[]> | undefined;
 async function search() {
   if (!input || !results) return;
   try {
-    pendingIndex ??= fetch("/search-index.json").then((response) => {
+    pendingIndex ??= fetch(
+      document.documentElement.dataset.language &&
+        document.documentElement.dataset.language !== "typescript"
+        ? `/search-index-${document.documentElement.dataset.language}.json`
+        : "/search-index.json",
+    ).then((response) => {
       if (!response.ok) throw new Error("Search index unavailable");
       return response.json() as Promise<SearchEntry[]>;
     });

@@ -1,4 +1,5 @@
 import { INTELLIGENCE_LIMITS, isProbability } from "@janitor/core";
+import { createActivityInput } from "./activity.js";
 import type { VisitorEvaluator, CrossDeviceInput } from "@janitor/core";
 import {
   compactObservation,
@@ -75,6 +76,13 @@ export function createJevMethods(
     return transport(input);
   };
   return {
+    async evaluateActivity(input) {
+      const response = await request(createActivityInput(input));
+      return {
+        automation: readNoul(response, "automation"),
+        suspicious: readNoul(response, "suspicious"),
+      };
+    },
     async evaluate(input) {
       return parseJevResponse(await request(createJevInput(input)));
     },

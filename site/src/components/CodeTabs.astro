@@ -89,7 +89,8 @@ await janitor.reset();`,
       <Code
         code={example.code}
         lang={example.name === "Phoenix" ? "elixir" : "ts"}
-        theme="github-dark"
+        themes={{ light: "github-light", dark: "github-dark" }}
+        defaultColor={false}
       />
     </div>
   ))}

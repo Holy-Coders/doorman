@@ -7,6 +7,29 @@ defmodule JanitorExample.Router do
     plug(:put_secure_browser_headers)
   end
 
+  pipeline :activity do
+    plug(:activity_session)
+
+    plug(Janitor.ActivityPlug,
+      config: &JanitorExample.Controller.config/0,
+      context: &JanitorExample.Controller.activity_context/1
+    )
+  end
+
+  defp activity_session(conn, _opts) do
+    if System.get_env("JANITOR_API_ACTIVITY") == "1" do
+      id = Plug.Conn.get_session(conn, :api_activity_id) || Janitor.random_id("session_")
+      Plug.Conn.put_session(conn, :api_activity_id, id)
+    else
+      conn
+    end
+  end
+
+  scope "/api/example" do
+    pipe_through([:browser, :activity])
+    get("/orders/:id", JanitorExample.Controller, :order)
+  end
+
   scope "/" do
     pipe_through(:browser)
     get("/", JanitorExample.Controller, :index)
@@ -29,9 +52,20 @@ defmodule JanitorExample.Controller do
           System.get_env("JANITOR_IDENTITY_SECRET", String.duplicate("local-example-only", 4)),
         namespace: "phoenix-example"
       ],
-      learning: [enabled: true, collection_policy: :application]
+      learning: [enabled: true, collection_policy: :application],
+      activity:
+        if(System.get_env("JANITOR_API_ACTIVITY") == "1",
+          do: [routes: [%{route: "GET /api/example/orders/:id"}]]
+        )
     )
   end
+
+  def activity_context(conn) do
+    if id = get_session(conn, :api_activity_id),
+      do: %{route: "GET /api/example/orders/:id", key: %{kind: "session", id: id}}
+  end
+
+  def order(conn, %{"id" => id}), do: json(conn, %{orderId: id, status: "example"})
 
   def identify(conn, _params) do
     # Add context from your authentication plug, never the incoming JSON:

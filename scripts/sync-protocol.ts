@@ -4,6 +4,8 @@ import { payloadSchema } from "../packages/adapters/src/validation.js";
 import {
   JEV_QUESTIONS,
   INTELLIGENCE_QUESTIONS,
+  API_ACTIVITY_QUESTIONS,
+  createActivityInput,
   createJevInput,
 } from "@janitor/evaluator-jev";
 import {
@@ -80,6 +82,22 @@ const shared = {
       })(JSON.stringify(["protection-v1", value])),
     })),
   ),
+  activity: createActivityInput({
+    activity: {
+      source: "application-api",
+      observedAt: 123,
+      windowMs: 60000,
+      truncated: false,
+      buckets: [],
+    },
+    route: "GET /api/orders/:id",
+    sensitive: true,
+    actor: { kind: "agent", delegated: true },
+  }),
+  activityLabel: await createSubjectLinker({
+    secret: "a".repeat(64),
+    namespace: "fixture",
+  })(JSON.stringify(["api-activity-v1", "actor", "private-actor"])),
   subjects: await Promise.all(
     ["account-123", "משתמש", "é", 'a"b'].map(async (id) => ({
       id,
@@ -93,6 +111,10 @@ const shared = {
   ),
 };
 for (const dir of ["protocol", "packages/elixir/priv"]) {
+  writeFileSync(
+    `${dir}/jev-activity.json`,
+    JSON.stringify(API_ACTIVITY_QUESTIONS, null, 2) + "\n",
+  );
   writeFileSync(
     `${dir}/jev-intelligence.json`,
     JSON.stringify(INTELLIGENCE_QUESTIONS, null, 2) + "\n",
@@ -119,6 +141,7 @@ for (const migration of [
   "0005_protection",
   "0006_evidence",
   "0007_learning_lookup",
+  "0008_api_activity",
 ])
   copyFileSync(
     `packages/storage/postgres/migrations/${migration}.sql`,
@@ -159,7 +182,7 @@ writeFileSync(
       openapi: "3.1.0",
       info: {
         title: "Janitor first-party browser protocol",
-        version: "0.8.1",
+        version: "0.9.0",
         description:
           "Self-hosted by each implementer. Measurements never establish authenticated account claims.",
       },

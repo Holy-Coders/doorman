@@ -1,6 +1,6 @@
 {
   "name": "@janitor/adapters",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -10,6 +10,10 @@
   ],
   "sideEffects": false,
   "exports": {
+    "./activity": {
+      "types": "./dist/activity.d.ts",
+      "import": "./dist/activity.js"
+    },
     "./cloudflare": {
       "types": "./dist/cloudflare/index.d.ts",
       "import": "./dist/cloudflare/index.js"
@@ -29,6 +33,10 @@
     "./security": {
       "types": "./dist/security.d.ts",
       "import": "./dist/security.js"
+    },
+    "./warehouse": {
+      "types": "./dist/warehouse.d.ts",
+      "import": "./dist/warehouse.js"
     }
   },
   "scripts": {

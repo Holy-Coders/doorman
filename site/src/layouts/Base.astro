@@ -4,29 +4,55 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource/ibm-plex-mono/400.css";
 import "../styles/global.css";
 import "../styles/brand.css";
+import "../styles/preferences.css";
 import { REPO } from "../content";
 interface Props {
   title?: string;
   description?: string;
   docs?: boolean;
+  language?: string;
 }
 const {
   title = "Janitor — Visitor identity, with context.",
   description = "An open-source library for recognizing returning browsers, assessing risk with Jev, and connecting authenticated people and agents. Runs on your server.",
   docs = false,
+  language,
 } = Astro.props;
+const docPath = (slug: string) =>
+  `/docs/${language && language !== "typescript" ? language + "/" : ""}${slug}/`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-doc-language={language}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/janitor-mark.svg" type="image/svg+xml" />
+    <link
+      id="theme-icon"
+      rel="icon"
+      href="/janitor-mark.svg"
+      type="image/svg+xml"
+    />
+    <script is:inline>
+      try {
+        const preference = localStorage.getItem("janitor-theme");
+        const theme =
+          preference === "light" || preference === "dark"
+            ? preference
+            : matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+        document.documentElement.dataset.theme = theme;
+        document.getElementById("theme-icon").href =
+          theme === "light" ? "/janitor-mark-dark.svg" : "/janitor-mark.svg";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
+    </script>
     <meta name="theme-color" content="#080c0c" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -45,7 +71,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         janitor<span class="brand-period">.</span>
       </a>
       <nav aria-label="Main navigation" class="desktop-nav">
-        <a href="/docs/introduction/" class:list={[docs && "active"]}>
+        <a href={docPath("introduction")} class:list={[docs && "active"]}>
           Documentation
         </a>
         <a
@@ -59,6 +85,32 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         </a>
       </nav>
       <div class="header-actions">
+        <label class="language-control">
+          <span class="sr-only">Documentation language</span>
+          <select data-language aria-label="Documentation language">
+            <option value="typescript" selected={language === "typescript"}>
+              TypeScript
+            </option>
+            <option value="elixir" selected={language === "elixir"}>
+              Elixir
+            </option>
+            <option value="python" selected={language === "python"}>
+              Python
+            </option>
+            <option value="go" selected={language === "go"}>
+              Go
+            </option>
+          </select>
+        </label>
+        <button
+          class="theme-toggle"
+          data-theme-toggle
+          aria-label="Switch color theme"
+          title="Switch color theme"
+        >
+          <span aria-hidden="true">◐</span>
+          <span data-theme-label>Theme</span>
+        </button>
         <button
           class="search-trigger"
           data-search
@@ -93,7 +145,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           <span></span>
         </summary>
         <nav aria-label="Mobile navigation">
-          <a href="/docs/introduction/">Documentation</a>
+          <a href={docPath("introduction")}>Documentation</a>
           <a href="/playground/">Playground</a>
           <a href={REPO}>GitHub ↗</a>
           <button data-search>Search docs</button>
@@ -118,15 +170,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       </div>
       <div>
         <span class="footer-heading">Build with Janitor</span>
-        <a href="/docs/getting-started/">Get started</a>
-        <a href="/docs/api/">API reference</a>
-        <a href="/docs/agentic-identity/">Humans, agents & authority</a>
+        <a href={docPath("getting-started")}>Get started</a>
+        <a href={docPath("api")}>API reference</a>
+        <a href={docPath("agentic-identity")}>Humans, agents & authority</a>
         <a href="/playground/">Interactive labs</a>
       </div>
       <div>
         <span class="footer-heading">Know the details</span>
-        <a href="/docs/privacy/">Privacy & signals</a>
-        <a href="/docs/validation/">Testing & limitations</a>
+        <a href={docPath("privacy")}>Privacy & signals</a>
+        <a href={docPath("validation")}>Testing & limitations</a>
         <a href={REPO + "/blob/main/LICENSE"}>MIT license</a>
       </div>
       <div class="footer-note">
@@ -167,6 +219,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         Local search. No query leaves your browser.
       </div>
     </dialog>
+    <script src="../scripts/preferences.ts"></script>
     <script src="../scripts/navigation.ts"></script>
   </body>
 </html>
