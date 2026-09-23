@@ -1,3 +1,5 @@
+import { createSubjectLinker } from "./subject.js";
+import type { SubjectLinkingOptions } from "./subject.js";
 import { createVisitorEngine, isVisitorId } from "@janitor/core";
 import type {
   EngineOptions,
@@ -12,12 +14,16 @@ export type AdapterOptions = RetentionOptions &
     cookie?: { name?: string; maxAgeDays?: number; secure?: boolean };
     maxBodyBytes?: number;
     endpointPath?: string;
+    subjectLinking?: SubjectLinkingOptions;
   };
 export function createVisitorHandler(
   storage: ManagedVisitorStorage,
   evaluator: VisitorEvaluator | undefined,
   options: AdapterOptions = {},
 ) {
+  const linkSubject = options.subjectLinking
+    ? createSubjectLinker(options.subjectLinking)
+    : undefined;
   const environment = options.environment ?? "production";
   if (options.debug && environment === "production")
     throw new Error("Debug requires a non-production environment");
@@ -44,13 +50,16 @@ export function createVisitorHandler(
       status,
       headers: {
         "Cache-Control": "private, no-store",
-        Vary: "Cookie, Origin",
+        Vary: "Cookie, Origin, Authorization",
         "X-Content-Type-Options": "nosniff",
         ...headers,
       },
     });
   return {
-    async handle(request: Request): Promise<Response> {
+    async handle(
+      request: Request,
+      context: { authenticatedSubject?: string } = {},
+    ): Promise<Response> {
       if (
         new URL(request.url).pathname !==
         (options.endpointPath ?? "/api/visitor")
@@ -80,6 +89,18 @@ export function createVisitorHandler(
         return json({ error: "Insecure cookies require localhost" }, 400);
       try {
         const payload = await readPayload(request, maxBodyBytes);
+        const subject = context.authenticatedSubject;
+        if (
+          subject !== undefined &&
+          (typeof subject !== "string" ||
+            !subject.trim() ||
+            subject.length > 512)
+        )
+          throw new RequestError(400, "Invalid authenticated subject");
+        if (subject !== undefined && !linkSubject)
+          throw new RequestError(500, "Subject linking is not configured");
+        const subjectId =
+          subject !== undefined ? await linkSubject!(subject) : undefined;
         const cookies = (request.headers.get("cookie") ?? "")
           .split(";")
           .map((cookie) => cookie.trim())
@@ -93,7 +114,7 @@ export function createVisitorHandler(
           visitorId: id && isVisitorId(id) ? id : undefined,
         });
         const secure = options.cookie?.secure === false ? "" : "; Secure";
-        return json(identity, 200, {
+        return json({ ...identity, ...(subjectId ? { subjectId } : {}) }, 200, {
           "Set-Cookie": `${cookieName}=${identity.visitorId}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAge)}`,
         });
       } catch (error) {

@@ -26,6 +26,15 @@ export type BrowserBehavior = {
   keyDownCount: number;
   scrollCount: number;
   visibilityChangeCount: number;
+  mouseDistancePx?: number;
+  mouseActiveMs?: number;
+  mouseDirectionChanges?: number;
+  mousePauseCount?: number;
+  scrollDistancePx?: number;
+  scrollDirectionChanges?: number;
+  interactionIntervalCount?: number;
+  interactionIntervalMeanMs?: number;
+  interactionIntervalStdDevMs?: number;
 };
 
 export type NormalizedObservation = BrowserObservation & {
@@ -35,6 +44,8 @@ export type NormalizedObservation = BrowserObservation & {
 
 export type VisitorIdentity = {
   visitorId: string;
+  /** Present only when the server supplies a verified account identity. */
+  subjectId?: string;
   confidence: number;
   isReturning: boolean;
   risk: { automation: number; suspicious: number };

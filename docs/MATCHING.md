@@ -24,7 +24,7 @@ Missing pairs are excluded from the denominator; they are not mismatches. An emp
 | WebGL vendor               |   0.07 |
 | WebGL renderer             |   0.13 |
 
-Dimensions use the mean ratio of corresponding short and long sides. Other features compare exact normalized values. Color depth and pixel ratio go to the evaluator but are not separate deterministic weights. Automation is exposed in the feature explanation and evaluator state but never weighted for identity. Behavioral counts are not identity features.
+Dimensions use the mean ratio of corresponding short and long sides. Other features compare exact normalized values. Color depth and pixel ratio go to the evaluator but are not separate deterministic weights. Automation is exposed in the feature explanation and evaluator state but never weighted for identity. Behavioral counts and optional motion/timing summaries are not identity features.
 
 All weights live in `SIMILARITY_WEIGHTS`; confidence constants live in `MATCHING_DEFAULTS`. These values are heuristics requiring calibration.
 

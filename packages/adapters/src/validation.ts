@@ -42,6 +42,20 @@ export const payloadSchema = z.strictObject({
       keyDownCount: count,
       scrollCount: count,
       visibilityChangeCount: count,
+      mouseDistancePx: z.number().int().min(0).max(1_000_000_000).optional(),
+      mouseActiveMs: z.number().int().min(0).max(1_000_000_000).optional(),
+      mouseDirectionChanges: count.optional(),
+      mousePauseCount: count.optional(),
+      scrollDistancePx: z.number().int().min(0).max(1_000_000_000).optional(),
+      scrollDirectionChanges: count.optional(),
+      interactionIntervalCount: count.optional(),
+      interactionIntervalMeanMs: z.number().int().min(0).max(60_000).optional(),
+      interactionIntervalStdDevMs: z
+        .number()
+        .int()
+        .min(0)
+        .max(60_000)
+        .optional(),
     })
     .optional(),
   debug: z.boolean().optional(),

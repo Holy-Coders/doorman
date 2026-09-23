@@ -99,12 +99,12 @@ pnpm test
 pnpm lint
 ```
 
-Download the prebuilt [v0.1.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.1.0) to try the packages outside the monorepo:
+Download the prebuilt [v0.2.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.2.0) to try the packages outside the monorepo:
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.1.0/janitor-0.1.0.tar.gz -o janitor-0.1.0.tar.gz
-tar -xzf janitor-0.1.0.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.2.0/janitor-0.2.0.tar.gz -o janitor-0.2.0.tar.gz
+tar -xzf janitor-0.2.0.tar.gz
 pnpm install
 ```
 
@@ -211,7 +211,7 @@ The example migrations are idempotent. All examples disable external AI by defau
 
 ## Privacy and scope
 
-Only first-party browser observations and aggregate counts are stored. No raw IP, geolocation, keys, form contents, mouse positions, account information or cross-site identifiers are collected. Browser protections are respected, including masked WebGL values. [PRIVACY.md](PRIVACY.md) describes every signal, erasure, retention, evaluator data sharing and disclosure. Create the client only after any required opt-in and stop collection when consent is withdrawn. Cookie loss is not treated as consent to resume collection.
+Only first-party browser observations and enabled aggregate behavior summaries are stored. No raw IP, geolocation, keys, form contents, absolute mouse positions or cross-site identifiers are collected from the browser. Optional server-verified account linking returns an application-scoped subject label without storing account identifiers. Browser protections are respected, including masked WebGL values. [PRIVACY.md](PRIVACY.md) describes every signal, erasure, retention, evaluator data sharing and disclosure. Create the client only after any required opt-in and stop collection when consent is withdrawn. Cookie loss is not treated as consent to resume collection.
 
 This is a small experimental library, not a fingerprinting platform: no accounts, dashboard, billing, queues, worker service, Redis, model training or automatic enforcement.
 
@@ -227,3 +227,9 @@ pnpm site:test
 ```
 
 See [site/README.md](site/README.md) for publishing and content maintenance.
+
+## Behavior, cross-device links, and benchmarks
+
+Opt in to motion/timing summaries with `createVisitorClient({ behavior: "extended" })`. For authenticated cross-device identity, configure `subjectLinking: { secret, namespace }` on the server and call `visitor.handle(request, { authenticatedSubject: verifiedSession.user.id })`. Different browsers keep their own `visitorId` and receive the same opaque `subjectId` only when the application verifies the same account. The library does not infer anonymous people or implement authentication. See [the integration guide](docs/EXTENSIONS.md).
+
+Generate controlled observations with `pnpm exec playwright install chromium firefox webkit` followed by `pnpm benchmark:browser`. [The benchmark report](docs/BENCHMARKS.md) includes both successful restoration and identical-profile false matches. The generated data is not a real-user population or a measured bot-detection accuracy claim.

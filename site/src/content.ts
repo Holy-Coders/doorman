@@ -44,6 +44,19 @@ export const sections = [
     title: "Under the hood",
     pages: [
       {
+        slug: "extensions",
+        title: "Behavior & cross-device",
+        description: "Optional movement summaries and verified account links.",
+        source: "docs/EXTENSIONS.md",
+      },
+      {
+        slug: "benchmarks",
+        title: "Browser benchmarks",
+        description:
+          "Real browser observations, controlled tests, and known limits.",
+        source: "docs/BENCHMARKS.md",
+      },
+      {
         slug: "matching",
         title: "Identity matching",
         description:

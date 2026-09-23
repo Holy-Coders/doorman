@@ -16,7 +16,16 @@ test("browser → Fastify → Postgres: first visit, cookie continuity, cookie l
     expect(result.status()).toBe(200);
     return (await result.json()) as VisitorIdentity;
   }
+  await page.mouse.move(10, 10);
+  await page.mouse.move(160, 110, { steps: 6 });
+  const outgoing = page.waitForRequest((request) =>
+    request.url().endsWith("/api/visitor"),
+  );
   const first = await identify();
+  const sent = (await outgoing).postDataJSON();
+  expect(sent.behavior.mouseDistancePx).toBeGreaterThan(0);
+  expect(sent.behavior).not.toHaveProperty("clientX");
+  expect(sent.behavior).not.toHaveProperty("events");
   expect(first.isReturning).toBe(false);
   expect(first.risk).toEqual({ automation: 0, suspicious: 0 });
   const cookie = (await context.cookies()).find(

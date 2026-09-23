@@ -3,13 +3,13 @@
 ## Browser
 
 ```ts
-createVisitorClient(options?: { endpoint?: string; debug?: boolean }): {
+createVisitorClient(options?: { endpoint?: string; debug?: boolean; behavior?: "counts" | "extended" }): {
   identify(): Promise<VisitorIdentity>;
   destroy(): void;
 };
 ```
 
-`endpoint` defaults to `/api/visitor`; cross-origin URLs are rejected. Concurrent calls on one client share a promise. `identify()` sends signals and current aggregate counts using same-origin cookies and a ten-second request timeout. Network, HTTP or invalid response errors reject; collection failures alone do not throw. After `destroy()`, the client cannot identify again. Create a new client on a new mount; do not reuse it after disposal. Collection should start only after the application's required opt-in.
+`endpoint` defaults to `/api/visitor`; cross-origin URLs are rejected. Concurrent calls on one client share a promise. `identify()` sends signals and current aggregate behavior using same-origin cookies and a ten-second request timeout. Network, HTTP or invalid response errors reject; collection failures alone do not throw. After `destroy()`, the client cannot identify again. Create a new client on a new mount; do not reuse it after disposal. Collection should start only after the application's required opt-in.
 
 `collectBrowserSignals`, `createBehaviorTracker`, and `safe` are exported for advanced integrations/testing. The normal application API requires only `createVisitorClient`.
 
@@ -52,7 +52,7 @@ const engine = createVisitorEngine({
 });
 const result = await engine.identify({
   signals,
-  behavior, // Optional aggregate counts.
+  behavior, // Optional aggregate counts/summaries.
   visitorId, // Optional, extracted from a trusted application cookie boundary.
 });
 ```
@@ -65,7 +65,7 @@ All return the same shape:
 
 ```ts
 {
-  handle(request: Request): Promise<Response>;
+  handle(request: Request, context?: { authenticatedSubject?: string }): Promise<Response>;
   cleanup(): Promise<void>;
   deleteVisitor(visitorId: string): Promise<void>;
 }
@@ -131,3 +131,9 @@ LICENSE
 ```
 
 Every package has an ESM export map, strict TypeScript build, version, license, and declaration files. `@janitor/adapters` has three public subpath entrypoints, not three conflicting npm packages. Storage migration files are exported as `@janitor/storage-d1/migrations/0001_visitors.sql` and the corresponding Postgres subpath.
+
+## Extended behavior and verified cross-device subjects
+
+`createBehaviorTracker({ extended: true })` enables the same optional summaries as `createVisitorClient({ behavior: "extended" })`. Counts remain the default. All summaries are optional fields on `BrowserBehavior`; see [the full inventory](../PRIVACY.md).
+
+High-level adapters accept `subjectLinking: { secret, namespace }`. Supply at least 32 cryptographically random bytes of secret material (a 64-character hex string works) and a nonempty application namespace. `handle(request, { authenticatedSubject })` derives an opaque `sub_…` HMAC-SHA-256 label from that already verified account identity. `VisitorIdentity.subjectId?: string` appears only for authenticated requests; `visitorId`, `confidence` and `isReturning` retain their browser-continuity meanings. No database migration or account table is required. See [the integration guide](./EXTENSIONS.md).

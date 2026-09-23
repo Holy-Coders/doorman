@@ -223,3 +223,139 @@ describe("HTTP boundary", () => {
     ]);
   });
 });
+
+describe("verified cross-device subjects", () => {
+  const secret = "a".repeat(64);
+  const options = { subjectLinking: { secret, namespace: "test-app" } };
+  it("links a verified account across different browsers without merging visitor IDs or sharing account data with the evaluator", async () => {
+    const evaluate = vi.fn(async () => evaluation);
+    const handler = createVisitorHandler(
+      createMemoryStorage(),
+      { evaluate },
+      options,
+    );
+    const first = await (
+      await handler.handle(request(), { authenticatedSubject: "account-123" })
+    ).json();
+    const phone = {
+      ...signals,
+      platform: "iPhone",
+      userAgent: "Version/18 Safari/605",
+      hardware: { maxTouchPoints: 5 },
+    };
+    const second = await (
+      await handler.handle(request({ signals: phone }), {
+        authenticatedSubject: "account-123",
+      })
+    ).json();
+    expect(first.subjectId).toMatch(/^sub_[a-f0-9]{64}$/);
+    expect(second.subjectId).toBe(first.subjectId);
+    expect(second.visitorId).not.toBe(first.visitorId);
+    expect(second.isReturning).toBe(false);
+    expect(JSON.stringify(evaluate.mock.calls)).not.toContain("account-123");
+    const loggedOut = await (
+      await handler.handle(
+        request({ signals }, { Cookie: `__visitor=${first.visitorId}` }),
+      )
+    ).json();
+    expect(loggedOut.visitorId).toBe(first.visitorId);
+    expect(loggedOut.subjectId).toBeUndefined();
+  });
+  it("ignores identity headers, rejects body claims, and only adds subjects for verified context", async () => {
+    const handler = createVisitorHandler(
+      createMemoryStorage(),
+      undefined,
+      options,
+    );
+    const anonymous = await (
+      await handler.handle(request({ signals }, { "x-user-id": "account-123" }))
+    ).json();
+    expect(anonymous.subjectId).toBeUndefined();
+    expect(
+      (
+        await handler.handle(
+          request({ signals, authenticatedSubject: "account-123" }),
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (await handler.handle(request(), { authenticatedSubject: "" })).status,
+    ).toBe(400);
+    expect(
+      (
+        await createVisitorHandler(createMemoryStorage(), undefined).handle(
+          request(),
+          { authenticatedSubject: "account-123" },
+        )
+      ).status,
+    ).toBe(500);
+  });
+  it("separates accounts, application namespaces and secrets", async () => {
+    const derive = async (account: string, namespace: string, key = secret) =>
+      (
+        await (
+          await createVisitorHandler(createMemoryStorage(), undefined, {
+            subjectLinking: { secret: key, namespace },
+          }).handle(request(), { authenticatedSubject: account })
+        ).json()
+      ).subjectId;
+    const ids = await Promise.all([
+      derive("a", "one"),
+      derive("b", "one"),
+      derive("a", "two"),
+      derive("a", "one", "b".repeat(64)),
+    ]);
+    expect(new Set(ids).size).toBe(4);
+    expect(await derive("a", "one")).toBe(ids[0]);
+    expect(() =>
+      createVisitorHandler(createMemoryStorage(), undefined, {
+        subjectLinking: { secret: "short", namespace: "one" },
+      }),
+    ).toThrow();
+  });
+});
+
+it("accepts bounded extended summaries while rejecting trajectories and excessive values", async () => {
+  const handler = createVisitorHandler(createMemoryStorage(), undefined);
+  const behavior = {
+    pageAgeMs: 2000,
+    mouseMoveCount: 10,
+    pointerDownCount: 1,
+    keyDownCount: 0,
+    scrollCount: 2,
+    visibilityChangeCount: 0,
+    mouseDistancePx: 150,
+    mouseActiveMs: 120,
+    mouseDirectionChanges: 2,
+    mousePauseCount: 0,
+    scrollDistancePx: 100,
+    scrollDirectionChanges: 1,
+    interactionIntervalCount: 0,
+  };
+  expect((await handler.handle(request({ signals, behavior }))).status).toBe(
+    200,
+  );
+  expect(
+    (
+      await handler.handle(
+        request({ signals, behavior: { ...behavior, mouseDistancePx: 1e12 } }),
+      )
+    ).status,
+  ).toBe(400);
+  expect(
+    (
+      await handler.handle(
+        request({
+          signals,
+          behavior: {
+            ...behavior,
+            path: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        }),
+      )
+    ).status,
+  ).toBe(400);
+});

@@ -17,7 +17,8 @@
     "site:dev": "pnpm --filter @janitor/site dev",
     "site:build": "pnpm --filter @janitor/core build && pnpm --filter @janitor/site build",
     "site:check": "pnpm --filter @janitor/site typecheck",
-    "site:test": "pnpm site:build && playwright test --config site/playwright.config.ts"
+    "site:test": "pnpm site:build && playwright test --config site/playwright.config.ts",
+    "benchmark:browser": "pnpm build && tsx tests/benchmarks/generate.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.0",

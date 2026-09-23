@@ -29,11 +29,22 @@ The browser client counts events from creation until `destroy()`:
 - elapsed milliseconds since tracker creation (bounded to seven days);
 - mouse-move, pointer-down, key-down, scroll and visibility-change counts (each capped at one million).
 
-Only totals are sent on `identify()`. Event objects and contents are not inspected or retained. There are no per-event timestamps, coordinates, sequences, key values, or movement paths. Creation adds passive listeners; `destroy()` removes them and aborts in-flight identification. Call it on unmount or opt-out. Creating a tracker is separate from sending an observation; the example button controls sending, while counts accumulate while the example is open.
+Only totals are sent on `identify()`. The default `behavior: "counts"` mode does not inspect event contents.
+
+Optional `behavior: "extended"` adds these bounded, rounded summaries:
+
+- `mouseDistancePx`: sum of mouse movement delta lengths;
+- `mouseActiveMs`: accumulated intervals below one second between mouse events;
+- `mouseDirectionChanges`: count of successive movement vectors more than 90 degrees apart;
+- `mousePauseCount`: mouse-event gaps of at least one second;
+- `scrollDistancePx` and `scrollDirectionChanges`: absolute vertical wheel deltas and sign reversals, using pixel-mode wheel events only (attempted movement, not actual page travel);
+- `interactionIntervalCount`, `interactionIntervalMeanMs`, `interactionIntervalStdDevMs`: count, mean and population standard deviation of successive key-down/pointer-down intervals no greater than one minute.
+
+Extended mode reads movement deltas, wheel deltas and a monotonic clock. It retains only running totals and the immediately preceding delta/time in transient memory. Visibility/focus gaps reset timing continuity. Absolute pointer coordinates, key values, event targets, text and form data are never read. No raw events, timestamps, movement paths or event sequences are sent or stored. Extended mode is opt-in so applications can disclose the additional processing before starting collection. These are uncalibrated risk inputs, never identity-matching features. Creation adds passive listeners; `destroy()` removes them and aborts in-flight identification. Call it on unmount or opt-out. Creating a tracker is separate from sending an observation; the example button controls sending, while counts accumulate while the example is open.
 
 ## What is never collected by the library
 
-No raw IP addresses, geolocation, actual keystrokes, passwords, text inputs, form values, mouse coordinates, camera, microphone, browsing history, referrer, URL history, account identifiers or third-party tracking identifiers. The current application origin is used locally to enforce same-origin delivery, not stored as a fingerprint feature. The library does not read IP-related request headers. Network infrastructure naturally receives connection metadata; configure hosting/access logs separately because they are outside this library's control.
+No raw IP addresses, geolocation, actual keystrokes, passwords, text inputs, form values, absolute mouse coordinates, camera, microphone, browsing history, referrer, URL history or third-party tracking identifiers are collected from the browser. The current application origin is used locally to enforce same-origin delivery, not stored as a fingerprint feature. The library does not read IP-related request headers. Network infrastructure naturally receives connection metadata; configure hosting/access logs separately because they are outside this library's control.
 
 There are no third-party browser scripts, beacons, cross-origin endpoints, hidden storage caches, localStorage/IndexedDB identity copies, evercookies, or attempts to recover values hidden by browser protections. All collection uses ordinary browser APIs.
 
@@ -41,7 +52,7 @@ There are no third-party browser scripts, beacons, cross-origin endpoints, hidde
 
 `visitors` stores an opaque ID and creation/last-seen timestamps. `observations` stores normalized JSON (including the optional aggregate behavior), a timestamp, visitor link, and coarse indexed fields: platform, browser family, timezone and WebGL renderer. The ID contains 192 random bits and encodes no browser information.
 
-When an evaluator is enabled, compact observations (up to five history entries plus current data and similarity evidence) are sent server-to-server to TypeSafe, or through Cloudflare Workers AI. The compact payload excludes raw user agent, visitor ID, cookie, IP address and application URL. Platform/browser, language/timezone, display/hardware/graphics values, webdriver and aggregate counts are included. This is still browser-environment data: disclose the evaluator providers and review their handling terms for your application. Deterministic-only mode does not send data to an evaluator.
+When an evaluator is enabled, compact observations (up to five history entries plus current data and similarity evidence) are sent server-to-server to TypeSafe, or through Cloudflare Workers AI. The compact payload excludes raw user agent, visitor ID, cookie, IP address and application URL. Platform/browser, language/timezone, display/hardware/graphics values, webdriver and enabled aggregate behavior summaries are included. This is still browser-environment data: disclose the evaluator providers and review their handling terms for your application. Deterministic-only mode does not send data to an evaluator.
 
 Responses contain ID, continuity confidence and risk. Debug responses additionally expose collected signals only with explicit client/server opt-in and a non-production server environment. Do not log debug output. Optional metrics contain counts, scores, evaluator usage/latency and returning status only; no fingerprints are logged by default.
 
@@ -65,3 +76,9 @@ The server's opaque visitor cookie can help locate records for erasure while pre
 Describe why browser recognition is used, which signal categories are collected, how cookie-loss restoration works, whether an evaluator receives compact data, how long data is kept, and how to withdraw/erase. Obtain any required opt-in before creating the client. Do not treat cookie removal as permission to resume tracking. Respect browser protections and user choices at the application integration point.
 
 Risk scores do not establish that a person is a bot, malicious, or identifiable. Privacy-focused browsers, missing APIs and lack of mouse activity are explicitly not sufficient evidence for high risk. Evaluator failure defaults to zero risk. The consuming application owns CAPTCHA/access policy and should assess false positives before acting on these experimental scores.
+
+## Optional verified cross-device labels
+
+When an application explicitly enables `subjectLinking` and passes a verified `authenticatedSubject` to the server handler, it returns an application-scoped HMAC `subjectId`. The account identifier is received only from the application's trusted server code. It is not collected from the browser, read from request headers/body, placed in cookies, stored in Janitor's database, sent to the evaluator, or logged. The subject label is returned only on requests where the application supplies verified identity. Anonymous requests never retrieve an old account association from a browser cookie.
+
+The label is deterministic for a given account, namespace and secret. Janitor stores no account-to-browser graph. If your application saves the returned labels or relationships, include those records in its own disclosure and erasure process. Rotating the secret/namespace changes all derived labels; using an account-specific generation identifier lets your authentication system retire one account's prior label. Signing into the same account establishes an account link, not proof that the same physical person operates every session.

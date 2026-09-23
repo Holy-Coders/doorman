@@ -23,7 +23,7 @@ export const JEV_QUESTIONS = {
     type: "noul",
     instructions:
       untrusted +
-      "Based only on current technical signals and aggregate behavior, is this session browser automation rather than ordinary human-operated usage? webdriver=true is positive technical evidence. Missing signals, privacy protections, keyboard-only use, accessibility tools and lack of mouse movement alone must not imply automation. Ignore historical identity similarity.",
+      "Based only on current technical signals and aggregate behavior, is this session browser automation rather than ordinary human-operated usage? webdriver=true is positive technical evidence. Missing signals, privacy protections, keyboard-only use, accessibility tools and lack of mouse movement alone must not imply automation. Optional motion/timing aggregates are weak supporting evidence only, not proof of human operation or malicious intent. Interpret timing only with its sample count; speed, regular motion, or irregular motion alone cannot establish automation. All client measurements can be spoofed. Ignore historical identity similarity.",
     criteria: {
       true: "Positive technical evidence of browser automation.",
       false: "Ordinary human use or insufficient positive automation evidence.",

@@ -6,7 +6,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm build`                  | All seven packages compile to ESM and declarations                                                                                                              |
 | `pnpm typecheck`              | Packages, test sources and all three example applications pass                                                                                                  |
-| `pnpm test`                   | 73 tests pass across five files                                                                                                                                 |
+| `pnpm test`                   | 79 tests pass across five files                                                                                                                                 |
 | `pnpm lint`                   | Passes                                                                                                                                                          |
 | `pnpm test:e2e`               | Chromium browser integration passes                                                                                                                             |
 | Next.js production build      | Passes on Next.js 16.3.6; page and API route produced                                                                                                           |
@@ -16,7 +16,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | All three live local examples | Browser identifies, uses HttpOnly cookie, then restores ID after cookies are cleared                                                                            |
 | Packed installation           | All seven packages install in an isolated consumer with local pnpm overrides; nine factory exports, SSR-safe browser import and both migration exports verified |
 
-Unit/integration coverage: 27 core cases, 6 browser cases, 14 evaluator cases, 16 HTTP/high-level adapter cases, 10 shared SQL storage contract cases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
+Unit/integration coverage: 27 core cases, 8 browser cases, 14 evaluator cases, 20 HTTP/high-level adapter cases, 10 shared SQL storage contract cases. These include the 24 requested behaviors plus ambiguity, sparse/zero-valued evidence, privacy protections, client lifecycle, response validation, request size/origin bounds, independent risk/identity and late evaluator completion.
 
 Storage contract tests execute real SQL using PGlite (embedded Postgres) and Miniflare D1. Core matching is not mocked. Evaluator network calls are mocked against the current official Jev/Workers AI contracts, including 500/429/529 errors, malformed outputs and timeouts.
 
@@ -42,4 +42,8 @@ Example boot commands and environment variables are in each example's README and
 
 ## Public website checks
 
-`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes five Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all twelve primary pages at mobile and desktop widths, and navigation/static assets. The site produces thirteen HTML pages, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
+`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes five Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all fourteen primary pages at mobile and desktop widths, and navigation/static assets. The site produces fifteen HTML pages, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
+
+## Controlled browser dataset
+
+The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 79 unit/integration and six browser UI/integration tests; no risk accuracy or Jev inference is claimed.

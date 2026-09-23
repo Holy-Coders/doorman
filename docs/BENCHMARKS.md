@@ -1,0 +1,46 @@
+# Browser benchmarks
+
+We can generate real browser measurements in a controlled environment. That provides repeatable regression evidence, not a substitute for a consented real-user population.
+
+## Reproduce
+
+```sh
+pnpm install
+pnpm exec playwright install chromium firefox webkit
+pnpm benchmark:browser
+```
+
+The generator serves the actual browser collector over loopback, launches three real browser engines, and records 30 observations from six isolated contexts. Display dimensions, locale and timezone are Playwright configurations, not measurements from six physical machines. All sessions are automated. It writes local `artifacts/benchmarks/observations.json` and `report.json`; raw observations are ignored by Git and never uploaded or sent to Jev.
+
+Scenarios include reload, scripted mouse/keyboard/wheel interaction, resizing and a timezone change. The timezone scenario recreates a context with copied storage state; it is emulation of travel. No actual browser-version upgrade, mobile hardware, privacy-browser modification or human session is represented.
+
+The identity replay runs the production core engine and Postgres adapter against PGlite, using the real SQL candidate lookup. Each trial starts from freshly seeded ground-truth history, so previous outcomes cannot contaminate later trials. One saved observation per profile is used. Cookies are modeled by supplying the enrolled opaque visitor ID directly to the engine; HTTP cookie handling is covered by the separate Chromium end-to-end test. AI evaluation is disabled, so this tests deterministic fallback, not Jev accuracy or calibration.
+
+## Recorded result: September 23, 2026
+
+Chromium 153.0.8010.12, Firefox 155.0 and WebKit 26.6 on one macOS host. Six logical browser profiles, 30 observations, 78 identity trials. [Machine-readable aggregate results](./benchmarks/browser-2026-09-23.json).
+
+| Trial cohort                                                        | Trials | Correct restorations | Wrong restorations | New IDs |
+| ------------------------------------------------------------------- | -----: | -------------------: | -----------------: | ------: |
+| One enrolled profile, same profile returning without a cookie       |     24 |                   24 |                  0 |       0 |
+| Known cookie, all profiles enrolled                                 |     24 |                   24 |                  0 |       0 |
+| All profiles enrolled, identical candidates compete without cookies |     24 |                    0 |                  0 |      24 |
+| Unseen profile, only an identical-looking other profile enrolled    |      6 |                    0 |                  6 |       0 |
+
+The last row is a known false-match case under a **browser-profile** definition of identity. The profiles share the same physical host and browser build, so it is not evidence about false matches between different physical machines. It nevertheless demonstrates that equal browser signals cannot distinguish isolated profiles or prove person identity. Confidence near 1 is an algorithm score, not a measured probability of correctness. Raising the threshold cannot distinguish two exactly equal observations.
+
+When multiple equal candidates are already stored, the ambiguity margin avoids choosing between them. When only one is stored, Janitor cannot tell whether an identical observation belongs to a new profile. Do not use this result to advertise 100% recognition. The benchmark deliberately includes this failure instead of averaging it away into one score.
+
+Risk accuracy is **not measured**. All sessions are automated and no human ground truth is present. Risk outputs remain zero because the evaluator is disabled. Extra motion summaries do not by themselves solve identity collisions or establish intent. Cross-device person/account continuity needs [verified account linking](./EXTENSIONS.md).
+
+## Public data candidates
+
+- [FP-Stalker](https://github.com/Spirals-Team/FPStalker) publishes a 15,000-fingerprint sample from historical browser observations. It is a useful candidate for chronological identity replay, subject to feature mapping and its research-era browser distribution. Janitor has not yet run this dataset. Browser updates, sample selection and missing modern fields limit extrapolation to today's browsers.
+- [FP-Agent](https://github.com/ethanbwang/fp-agent) links its public data and code for a controlled human/AI-agent study. It is a candidate risk benchmark, but Janitor must use only the subset of features it actually collects and split by participant/environment to avoid leakage. The published study's classifier results are not Janitor's results.
+- [CERTH Web Bot Detection Dataset](https://m4d.iti.gr/web-bot-detection-dataset/) includes human and bot sessions with mouse behavior and web logs. Its stated license is CC BY-NC-SA; check applicability before using it for a commercial benchmark. Raw paths, coordinates and logs would need to be reduced to Janitor's permitted summaries, not added to the library's collection surface.
+
+## What a production evaluation still needs
+
+A consented panel with independently verified browser/device/account labels across multiple days, browser updates, cookie deletion and ordinary device changes. Include different people with common identical devices, shared browsers, privacy settings, touch-only and accessibility usage. Hold out users and later time periods; do not tune thresholds on the final test set.
+
+Report false restoration and correct restoration separately, unknown/new-visitor rejection, ambiguity/abstention rate, candidate recall, risk false-positive rates on humans, and latency/cost. Compare deterministic-only against Jev on the same held-out observations. Synthetic fixtures and AI-generated labels cannot establish real-world human/bot accuracy.

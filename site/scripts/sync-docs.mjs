@@ -6,6 +6,18 @@ const output = resolve(root, "site/src/generated");
 mkdirSync(output, { recursive: true });
 const entries = [
   [
+    "extensions",
+    "Behavior & cross-device",
+    "Optional movement summaries and verified account links.",
+    "docs/EXTENSIONS.md",
+  ],
+  [
+    "benchmarks",
+    "Browser benchmarks",
+    "Real browser observations, controlled tests, and known limits.",
+    "docs/BENCHMARKS.md",
+  ],
+  [
     "getting-started",
     "Getting started",
     "Your first visitor identity, from checkout to response.",

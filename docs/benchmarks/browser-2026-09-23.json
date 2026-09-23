@@ -1,0 +1,596 @@
+{
+  "generatedAt": "2026-09-23T03:41:53.057Z",
+  "kind": "controlled-real-browser",
+  "hostCount": 1,
+  "logicalProfiles": 6,
+  "observations": 30,
+  "versions": {
+    "chromium": "153.0.8010.12",
+    "firefox": "155.0",
+    "webkit": "26.6"
+  },
+  "evaluator": "disabled",
+  "riskAccuracy": "not evaluated: all sessions automated; no human labels or AI inference",
+  "emulation": ["viewport", "screen", "locale", "timezone"],
+  "limitations": [
+    "Same host and browser build per engine, not a population or longitudinal benchmark",
+    "Ground truth is isolated test profile, not separate person or physical device",
+    "Timezone scenario recreates a context with copied storage state",
+    "Unseen identical profiles expose non-identifiability from these signals",
+    "No browser-version update or mobile hardware was measured"
+  ],
+  "cohorts": {
+    "isolated-return": {
+      "total": 24,
+      "correctRestorations": 24,
+      "wrongRestorations": 0,
+      "newIds": 0
+    },
+    "cookie-continuity": {
+      "total": 24,
+      "correctRestorations": 24,
+      "wrongRestorations": 0,
+      "newIds": 0
+    },
+    "ambiguous-pool": {
+      "total": 24,
+      "correctRestorations": 0,
+      "wrongRestorations": 0,
+      "newIds": 24
+    },
+    "unseen-identical-profile": {
+      "total": 6,
+      "correctRestorations": 0,
+      "wrongRestorations": 6,
+      "newIds": 0
+    }
+  },
+  "trials": [
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "reload",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "scripted-interaction",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 0.9438055555555557
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "resize",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 0.9500000000000001
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "timezone-emulation",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "reload",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "scripted-interaction",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 0.9438055555555557
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "resize",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "chromium",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 0.9500000000000001
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "chromium",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "chromium",
+      "scenario": "timezone-emulation",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "reload",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "scripted-interaction",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 0.9395758661887694
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "resize",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 0.9462365591397849
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "timezone-emulation",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "reload",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "scripted-interaction",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 0.9395758661887694
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "resize",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "firefox",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 0.9462365591397849
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "firefox",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "firefox",
+      "scenario": "timezone-emulation",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "reload",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "scripted-interaction",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 0.9395758661887694
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "resize",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 0.9462365591397849
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "timezone-emulation",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "reload",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "reload",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "scripted-interaction",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "scripted-interaction",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 0.9395758661887694
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "resize",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "resize",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "isolated-return",
+      "engine": "webkit",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 0.9462365591397849
+    },
+    {
+      "cohort": "cookie-continuity",
+      "engine": "webkit",
+      "scenario": "timezone-emulation",
+      "result": "correct-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "ambiguous-pool",
+      "engine": "webkit",
+      "scenario": "timezone-emulation",
+      "result": "new-id",
+      "confidence": 0
+    },
+    {
+      "cohort": "unseen-identical-profile",
+      "engine": "chromium",
+      "scenario": "baseline",
+      "result": "wrong-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "unseen-identical-profile",
+      "engine": "chromium",
+      "scenario": "baseline",
+      "result": "wrong-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "unseen-identical-profile",
+      "engine": "firefox",
+      "scenario": "baseline",
+      "result": "wrong-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "unseen-identical-profile",
+      "engine": "firefox",
+      "scenario": "baseline",
+      "result": "wrong-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "unseen-identical-profile",
+      "engine": "webkit",
+      "scenario": "baseline",
+      "result": "wrong-restoration",
+      "confidence": 1
+    },
+    {
+      "cohort": "unseen-identical-profile",
+      "engine": "webkit",
+      "scenario": "baseline",
+      "result": "wrong-restoration",
+      "confidence": 1
+    }
+  ]
+}

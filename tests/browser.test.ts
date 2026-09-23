@@ -119,3 +119,68 @@ it("accepts masked or absent graphics values and never requests an unmasking ext
   });
   expect(getExtension).toHaveBeenCalledExactlyOnceWith("WEBGL_lose_context");
 });
+
+it("summarizes motion and press timing without reading coordinates, key values or targets", () => {
+  const document = documentStub();
+  let time = 0;
+  vi.stubGlobal("performance", { now: () => time });
+  const tracker = createBehaviorTracker({ extended: true });
+  const emit = (
+    type: string,
+    at: number,
+    values: Record<string, number> = {},
+  ) => {
+    time = at;
+    const event = Object.assign(new Event(type), values);
+    for (const name of ["clientX", "clientY", "key", "target"])
+      Object.defineProperty(event, name, {
+        get() {
+          throw new Error("Private event content accessed");
+        },
+      });
+    document.dispatchEvent(event);
+  };
+  emit("mousemove", 0, { movementX: 3, movementY: 4 });
+  emit("mousemove", 100, { movementX: -3, movementY: -4 });
+  emit("mousemove", 1200, { movementX: 0, movementY: 5 });
+  emit("wheel", 1250, { deltaY: 120, deltaMode: 0 });
+  emit("wheel", 1300, { deltaY: -40, deltaMode: 0 });
+  emit("wheel", 1350, { deltaY: 20, deltaMode: 1 });
+  emit("keydown", 1400);
+  emit("pointerdown", 1600);
+  emit("keydown", 2000);
+  expect(tracker.snapshot()).toMatchObject({
+    mouseDistancePx: 15,
+    mouseActiveMs: 100,
+    mouseDirectionChanges: 1,
+    mousePauseCount: 1,
+    scrollDistancePx: 160,
+    scrollDirectionChanges: 1,
+    interactionIntervalCount: 2,
+    interactionIntervalMeanMs: 300,
+    interactionIntervalStdDevMs: 100,
+  });
+  const before = tracker.snapshot();
+  tracker.destroy();
+  emit("wheel", 2100, { deltaY: 400, deltaMode: 0 });
+  expect(tracker.snapshot().scrollDistancePx).toBe(before.scrollDistancePx);
+});
+
+it("does not manufacture motion evidence from missing APIs or timing across visibility gaps", () => {
+  const document = documentStub();
+  let time = 0;
+  vi.stubGlobal("performance", { now: () => time });
+  const tracker = createBehaviorTracker({ extended: true });
+  document.dispatchEvent(new Event("mousemove"));
+  document.dispatchEvent(new Event("keydown"));
+  time = 100;
+  document.dispatchEvent(new Event("visibilitychange"));
+  time = 200;
+  document.dispatchEvent(new Event("keydown"));
+  expect(tracker.snapshot()).toMatchObject({
+    mouseDistancePx: 0,
+    interactionIntervalCount: 0,
+  });
+  expect(tracker.snapshot().interactionIntervalMeanMs).toBeUndefined();
+  tracker.destroy();
+});

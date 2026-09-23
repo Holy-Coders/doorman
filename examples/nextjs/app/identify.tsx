@@ -5,7 +5,10 @@ export function Identify() {
   const client = useRef<ReturnType<typeof createVisitorClient> | null>(null);
   const [result, setResult] = useState("No observation sent yet.");
   useEffect(() => {
-    const visitor = createVisitorClient({ endpoint: "/api/visitor" });
+    const visitor = createVisitorClient({
+      endpoint: "/api/visitor",
+      behavior: "extended",
+    });
     client.current = visitor;
     return () => {
       visitor.destroy();

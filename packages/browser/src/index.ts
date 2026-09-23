@@ -1,3 +1,4 @@
+import { createExtendedBehavior } from "./behavior.js";
 import type {
   BrowserBehavior,
   BrowserObservation,
@@ -68,7 +69,8 @@ export function collectBrowserSignals(): BrowserObservation {
   };
 }
 
-export function createBehaviorTracker() {
+export function createBehaviorTracker(options: { extended?: boolean } = {}) {
+  const extended = options.extended ? createExtendedBehavior() : undefined;
   const started = Date.now();
   const counts = {
     mouseMoveCount: 0,
@@ -86,8 +88,9 @@ export function createBehaviorTracker() {
     ["visibilitychange", "visibilityChangeCount"],
   ] as const) {
     safe(() => {
-      const listener = () => {
+      const listener = (event: Event) => {
         counts[field] = Math.min(1_000_000, counts[field] + 1);
+        safe(() => extended?.observe(event));
       };
       document.addEventListener(event, listener, {
         passive: true,
@@ -98,13 +101,29 @@ export function createBehaviorTracker() {
       );
     });
   }
+  if (extended)
+    for (const event of ["wheel", "blur"])
+      safe(() => {
+        const listener = (event: Event) => {
+          safe(() => extended.observe(event));
+        };
+        document.addEventListener(event, listener, {
+          passive: true,
+          capture: true,
+        });
+        removers.push(() =>
+          document.removeEventListener(event, listener, { capture: true }),
+        );
+      });
   return {
     snapshot: (): BrowserBehavior => ({
       ...counts,
+      ...extended?.snapshot(),
       pageAgeMs: Math.min(604_800_000, Math.max(0, Date.now() - started)),
     }),
     destroy: () => {
       removers.splice(0).forEach((remove) => safe(remove));
+      extended?.clear();
     },
   };
 }
@@ -117,6 +136,9 @@ function validIdentity(value: unknown): value is VisitorIdentity {
   return (
     typeof v.visitorId === "string" &&
     /^vis_[a-f0-9]{48}$/.test(v.visitorId) &&
+    (v.subjectId === undefined ||
+      (typeof v.subjectId === "string" &&
+        /^sub_[a-f0-9]{64}$/.test(v.subjectId))) &&
     typeof v.isReturning === "boolean" &&
     probability(v.confidence) &&
     !!risk &&
@@ -125,9 +147,15 @@ function validIdentity(value: unknown): value is VisitorIdentity {
   );
 }
 export function createVisitorClient(
-  options: { endpoint?: string; debug?: boolean } = {},
+  options: {
+    endpoint?: string;
+    debug?: boolean;
+    behavior?: "counts" | "extended";
+  } = {},
 ) {
-  const tracker = createBehaviorTracker();
+  const tracker = createBehaviorTracker({
+    extended: options.behavior === "extended",
+  });
   let pending: Promise<VisitorIdentity> | undefined;
   let destroyed = false;
   let controller: AbortController | undefined;

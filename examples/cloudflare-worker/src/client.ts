@@ -1,5 +1,8 @@
 import { createVisitorClient } from "@janitor/browser";
-const visitor = createVisitorClient({ endpoint: "/api/visitor" });
+const visitor = createVisitorClient({
+  endpoint: "/api/visitor",
+  behavior: "extended",
+});
 const output = document.querySelector("pre")!;
 document.querySelector("button")!.addEventListener("click", async () => {
   try {
