@@ -115,6 +115,9 @@ export type Evaluation = {
   suspicious: number;
 };
 export interface VisitorEvaluator {
+  evaluateOperator?(
+    input: import("./operators.js").OperatorEvaluationInput,
+  ): Promise<import("./operators.js").OperatorEvaluation>;
   evaluate(input: EvaluationInput): Promise<Evaluation>;
   planLookup?(current: NormalizedObservation): Promise<LookupScope>;
   evaluateCandidates?(input: CandidateEvaluationInput): Promise<Evaluation[]>;

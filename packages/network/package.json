@@ -29,6 +29,10 @@
     "./classifier": {
       "types": "./dist/classifier.d.ts",
       "import": "./dist/classifier.js"
+    },
+    "./operators": {
+      "types": "./dist/operator-study.d.ts",
+      "import": "./dist/operator-study.js"
     }
   },
   "scripts": {

@@ -37,6 +37,10 @@
     "./warehouse": {
       "types": "./dist/warehouse.d.ts",
       "import": "./dist/warehouse.js"
+    },
+    "./operators": {
+      "types": "./dist/operators.d.ts",
+      "import": "./dist/operators.js"
     }
   },
   "scripts": {

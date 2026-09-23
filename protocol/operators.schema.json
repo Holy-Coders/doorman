@@ -1,0 +1,702 @@
+{
+  "version": 1,
+  "description": "Private TypeScript server API and controlled-run reference fitting. No public endpoint is installed. Temporal, account authorization and semantic constraints are additionally enforced by the application and service.",
+  "window": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "accountId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "sessionId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "windowId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "browserId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "startedAt": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "endedAt": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "evidence": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "browser",
+              "server",
+              "mixed"
+            ]
+          },
+          "features": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "enum": [
+                "observation_duration_ms",
+                "mouse_event_count",
+                "interaction_sample_count",
+                "api_request_count",
+                "api_denied_ratio",
+                "api_error_ratio",
+                "api_duration_mean_ms",
+                "api_short_gap_ratio",
+                "api_gap_mean_ms",
+                "api_gap_cv",
+                "api_sequence_repeat_ratio",
+                "mouse_speed",
+                "mouse_turn_ratio",
+                "mouse_pause_ratio",
+                "interaction_mean_ms",
+                "interaction_cv",
+                "route_navigation_share",
+                "route_read_share",
+                "route_write_share",
+                "route_auth_share",
+                "route_tool_share",
+                "route_telemetry_share",
+                "route_other_share",
+                "transition_navigation_navigation",
+                "transition_navigation_read",
+                "transition_navigation_write",
+                "transition_navigation_auth",
+                "transition_navigation_tool",
+                "transition_navigation_telemetry",
+                "transition_navigation_other",
+                "transition_read_navigation",
+                "transition_read_read",
+                "transition_read_write",
+                "transition_read_auth",
+                "transition_read_tool",
+                "transition_read_telemetry",
+                "transition_read_other",
+                "transition_write_navigation",
+                "transition_write_read",
+                "transition_write_write",
+                "transition_write_auth",
+                "transition_write_tool",
+                "transition_write_telemetry",
+                "transition_write_other",
+                "transition_auth_navigation",
+                "transition_auth_read",
+                "transition_auth_write",
+                "transition_auth_auth",
+                "transition_auth_tool",
+                "transition_auth_telemetry",
+                "transition_auth_other",
+                "transition_tool_navigation",
+                "transition_tool_read",
+                "transition_tool_write",
+                "transition_tool_auth",
+                "transition_tool_tool",
+                "transition_tool_telemetry",
+                "transition_tool_other",
+                "transition_telemetry_navigation",
+                "transition_telemetry_read",
+                "transition_telemetry_write",
+                "transition_telemetry_auth",
+                "transition_telemetry_tool",
+                "transition_telemetry_telemetry",
+                "transition_telemetry_other",
+                "transition_other_navigation",
+                "transition_other_read",
+                "transition_other_write",
+                "transition_other_auth",
+                "transition_other_tool",
+                "transition_other_telemetry",
+                "transition_other_other"
+              ]
+            },
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000
+            }
+          }
+        },
+        "required": [
+          "source",
+          "features"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "accountId",
+      "sessionId",
+      "windowId",
+      "startedAt",
+      "endedAt",
+      "evidence"
+    ],
+    "additionalProperties": false
+  },
+  "evidence": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "source": {
+        "type": "string",
+        "enum": [
+          "browser",
+          "server",
+          "mixed"
+        ]
+      },
+      "features": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "enum": [
+            "observation_duration_ms",
+            "mouse_event_count",
+            "interaction_sample_count",
+            "api_request_count",
+            "api_denied_ratio",
+            "api_error_ratio",
+            "api_duration_mean_ms",
+            "api_short_gap_ratio",
+            "api_gap_mean_ms",
+            "api_gap_cv",
+            "api_sequence_repeat_ratio",
+            "mouse_speed",
+            "mouse_turn_ratio",
+            "mouse_pause_ratio",
+            "interaction_mean_ms",
+            "interaction_cv",
+            "route_navigation_share",
+            "route_read_share",
+            "route_write_share",
+            "route_auth_share",
+            "route_tool_share",
+            "route_telemetry_share",
+            "route_other_share",
+            "transition_navigation_navigation",
+            "transition_navigation_read",
+            "transition_navigation_write",
+            "transition_navigation_auth",
+            "transition_navigation_tool",
+            "transition_navigation_telemetry",
+            "transition_navigation_other",
+            "transition_read_navigation",
+            "transition_read_read",
+            "transition_read_write",
+            "transition_read_auth",
+            "transition_read_tool",
+            "transition_read_telemetry",
+            "transition_read_other",
+            "transition_write_navigation",
+            "transition_write_read",
+            "transition_write_write",
+            "transition_write_auth",
+            "transition_write_tool",
+            "transition_write_telemetry",
+            "transition_write_other",
+            "transition_auth_navigation",
+            "transition_auth_read",
+            "transition_auth_write",
+            "transition_auth_auth",
+            "transition_auth_tool",
+            "transition_auth_telemetry",
+            "transition_auth_other",
+            "transition_tool_navigation",
+            "transition_tool_read",
+            "transition_tool_write",
+            "transition_tool_auth",
+            "transition_tool_tool",
+            "transition_tool_telemetry",
+            "transition_tool_other",
+            "transition_telemetry_navigation",
+            "transition_telemetry_read",
+            "transition_telemetry_write",
+            "transition_telemetry_auth",
+            "transition_telemetry_tool",
+            "transition_telemetry_telemetry",
+            "transition_telemetry_other",
+            "transition_other_navigation",
+            "transition_other_read",
+            "transition_other_write",
+            "transition_other_auth",
+            "transition_other_tool",
+            "transition_other_telemetry",
+            "transition_other_other"
+          ]
+        },
+        "additionalProperties": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      }
+    },
+    "required": [
+      "source",
+      "features"
+    ],
+    "additionalProperties": false
+  },
+  "study": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "maxItems": 10000,
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "runId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "task": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "split": {
+          "type": "string",
+          "enum": [
+            "train",
+            "holdout"
+          ]
+        },
+        "observedAt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "labelSource": {
+          "type": "string",
+          "const": "controlled-run"
+        },
+        "trainingAllowed": {
+          "type": "boolean"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "human",
+            "assistant",
+            "automation"
+          ]
+        },
+        "family": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "evidence": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "browser",
+                "server",
+                "mixed"
+              ]
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "observation_duration_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 900000
+                },
+                "mouse_event_count": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "interaction_sample_count": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "api_request_count": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "api_denied_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "api_error_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "api_duration_mean_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 60000
+                },
+                "api_short_gap_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "api_gap_mean_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 60000
+                },
+                "api_gap_cv": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 10
+                },
+                "api_sequence_repeat_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "mouse_speed": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 10000
+                },
+                "mouse_turn_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "mouse_pause_ratio": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "interaction_mean_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 60000
+                },
+                "interaction_cv": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 10
+                },
+                "route_navigation_share": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "route_read_share": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "route_write_share": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "route_auth_share": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "route_tool_share": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "route_telemetry_share": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "route_other_share": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_navigation_navigation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_navigation_read": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_navigation_write": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_navigation_auth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_navigation_tool": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_navigation_telemetry": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_navigation_other": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_read_navigation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_read_read": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_read_write": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_read_auth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_read_tool": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_read_telemetry": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_read_other": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_write_navigation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_write_read": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_write_write": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_write_auth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_write_tool": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_write_telemetry": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_write_other": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_auth_navigation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_auth_read": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_auth_write": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_auth_auth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_auth_tool": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_auth_telemetry": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_auth_other": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_tool_navigation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_tool_read": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_tool_write": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_tool_auth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_tool_tool": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_tool_telemetry": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_tool_other": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_telemetry_navigation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_telemetry_read": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_telemetry_write": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_telemetry_auth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_telemetry_tool": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_telemetry_telemetry": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_telemetry_other": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_other_navigation": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_other_read": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_other_write": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_other_auth": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_other_tool": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_other_telemetry": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "transition_other_other": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "source",
+            "features"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "runId",
+        "task",
+        "split",
+        "observedAt",
+        "labelSource",
+        "trainingAllowed",
+        "kind",
+        "evidence"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

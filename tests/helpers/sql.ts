@@ -7,6 +7,7 @@ import {
   createPostgresEvidenceStorage,
   createPostgresIdentityStorage,
   createPostgresActivityStorage,
+  createPostgresOperatorStorage,
 } from "@janitor/storage-postgres";
 import {
   createD1Storage,
@@ -14,6 +15,7 @@ import {
   createD1EvidenceStorage,
   createD1IdentityStorage,
   createD1ActivityStorage,
+  createD1OperatorStorage,
 } from "@janitor/storage-d1";
 import type { D1Database } from "@janitor/storage-d1";
 
@@ -41,6 +43,7 @@ export async function sqlBackend(kind: "postgres" | "d1") {
       evidence: createPostgresEvidenceStorage(db),
       identities: createPostgresIdentityStorage(db),
       activity: createPostgresActivityStorage(db),
+      operators: createPostgresOperatorStorage(db),
       query: async (s: string, args: unknown[] = []) =>
         (await db.query(s, args)).rows,
       close: () => db.close(),
@@ -63,6 +66,7 @@ export async function sqlBackend(kind: "postgres" | "d1") {
     evidence: createD1EvidenceStorage(db),
     identities: createD1IdentityStorage(db),
     activity: createD1ActivityStorage(db),
+    operators: createD1OperatorStorage(db),
     query: async (s: string, args: unknown[] = []) =>
       (
         await binding

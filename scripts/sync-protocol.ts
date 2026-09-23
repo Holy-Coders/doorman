@@ -1,4 +1,9 @@
 import {
+  operatorWindowInputSchema,
+  operatorEvidenceSchema,
+} from "../packages/adapters/src/operators.js";
+import { operatorStudySchema } from "../packages/network/src/operator-study.js";
+import {
   classifierAssessmentSchema,
   classifierDatasetSchema,
   classifierModelSchema,
@@ -30,6 +35,21 @@ import {
 import { signals, phone } from "../tests/helpers/fixtures.js";
 import { createSubjectLinker } from "../packages/adapters/src/subject.js";
 const schema = z.toJSONSchema(payloadSchema);
+writeFileSync(
+  "protocol/operators.schema.json",
+  JSON.stringify(
+    {
+      version: 1,
+      description:
+        "Private TypeScript server API and controlled-run reference fitting. No public endpoint is installed. Temporal, account authorization and semantic constraints are additionally enforced by the application and service.",
+      window: z.toJSONSchema(operatorWindowInputSchema),
+      evidence: z.toJSONSchema(operatorEvidenceSchema),
+      study: z.toJSONSchema(operatorStudySchema),
+    },
+    null,
+    2,
+  ) + "\n",
+);
 writeFileSync(
   "protocol/network.schema.json",
   JSON.stringify(

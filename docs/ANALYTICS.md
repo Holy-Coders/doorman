@@ -1,5 +1,7 @@
 # PostHog, Mixpanel and Segment
 
+For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
+
 Use Janitor alongside your existing analytics to connect anonymous visits to login, keep user profiles correct on shared browsers, and report on the people and agents using an account.
 
 There are two parts: a browser helper calls your SDK’s identify/reset methods when authentication changes; a server helper can send private Janitor assessments as analytics events. You can use either part independently. Nothing is exported until you configure and call it.

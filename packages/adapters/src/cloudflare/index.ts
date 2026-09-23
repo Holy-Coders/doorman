@@ -6,6 +6,7 @@ import {
   createPostgresProtectionStorage,
   createPostgresEvidenceStorage,
   createPostgresActivityStorage,
+  createPostgresOperatorStorage,
 } from "@janitor/storage-postgres";
 import type { PostgresDatabase } from "@janitor/storage-postgres";
 import {
@@ -15,6 +16,7 @@ import {
   createD1ProtectionStorage,
   createD1EvidenceStorage,
   createD1ActivityStorage,
+  createD1OperatorStorage,
 } from "@janitor/storage-d1";
 import type { D1Database } from "@janitor/storage-d1";
 import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
@@ -49,7 +51,7 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
         ? createPostgresLearningStorage(postgres)
         : createD1LearningStorage(d1!)
       : undefined,
-    options.protection || options.activity
+    options.protection || options.activity || options.operators
       ? postgres
         ? createPostgresProtectionStorage(postgres)
         : createD1ProtectionStorage(d1!)
@@ -63,6 +65,11 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
       ? postgres
         ? createPostgresActivityStorage(postgres)
         : createD1ActivityStorage(d1!)
+      : undefined,
+    options.operators
+      ? postgres
+        ? createPostgresOperatorStorage(postgres)
+        : createD1OperatorStorage(d1!)
       : undefined,
   );
 }

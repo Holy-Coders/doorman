@@ -18,6 +18,7 @@ export function replayBehavior(events: ReplayEvent[]) {
   for (const [kind, at, x, y] of events) {
     if (!Number.isFinite(at) || at < 0) continue;
     if (at < time || kind === "reset") tracker.clear();
+    if (kind !== "reset" && at >= time) behavior.pageAgeMs += at - time;
     time = at;
     if (kind === "mousemove") {
       behavior.mouseMoveCount = Math.min(

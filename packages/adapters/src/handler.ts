@@ -1,4 +1,6 @@
 import { createEvidence, requestEvidence } from "./evidence.js";
+import { createOperatorService } from "./operators.js";
+import type { OperatorOptions } from "./operators.js";
 import { createApiActivity } from "./activity.js";
 import type { ApiActivityOptions } from "./activity.js";
 import type { EvidenceOptions, TrustedRequestEvidence } from "./evidence.js";
@@ -29,6 +31,7 @@ import type {
   EvidenceStorage,
   RequestEvidence,
   ApiActivityStorage,
+  OperatorStorage,
 } from "@janitor/core";
 import { readPayload, RequestError } from "./validation.js";
 const EVALUATOR_STORAGE_GRACE_MS = 1000;
@@ -39,6 +42,7 @@ export type AdapterOptions = RetentionOptions &
     protection?: ProtectionOptions;
     evidence?: true | EvidenceOptions;
     activity?: ApiActivityOptions;
+    operators?: OperatorOptions;
     environment?: "production" | "development" | "test";
     cookie?: { name?: string; maxAgeDays?: number; secure?: boolean };
     maxBodyBytes?: number;
@@ -75,6 +79,7 @@ export function createVisitorHandler(
   protectionStorage?: ProtectionStorage,
   evidenceStorage?: EvidenceStorage,
   activityStorage?: ApiActivityStorage,
+  operatorStorage?: OperatorStorage,
 ) {
   const maxInFlight = options.maxInFlightRequests ?? 64;
   if (!Number.isInteger(maxInFlight) || maxInFlight < 1 || maxInFlight > 1024)
@@ -125,11 +130,34 @@ export function createVisitorHandler(
       "API activity requires identity, activity storage and evaluator protection storage",
     );
   const activityProtection =
-    options.activity && !protection && options.identity && protectionStorage
+    (options.activity || options.operators) &&
+    !protection &&
+    options.identity &&
+    protectionStorage
       ? createProtection(
           protectionStorage,
           { ...options.identity, evaluator: { maxCalls: 60 } },
           options.evaluatorTimeoutMs ?? 1200,
+        )
+      : undefined;
+  if (
+    options.operators &&
+    (!options.identity || !operatorStorage || (evaluator && !protectionStorage))
+  )
+    throw new Error(
+      "Operator attribution requires identity, operator storage and evaluator protection storage",
+    );
+  const operators =
+    options.operators && options.identity && operatorStorage
+      ? createOperatorService(
+          operatorStorage,
+          options.identity,
+          options.operators,
+          evaluator && activityProtection
+            ? activityProtection.wrap(evaluator)
+            : guardedEvaluator,
+          (protection ?? activityProtection)?.admit,
+          (options.evaluatorTimeoutMs ?? 1200) + EVALUATOR_STORAGE_GRACE_MS,
         )
       : undefined;
   const activity =
@@ -393,6 +421,7 @@ export function createVisitorHandler(
     },
     identities,
     activity,
+    operators,
     evidence,
     learning: learner
       ? { reports: learner.reports, deleteSession: learner.deleteSession }
@@ -404,6 +433,7 @@ export function createVisitorHandler(
       await protection?.cleanup();
       await evidence?.cleanup();
       await activity?.cleanup();
+      await operators?.cleanup();
       await activityProtection?.cleanup();
       return progress;
     },

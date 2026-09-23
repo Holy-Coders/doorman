@@ -23,6 +23,12 @@ export function extractFeatures(input: {
       ) ?? [];
   const requests = rows.reduce((n, r) => n + r.requests, 0);
   if (requests >= 5) {
+    result.observation_duration_ms = round(
+      Math.max(...rows.map((r) => r.lastSeenAt)) -
+        Math.min(...rows.map((r) => r.firstSeenAt)),
+      1000,
+      900_000,
+    );
     result.api_request_count = round(requests, 5, 1_000_000);
     result.api_denied_ratio = ratio(
       rows.reduce((n, r) => n + r.denied, 0) / requests,
@@ -47,7 +53,14 @@ export function extractFeatures(input: {
   }
   const b = input.behavior;
   // Missing APIs and sparse observations stay missing, rather than becoming bot evidence.
+  if (
+    b &&
+    (b.mouseMoveCount >= 20 || (b.interactionIntervalCount ?? 0) >= 10)
+  ) {
+    result.observation_duration_ms = round(b.pageAgeMs, 1000, 900_000);
+  }
   if (b && b.mouseMoveCount >= 20) {
+    result.mouse_event_count = round(b.mouseMoveCount, 5, 1_000_000);
     if (
       b.mouseDistancePx !== undefined &&
       b.mouseActiveMs &&
@@ -72,6 +85,11 @@ export function extractFeatures(input: {
     b.interactionIntervalStdDevMs !== undefined &&
     b.interactionIntervalMeanMs > 0
   ) {
+    result.interaction_sample_count = round(
+      b.interactionIntervalCount!,
+      5,
+      1_000_000,
+    );
     result.interaction_mean_ms = round(
       b.interactionIntervalMeanMs,
       100,

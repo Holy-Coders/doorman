@@ -13,6 +13,8 @@ describe("external dataset projection", () => {
       0,
     ]);
     expect(replayBehavior(events)).toEqual({
+      observation_duration_ms: 2000,
+      mouse_event_count: 20,
       mouse_speed: 100,
       mouse_turn_ratio: 0,
       mouse_pause_ratio: 0,
@@ -28,6 +30,8 @@ describe("external dataset projection", () => {
       for (let i = 0; i < 6; i++) events.push(["keydown", i * 100]);
     }
     expect(replayBehavior(events)).toEqual({
+      observation_duration_ms: 1000,
+      interaction_sample_count: 10,
       interaction_mean_ms: 100,
       interaction_cv: 0,
     });

@@ -181,3 +181,7 @@ The [public dataset benchmarks](docs/EXTERNAL-BENCHMARKS.md) expose a concrete r
 The public website is an Astro app in `site/`. Run `pnpm site:dev`, `pnpm site:check` or `pnpm site:test` from the root. Its local playground examples use made-up data. An explicitly activated live demo uses Janitor itself, with isolated browser history, private scores, cached Jev calls and a shared lifetime allowance. [How the playground works](docs/PLAYGROUND.md).
 
 Optional [API activity middleware](docs/API-ACTIVITY.md) adds private Jev judgments from bounded server request aggregates. [Analytics bridges](docs/ANALYTICS.md) support PostHog, Mixpanel, Segment, Amplitude and RudderStack; [warehouse exports](docs/WAREHOUSES.md) feed Snowflake, BigQuery or an existing JSONL pipeline. [Python](packages/python/README.md) and [Go](packages/go/README.md) clients can mount first-party routes backed by your Janitor engine. Choose your language and theme in the [documentation](https://janitor.holycoders.io/docs/introduction/).
+
+### Experimental operator attribution
+
+Estimate whether short activity windows were operated by a human, an AI assistant or a conventional script, then compare windows within an account. Optional labeled references support agent-family suggestions. Private PostHog/Mixpanel events and warehouse rows keep these inferences separate from verified identities. Scores and counts are experimental; missing comparison evidence withholds totals. See [the setup and limitations](docs/OPERATOR-ATTRIBUTION.md).

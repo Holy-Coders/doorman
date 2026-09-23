@@ -55,3 +55,10 @@ export function createJevEvaluator(options: JevOptions): VisitorEvaluator {
     }
   });
 }
+
+export {
+  createOperatorInput,
+  parseOperatorResponse,
+  OPERATOR_QUESTIONS,
+  OPERATOR_PROMPT_VERSION,
+} from "./operators.js";

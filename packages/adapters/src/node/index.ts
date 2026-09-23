@@ -6,6 +6,7 @@ import {
   createPostgresProtectionStorage,
   createPostgresEvidenceStorage,
   createPostgresActivityStorage,
+  createPostgresOperatorStorage,
 } from "@janitor/storage-postgres";
 import type { PostgresDatabase } from "@janitor/storage-postgres";
 import { createJevEvaluator } from "@janitor/evaluator-jev";
@@ -37,11 +38,12 @@ export function createNodeVisitor(options: NodeVisitorOptions) {
     options,
     options.identity ? createPostgresIdentityStorage(options.db) : undefined,
     options.learning ? createPostgresLearningStorage(options.db) : undefined,
-    options.protection || options.activity
+    options.protection || options.activity || options.operators
       ? createPostgresProtectionStorage(options.db)
       : undefined,
     options.evidence ? createPostgresEvidenceStorage(options.db) : undefined,
     options.activity ? createPostgresActivityStorage(options.db) : undefined,
+    options.operators ? createPostgresOperatorStorage(options.db) : undefined,
   );
 }
 export type { ProtectionOptions, AdmissionContext } from "../protection.js";

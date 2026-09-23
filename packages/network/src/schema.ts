@@ -12,6 +12,9 @@ export const ROUTE_CATEGORIES = [
 export type RouteCategory = (typeof ROUTE_CATEGORIES)[number];
 const range = (max: number) => z.number().finite().min(0).max(max).optional();
 const baseFeatures = {
+  observation_duration_ms: range(900_000),
+  mouse_event_count: range(1_000_000),
+  interaction_sample_count: range(1_000_000),
   api_request_count: range(1_000_000),
   api_denied_ratio: range(1),
   api_error_ratio: range(1),

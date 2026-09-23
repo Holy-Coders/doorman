@@ -190,6 +190,21 @@
             "features": {
               "type": "object",
               "properties": {
+                "observation_duration_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 900000
+                },
+                "mouse_event_count": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "interaction_sample_count": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
                 "api_request_count": {
                   "type": "number",
                   "minimum": 0,
@@ -820,7 +835,7 @@
             "properties": {
               "columns": {
                 "minItems": 2,
-                "maxItems": 73,
+                "maxItems": 76,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -828,6 +843,9 @@
                     "name": {
                       "type": "string",
                       "enum": [
+                        "observation_duration_ms",
+                        "mouse_event_count",
+                        "interaction_sample_count",
                         "api_request_count",
                         "api_denied_ratio",
                         "api_error_ratio",
@@ -933,7 +951,7 @@
                       },
                       "weights": {
                         "minItems": 2,
-                        "maxItems": 73,
+                        "maxItems": 76,
                         "type": "array",
                         "items": {
                           "type": "number",

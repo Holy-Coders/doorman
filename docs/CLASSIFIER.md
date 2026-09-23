@@ -1,5 +1,7 @@
 # Train a Janitor classifier
 
+For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
+
 Janitor can learn which combinations of session measurements tend to accompany confirmed assistants or confirmed abuse. This is an optional training pipeline for operators of the learning service. Your existing visitor identity and analytics integrations keep working independently.
 
 **This trains a Janitor model, not Jev's weights.** TypeSafe does not offer customer fine-tuning or LoRA for Jev. We use Jev's typed answers as optional numeric features, then train a small supervised classifier. See [the research and design decisions](CLASSIFIER-RESEARCH.md).

@@ -13,3 +13,6 @@ export * from "./evidence.js";
 
 export * from "./intelligence.js";
 export * from "./activity.js";
+
+export * from "./operators.js";
+export * from "./operator-summary.js";

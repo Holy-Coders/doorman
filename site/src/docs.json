@@ -79,6 +79,12 @@
         "source": "docs/API-ACTIVITY.md"
       },
       {
+        "slug": "operator-attribution",
+        "title": "Who operates an account?",
+        "description": "Score activity windows, compare inferred operators, and report separately from verified identities.",
+        "source": "docs/OPERATOR-ATTRIBUTION.md"
+      },
+      {
         "slug": "warehouses",
         "title": "Snowflake & warehouses",
         "description": "Send verified identity context to Snowflake, BigQuery and your existing data pipelines.",

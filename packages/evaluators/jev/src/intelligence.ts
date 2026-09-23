@@ -1,4 +1,5 @@
 import { INTELLIGENCE_LIMITS, isProbability } from "@janitor/core";
+import { createOperatorInput, parseOperatorResponse } from "./operators.js";
 import { createActivityInput } from "./activity.js";
 import type { VisitorEvaluator, CrossDeviceInput } from "@janitor/core";
 import {
@@ -76,6 +77,12 @@ export function createJevMethods(
     return transport(input);
   };
   return {
+    async evaluateOperator(input) {
+      return parseOperatorResponse(
+        await request(createOperatorInput(input)),
+        input,
+      );
+    },
     async evaluateActivity(input) {
       const response = await request(createActivityInput(input));
       return {

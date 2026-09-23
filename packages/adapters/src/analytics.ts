@@ -1,3 +1,26 @@
+import {
+  operatorWindowProperties,
+  operatorSummaryProperties,
+  operatorProfileProperties,
+} from "./operator-analytics.js";
+import type {
+  OperatorAnalyticsContext,
+  OperatorReportContext,
+} from "./operator-analytics.js";
+import type {
+  OperatorWindow,
+  OperatorSummary,
+  OperatorProfile,
+} from "@janitor/core";
+export {
+  operatorWindowProperties,
+  operatorSummaryProperties,
+  operatorProfileProperties,
+} from "./operator-analytics.js";
+export type {
+  OperatorAnalyticsContext,
+  OperatorReportContext,
+} from "./operator-analytics.js";
 import type {
   ApiActivityAssessment,
   IdentityAttribution,
@@ -162,51 +185,95 @@ export function createAnalyticsBridge(options: BridgeOptions) {
       return { status: "unavailable" as const };
     }
   };
+  function send(
+    event: string,
+    properties: Properties,
+    userId: string,
+    context: AnalyticsContext,
+  ) {
+    return safe(() => {
+      if (options.provider === "posthog")
+        return options.client.capture({
+          distinctId: userId,
+          event,
+          properties: { ...properties, $geoip_disable: true },
+          ...(group && context.accountId
+            ? { groups: { [group]: context.accountId } }
+            : {}),
+        });
+      if (options.provider === "segment" || options.provider === "rudderstack")
+        return options.client.track({ userId, event, properties });
+      if (options.provider === "amplitude")
+        return options.client.track({
+          event_type: event,
+          user_id: userId,
+          event_properties: properties,
+          ...(group && context.accountId
+            ? { groups: { [group]: context.accountId } }
+            : {}),
+          insert_id: crypto.randomUUID(),
+          ip: "0.0.0.0",
+        });
+      if (options.provider !== "mixpanel")
+        throw new Error("Unknown analytics provider");
+      return options.client.track(event, {
+        ...properties,
+        distinct_id: userId,
+        ...(options.identityMerge !== "original" ? { $user_id: userId } : {}),
+        ...(group && context.accountId ? { [group]: context.accountId } : {}),
+        ip: 0,
+      });
+    });
+  }
   return {
     capture(
       identity: AnalyticsAssessment,
       authenticatedId: string,
       context: AnalyticsContext = {},
     ) {
-      const userId = validId(authenticatedId);
-      const properties = analyticsProperties(identity, context);
-      const event = "janitor identified";
-      return safe(() => {
-        if (options.provider === "posthog")
-          return options.client.capture({
-            distinctId: userId,
-            event,
-            properties: { ...properties, $geoip_disable: true },
-            ...(group && context.accountId
-              ? { groups: { [group]: context.accountId } }
-              : {}),
-          });
-        if (
-          options.provider === "segment" ||
-          options.provider === "rudderstack"
-        )
-          return options.client.track({ userId, event, properties });
-        if (options.provider === "amplitude")
-          return options.client.track({
-            event_type: event,
-            user_id: userId,
-            event_properties: properties,
-            ...(group && context.accountId
-              ? { groups: { [group]: context.accountId } }
-              : {}),
-            insert_id: crypto.randomUUID(),
-            ip: "0.0.0.0",
-          });
-        if (options.provider !== "mixpanel")
-          throw new Error("Unknown analytics provider");
-        return options.client.track(event, {
-          ...properties,
-          distinct_id: userId,
-          ...(options.identityMerge !== "original" ? { $user_id: userId } : {}),
-          ...(group && context.accountId ? { [group]: context.accountId } : {}),
-          ip: 0,
-        });
-      });
+      return send(
+        "janitor identified",
+        analyticsProperties(identity, context),
+        validId(authenticatedId),
+        context,
+      );
+    },
+    captureOperatorWindow(
+      window: OperatorWindow,
+      authenticatedId: string,
+      context: OperatorAnalyticsContext,
+    ) {
+      return send(
+        "janitor operator assessed",
+        operatorWindowProperties(window, context),
+        validId(authenticatedId),
+        context,
+      );
+    },
+    captureOperatorSummary(
+      summary: OperatorSummary,
+      authenticatedId: string,
+      context: OperatorReportContext,
+    ) {
+      return send(
+        "janitor operators summarized",
+        operatorSummaryProperties(summary, context),
+        validId(authenticatedId),
+        context,
+      );
+    },
+    captureOperatorProfile(
+      profile: OperatorProfile,
+      summary: OperatorSummary,
+      authenticatedId: string,
+      context: OperatorReportContext,
+    ) {
+      return send(
+        "janitor operator profile",
+        operatorProfileProperties(profile, summary, context),
+        validId(authenticatedId),
+        context,
+      );
     },
     identifyUser(authenticatedId: string, traits: ProfileTraits = {}) {
       const userId = validId(authenticatedId);

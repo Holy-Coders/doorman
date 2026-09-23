@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — operator attribution pilot
+
+- Add private activity-window labels and bounded account-scoped operator comparisons to the TypeScript adapters, backed by D1/Postgres migration 0009.
+- Add shared Jev/Workers AI operator questions, immutable evaluation caching, existing shared budgets, unknown/failure states and account/session/browser erasure.
+- Add controlled-run family reference fitting, holdout exclusion, reference expiry and explicit uncalibrated score semantics.
+- Export separate window, summary and inferred-profile events through the existing analytics bridges and warehouse projection; preserve authenticated analytics identities.
+- Retain aggregate observation duration and mouse/interaction sample counts for better evidence-volume context.
+- Document incomplete comparisons, report limits and the runtime/interaction detection research backlog. No detector from that backlog is enabled.
+
 ## 0.7.0 — 2026-09-23
 
 - Coordinate PostHog and Mixpanel anonymous-to-authenticated transitions, profile

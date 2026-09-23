@@ -1,5 +1,7 @@
 # Connect people and agents
 
+For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
+
 Use Janitor’s identity directory when your app needs to connect signed-in visits across devices or track an agent acting for a user. The directory is a set of records in your database: people, agents, verified lookup keys and permissions.
 
 For example, Alex can sign in on a laptop and phone. Those browsers keep different visitor IDs, but your server registers the same person for both. If Alex authorizes an assistant, the assistant gets its own identity and a limited permission record.

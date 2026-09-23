@@ -5,6 +5,7 @@ import {
   isCandidateEvaluations,
   isCrossDevicePrediction,
   isApiActivityRisk,
+  isOperatorEvaluation,
 } from "@janitor/core";
 import type {
   EvaluationControl,
@@ -298,6 +299,19 @@ export function createProtection(
         }
       }
       return {
+        ...(evaluator.evaluateOperator
+          ? {
+              evaluateOperator: (
+                input: Parameters<
+                  NonNullable<VisitorEvaluator["evaluateOperator"]>
+                >[0],
+              ) =>
+                guarded(
+                  () => evaluator.evaluateOperator!(input),
+                  isOperatorEvaluation,
+                ),
+            }
+          : {}),
         ...(evaluator.evaluateActivity
           ? {
               evaluateActivity: (

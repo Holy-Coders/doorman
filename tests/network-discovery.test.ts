@@ -49,6 +49,9 @@ describe("network feature extraction", () => {
       },
     });
     expect(features).toEqual({
+      observation_duration_ms: 60_000,
+      mouse_event_count: 100,
+      interaction_sample_count: 20,
       mouse_speed: 200,
       mouse_turn_ratio: 0.15000000000000002,
       mouse_pause_ratio: 0.05,
