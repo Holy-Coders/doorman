@@ -5,6 +5,8 @@
 - The functional changes and site redesign passed [GitHub CI](https://github.com/Holy-Coders/janitor/actions/runs/35842422160), including TypeScript, native Elixir/Postgres, Phoenix, browser integration, example builds and website tests.
 - Local release checks passed: 204 TypeScript tests, typecheck, lint, 11 website browser tests and Astro diagnostics with no errors or warnings. The site builds 29 HTML pages.
 - All seven v0.7.0 JavaScript archives installed in isolated npm, pnpm and Bun consumers. Ten public factory/helper exports and the analytics identify/reset lifecycle passed in each. The native v0.7.0 Hex-format archive builds successfully. SHA256 checksums accompany the GitHub assets.
+- All ten public GitHub release assets were downloaded successfully; the nine archives match the published SHA256 manifest. The release commit also passed [CI](https://github.com/Holy-Coders/janitor/actions/runs/35842788097).
+- The redesigned site is deployed at [janitor.holycoders.io](https://janitor.holycoders.io). Live Chromium checks pass for desktop/mobile rendering, video playback/pause, reduced motion, documentation search, synthetic cookie restoration and agent delegation, with no browser errors, cookies or third-party requests. The site's `no-transform` response header prevents Cloudflare's automatic analytics injection.
 - npm publication was attempted and rejected with `EOTP` (authenticator verification required). Hex reports no authenticated account. GitHub archives and the versioned Elixir Git dependency are the installation paths until registry authentication is completed.
 - Publication does not imply a production identity endpoint, live analytics ingestion, Open Calls integration, paid inference validation or real-user accuracy calibration.
 
