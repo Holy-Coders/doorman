@@ -4,6 +4,12 @@ Janitor’s tests check whether the implementation behaves as documented: matchi
 
 ## What is verified
 
+The optional learning-network pilot adds **30 tests**, bringing the current TypeScript suite to **307 tests across eighteen files**. Strict typechecking and lint pass. Its shared storage tests also passed against a real Postgres 17 server and Cloudflare's local D1 runtime. The public site has **135 generated HTML pages** and seventeen passing browser tests.
+
+The pilot checks opt-ins, tenant isolation, immutable uploads, independent feedback, disputed labels, bounded discovery, unseen-application holdouts, shadow/canary separation, budgets, cache leases, deadlines, erasure and credential revocation. An actual Fastify/Postgres HTTP service passed enrollment, contribution, the verified-attribution helper and deletion checks. The deployed Cloudflare service passed authentication, contribution, deduplication, erasure and revocation checks. Those smoke tests used generated data, removed it afterward and made **zero paid model calls**. Hosted evaluation and contribution preferences remain disabled for the provisioned pilot participant; no real-user data has been collected for this experiment.
+
+`pnpm benchmark:network` runs discovery on 2,400 generated sessions. It finds a combination of timing and operation-category evidence, while a timing-only rule produces false positives. When generated human sessions mimic the combination, the learned rule fails promotion. This verifies the experiment and rejection behavior; it does not measure real-world accuracy. See [how pattern discovery works](LEARNING-NETWORK.md).
+
 The v0.9.0 implementation passed these checks on September 23, 2026:
 
 | Area                | Evidence                                                                                                                                                                           |

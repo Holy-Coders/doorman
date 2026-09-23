@@ -2,6 +2,14 @@ import { writeFileSync, mkdirSync, copyFileSync } from "node:fs";
 import { z } from "zod";
 import { payloadSchema } from "../packages/adapters/src/validation.js";
 import {
+  featureSchema,
+  contributionSchema,
+  feedbackSchema,
+  preferencesSchema,
+  evaluationSchema,
+} from "../packages/network/src/schema.js";
+import { assessmentSchema } from "../packages/network/src/client.js";
+import {
   JEV_QUESTIONS,
   INTELLIGENCE_QUESTIONS,
   API_ACTIVITY_QUESTIONS,
@@ -17,6 +25,24 @@ import {
 import { signals, phone } from "../tests/helpers/fixtures.js";
 import { createSubjectLinker } from "../packages/adapters/src/subject.js";
 const schema = z.toJSONSchema(payloadSchema);
+writeFileSync(
+  "protocol/network.schema.json",
+  JSON.stringify(
+    {
+      version: 1,
+      description:
+        "Server-to-server learning pilot. Outcome provenance constraints are additionally enforced by the service; model predictions and login alone are not valid labels.",
+      features: z.toJSONSchema(featureSchema),
+      contribution: z.toJSONSchema(contributionSchema),
+      feedback: z.toJSONSchema(feedbackSchema),
+      preferences: z.toJSONSchema(preferencesSchema),
+      evaluation: z.toJSONSchema(evaluationSchema),
+      assessment: z.toJSONSchema(assessmentSchema),
+    },
+    null,
+    2,
+  ) + "\n",
+);
 const scenarios = [
   signals,
   {

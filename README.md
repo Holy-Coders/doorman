@@ -46,6 +46,8 @@ Janitor manages provider identification, profile updates and account switching. 
 
 With Jev and the identity directory configured, `learning: { enabled: true, collectionPolicy: "application" }` also enables built-in cross-device suggestions from login-confirmed history. No custom predictor is required. Suggestions stay private and never become a login or analytics merge. [Set up learning](docs/LEARNING.md).
 
+The separate opt-in [learning service](docs/LEARNING-NETWORK.md) can discover recurring assistant and abuse patterns from sampled summaries and independently confirmed outcomes. It includes authenticated ingestion, Postgres/D1 storage, readable pattern discovery, future-session/application holdouts, shadow/canary rollout and erasure. Remote evaluation, contribution and training are separate choices; ordinary installations send it no data. This pilot is available from source and has not established real-world detection accuracy.
+
 ## Choose your server
 
 ### Cloudflare Workers

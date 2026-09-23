@@ -13,6 +13,7 @@ for (const path of [
   "evaluators/jev",
   "evaluators/cloudflare-jev",
   "adapters",
+  "network",
 ]) {
   const manifest = JSON.parse(
     readFileSync(`${root}/packages/${path}/package.json`, "utf8"),

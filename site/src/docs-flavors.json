@@ -4,20 +4,23 @@
     "languages": "packages/elixir/README.md",
     "api": "docs/flavors/elixir/api.md",
     "analytics": "docs/flavors/elixir/analytics.md",
-    "api-activity": "docs/flavors/elixir/api-activity.md"
+    "api-activity": "docs/flavors/elixir/api-activity.md",
+    "network-client": "docs/flavors/elixir/network-client.md"
   },
   "python": {
     "getting-started": "examples/python-flask/README.md",
     "languages": "packages/python/README.md",
     "api": "docs/flavors/python/api.md",
     "analytics": "docs/flavors/python/analytics.md",
-    "api-activity": "docs/flavors/python/api-activity.md"
+    "api-activity": "docs/flavors/python/api-activity.md",
+    "network-client": "docs/flavors/python/network-client.md"
   },
   "go": {
     "getting-started": "examples/go-http/README.md",
     "languages": "packages/go/README.md",
     "api": "docs/flavors/go/api.md",
     "analytics": "docs/flavors/go/analytics.md",
-    "api-activity": "docs/flavors/go/api-activity.md"
+    "api-activity": "docs/flavors/go/api-activity.md",
+    "network-client": "docs/flavors/go/network-client.md"
   }
 }

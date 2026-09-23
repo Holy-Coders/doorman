@@ -1,0 +1,23 @@
+{
+  "name": "janitor-network",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-23",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "NETWORK",
+      "database_name": "janitor-network",
+      "database_id": "5babbfb4-0c25-4e5f-a401-a950a6eb83f1",
+      "migrations_dir": "../../packages/network/migrations",
+    },
+  ],
+  "ai": { "binding": "AI" },
+  "vars": {
+    "JEV_ENABLED": "false",
+    "MAX_EVALUATIONS_PER_DAY": "0",
+    "MAX_EVALUATIONS_LIFETIME": "0",
+    "DISCOVERY_HOLDOUT_TENANTS": "[]",
+  },
+  "triggers": { "crons": ["15 * * * *"] },
+  "observability": { "enabled": false },
+}

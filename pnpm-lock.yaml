@@ -115,6 +115,35 @@ importers:
         specifier: ^4.136.3
         version: 4.136.3(@cloudflare/workers-types@5.20260922.1)(@types/node@22.20.4)
 
+  examples/learning-service:
+    dependencies:
+      '@janitor/network':
+        specifier: workspace:^
+        version: link:../../packages/network
+      fastify:
+        specifier: ^5.12.5
+        version: 5.12.5
+      pg:
+        specifier: ^8.16.0
+        version: 8.23.0
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.15.0
+        version: 8.23.1
+      tsx:
+        specifier: ^4.20.0
+        version: 4.23.15
+
+  examples/learning-worker:
+    dependencies:
+      '@janitor/network':
+        specifier: workspace:^
+        version: link:../../packages/network
+    devDependencies:
+      wrangler:
+        specifier: ^4.136.3
+        version: 4.136.3(@cloudflare/workers-types@5.20260922.1)(@types/node@22.20.4)
+
   examples/nextjs:
     dependencies:
       '@janitor/adapters':
@@ -223,6 +252,15 @@ importers:
       '@janitor/core':
         specifier: workspace:^
         version: link:../../core
+
+  packages/network:
+    dependencies:
+      '@janitor/core':
+        specifier: workspace:^
+        version: link:../core
+      zod:
+        specifier: ^4.0.0
+        version: 4.6.5
 
   packages/storage/d1:
     dependencies:

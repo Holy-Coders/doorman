@@ -1,6 +1,6 @@
-# A shared learning service: proposal for discussion
+# A shared learning service: original proposal
 
-Janitor can remain a useful, self-hosted open-source library while an optional service improves risk evaluation across participating applications. The evaluator interface is the extension point. This release does not operate that service, upload customer telemetry, or train a model.
+The opt-in pilot described here is now implemented in `packages/network`, with Postgres and Cloudflare D1 service examples. Read the [current guide](LEARNING-NETWORK.md) and [application setup](NETWORK-CLIENT.md) for the shipped behavior. It discovers readable patterns from labeled summaries; it does not fine-tune Jev's weights. Ordinary Janitor installs and the public website do not contribute data automatically.
 
 ## Keep three choices separate
 

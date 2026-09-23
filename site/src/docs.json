@@ -161,6 +161,18 @@
     "title": "Explore & evaluate",
     "pages": [
       {
+        "slug": "network-learning",
+        "title": "Learn assistant patterns",
+        "description": "Discover recurring patterns from confirmed sessions and test them on unseen applications.",
+        "source": "docs/LEARNING-NETWORK.md"
+      },
+      {
+        "slug": "network-client",
+        "title": "Connect the learning service",
+        "description": "Opt into private evaluations, sampled contributions and independently confirmed feedback.",
+        "source": "docs/NETWORK-CLIENT.md"
+      },
+      {
         "slug": "learning",
         "title": "Learn from later logins",
         "description": "Use Jev to evaluate cross-device suggestions from login-confirmed history.",
