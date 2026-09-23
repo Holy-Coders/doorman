@@ -1,5 +1,6 @@
 import { isIdentityAttribution } from "@janitor/core";
 import { createExtendedBehavior } from "./behavior.js";
+export { createIdentityAnalytics } from "./analytics.js";
 import type {
   BrowserBehavior,
   BrowserObservation,

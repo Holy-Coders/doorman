@@ -72,7 +72,13 @@ defmodule Janitor.Plug do
                 else: conn
 
             if context[:analytics_consent] == true and is_binary(context[:analytics_id]),
-              do: Janitor.Analytics.capture_all(c.analytics, identity, context.analytics_id)
+              do:
+                Janitor.Analytics.capture_all(
+                  c.analytics,
+                  identity,
+                  context.analytics_id,
+                  context[:analytics_context] || %{}
+                )
 
             public =
               if c.expose_client_scores,

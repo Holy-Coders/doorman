@@ -127,7 +127,7 @@ Recording requires at least one subject, actor or application session. Subject/a
 
 A repeated event ID with the same semantic fields is idempotent, including concurrent delivery. Reusing it for different data throws an error. Deduplication lasts while the event is retained; after erasure/expiry cleanup, the application must prevent unwanted replay from its source system. There is no public ingestion endpoint or automatic forwarding to analytics vendors.
 
-Velocity selects exactly one subject, session or actor and optionally an action. The window is 1 second to 24 hours, default 15 minutes. Indexed reads return at most `maxEventsPerQuery + 1` rows. When `saturated: true`, reported counts and `total` are **lower bounds**, not exact totals; do not interpret the cap as low activity. This bounds the returned data, not every physical database read. No million-row production event workload has been benchmarked yet.
+Velocity selects exactly one subject, session or actor and optionally an action. The window is 1 second to 24 hours, default 15 minutes. Indexed reads return at most `maxEventsPerQuery + 1` rows. When `saturated: true`, reported counts and `total` are **lower bounds**, not exact totals; do not interpret the cap as low activity. This bounds the returned data, not every physical database read. The [capacity report](CAPACITY.md) includes one million synthetic application events on local Postgres; a production event workload is still unmeasured.
 
 ## Auditable device associations
 

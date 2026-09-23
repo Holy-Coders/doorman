@@ -76,7 +76,7 @@ Existing installations need `Janitor.Migration.upgrade_security()` in a new appl
 
 ## Browser and LiveView client
 
-The Mix package includes a generated 6 KiB ESM client, so installing the server package requires no JavaScript build:
+The Mix package includes a small generated ESM client, so installing the server package requires no JavaScript build:
 
 ```elixir
 # Endpoint, before the router
@@ -118,6 +118,8 @@ Repeated identification upserts the same subject. This works independently of le
 
 ## PostHog and Mixpanel
 
+The unreleased checkout includes `createIdentityAnalytics` in the bundled browser client plus account/actor dimensions in native server exports. Follow the [complete Phoenix lifecycle, shared-browser and reporting guide](../../docs/ANALYTICS.md) to connect anonymous journeys, login, profile updates, logout and multi-user accounts.
+
 Use the same account ID your analytics already uses. Janitor does not replace either analytics product. No export happens unless your server calls these functions or explicitly supplies `analytics_consent: true` and `analytics_id` to the handler with configured providers.
 
 ```elixir
@@ -134,7 +136,7 @@ Janitor.Analytics.capture(:posthog, identity, to_string(user.id), posthog)
 Janitor.Analytics.capture(:mixpanel, identity, to_string(user.id), mixpanel)
 ```
 
-Profile updates allow only `email`, `name`, `plan`; risk events export only Janitor's small allowlist. No fingerprints, behavior, debug data, IP addresses or raw identity keys are exported. Choose EU/regional ingestion hosts to match your project. Exports are synchronous best effort, default 750 ms/provider, no retry/queue; functions return `:ok` or `{:error, reason}`. Delivery failure cannot change the returned identity. Accepted ingestion is not proof of a dashboard profile update. With an existing SDK, pass `Janitor.Analytics.properties(identity)` to its capture/track function instead of configuring a second exporter.
+Profile updates allow only `email`, `name`, `plan`; risk events export only Janitor's small allowlist, including verified actor/subject IDs and an optional authorized account ID. Pass `account_id:` per capture or `analytics_context: %{account_id: ...}` in trusted handler context; `analytics_id` must identify the authenticated actor, not a shared workspace. No fingerprints, behavior, debug data, IP addresses or raw identity keys are exported. Choose EU/regional ingestion hosts to match your project. Exports are synchronous best effort, default 750 ms/provider, no retry/queue; functions return `:ok` or `{:error, reason}`. Delivery failure cannot change the returned identity. Accepted ingestion is not proof of a dashboard profile update. With an existing SDK, pass `Janitor.Analytics.properties(identity)` to its capture/track function instead of configuring a second exporter.
 
 For an Open Calls rebuild, put this controller behind the existing authenticated Phoenix session and use the existing PostHog account ID. No calling, billing, provider credential, phone number, message content or replay is needed by Janitor. This example does not modify or deploy Open Calls.
 

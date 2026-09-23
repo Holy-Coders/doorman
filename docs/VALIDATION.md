@@ -1,5 +1,12 @@
 # Validation record
 
+## Unreleased analytics lifecycle and actor reports — 2026-09-23
+
+- Browser `createIdentityAnalytics` coordinates existing PostHog/Mixpanel identify, profile update, account-switch and logout/reset calls without accepting private scores. It preserves the initial anonymous transition and emits the event needed for Mixpanel Simplified ID Merge.
+- Server TypeScript and native Elixir exports now include optional account/workspace context and opaque verified subject/actor IDs. Groups are opt-in and attached per event. Server agents can export credential attribution without browser/risk fields. Unknown actors are never converted to humans from a low risk score.
+- **204 TypeScript tests across twelve files** and **51 native Elixir tests against local Postgres** pass. Typecheck and lint pass. The real `posthog-js` 1.434.10 and `mixpanel-browser` 2.83.0 SDKs run in Chromium with all analytics traffic intercepted locally: anonymous identity links, second-device login, two users sharing a browser, duplicate auth callbacks, logout and private-score exclusion are checked. Native HTTP export/group/profile payloads use mocked transport. These SDKs are test dependencies only.
+- The [integration guide](ANALYTICS.md) includes Phoenix code, browser lifecycle/UX, distinct-actor report definitions, PostHog SQL, Mixpanel report steps and prompts for analytics assistants. Live provider ingestion, profile merging and dashboard queries have not been validated, and Open Calls has not been integrated. Publishing/deployment remain deferred.
+
 ## Unreleased capacity work — 2026-09-23
 
 - Local real-SQL evidence/protection benchmarks completed with one million synthetic events; raw before/after results and index plans are in the [capacity report](CAPACITY.md).

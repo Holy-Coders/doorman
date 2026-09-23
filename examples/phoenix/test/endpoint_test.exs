@@ -9,6 +9,7 @@ defmodule JanitorExample.EndpointTest do
     asset = conn(:get, "/janitor/janitor.js") |> JanitorExample.Endpoint.call([])
     assert asset.status == 200
     assert asset.resp_body =~ "createVisitorClient"
+    assert asset.resp_body =~ "createIdentityAnalytics"
 
     assert_raise Plug.CSRFProtection.InvalidCSRFTokenError, fn ->
       conn(:post, "/api/visitor", ~s({"signals":{}}))

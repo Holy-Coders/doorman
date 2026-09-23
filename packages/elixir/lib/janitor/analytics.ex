@@ -1,27 +1,51 @@
 defmodule Janitor.Analytics do
   @moduledoc "Explicit, best-effort PostHog and Mixpanel exports. No raw observations or inferred account identifiers."
-  def properties(identity) do
+  def properties(identity, context \\ %{}) do
+    actor = get_in(identity, ["attribution", "actor"]) || %{}
+    subject = get_in(identity, ["attribution", "subject"]) || %{}
+    verified_actor = actor["basis"] == "verified-credential" and is_binary(actor["id"])
+
     %{
+      "janitor_schema_version" => 1,
+      "janitor_account_id" => if(context[:account_id], do: valid_id!(context.account_id)),
+      "janitor_subject_id" => if(subject["status"] == "verified", do: subject["id"]),
+      "janitor_subject_status" => subject["status"] || "unknown",
+      "janitor_actor_id" => if(verified_actor, do: actor["id"]),
+      "janitor_actor_basis" => if(verified_actor, do: "verified-credential", else: "unknown"),
       "janitor_visitor_id" => identity["visitorId"],
       "janitor_confidence" => identity["confidence"],
       "janitor_returning" => identity["isReturning"],
       "janitor_automation" => get_in(identity, ["risk", "automation"]),
       "janitor_suspicious" => get_in(identity, ["risk", "suspicious"]),
       "janitor_risk_status" => identity["riskStatus"],
-      "janitor_actor_kind" => get_in(identity, ["attribution", "actor", "kind"]),
+      "janitor_actor_kind" => if(verified_actor, do: actor["kind"], else: "unknown"),
       "janitor_delegation_status" => get_in(identity, ["attribution", "delegation", "status"])
     }
     |> Janitor.Observation.clean()
   end
 
-  def capture_all(providers, identity, distinct_id),
+  def capture_all(providers, identity, distinct_id, context \\ %{}),
     do:
       Enum.map(providers, fn {provider, opts} ->
-        {provider, capture(provider, identity, distinct_id, opts)}
+        {provider,
+         capture(
+           provider,
+           identity,
+           distinct_id,
+           Keyword.put(opts, :account_id, context[:account_id])
+         )}
       end)
 
   def capture(provider, identity, distinct_id, opts) do
-    send_event(provider, "janitor identified", properties(identity), distinct_id, opts)
+    props = properties(identity, %{account_id: opts[:account_id]})
+
+    send_event(
+      provider,
+      "janitor identified",
+      group_properties(provider, props, opts),
+      distinct_id,
+      opts
+    )
   rescue
     _ -> {:error, :unavailable}
   catch
@@ -77,6 +101,11 @@ defmodule Janitor.Analytics do
   end
 
   defp send_event(:mixpanel, event, props, id, opts) do
+    props =
+      if Keyword.get(opts, :identity_merge, :simplified) == :original,
+        do: props,
+        else: Map.put(props, "$user_id", valid_id!(id))
+
     body = [
       %{
         "event" => event,
@@ -100,6 +129,29 @@ defmodule Janitor.Analytics do
       do: raise(ArgumentError, "verified analytics ID required")
 
     id
+  end
+
+  defp group_properties(provider, props, opts) do
+    case opts[:account_group] do
+      nil ->
+        props
+
+      group ->
+        unless is_binary(group) and Regex.match?(~r/^[a-z][a-z0-9_]{0,63}$/, group) and
+                 group not in ~w(distinct_id ip token time event properties user_id) and
+                 (not String.starts_with?(group, "janitor_") or group == "janitor_account_id"),
+               do: raise(ArgumentError, "invalid analytics account group")
+
+        case props["janitor_account_id"] do
+          nil ->
+            props
+
+          account ->
+            if provider == :posthog,
+              do: Map.put(props, "$groups", %{group => account}),
+              else: Map.put(props, group, account)
+        end
+    end
   end
 
   defp deliver(provider, path, body, opts) do

@@ -60,6 +60,8 @@ Janitor.handle(conn, janitor)
 
 Native Ecto/Postgres, Plug/Phoenix, verified user updates, PostHog and Mixpanel. [Install and connect an existing app](packages/elixir/README.md) · [Boot the Phoenix example](examples/phoenix/README.md).
 
+The unreleased checkout adds coordinated browser login/logout hooks and private account/actor exports for PostHog and Mixpanel. Count distinct people or agents per account, or investigate multiple verified users associated with one browser. Follow the [code, UX and reporting guide](docs/ANALYTICS.md); a browser ID never replaces a person's analytics ID.
+
 ## Cloudflare
 
 ```ts

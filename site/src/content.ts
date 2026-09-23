@@ -44,7 +44,7 @@ export const sections = [
         slug: "analytics",
         title: "PostHog, Mixpanel & Segment",
         description:
-          "Explicit account profile updates and allowlisted risk events.",
+          "Login identity, multi-user accounts, agents and private analytics reports.",
         source: "docs/ANALYTICS.md",
       },
       {

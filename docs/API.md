@@ -13,6 +13,8 @@ createVisitorClient(options?: { endpoint?: string; debug?: boolean; behavior?: "
 
 `endpoint` defaults to `/api/visitor`; cross-origin URLs are rejected. Concurrent calls on one client share a promise. `identify()` sends signals and current aggregate behavior using same-origin cookies and a ten-second request timeout. Network, HTTP or invalid response errors reject; collection failures alone do not throw. After `destroy()`, the client cannot identify again. Create a new client on a new mount; do not reuse it after disposal. Collection should start only after the application's required opt-in.
 
+`createIdentityAnalytics({ visitor?, posthog?, mixpanel? })` adds explicit `identifyUser(authenticatedId, traits?)` and `reset()` hooks for existing browser analytics SDKs. It preserves the anonymous-to-login transition, resets on user switches, and never receives risk scores. See [analytics lifecycle and account/actor reports](ANALYTICS.md).
+
 `collectBrowserSignals`, `createBehaviorTracker`, and `safe` are exported for advanced integrations/testing. The normal application API requires only `createVisitorClient`. `enabled: false` creates no event listeners; `setEnabled(false)` pauses and clears collection. `reset()` discards pending results and restarts aggregate counts, useful after logout/account changes. Neither changes HttpOnly cookies. `headers()` supplies framework CSRF tokens at request time.
 
 ## Core

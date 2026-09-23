@@ -51,7 +51,7 @@ const entries = [
   [
     "analytics",
     "PostHog, Mixpanel & Segment",
-    "Explicit account profile updates and allowlisted risk events.",
+    "Login identity, multi-user accounts, agents and private analytics reports.",
     "docs/ANALYTICS.md",
   ],
   [
