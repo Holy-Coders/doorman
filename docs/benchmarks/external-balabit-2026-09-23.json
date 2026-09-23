@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-23T17:10:43.860Z",
+  "revision": "b9a574843e3535e9ff5b8ab6624545ba13a0999d",
+  "worktreeModified": false,
+  "provenance": {
+    "url": "https://github.com/balabit/Mouse-Dynamics-Challenge",
+    "revision": "d00d6f779254a2a917deeab4a5b7a9e8643bd91e",
+    "terms": "README invites research benchmarking and requests citation; no explicit license found. No raw data or trained weights redistributed.",
+    "files": [
+      {
+        "name": "balabit.tar.gz",
+        "bytes": 44628882,
+        "sha256": "f4c484c30678c3c58235f6ee78e35636f29abd2e69f379bbb46aec7ca083acef",
+        "url": "https://codeload.github.com/balabit/Mouse-Dynamics-Challenge/tar.gz/d00d6f779254a2a917deeab4a5b7a9e8643bd91e"
+      }
+    ]
+  },
+  "jevCalls": 0,
+  "productionPromoted": false,
+  "parityChecked": 0,
+  "coverage": {
+    "test": {
+      "sessions": 816,
+      "features": {
+        "mouse_speed": 816,
+        "mouse_turn_ratio": 816,
+        "mouse_pause_ratio": 816,
+        "interaction_mean_ms": 799,
+        "interaction_cv": 799
+      }
+    },
+    "training": {
+      "sessions": 65,
+      "features": {
+        "mouse_speed": 65,
+        "mouse_turn_ratio": 65,
+        "mouse_pause_ratio": 65,
+        "interaction_mean_ms": 65,
+        "interaction_cv": 65
+      }
+    }
+  },
+  "result": {
+    "source": "Balabit",
+    "sessions": 881,
+    "trainingSessions": 65,
+    "testSessions": 816,
+    "owners": 10,
+    "method": "owner median and training standard deviation; mean squared standardized distance; monotonic d/(1+d) anomaly score",
+    "features": [
+      "mouse_speed",
+      "mouse_turn_ratio",
+      "mouse_pause_ratio",
+      "interaction_mean_ms",
+      "interaction_cv"
+    ],
+    "productionEligible": false,
+    "jev": "not evaluated",
+    "threshold": null,
+    "thresholdReason": "Only 5-7 training recordings per owner; insufficient independent owner calibration for a reliable 95% cutoff.",
+    "test": {
+      "sessions": 816,
+      "positives": 405,
+      "negatives": 411,
+      "scored": 799,
+      "positiveCoverage": 0.9777777777777777,
+      "negativeCoverage": 0.9805352798053528,
+      "rocAucScored": 0.66840865227962,
+      "averagePrecisionScored": 0.686174300507915
+    },
+    "ownerResults": [
+      {
+        "trainingSessions": 7,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 6,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 6,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 7,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 5,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 6,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 7,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 7,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 7,
+        "status": "evaluated"
+      },
+      {
+        "trainingSessions": 7,
+        "status": "evaluated"
+      }
+    ]
+  }
+}

@@ -30,6 +30,7 @@
     "classifier": "tsx scripts/classifier.ts",
     "benchmark:external:download": "tsx scripts/benchmarks/external/download.ts",
     "benchmark:external": "pnpm build && tsx scripts/benchmarks/external/run.ts",
+    "benchmark:jev": "pnpm build && tsx scripts/benchmarks/external/jev-pilot.ts",
     "test:external": "python3 -m unittest discover -s tools/benchmarks -p \"test_*.py\" -v"
   },
   "devDependencies": {

@@ -35,10 +35,12 @@ When multiple equal candidates are already stored, the ambiguity margin avoids c
 
 Risk accuracy is **not measured**. All sessions are automated and no human ground truth is present. Risk outputs remain zero because the evaluator is disabled. Extra motion summaries do not by themselves solve identity collisions or establish intent. Cross-device person/account continuity needs [verified account linking](./EXTENSIONS.md).
 
-## Public data candidates
+## Public research datasets
 
-- [FP-Stalker](https://github.com/Spirals-Team/FPStalker) publishes a 15,000-fingerprint sample from historical browser observations. It is a useful candidate for chronological identity replay, subject to feature mapping and its research-era browser distribution. Janitor has not yet run this dataset. Browser updates, sample selection and missing modern fields limit extrapolation to today's browsers.
-- [FP-Agent](https://github.com/ethanbwang/fp-agent) links its public data and code for a controlled human/AI-agent study. It is a candidate risk benchmark, but Janitor must use only the subset of features it actually collects and split by participant/environment to avoid leakage. The published study's classifier results are not Janitor's results.
+Janitor has now run FP-Stalker, FP-Agent and Balabit with its existing signals. The [public dataset report](EXTERNAL-BENCHMARKS.md) documents the projections, held-out groups, source checksums and reproducible commands. The historical cookie-loss replay produced 1,258 correct restores and 2,303 wrong restores. Agent timing features showed useful separation but incomplete coverage and substantial human false positives in some folds. A separate 120-case pilot made 103 real Jev calls: fewer false restores came with more missed restores, and behavior-only automation scores detected no agents at the preset threshold. No research model was promoted to production.
+
+Additional datasets remain candidates:
+
 - [CERTH Web Bot Detection Dataset](https://m4d.iti.gr/web-bot-detection-dataset/) includes human and bot sessions with mouse behavior and web logs. Its stated license is CC BY-NC-SA; check applicability before using it for a commercial benchmark. Raw paths, coordinates and logs would need to be reduced to Janitor's permitted summaries, not added to the library's collection surface.
 
 ## What a production evaluation still needs

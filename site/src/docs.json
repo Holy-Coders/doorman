@@ -191,6 +191,12 @@
         "source": "docs/BENCHMARKS.md"
       },
       {
+        "slug": "external-benchmarks",
+        "title": "Public dataset results",
+        "description": "Real research data exposes recovery errors, agent coverage gaps and the limits of mouse behavior.",
+        "source": "docs/EXTERNAL-BENCHMARKS.md"
+      },
+      {
         "slug": "validation",
         "title": "Testing & limitations",
         "description": "What the test suite verifies and what still needs real-world evaluation.",

@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-23T17:26:09.979Z",
+  "model": "jev-1.13.0",
+  "transport": "Cloudflare AI REST /ai/run; typesafe/jev; default gateway",
+  "sampling": "Frozen hash-selected pilot; no prompt changes or threshold tuning on these cases",
+  "questions": "Existing JEV_QUESTIONS and CLASSIFIER_QUESTIONS unchanged",
+  "provenance": {
+    "agentCasesSha256": "eea1bce4df8a067c405ab315157742be4472153b7eae4e7b8df0e7a0c46f3352",
+    "identityCasesSha256": "bb9a26d520e557af672c36c7dd6d4a7ef6345367e419d91f09f86b349f8962d4",
+    "pilotCodeSha256": "354bbe3f34d2af1a96bf7c4cfb113215b49ba60042286d35bdc54baeeba48a33",
+    "questionsSha256": "f6ca088295c01971116f6017a1bcf2f7100045df34ce9552b2666ede08743dab"
+  },
+  "allowance": {
+    "maxCalls": 120,
+    "maxRequestBytes": 32768,
+    "automaticRetries": 0,
+    "gatewayLogs": false
+  },
+  "usage": {
+    "attempts": 103,
+    "completed": 103,
+    "inputBytes": 867675,
+    "inputTokens": 267602,
+    "outputTokens": 14542,
+    "p50LatencyMs": 520,
+    "p95LatencyMs": 633,
+    "aboveDefault1200ms": 1
+  },
+  "newCalls": 103,
+  "agents": {
+    "cases": 80,
+    "selection": "40 human test cases and 40 agent cases stratified across the seven existing family-holdout folds",
+    "baselineThreshold": "Each fold's preselected validation threshold",
+    "jevThreshold": 0.85,
+    "baseline": {
+      "cases": 80,
+      "scored": 55,
+      "humanCases": 40,
+      "agentCases": 40,
+      "truePositives": 17,
+      "falsePositives": 3,
+      "rocAucScored": 0.907258064516129
+    },
+    "jev": {
+      "cases": 80,
+      "scored": 80,
+      "humanCases": 40,
+      "agentCases": 40,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "rocAucScored": 0.340625
+    }
+  },
+  "identity": {
+    "cases": 40,
+    "returningLabels": 20,
+    "firstObservations": 20,
+    "selection": "Last 30% of chronology, with platform/screen/renderer present; hash-selected without looking at matcher outputs",
+    "history": "Earlier observations seeded under publisher labels, modeling reliable previous cookies; both queries roll back to exactly the same SQL state",
+    "evaluatorTimeoutMs": 20000,
+    "lookupPlanning": false,
+    "baseline": {
+      "correct-restore": 8,
+      "wrong-restore": 5,
+      "new-id": 27
+    },
+    "jev": {
+      "correct-restore": 6,
+      "wrong-restore": 2,
+      "new-id": 32
+    },
+    "evaluated": 40
+  },
+  "limitations": [
+    "Small pilot, not population accuracy or a calibrated security threshold",
+    "Identity pilot uses known prior cookie history and is not the full all-cookies-lost replay",
+    "Jev sees only the five aggregate behavior features in the agent comparison; no browser signals or server activity",
+    "Agent detection is not malicious-intent detection",
+    "No model fine-tuning, downstream Jev-feature training, account linking or production promotion",
+    "Longer offline timeout measures model quality; latency above the default deadline is reported separately"
+  ]
+}

@@ -4,7 +4,7 @@ Janitor’s tests check whether the implementation behaves as documented: matchi
 
 ## What is verified
 
-The optional learning-network pilot adds **30 tests**, bringing the current TypeScript suite to **307 tests across eighteen files**. Strict typechecking and lint pass. Its shared storage tests also passed against a real Postgres 17 server and Cloudflare's local D1 runtime. The public site has **135 generated HTML pages** and seventeen passing browser tests.
+The current TypeScript suite passes **339 tests across 23 files**, including the classifier, external-data projection and budgeted Jev transport checks. The offline benchmark importer/evaluator adds **nine Python tests**, including checks that unseen labels cannot change fitting, model selection or thresholds. Strict typechecking and lint pass. Shared storage checks also passed against a real Postgres 17 server and Cloudflare's local D1 runtime. The public site has seventeen browser tests.
 
 The pilot checks opt-ins, tenant isolation, immutable uploads, independent feedback, disputed labels, bounded discovery, unseen-application holdouts, shadow/canary separation, budgets, cache leases, deadlines, erasure and credential revocation. An actual Fastify/Postgres HTTP service passed enrollment, contribution, the verified-attribution helper and deletion checks. The deployed Cloudflare service passed authentication, contribution, deduplication, erasure and revocation checks. Those smoke tests used generated data, removed it afterward and made **zero paid model calls**. Hosted evaluation and contribution preferences remain disabled for the provisioned pilot participant; no real-user data has been collected for this experiment.
 
@@ -39,13 +39,16 @@ See the [latest CI runs](https://github.com/Holy-Coders/janitor/actions) and [de
 
 The benchmarks answer different questions. Keep their results separate:
 
-| Benchmark                                     | What it tests                                                  | What it does not establish                                            |
-| --------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [Controlled browser visits](BENCHMARKS.md)    | Browser signals and recovery after controlled changes.         | Accuracy across a representative real-user population.                |
-| [Millions of stored observations](SCALING.md) | Indexed candidate lookup and history-read latency.             | Sustained production throughput or correct person identity.           |
-| [Connection and workload tests](CAPACITY.md)  | Open connections, successful responses, overload and recovery. | 200,000 simultaneous successful identifications or real Jev capacity. |
+| Benchmark                                          | What it tests                                                                                  | What it does not establish                                                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [Controlled browser visits](BENCHMARKS.md)         | Browser signals and recovery after controlled changes.                                         | Accuracy across a representative real-user population.                                                          |
+| [Public research datasets](EXTERNAL-BENCHMARKS.md) | Historical browser recovery, agent-family/configuration holdouts and aggregate owner behavior. | Reliable cookie-loss identity, participant-disjoint agent accuracy, cross-device ownership or malicious intent. |
+| [Millions of stored observations](SCALING.md)      | Indexed candidate lookup and history-read latency.                                             | Sustained production throughput or correct person identity.                                                     |
+| [Connection and workload tests](CAPACITY.md)       | Open connections, successful responses, overload and recovery.                                 | 200,000 simultaneous successful identifications or real Jev capacity.                                           |
 
-The browser experiment includes a false match between indistinguishable profiles. The connection experiment includes controlled `503` overload responses. Those are part of the findings, not successes hidden inside headline counts.
+The controlled browser experiment includes a false match between indistinguishable profiles. The external identity replay found 2,303 wrong restores and 1,258 correct restores; the behavioral studies have coverage gaps and false alerts. The connection experiment includes controlled `503` overload responses. Those are part of the findings, not successes hidden inside headline counts.
+
+A separate [real Jev pilot](EXTERNAL-BENCHMARKS.md#what-real-jev-calls-added) completed 120 cases with 103 unique provider requests and seventeen cache hits. In forty cookie-recovery trials, wrong restores fell from five to two, while correct restores fell from eight to six. With only aggregate behavior as input, the raw Jev automation score detected none of forty agents at the preset 0.85 threshold and flagged no humans. Median provider latency was 520 ms, p95 was 633 ms, and one request exceeded the ordinary timeout. This is a small quality experiment with a longer offline deadline, not proof of deployment accuracy or load capacity.
 
 ## What still needs real-world testing
 

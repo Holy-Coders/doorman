@@ -1,0 +1,1124 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-23T17:10:34.890Z",
+  "revision": "b9a574843e3535e9ff5b8ab6624545ba13a0999d",
+  "worktreeModified": false,
+  "provenance": {
+    "url": "https://github.com/ethanbwang/fp-agent",
+    "revision": "a9bdba8701ec0447e98462e95780ea3b0beefd6a",
+    "terms": "Author-publicized OSF view-only download. No explicit reusable data/model license found in inspected repository or OSF metadata. Local evaluation only.",
+    "files": [
+      {
+        "name": "fpagent-raw.json",
+        "bytes": 4256214855,
+        "sha256": "e07847509a4851acb18e2390f5bf364c9b2f9c25588fce9f34929a872524cde3",
+        "url": "https://osf.io/download/fc85n/?view_only=ac4ad89fbde540269aaaa85a2249cad6"
+      }
+    ]
+  },
+  "jevCalls": 0,
+  "productionPromoted": false,
+  "parityChecked": 216384,
+  "coverage": {
+    "Browser Use": {
+      "sessions": 1139,
+      "features": {
+        "interaction_mean_ms": 1129,
+        "interaction_cv": 1129,
+        "mouse_speed": 210,
+        "mouse_turn_ratio": 215,
+        "mouse_pause_ratio": 215
+      }
+    },
+    "Skyvern": {
+      "sessions": 1029,
+      "features": {
+        "interaction_mean_ms": 1029,
+        "interaction_cv": 1029,
+        "mouse_speed": 1,
+        "mouse_turn_ratio": 2,
+        "mouse_pause_ratio": 2
+      }
+    },
+    "Comet": {
+      "sessions": 1026,
+      "features": {
+        "interaction_mean_ms": 362,
+        "interaction_cv": 362,
+        "mouse_turn_ratio": 64,
+        "mouse_pause_ratio": 64,
+        "mouse_speed": 35
+      }
+    },
+    "Manus": {
+      "sessions": 995,
+      "features": {
+        "interaction_mean_ms": 688,
+        "interaction_cv": 688,
+        "mouse_turn_ratio": 22,
+        "mouse_pause_ratio": 22,
+        "mouse_speed": 6
+      }
+    },
+    "Human": {
+      "sessions": 546,
+      "features": {
+        "mouse_speed": 518,
+        "mouse_turn_ratio": 525,
+        "mouse_pause_ratio": 525,
+        "interaction_mean_ms": 461,
+        "interaction_cv": 461
+      }
+    },
+    "ChatGPT Agent": {
+      "sessions": 997,
+      "features": {
+        "mouse_speed": 326,
+        "mouse_turn_ratio": 327,
+        "mouse_pause_ratio": 327,
+        "interaction_mean_ms": 416,
+        "interaction_cv": 416
+      }
+    },
+    "Atlas Agent": {
+      "sessions": 994,
+      "features": {
+        "mouse_turn_ratio": 327,
+        "mouse_pause_ratio": 327,
+        "interaction_mean_ms": 608,
+        "interaction_cv": 608,
+        "mouse_speed": 313
+      }
+    },
+    "Claude": {
+      "sessions": 1002,
+      "features": {
+        "interaction_mean_ms": 422,
+        "interaction_cv": 422
+      }
+    }
+  },
+  "result": {
+    "source": "FP-Agent",
+    "sessions": 7728,
+    "humans": 546,
+    "agents": 7182,
+    "humanBrowserGroups": 60,
+    "participantHoldoutVerified": false,
+    "physicalEnvironmentHoldoutVerified": false,
+    "split": "seven leave-one-agent-family-out folds; human browser groups and other agent source runs split before fitting",
+    "features": [
+      "mouse_speed",
+      "mouse_turn_ratio",
+      "mouse_pause_ratio",
+      "interaction_mean_ms",
+      "interaction_cv"
+    ],
+    "environmentAudit": {
+      "agentComponents": 7,
+      "reportedConfigurations": 52,
+      "status": "evaluated",
+      "folds": [
+        {
+          "heldoutEnvironment": 1,
+          "partitions": [4293, 2473, 570, 392],
+          "sharedReportedEnvironments": 0,
+          "groupOverlap": 0,
+          "status": "evaluated",
+          "selected": "telemetry-boosted-trees",
+          "threshold": 0.9716093467605464,
+          "columns": ["interaction_mean_ms", "interaction_cv"],
+          "validationComparison": [
+            {
+              "name": "telemetry-logistic",
+              "threshold": 0.9321166731201149,
+              "validation": {
+                "sessions": 570,
+                "positives": 501,
+                "negatives": 69,
+                "scored": 559,
+                "positiveCoverage": 1,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 302,
+                "falsePositives": 1,
+                "precision": 0.9966996699669967,
+                "recall": 0.6027944111776448,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.9294858558744579,
+                "averagePrecisionScored": 0.9909495698307024,
+                "brierScored": 0.055672195419480916
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            },
+            {
+              "name": "telemetry-boosted-trees",
+              "threshold": 0.9716093467605464,
+              "validation": {
+                "sessions": 570,
+                "positives": 501,
+                "negatives": 69,
+                "scored": 559,
+                "positiveCoverage": 1,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 452,
+                "falsePositives": 1,
+                "precision": 0.9977924944812362,
+                "recall": 0.9021956087824351,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.991155619794893,
+                "averagePrecisionScored": 0.9988773747791013,
+                "brierScored": 0.015442327606623011
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            }
+          ],
+          "test": {
+            "sessions": 392,
+            "positives": 333,
+            "negatives": 59,
+            "scored": 384,
+            "positiveCoverage": 0.993993993993994,
+            "negativeCoverage": 0.8983050847457628,
+            "truePositives": 145,
+            "falsePositives": 0,
+            "precision": 1,
+            "recall": 0.43543543543543545,
+            "falsePositiveRate": 0,
+            "rocAucScored": 0.9522316593513083,
+            "averagePrecisionScored": 0.9912973624720409,
+            "brierScored": 0.04639100928121851
+          }
+        },
+        {
+          "heldoutEnvironment": 2,
+          "partitions": [4293, 1977, 402, 1056],
+          "sharedReportedEnvironments": 0,
+          "groupOverlap": 0,
+          "status": "evaluated",
+          "selected": "telemetry-boosted-trees",
+          "threshold": 0.9706283223610789,
+          "columns": ["interaction_mean_ms", "interaction_cv"],
+          "validationComparison": [
+            {
+              "name": "telemetry-logistic",
+              "threshold": 0.9339006952328557,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 168,
+                "falsePositives": 1,
+                "precision": 0.9940828402366864,
+                "recall": 0.5045045045045045,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.8805083862902388,
+                "averagePrecisionScored": 0.9771842839095453,
+                "brierScored": 0.08848906181298437
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            },
+            {
+              "name": "telemetry-boosted-trees",
+              "threshold": 0.9706283223610789,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 162,
+                "falsePositives": 1,
+                "precision": 0.9938650306748467,
+                "recall": 0.4864864864864865,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.9609594749453068,
+                "averagePrecisionScored": 0.9912911963432076,
+                "brierScored": 0.038777259924147475
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            }
+          ],
+          "test": {
+            "sessions": 1056,
+            "positives": 997,
+            "negatives": 59,
+            "scored": 469,
+            "positiveCoverage": 0.4172517552657974,
+            "negativeCoverage": 0.8983050847457628,
+            "truePositives": 293,
+            "falsePositives": 0,
+            "precision": 1,
+            "recall": 0.2938816449348044,
+            "falsePositiveRate": 0,
+            "rocAucScored": 0.9739885703918724,
+            "averagePrecisionScored": 0.9962847397776782,
+            "brierScored": 0.026955262702688103
+          }
+        },
+        {
+          "heldoutEnvironment": 3,
+          "partitions": [4293, 1618, 402, 1415],
+          "sharedReportedEnvironments": 0,
+          "groupOverlap": 0,
+          "status": "evaluated",
+          "selected": "telemetry-boosted-trees",
+          "threshold": 0.9862922642929208,
+          "columns": ["interaction_mean_ms", "interaction_cv"],
+          "validationComparison": [
+            {
+              "name": "telemetry-logistic",
+              "threshold": 0.9582871088303094,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 168,
+                "falsePositives": 1,
+                "precision": 0.9940828402366864,
+                "recall": 0.5045045045045045,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.8805083862902388,
+                "averagePrecisionScored": 0.9771842839095453,
+                "brierScored": 0.08858321189619056
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            },
+            {
+              "name": "telemetry-boosted-trees",
+              "threshold": 0.9862922642929208,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 162,
+                "falsePositives": 1,
+                "precision": 0.9938650306748467,
+                "recall": 0.4864864864864865,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.9609594749453068,
+                "averagePrecisionScored": 0.9912911963432076,
+                "brierScored": 0.05586663519944318
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            }
+          ],
+          "test": {
+            "sessions": 1415,
+            "positives": 1336,
+            "negatives": 79,
+            "scored": 793,
+            "positiveCoverage": 0.5419161676646707,
+            "negativeCoverage": 0.8734177215189873,
+            "truePositives": 596,
+            "falsePositives": 1,
+            "precision": 0.998324958123953,
+            "recall": 0.44610778443113774,
+            "falsePositiveRate": 0.012658227848101266,
+            "rocAucScored": 0.974207302426135,
+            "averagePrecisionScored": 0.9974599527243303,
+            "brierScored": 0.04005501152182656
+          }
+        },
+        {
+          "heldoutEnvironment": 4,
+          "partitions": [4293, 2473, 402, 560],
+          "sharedReportedEnvironments": 0,
+          "groupOverlap": 0,
+          "status": "evaluated",
+          "selected": "telemetry-boosted-trees",
+          "threshold": 0.9702074337017053,
+          "columns": ["interaction_mean_ms", "interaction_cv"],
+          "validationComparison": [
+            {
+              "name": "telemetry-logistic",
+              "threshold": 0.9362820058417989,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 168,
+                "falsePositives": 1,
+                "precision": 0.9940828402366864,
+                "recall": 0.5045045045045045,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.8805083862902388,
+                "averagePrecisionScored": 0.9771842839095453,
+                "brierScored": 0.08837141145225116
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            },
+            {
+              "name": "telemetry-boosted-trees",
+              "threshold": 0.9702074337017053,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 162,
+                "falsePositives": 1,
+                "precision": 0.9938650306748467,
+                "recall": 0.4864864864864865,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.9609594749453068,
+                "averagePrecisionScored": 0.9912911963432076,
+                "brierScored": 0.038011641603176174
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            }
+          ],
+          "test": {
+            "sessions": 560,
+            "positives": 501,
+            "negatives": 59,
+            "scored": 554,
+            "positiveCoverage": 1,
+            "negativeCoverage": 0.8983050847457628,
+            "truePositives": 452,
+            "falsePositives": 0,
+            "precision": 1,
+            "recall": 0.9021956087824351,
+            "falsePositiveRate": 0,
+            "rocAucScored": 0.9926561970398825,
+            "averagePrecisionScored": 0.99921059347167,
+            "brierScored": 0.02104671500443076
+          }
+        },
+        {
+          "heldoutEnvironment": 5,
+          "partitions": [3116, 1618, 402, 2592],
+          "sharedReportedEnvironments": 0,
+          "groupOverlap": 0,
+          "status": "evaluated",
+          "selected": "telemetry-boosted-trees",
+          "threshold": 0.9941600608688627,
+          "columns": ["interaction_mean_ms", "interaction_cv"],
+          "validationComparison": [
+            {
+              "name": "telemetry-logistic",
+              "threshold": 0.9681777827681929,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 167,
+                "falsePositives": 1,
+                "precision": 0.9940476190476191,
+                "recall": 0.5015015015015015,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.8755599541618919,
+                "averagePrecisionScored": 0.9759050700848186,
+                "brierScored": 0.08893585317620378
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            },
+            {
+              "name": "telemetry-boosted-trees",
+              "threshold": 0.9941600608688627,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 185,
+                "falsePositives": 1,
+                "precision": 0.9946236559139785,
+                "recall": 0.5555555555555556,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.9690332326283988,
+                "averagePrecisionScored": 0.9936946507148938,
+                "brierScored": 0.05056503464382815
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            }
+          ],
+          "test": {
+            "sessions": 2592,
+            "positives": 2492,
+            "negatives": 100,
+            "scored": 1553,
+            "positiveCoverage": 0.5882825040128411,
+            "negativeCoverage": 0.87,
+            "truePositives": 1179,
+            "falsePositives": 0,
+            "precision": 1,
+            "recall": 0.4731139646869984,
+            "falsePositiveRate": 0,
+            "rocAucScored": 0.979069639804927,
+            "averagePrecisionScored": 0.9986835711696155,
+            "brierScored": 0.0241440580069661
+          }
+        },
+        {
+          "heldoutEnvironment": 6,
+          "partitions": [4654, 1618, 402, 1054],
+          "sharedReportedEnvironments": 0,
+          "groupOverlap": 0,
+          "status": "evaluated",
+          "selected": "telemetry-boosted-trees",
+          "threshold": 0.9902163963333465,
+          "columns": ["interaction_mean_ms", "interaction_cv"],
+          "validationComparison": [
+            {
+              "name": "telemetry-logistic",
+              "threshold": 0.9536177558491497,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 169,
+                "falsePositives": 1,
+                "precision": 0.9941176470588236,
+                "recall": 0.5075075075075075,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.8817585165121367,
+                "averagePrecisionScored": 0.9775106237001857,
+                "brierScored": 0.08845103473819681
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            },
+            {
+              "name": "telemetry-boosted-trees",
+              "threshold": 0.9902163963333465,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 190,
+                "falsePositives": 1,
+                "precision": 0.9947643979057592,
+                "recall": 0.5705705705705706,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.9734607771642879,
+                "averagePrecisionScored": 0.9941278856326315,
+                "brierScored": 0.0298080786454995
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            }
+          ],
+          "test": {
+            "sessions": 1054,
+            "positives": 995,
+            "negatives": 59,
+            "scored": 741,
+            "positiveCoverage": 0.6914572864321608,
+            "negativeCoverage": 0.8983050847457628,
+            "truePositives": 535,
+            "falsePositives": 1,
+            "precision": 0.9981343283582089,
+            "recall": 0.5376884422110553,
+            "falsePositiveRate": 0.01694915254237288,
+            "rocAucScored": 0.9853142825800791,
+            "averagePrecisionScored": 0.9987842066497545,
+            "brierScored": 0.01888087180039725
+          }
+        },
+        {
+          "heldoutEnvironment": 7,
+          "partitions": [5121, 1618, 402, 587],
+          "sharedReportedEnvironments": 0,
+          "groupOverlap": 0,
+          "status": "evaluated",
+          "selected": "telemetry-boosted-trees",
+          "threshold": 0.9899798641646462,
+          "columns": ["interaction_mean_ms", "interaction_cv"],
+          "validationComparison": [
+            {
+              "name": "telemetry-logistic",
+              "threshold": 0.9184095764053868,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 177,
+                "falsePositives": 1,
+                "precision": 0.9943820224719101,
+                "recall": 0.5315315315315315,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.8877487238253985,
+                "averagePrecisionScored": 0.9789379686555606,
+                "brierScored": 0.08805270105269608
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            },
+            {
+              "name": "telemetry-boosted-trees",
+              "threshold": 0.9899798641646462,
+              "validation": {
+                "sessions": 402,
+                "positives": 333,
+                "negatives": 69,
+                "scored": 389,
+                "positiveCoverage": 0.993993993993994,
+                "negativeCoverage": 0.8405797101449275,
+                "truePositives": 267,
+                "falsePositives": 1,
+                "precision": 0.996268656716418,
+                "recall": 0.8018018018018018,
+                "falsePositiveRate": 0.014492753623188406,
+                "rocAucScored": 0.977471611626211,
+                "averagePrecisionScored": 0.9956959022236044,
+                "brierScored": 0.033766928816993745
+              },
+              "columns": ["interaction_mean_ms", "interaction_cv"]
+            }
+          ],
+          "test": {
+            "sessions": 587,
+            "positives": 528,
+            "negatives": 59,
+            "scored": 581,
+            "positiveCoverage": 1,
+            "negativeCoverage": 0.8983050847457628,
+            "truePositives": 197,
+            "falsePositives": 3,
+            "precision": 0.985,
+            "recall": 0.3731060606060606,
+            "falsePositiveRate": 0.05084745762711865,
+            "rocAucScored": 0.9209548313321898,
+            "averagePrecisionScored": 0.9891489593960665,
+            "brierScored": 0.026711844852803746
+          }
+        }
+      ],
+      "explanation": "Connected source runs, browser identifiers and reported configurations are kept disjoint. Configurations are proxies; physical host and human participant IDs are unavailable."
+    },
+    "jev": "not evaluated: no paid inference budget used",
+    "productionEligible": false,
+    "folds": [
+      {
+        "heldoutAgent": "Atlas Agent",
+        "partitions": [4642, 1130, 894, 1062],
+        "trainingSessionsWithEvidence": 2496,
+        "calibrationSessionsWithEvidence": 1122,
+        "sharedReportedEnvironments": 3,
+        "groupOverlap": 0,
+        "status": "evaluated",
+        "selected": "telemetry-boosted-trees",
+        "threshold": 0.9838167783400891,
+        "columns": ["interaction_mean_ms", "interaction_cv"],
+        "validationComparison": [
+          {
+            "name": "telemetry-logistic",
+            "threshold": 0.9146910817399051,
+            "validation": {
+              "sessions": 894,
+              "positives": 832,
+              "negatives": 62,
+              "scored": 885,
+              "positiveCoverage": 0.9939903846153846,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 460,
+              "falsePositives": 1,
+              "precision": 0.9978308026030369,
+              "recall": 0.5528846153846154,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.8786953258558146,
+              "averagePrecisionScored": 0.9902334634540761,
+              "brierScored": 0.05188906042972097
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          },
+          {
+            "name": "telemetry-boosted-trees",
+            "threshold": 0.9838167783400891,
+            "validation": {
+              "sessions": 894,
+              "positives": 832,
+              "negatives": 62,
+              "scored": 885,
+              "positiveCoverage": 0.9939903846153846,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 425,
+              "falsePositives": 1,
+              "precision": 0.9976525821596244,
+              "recall": 0.5108173076923077,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.9074240086728099,
+              "averagePrecisionScored": 0.9924683252336928,
+              "brierScored": 0.04021181685403015
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          }
+        ],
+        "test": {
+          "sessions": 1062,
+          "positives": 994,
+          "negatives": 68,
+          "scored": 664,
+          "positiveCoverage": 0.6116700201207244,
+          "negativeCoverage": 0.8235294117647058,
+          "truePositives": 595,
+          "falsePositives": 2,
+          "precision": 0.9966499162479062,
+          "recall": 0.5985915492957746,
+          "falsePositiveRate": 0.029411764705882353,
+          "rocAucScored": 0.9971804511278195,
+          "averagePrecisionScored": 0.9997095726336063,
+          "brierScored": 0.03986746134149613
+        }
+      },
+      {
+        "heldoutAgent": "Browser Use",
+        "partitions": [4030, 1430, 1061, 1207],
+        "trainingSessionsWithEvidence": 2139,
+        "calibrationSessionsWithEvidence": 789,
+        "sharedReportedEnvironments": 3,
+        "groupOverlap": 0,
+        "status": "evaluated",
+        "selected": "telemetry-logistic",
+        "threshold": 0.7262193191645294,
+        "columns": ["interaction_mean_ms", "interaction_cv"],
+        "validationComparison": [
+          {
+            "name": "telemetry-logistic",
+            "threshold": 0.7262193191645294,
+            "validation": {
+              "sessions": 1061,
+              "positives": 999,
+              "negatives": 62,
+              "scored": 1056,
+              "positiveCoverage": 0.998998998998999,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 683,
+              "falsePositives": 1,
+              "precision": 0.9985380116959064,
+              "recall": 0.6836836836836837,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.9064162808375372,
+              "averagePrecisionScored": 0.9939906075332327,
+              "brierScored": 0.11352905465912812
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          },
+          {
+            "name": "telemetry-boosted-trees",
+            "threshold": 0.9803208766476069,
+            "validation": {
+              "sessions": 1061,
+              "positives": 999,
+              "negatives": 62,
+              "scored": 1056,
+              "positiveCoverage": 0.998998998998999,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 583,
+              "falsePositives": 1,
+              "precision": 0.9982876712328768,
+              "recall": 0.5835835835835835,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.914069518347039,
+              "averagePrecisionScored": 0.9942207095123113,
+              "brierScored": 0.12487958080360491
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          }
+        ],
+        "test": {
+          "sessions": 1207,
+          "positives": 1139,
+          "negatives": 68,
+          "scored": 1185,
+          "positiveCoverage": 0.9912203687445127,
+          "negativeCoverage": 0.8235294117647058,
+          "truePositives": 663,
+          "falsePositives": 10,
+          "precision": 0.9851411589895989,
+          "recall": 0.582089552238806,
+          "falsePositiveRate": 0.14705882352941177,
+          "rocAucScored": 0.849447994432494,
+          "averagePrecisionScored": 0.9909682650293965,
+          "brierScored": 0.11160977680710114
+        }
+      },
+      {
+        "heldoutAgent": "ChatGPT Agent",
+        "partitions": [3975, 1931, 757, 1065],
+        "trainingSessionsWithEvidence": 2332,
+        "calibrationSessionsWithEvidence": 1618,
+        "sharedReportedEnvironments": 3,
+        "groupOverlap": 0,
+        "status": "evaluated",
+        "selected": "telemetry-logistic",
+        "threshold": 0.9242736817285284,
+        "columns": ["interaction_mean_ms", "interaction_cv"],
+        "validationComparison": [
+          {
+            "name": "telemetry-logistic",
+            "threshold": 0.9242736817285284,
+            "validation": {
+              "sessions": 757,
+              "positives": 695,
+              "negatives": 62,
+              "scored": 747,
+              "positiveCoverage": 0.9913669064748202,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 342,
+              "falsePositives": 1,
+              "precision": 0.9970845481049563,
+              "recall": 0.4920863309352518,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.8294004304088884,
+              "averagePrecisionScored": 0.9835000601284527,
+              "brierScored": 0.067607757731309
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          },
+          {
+            "name": "telemetry-boosted-trees",
+            "threshold": 0.9898215906031028,
+            "validation": {
+              "sessions": 757,
+              "positives": 695,
+              "negatives": 62,
+              "scored": 747,
+              "positiveCoverage": 0.9913669064748202,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 178,
+              "falsePositives": 1,
+              "precision": 0.994413407821229,
+              "recall": 0.25611510791366904,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.8795605825534258,
+              "averagePrecisionScored": 0.9868933288035117,
+              "brierScored": 0.06852374711890591
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          }
+        ],
+        "test": {
+          "sessions": 1065,
+          "positives": 997,
+          "negatives": 68,
+          "scored": 472,
+          "positiveCoverage": 0.4172517552657974,
+          "negativeCoverage": 0.8235294117647058,
+          "truePositives": 295,
+          "falsePositives": 10,
+          "precision": 0.9672131147540983,
+          "recall": 0.2958876629889669,
+          "falsePositiveRate": 0.14705882352941177,
+          "rocAucScored": 0.921381353021978,
+          "averagePrecisionScored": 0.987876177181696,
+          "brierScored": 0.07404361092924266
+        }
+      },
+      {
+        "heldoutAgent": "Claude",
+        "partitions": [4634, 1130, 894, 1070],
+        "trainingSessionsWithEvidence": 2684,
+        "calibrationSessionsWithEvidence": 1122,
+        "sharedReportedEnvironments": 3,
+        "groupOverlap": 0,
+        "status": "evaluated",
+        "selected": "telemetry-boosted-trees",
+        "threshold": 0.9841269382004459,
+        "columns": ["interaction_mean_ms", "interaction_cv"],
+        "validationComparison": [
+          {
+            "name": "telemetry-logistic",
+            "threshold": 0.911308557483953,
+            "validation": {
+              "sessions": 894,
+              "positives": 832,
+              "negatives": 62,
+              "scored": 885,
+              "positiveCoverage": 0.9939903846153846,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 471,
+              "falsePositives": 1,
+              "precision": 0.9978813559322034,
+              "recall": 0.5661057692307693,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.8813013384480674,
+              "averagePrecisionScored": 0.9904933784973047,
+              "brierScored": 0.05212522889595875
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          },
+          {
+            "name": "telemetry-boosted-trees",
+            "threshold": 0.9841269382004459,
+            "validation": {
+              "sessions": 894,
+              "positives": 832,
+              "negatives": 62,
+              "scored": 885,
+              "positiveCoverage": 0.9939903846153846,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 352,
+              "falsePositives": 1,
+              "precision": 0.9971671388101983,
+              "recall": 0.4230769230769231,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.9176291539840721,
+              "averagePrecisionScored": 0.9929847468254368,
+              "brierScored": 0.03921307906598446
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          }
+        ],
+        "test": {
+          "sessions": 1070,
+          "positives": 1002,
+          "negatives": 68,
+          "scored": 478,
+          "positiveCoverage": 0.42115768463073855,
+          "negativeCoverage": 0.8235294117647058,
+          "truePositives": 167,
+          "falsePositives": 2,
+          "precision": 0.9881656804733728,
+          "recall": 0.16666666666666666,
+          "falsePositiveRate": 0.029411764705882353,
+          "rocAucScored": 0.9640741367637102,
+          "averagePrecisionScored": 0.994474905339405,
+          "brierScored": 0.055080679899837386
+        }
+      },
+      {
+        "heldoutAgent": "Comet",
+        "partitions": [4610, 1130, 894, 1094],
+        "trainingSessionsWithEvidence": 2744,
+        "calibrationSessionsWithEvidence": 1122,
+        "sharedReportedEnvironments": 3,
+        "groupOverlap": 0,
+        "status": "evaluated",
+        "selected": "telemetry-boosted-trees",
+        "threshold": 0.9820406553865718,
+        "columns": ["interaction_mean_ms", "interaction_cv"],
+        "validationComparison": [
+          {
+            "name": "telemetry-logistic",
+            "threshold": 0.9117534899189714,
+            "validation": {
+              "sessions": 894,
+              "positives": 832,
+              "negatives": 62,
+              "scored": 885,
+              "positiveCoverage": 0.9939903846153846,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 476,
+              "falsePositives": 1,
+              "precision": 0.9979035639412998,
+              "recall": 0.5721153846153846,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.8821561105783263,
+              "averagePrecisionScored": 0.9905728376820692,
+              "brierScored": 0.05207793599755031
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          },
+          {
+            "name": "telemetry-boosted-trees",
+            "threshold": 0.9820406553865718,
+            "validation": {
+              "sessions": 894,
+              "positives": 832,
+              "negatives": 62,
+              "scored": 885,
+              "positiveCoverage": 0.9939903846153846,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 452,
+              "falsePositives": 1,
+              "precision": 0.9977924944812362,
+              "recall": 0.5432692307692307,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.9184213818121169,
+              "averagePrecisionScored": 0.9932995320378886,
+              "brierScored": 0.03840569969499725
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          }
+        ],
+        "test": {
+          "sessions": 1094,
+          "positives": 1026,
+          "negatives": 68,
+          "scored": 418,
+          "positiveCoverage": 0.35282651072124754,
+          "negativeCoverage": 0.8235294117647058,
+          "truePositives": 360,
+          "falsePositives": 2,
+          "precision": 0.994475138121547,
+          "recall": 0.3508771929824561,
+          "falsePositiveRate": 0.029411764705882353,
+          "rocAucScored": 0.9971389108129439,
+          "averagePrecisionScored": 0.9995046872201097,
+          "brierScored": 0.06186218144041146
+        }
+      },
+      {
+        "heldoutAgent": "Manus",
+        "partitions": [4308, 1269, 1088, 1063],
+        "trainingSessionsWithEvidence": 2415,
+        "calibrationSessionsWithEvidence": 933,
+        "sharedReportedEnvironments": 3,
+        "groupOverlap": 0,
+        "status": "evaluated",
+        "selected": "telemetry-logistic",
+        "threshold": 0.8932886012148502,
+        "columns": ["interaction_mean_ms", "interaction_cv"],
+        "validationComparison": [
+          {
+            "name": "telemetry-logistic",
+            "threshold": 0.8932886012148502,
+            "validation": {
+              "sessions": 1088,
+              "positives": 1026,
+              "negatives": 62,
+              "scored": 1077,
+              "positiveCoverage": 0.99317738791423,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 576,
+              "falsePositives": 1,
+              "precision": 0.9982668977469671,
+              "recall": 0.5614035087719298,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.8644800514364998,
+              "averagePrecisionScored": 0.9911816570249998,
+              "brierScored": 0.05104893549385339
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          },
+          {
+            "name": "telemetry-boosted-trees",
+            "threshold": 0.9855133762308294,
+            "validation": {
+              "sessions": 1088,
+              "positives": 1026,
+              "negatives": 62,
+              "scored": 1077,
+              "positiveCoverage": 0.99317738791423,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 391,
+              "falsePositives": 1,
+              "precision": 0.9974489795918368,
+              "recall": 0.3810916179337232,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.9055700314710162,
+              "averagePrecisionScored": 0.9933330302120149,
+              "brierScored": 0.04941481226177223
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          }
+        ],
+        "test": {
+          "sessions": 1063,
+          "positives": 995,
+          "negatives": 68,
+          "scored": 744,
+          "positiveCoverage": 0.6914572864321608,
+          "negativeCoverage": 0.8235294117647058,
+          "truePositives": 638,
+          "falsePositives": 10,
+          "precision": 0.9845679012345679,
+          "recall": 0.6412060301507537,
+          "falsePositiveRate": 0.14705882352941177,
+          "rocAucScored": 0.9721371470099667,
+          "averagePrecisionScored": 0.997635719352014,
+          "brierScored": 0.044967875426432664
+        }
+      },
+      {
+        "heldoutAgent": "Skyvern",
+        "partitions": [4942, 768, 921, 1097],
+        "trainingSessionsWithEvidence": 2742,
+        "calibrationSessionsWithEvidence": 432,
+        "sharedReportedEnvironments": 3,
+        "groupOverlap": 0,
+        "status": "evaluated",
+        "selected": "telemetry-boosted-trees",
+        "threshold": 0.9654449314980912,
+        "columns": ["interaction_mean_ms", "interaction_cv"],
+        "validationComparison": [
+          {
+            "name": "telemetry-logistic",
+            "threshold": 0.7748999040326257,
+            "validation": {
+              "sessions": 921,
+              "positives": 859,
+              "negatives": 62,
+              "scored": 910,
+              "positiveCoverage": 0.9918509895227008,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 535,
+              "falsePositives": 1,
+              "precision": 0.9981343283582089,
+              "recall": 0.6228172293364377,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.8902683341427878,
+              "averagePrecisionScored": 0.9918485367226261,
+              "brierScored": 0.0691562637934523
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          },
+          {
+            "name": "telemetry-boosted-trees",
+            "threshold": 0.9654449314980912,
+            "validation": {
+              "sessions": 921,
+              "positives": 859,
+              "negatives": 62,
+              "scored": 910,
+              "positiveCoverage": 0.9918509895227008,
+              "negativeCoverage": 0.9354838709677419,
+              "truePositives": 405,
+              "falsePositives": 1,
+              "precision": 0.9975369458128078,
+              "recall": 0.47147846332945287,
+              "falsePositiveRate": 0.016129032258064516,
+              "rocAucScored": 0.9221507204144407,
+              "averagePrecisionScored": 0.993807030693983,
+              "brierScored": 0.06272916676026849
+            },
+            "columns": ["interaction_mean_ms", "interaction_cv"]
+          }
+        ],
+        "test": {
+          "sessions": 1097,
+          "positives": 1029,
+          "negatives": 68,
+          "scored": 1085,
+          "positiveCoverage": 1,
+          "negativeCoverage": 0.8235294117647058,
+          "truePositives": 356,
+          "falsePositives": 1,
+          "precision": 0.9971988795518207,
+          "recall": 0.3459669582118562,
+          "falsePositiveRate": 0.014705882352941176,
+          "rocAucScored": 0.9316690962099126,
+          "averagePrecisionScored": 0.9950312732586031,
+          "brierScored": 0.03688235434084989
+        }
+      }
+    ]
+  }
+}

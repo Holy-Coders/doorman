@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-23T17:09:46.318Z",
+  "revision": "b9a574843e3535e9ff5b8ab6624545ba13a0999d",
+  "worktreeModified": false,
+  "provenance": {
+    "url": "https://github.com/Spirals-Team/FPStalker",
+    "revision": "60b4fed8cd669495c5a3cf6cd007480f977e56ca",
+    "terms": "Repository AGPL-3.0; no separate data license established. Independent parser, no upstream algorithm code or data redistributed.",
+    "files": [
+      {
+        "name": "extension1.txt.tar.gz",
+        "bytes": 73169899,
+        "sha256": "4791cdbe989e21195862813a3e8ca69dce53e1211a7c4b191eac54d81a712b3f"
+      },
+      {
+        "name": "extension2.txt.tar.gz",
+        "bytes": 69956820,
+        "sha256": "2ea55958c4dde4722014cc0766752c2f254de6159b660341bd9f7c9313de7f42"
+      },
+      {
+        "name": "fpstalker-schema.sql",
+        "path": "extensionDataScheme.sql",
+        "bytes": 3655,
+        "sha256": "509aba0c44459a0cd6c40f3db38d126d22d6282fb3c8c888ace73440596e4a3d"
+      }
+    ]
+  },
+  "jevCalls": 0,
+  "productionPromoted": false,
+  "parityChecked": 0,
+  "result": {
+    "source": "FP-Stalker",
+    "kind": "chronological-cookie-loss",
+    "evaluator": "disabled",
+    "storage": "production Postgres adapter on PGlite",
+    "defaults": {
+      "candidateLimit": 10,
+      "evaluationLimit": 3,
+      "historyLimit": 5,
+      "restoreThreshold": 0.9,
+      "candidateFloor": 0.65,
+      "ambiguityMargin": 0.03,
+      "deterministicWeight": 0.35,
+      "evaluatorWeight": 0.65,
+      "evaluatorTimeoutMs": 1200
+    },
+    "observationRetentionDays": 90,
+    "maxObservationsPerVisitor": 10,
+    "from": "2015-10-15T14:00:00.000Z",
+    "to": "2016-08-31T09:00:00.000Z",
+    "observations": 15000,
+    "browserLabels": 1819,
+    "firstObservations": 1819,
+    "returningObservations": 13181,
+    "correctRestorations": 1258,
+    "wrongRestorations": 2303,
+    "wrongOnFirstObservation": 362,
+    "wrongOnReturningObservation": 1941,
+    "newOnFirstObservation": 1457,
+    "newOnReturningObservation": 9982,
+    "lookupSaturated": 8548,
+    "maxCandidateCount": 10,
+    "maxObservationRowsRead": 136,
+    "restorePrecision": 0.35327155293456897,
+    "returningRecovery": 0.09544040664592975,
+    "distinctAssignedIds": 11439,
+    "limitations": [
+      "Every visit loses its cookie: a stress scenario, not normal traffic.",
+      "Ground truth is the publisher's browser label, not person or verified device ownership.",
+      "Online predictions update history; mistakes can propagate. Labels never repair engine state.",
+      "No native language array, IANA timezone, hardware, viewport or WebDriver data in this projection.",
+      "Historical selected sample; not a current browser population or cross-device benchmark."
+    ]
+  }
+}
