@@ -1,6 +1,6 @@
 # Doorman public website
 
-The home, searchable docs, local examples and opt-in live playground at https://doorman.holycoders.io. Astro builds static pages. The existing `janitor-docs` Worker (its existing resource name is retained) handles `/api/playground/*` and hourly cleanup; other requests use static assets.
+The home, searchable docs, local examples and opt-in live playground at https://doorman.holycoders.io. Astro builds static pages. The existing `janitor-docs` Worker (its existing resource name is retained) handles `/api/playground/*` and hourly cleanup; other requests use static assets. The legacy `janitor.holycoders.io` domain redirects to the corresponding Doorman URL, preserving the path and query.
 
 Ordinary page views and local examples collect nothing. The activated live demo uses Doorman's collectors, HTTP handler, real matching engine, D1 storage, request controls and Jev evaluator. Its session-scoped wrapper is in `worker/`. See [playground behavior and privacy](../docs/PLAYGROUND.md).
 

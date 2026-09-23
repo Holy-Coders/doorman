@@ -27,7 +27,7 @@ try {
           <p style="position:absolute;bottom:25px;left:28px;font-size:17px;color:#fff5e3;">One account. Different operators.</p>
         </div>
         <div style="position:relative;padding:38px 50px;width:650px;">
-          <div style="font-size:32px;letter-spacing:-1.5px;font-weight:700;display:flex;align-items:center;gap:9px;"><img src="/doorman-mark-dark.png" width="48" height="48" alt="">doorman.</div>
+          <div style="font-size:32px;letter-spacing:-1.5px;font-weight:700;display:flex;align-items:baseline;gap:0;line-height:1;"><span style="display:inline-block;position:relative;width:.66em;height:1.13em"><img src="/doorman-mark-dark.png" style="position:absolute;width:1.18em;height:1.18em;max-width:none;left:-.23em;bottom:-.095em" alt=""></span>oorman</div>
           <h1 style="font-size:78px;line-height:1.02;letter-spacing:-5px;font-weight:700;margin:70px 0 24px;">Know who’s<br>behind the<br>request.</h1>
           <p style="font-size:18px;line-height:1.55;color:#615445;">First-party identity for people and agents.<br>Your analytics. Your infrastructure.</p>
           <p style="font-size:12px;color:#615445;margin-top:32px;">Open source · Powered by Jev · Developer preview</p>

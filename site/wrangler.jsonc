@@ -6,7 +6,8 @@
     "directory": "./dist",
     "not_found_handling": "404-page",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/playground/*"],
+    // Check the legacy hostname before serving static assets.
+    "run_worker_first": true,
   },
   "d1_databases": [
     {

@@ -69,7 +69,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <header class="site-header">
       <a href="/" class="brand" aria-label="Doorman home">
         <Logo />
-        doorman<span class="brand-period">.</span>
+        <span class="brand-name" aria-hidden="true">
+          oorman
+        </span>
       </a>
       <nav aria-label="Main navigation" class="desktop-nav">
         <a href={docPath("introduction")} class:list={[docs && "active"]}>
@@ -158,9 +160,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <slot />
     <footer class="site-footer">
       <div class="footer-brand">
-        <a href="/" class="brand">
+        <a href="/" class="brand" aria-label="Doorman home">
           <Logo />
-          doorman.
+          <span class="brand-name" aria-hidden="true">
+            oorman
+          </span>
         </a>
         <p>
           Visitor identity.

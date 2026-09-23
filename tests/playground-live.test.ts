@@ -77,6 +77,22 @@ describe("public live playground", () => {
     app = createPlaygroundWorker(env);
   });
   afterAll(async () => sql.close());
+  it("redirects the legacy hostname without evaluating or collecting", async () => {
+    const response = await app.fetch(
+      new Request("https://janitor.holycoders.io/docs/api/?language=elixir"),
+    );
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe(
+      "https://doorman.holycoders.io/docs/api/?language=elixir",
+    );
+    expect(env.AI.run).not.toHaveBeenCalled();
+    expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+    const current = await app.fetch(
+      new Request("https://doorman.holycoders.io/docs/api/"),
+    );
+    expect(await current.text()).toBe("static page");
+  });
+
   const request = (
     path: string,
     cookie = "",

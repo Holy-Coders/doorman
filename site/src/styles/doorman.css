@@ -373,3 +373,35 @@
     scroll-behavior: auto;
   }
 }
+
+/* The door-shaped d is the first letter, aligned with the wordmark baseline. */
+.site-header .brand,
+.footer-brand .brand {
+  gap: 0;
+  align-items: baseline;
+  line-height: 1;
+}
+.site-header .brand-symbol,
+.footer-brand .brand-symbol {
+  display: inline-block;
+  position: relative;
+  width: 0.66em;
+  height: 1.13em;
+  flex-shrink: 0;
+  overflow: visible;
+  border-radius: 0;
+  vertical-align: baseline;
+}
+.brand-symbol img {
+  position: absolute;
+  width: 1.18em;
+  height: 1.18em;
+  max-width: none;
+  left: -0.23em;
+  bottom: -0.095em;
+  transform: none;
+  border-radius: 0.08em;
+}
+.brand-name {
+  display: inline-block;
+}

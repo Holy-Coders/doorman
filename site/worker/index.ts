@@ -356,8 +356,13 @@ export function createPlaygroundWorker(env: DemoEnv) {
   }
   return {
     async fetch(request: Request) {
-      if (!new URL(request.url).pathname.startsWith(PREFIX))
-        return env.ASSETS.fetch(request);
+      const url = new URL(request.url);
+      if (url.hostname === "janitor.holycoders.io") {
+        url.hostname = "doorman.holycoders.io";
+        url.protocol = "https:";
+        return Response.redirect(url.href, 308);
+      }
+      if (!url.pathname.startsWith(PREFIX)) return env.ASSETS.fetch(request);
       if (inFlight >= 16)
         return json({ error: "Live playground is busy" }, 503);
       inFlight++;

@@ -1,6 +1,11 @@
 defmodule DoormanExample.Endpoint do
   use Phoenix.Endpoint, otp_app: :doorman_example
-  plug(Plug.Static, at: "/doorman", from: {:doorman_identity, "priv/static"}, only: ~w(doorman.js))
+
+  plug(Plug.Static,
+    at: "/doorman",
+    from: {:doorman_identity, "priv/static"},
+    only: ~w(doorman.js)
+  )
 
   plug(Plug.Session,
     store: :cookie,
