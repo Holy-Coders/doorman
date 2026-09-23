@@ -1,0 +1,123 @@
+<section
+  class="actor-lab"
+  id="actor-lab"
+  data-actor-lab
+  aria-labelledby="actor-lab-title"
+>
+  <div class="actor-lab-heading">
+    <div>
+      <span class="section-kicker">The actor lab</span>
+      <h2 id="actor-lab-title">
+        Same account.
+        <br />
+        Different hands.
+      </h2>
+    </div>
+    <p>
+      Give an assistant permission. Revoke it. Invite a family member. Watch
+      identity and authority stay separate.
+    </p>
+  </div>
+  <div class="actor-console">
+    <div class="actor-switcher" role="group" aria-label="Actor scenarios">
+      {[
+        ["human", "You, signed in", "◎"],
+        ["agent", "Your AI assistant", ">_"],
+        ["family", "A family member", "⊕"],
+        ["revoked", "Revoke the grant", "×"],
+        ["scope", "Request another scope", "↗"],
+        ["expired", "Let the grant expire", "◷"],
+        ["unknown", "An unknown actor", "?"],
+      ].map(([id, label, symbol]) => (
+        <button
+          data-actor-scenario={id}
+          aria-pressed={id === "human" ? "true" : "false"}
+          disabled
+        >
+          <span aria-hidden="true">{symbol}</span>
+          {label}
+        </button>
+      ))}
+      <p>
+        <span>Simulated credentials.</span>
+        <span>Actual Janitor checks.</span>
+        <span>Zero network requests.</span>
+      </p>
+    </div>
+    <div class="actor-stage" data-actor-stage>
+      <div class="actor-console-top">
+        <span class="mono">identities.assess(context)</span>
+        <span class="actor-verdict" data-actor-verdict aria-live="polite">
+          Loading
+        </span>
+      </div>
+      <div
+        class="actor-diagram"
+        aria-label="Account, actor and delegation relationships"
+      >
+        <div class="actor-account">
+          <span class="actor-node">◎</span>
+          <span>Account</span>
+          <strong>account_owner</strong>
+        </div>
+        <div class="actor-wire" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="actor-current">
+          <span class="actor-node" data-actor-glyph>
+            ◎
+          </span>
+          <span>Acting as</span>
+          <strong data-actor-name>account_owner</strong>
+        </div>
+        <div class="actor-wire" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="actor-authority">
+          <span class="actor-node" data-grant-glyph>
+            —
+          </span>
+          <span>Delegation</span>
+          <strong data-grant-state>Not required</strong>
+        </div>
+      </div>
+      <p class="actor-explanation" data-actor-explanation>
+        Enable JavaScript to run the local scenarios.
+      </p>
+      <div class="actor-facts">
+        <div>
+          <span>Account evidence</span>
+          <strong data-account-evidence>—</strong>
+        </div>
+        <div>
+          <span>Actor kind</span>
+          <strong data-actor-kind>—</strong>
+        </div>
+        <div>
+          <span>Requested scope</span>
+          <strong data-actor-scope>—</strong>
+        </div>
+      </div>
+      <details class="actor-response">
+        <summary>
+          Inspect the actual response <span aria-hidden="true">+</span>
+        </summary>
+        <pre><code data-actor-json></code></pre>
+      </details>
+      <div class="actor-console-bottom">
+        <span class="version-dot"></span>Real @janitor/core
+        <span>Jev not called · your app owns access</span>
+      </div>
+    </div>
+  </div>
+  <p class="actor-lab-note">
+    These are explicit credential relationships, not guesses about a person at
+    the keyboard.
+    <a href="/docs/agentic-identity/">Build this into your app ↗</a>
+  </p>
+</section>
+<script src="../scripts/actor-lab.ts"></script>

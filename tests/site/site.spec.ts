@@ -130,3 +130,72 @@ test("every internal navigation link and asset on the landing page resolves", as
   ])
     expect((await request.get(path)).status(), path).toBe(200);
 });
+
+test("actor lab executes delegation checks for agents, family and invalid grants locally", async ({
+  page,
+}) => {
+  await page.goto("/playground/");
+  const lab = page.locator("[data-actor-lab]");
+  await expect(lab.locator("[data-actor-verdict]")).toHaveText(
+    "Same principal",
+  );
+  const requests: string[] = [];
+  page.on("request", (request) => requests.push(request.url()));
+  await lab.getByText("Inspect the actual response", { exact: false }).click();
+  const result = async () =>
+    JSON.parse((await lab.locator("[data-actor-json]").textContent())!);
+  const subject = (await result()).subject.id;
+  for (const [button, actor, status, reason] of [
+    ["Your AI assistant", "agent", "valid", undefined],
+    ["A family member", "person", "valid", undefined],
+    ["Revoke the grant", "agent", "invalid", "revoked"],
+    ["Request another scope", "agent", "invalid", "scope"],
+    ["Let the grant expire", "agent", "invalid", "expired"],
+    ["An unknown actor", "unknown", "none", undefined],
+  ] as const) {
+    await lab.getByRole("button", { name: button, exact: false }).click();
+    await expect(
+      lab.getByRole("button", { name: button, exact: false }),
+    ).toBeEnabled();
+    const response = await result();
+    expect(response.subject.id).toBe(subject);
+    expect(response.actor.kind).toBe(actor);
+    expect(response.delegation.status).toBe(status);
+    expect(response.delegation.reason).toBe(reason);
+  }
+  expect(requests).toEqual([]);
+  expect(await page.context().cookies()).toEqual([]);
+});
+
+test("motion can be paused and follows reduced-motion preference without disabling the labs", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const trace = page.locator(".trace-light");
+  await expect(trace).toHaveCSS("animation-play-state", "running");
+  await page.getByRole("button", { name: "Pause motion", exact: true }).click();
+  await expect(trace).toHaveCSS("animation-play-state", "paused");
+  await page.getByRole("button", { name: "Play motion", exact: true }).click();
+  await expect(trace).toHaveCSS("animation-play-state", "running");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(
+    page.getByRole("button", { name: "Reduced motion", exact: true }),
+  ).toBeDisabled();
+  await expect(trace).toHaveCSS("animation-name", "none");
+  await page
+    .getByRole("button", { name: "Your AI assistant", exact: false })
+    .click();
+  await expect(page.locator("[data-actor-verdict]")).toHaveText(
+    "Valid delegation",
+  );
+  const running = await page
+    .locator(".actor-node")
+    .evaluateAll(
+      (nodes) =>
+        nodes
+          .flatMap((node) => node.getAnimations())
+          .filter((animation) => animation.playState === "running").length,
+    );
+  expect(running).toBe(0);
+});

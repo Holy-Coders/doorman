@@ -327,19 +327,6 @@ pre {
 .code-string {
   color: var(--accent);
 }
-.trace-light {
-  animation: trace-in 2s ease-out 1;
-}
-@keyframes trace-in {
-  from {
-    stroke-dashoffset: 300;
-    opacity: 0;
-  }
-  to {
-    stroke-dashoffset: 0;
-    opacity: 1;
-  }
-}
 .platform-strip {
   border-block: 1px solid var(--line);
   display: flex;
@@ -2263,5 +2250,492 @@ p {
     align-items: start;
     flex-direction: column;
     gap: 8px;
+  }
+}
+
+/* Observation packets converge; motion stops outside the viewport. */
+.trace-light {
+  animation: history-flow 5s linear infinite;
+  animation-play-state: paused;
+}
+.history-orbit {
+  transform-origin: 353px 211px;
+  animation: history-orbit 40s linear infinite;
+  animation-play-state: paused;
+}
+[data-motion="running"] [data-in-view="true"] .trace-light,
+[data-motion="running"] [data-in-view="true"] .history-orbit {
+  animation-play-state: running;
+}
+@keyframes history-flow {
+  from {
+    stroke-dashoffset: 364;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes history-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.motion-toggle {
+  border: 0;
+  color: var(--muted);
+  padding: 6px 8px;
+  background: var(--surface);
+  font: 10px var(--mono);
+}
+.motion-toggle:disabled {
+  cursor: default;
+}
+[data-motion="running"] .sequence-visible .pipeline-dot {
+  animation: pipeline-arrival 650ms ease-out both;
+}
+.pipeline > div:nth-child(2) .pipeline-dot {
+  animation-delay: 200ms;
+}
+.pipeline > div:nth-child(3) .pipeline-dot {
+  animation-delay: 400ms;
+}
+.pipeline > div:nth-child(4) .pipeline-dot {
+  animation-delay: 600ms;
+}
+@keyframes pipeline-arrival {
+  from {
+    box-shadow: 0 0 0 0 #b8b4ff88;
+    transform: scale(0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 10px #b8b4ff22;
+  }
+  to {
+    box-shadow: 0 0 0 18px #b8b4ff00;
+    transform: scale(1);
+  }
+}
+[data-motion="running"] .sequence-visible.jev-terminal dl > div {
+  animation: question-arrival 900ms ease-out both;
+}
+[data-motion="running"] .sequence-visible.jev-terminal dl > div:nth-child(2) {
+  animation-delay: 180ms;
+}
+[data-motion="running"] .sequence-visible.jev-terminal dl > div:nth-child(3) {
+  animation-delay: 360ms;
+}
+@keyframes question-arrival {
+  from {
+    opacity: 0.35;
+    transform: translateX(-9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.button > span[aria-hidden] {
+  display: inline-block;
+  transition: transform 180ms ease;
+}
+.button:hover > span[aria-hidden] {
+  transform: translate(2px, -2px);
+}
+
+/* A live, local illustration of who acts for whom. */
+.actor-lab {
+  margin-block: 90px;
+}
+.actor-lab-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 48px;
+  margin-bottom: 34px;
+}
+.actor-lab-heading h2 {
+  font-size: clamp(36px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -2px;
+  margin: 22px 0 0;
+}
+.actor-lab-heading > p {
+  max-width: 350px;
+  line-height: 1.8;
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+.actor-console {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  border: 1px solid #44445f;
+  background: var(--surface-soft);
+}
+.actor-switcher {
+  border-right: 1px solid var(--line);
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.actor-switcher button {
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.actor-switcher button > span {
+  width: 22px;
+  font: 17px var(--mono);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.actor-switcher button:hover {
+  background: #23283b;
+}
+.actor-switcher button[aria-pressed="true"] {
+  background: #2e2e48;
+  border-color: #494663;
+  color: var(--text);
+}
+.actor-switcher > p span {
+  display: block;
+}
+.actor-switcher > p {
+  margin: auto 12px 4px;
+  padding-top: 25px;
+  font: 10px/1.9 var(--mono);
+  color: var(--dim);
+}
+.actor-stage {
+  padding: 24px 30px;
+  min-width: 0;
+}
+.actor-console-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.actor-verdict {
+  color: var(--accent);
+  border: 1px solid #454460;
+  padding: 6px 9px;
+  font: 10px var(--mono);
+  white-space: nowrap;
+}
+.actor-diagram {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 46px minmax(0, 1fr);
+  align-items: start;
+  margin: 44px 0 30px;
+}
+.actor-diagram > div:not(.actor-wire) {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  min-width: 0;
+}
+.actor-node {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 76px;
+  height: 76px;
+  border: 1px solid #64618a;
+  border-radius: 20px;
+  background: #22263b;
+  color: var(--accent);
+  font: 32px var(--mono);
+  position: relative;
+}
+.actor-account .actor-node {
+  border-radius: 50%;
+  background: transparent;
+}
+.actor-current .actor-node {
+  box-shadow:
+    0 0 0 6px #b8b4ff08,
+    0 0 0 13px #b8b4ff04;
+}
+.actor-diagram > div > span:not(.actor-node) {
+  margin: 18px 0 7px;
+  font-size: 10px;
+  color: var(--dim);
+}
+.actor-diagram strong {
+  font: 11px var(--mono);
+  color: var(--muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.actor-wire {
+  height: 1px;
+  margin-top: 37px;
+  background: #44445f;
+  position: relative;
+}
+.actor-wire > span {
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+  background: var(--accent);
+  position: absolute;
+  top: -1.5px;
+  left: 0;
+  opacity: 0;
+}
+.actor-transfer .actor-wire > span {
+  animation: actor-packet 650ms ease-in-out;
+}
+.actor-transfer .actor-wire > span:nth-child(2) {
+  animation-delay: 85ms;
+}
+.actor-transfer .actor-wire > span:nth-child(3) {
+  animation-delay: 170ms;
+}
+.actor-transfer .actor-wire:nth-child(4) > span {
+  animation-delay: 160ms;
+}
+.actor-transfer .actor-wire:nth-child(4) > span:nth-child(2) {
+  animation-delay: 245ms;
+}
+.actor-transfer .actor-wire:nth-child(4) > span:nth-child(3) {
+  animation-delay: 330ms;
+}
+@keyframes actor-packet {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  25%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(46px);
+  }
+}
+[data-verdict="invalid"] .actor-authority .actor-node {
+  color: var(--coral);
+  border-color: #896859;
+  background: #2a2429;
+}
+[data-verdict="invalid"] .actor-verdict {
+  color: var(--coral);
+  border-color: #896859;
+}
+[data-verdict="unknown"] .actor-current .actor-node {
+  border-style: dashed;
+  color: var(--dim);
+  box-shadow: none;
+}
+.actor-explanation {
+  min-height: 72px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.85;
+  margin: 0 0 24px;
+}
+.actor-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  border-block: 1px solid var(--line);
+  padding-block: 20px;
+}
+.actor-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.actor-facts span {
+  font-size: 10px;
+  color: var(--dim);
+}
+.actor-facts strong {
+  font: 11px var(--mono);
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+.actor-response summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font: 11px var(--mono);
+  padding: 19px 0;
+  color: var(--muted);
+}
+.actor-response summary::-webkit-details-marker {
+  display: none;
+}
+.actor-response summary > span {
+  font-size: 18px;
+}
+.actor-response[open] summary > span {
+  transform: rotate(45deg);
+}
+.actor-response pre {
+  max-height: 320px;
+  overflow: auto;
+  font: 11px/1.8 var(--mono);
+  color: var(--accent);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 18px;
+  margin: 0 0 20px;
+}
+.actor-console-bottom {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--dim);
+  font: 9px var(--mono);
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.actor-console-bottom > span:last-child {
+  margin-left: auto;
+}
+.actor-lab-note {
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--dim);
+  margin-top: 19px;
+}
+.actor-lab-note a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-left: 4px;
+}
+@media (max-width: 1000px) {
+  .actor-console {
+    grid-template-columns: 215px minmax(0, 1fr);
+  }
+  .actor-stage {
+    padding: 22px;
+  }
+  .actor-diagram {
+    grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) 24px minmax(
+        0,
+        1fr
+      );
+  }
+  .actor-console-top {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  @keyframes actor-packet {
+    0% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+    25%,
+    75% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+  }
+}
+@media (max-width: 700px) {
+  .actor-lab {
+    margin-block: 65px;
+  }
+  .actor-lab-heading {
+    flex-direction: column;
+    align-items: start;
+    gap: 24px;
+  }
+  .actor-console {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .actor-switcher {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    padding: 13px;
+  }
+  .actor-switcher button {
+    font-size: 11px;
+    padding: 10px 7px;
+    gap: 7px;
+  }
+  .actor-switcher button > span {
+    font-size: 14px;
+    width: 17px;
+  }
+  .actor-switcher > p {
+    grid-column: 1 / -1;
+    margin: 8px;
+    padding-top: 4px;
+    font-size: 9px;
+  }
+  .actor-switcher > p span {
+    display: inline;
+    margin-right: 4px;
+  }
+  .actor-stage {
+    padding: 22px 17px;
+  }
+  .actor-node {
+    width: 58px;
+    height: 58px;
+    font-size: 25px;
+    border-radius: 15px;
+  }
+  .actor-wire {
+    margin-top: 28px;
+  }
+  .actor-diagram {
+    margin-top: 32px;
+  }
+  .actor-diagram strong {
+    font-size: 9px;
+  }
+  .actor-explanation {
+    font-size: 12px;
+  }
+  .actor-facts {
+    gap: 12px;
+  }
+  .actor-facts strong,
+  .actor-facts span {
+    font-size: 9px;
+  }
+  .actor-console-bottom {
+    font-size: 8px;
+  }
+  .actor-console-bottom > span:last-child {
+    margin-left: 0;
+    width: 100%;
+    margin-top: 6px;
+  }
+}
+[data-motion="paused"] .actor-wire > span {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trace-light,
+  .history-orbit,
+  .actor-wire > span {
+    animation: none !important;
   }
 }

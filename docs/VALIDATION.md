@@ -42,11 +42,11 @@ Example boot commands and environment variables are in each example's README and
 
 ## Public website checks
 
-`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes five Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all fifteen primary pages at mobile and desktop widths, and navigation/static assets. The site produces sixteen HTML pages, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
+`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all fifteen primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The site produces sixteen HTML pages, a sitemap, and an `llms.txt` index. It makes no third-party browser requests or fingerprint-collection calls.
 
 ## Controlled browser dataset
 
-The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 98 unit/integration and six browser UI/integration tests; no risk accuracy or Jev inference is claimed.
+The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 98 unit/integration and eight browser UI/integration tests; no risk accuracy or Jev inference is claimed.
 
 ## Identity directory and delegation
 

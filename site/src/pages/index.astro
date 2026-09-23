@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import CodeTabs from "../components/CodeTabs.astro";
+import ActorLab from "../components/ActorLab.astro";
 import Playground from "../components/Playground.astro";
 import { REPO } from "../content";
 ---
@@ -28,8 +29,8 @@ import { REPO } from "../content";
           <a class="button button-primary" href="/docs/getting-started/">
             Start building <span aria-hidden="true">↗</span>
           </a>
-          <a class="button button-subtle" href="#playground">
-            Try the identity lab <span aria-hidden="true">↓</span>
+          <a class="button button-subtle" href="#actor-lab">
+            Try the actor lab <span aria-hidden="true">↓</span>
           </a>
         </div>
         <div class="hero-footnote">
@@ -42,6 +43,7 @@ import { REPO } from "../content";
       </div>
       <div
         class="hero-visual"
+        data-motion-scene
         aria-label="Illustration: changing browser observations converge on one stable visitor identity"
       >
         <div class="visual-top">
@@ -96,6 +98,7 @@ import { REPO } from "../content";
             r="90"
             stroke="#b8b4ff"
             stroke-opacity=".12"
+            class="history-orbit"
             stroke-dasharray="3 6"
           />
           <circle
@@ -186,7 +189,9 @@ import { REPO } from "../content";
             <span class="code-key">visitorId</span>:{" "}
             <span class="code-string">"vis_7a92…"</span>
           </span>
-          <span>Illustrative history</span>
+          <button class="motion-toggle" data-motion-toggle aria-pressed="false">
+            Play motion
+          </button>
         </div>
       </div>
     </section>
@@ -232,7 +237,7 @@ import { REPO } from "../content";
           See exactly how Janitor uses Jev ↗
         </a>
       </div>
-      <div class="jev-terminal">
+      <div class="jev-terminal" data-jev-terminal>
         <div class="terminal-caption">
           <span class="version-dot"></span> jev.evaluate(history, current)
         </div>
@@ -317,6 +322,9 @@ import { REPO } from "../content";
         </a>
       </div>
     </section>
+    <div class="container">
+      <ActorLab />
+    </div>
     <section class="intro-section container">
       <div>
         <span class="section-kicker">Built for ordinary change</span>
@@ -400,7 +408,11 @@ import { REPO } from "../content";
           understandable pieces.
         </p>
       </div>
-      <div class="pipeline" aria-label="Identity matching pipeline">
+      <div
+        class="pipeline"
+        data-pipeline
+        aria-label="Identity matching pipeline"
+      >
         <div>
           <span class="pipeline-dot"></span>
           <strong>Observe</strong>
@@ -503,4 +515,5 @@ import { REPO } from "../content";
       </div>
     </section>
   </main>
+  <script src="../scripts/motion.ts"></script>
 </Base>
