@@ -2,7 +2,7 @@
 
 Choose the package for the code that runs on your server. TypeScript applications use `@janitor/*`; Phoenix applications use the native `janitor` Mix dependency. Both can serve the same browser client.
 
-Janitor v0.8.0 is a developer preview distributed through GitHub. The packages are not yet published to npm or Hex, so use the release archive or Git dependency below. You do not need a Janitor API key. An optional Jev evaluation uses credentials for your chosen AI provider.
+Janitor v0.8.1 is a developer preview distributed through GitHub. The packages are not yet published to npm or Hex, so use the release archive or Git dependency below. You do not need a Janitor API key. An optional Jev evaluation uses credentials for your chosen AI provider.
 
 Want to try it before adding dependencies to an existing app? Follow [your first visitor ID](GETTING-STARTED.md).
 
@@ -10,7 +10,7 @@ Want to try it before adding dependencies to an existing app? Follow [your first
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.8.0/janitor-0.8.0.tar.gz -o janitor.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.8.1/janitor-0.8.1.tar.gz -o janitor.tar.gz
 tar -xzf janitor.tar.gz
 # Choose your package manager:
 npm install
@@ -30,7 +30,7 @@ Use Node 22.12+ for Node/Next.js examples. Bun can install and import the same W
 ## Elixir / Mix / Phoenix
 
 ```elixir
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.1", sparse: "packages/elixir"}
 ```
 
 ```sh

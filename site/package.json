@@ -4,6 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/sync-docs.mjs && astro dev --host 127.0.0.1",
+    "dev:live": "pnpm build && wrangler dev",
+    "migrate:local": "wrangler d1 migrations apply VISITORS --local && wrangler d1 execute VISITORS --local --file worker/schema.sql",
+    "migrate:remote": "wrangler d1 migrations apply VISITORS --remote && wrangler d1 execute VISITORS --remote --file worker/schema.sql",
     "build": "node scripts/sync-docs.mjs && astro build",
     "preview": "astro preview --host 127.0.0.1",
     "typecheck": "node scripts/sync-docs.mjs && astro check",
@@ -13,6 +16,11 @@
     "@fontsource-variable/space-grotesk": "^5.2.0",
     "@fontsource/ibm-plex-mono": "^5.2.0",
     "@janitor/core": "workspace:^",
+    "@janitor/adapters": "workspace:^",
+    "@janitor/browser": "workspace:^",
+    "@janitor/evaluator-cloudflare-jev": "workspace:^",
+    "@janitor/evaluator-jev": "workspace:^",
+    "@janitor/storage-d1": "workspace:^",
     "astro": "^7.3.4",
     "cookie": "^2.0.1"
   },

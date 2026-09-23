@@ -1,5 +1,16 @@
 # Historical validation records
 
+## v0.8.1 live playground and Cloudflare transport — 2026-09-23
+
+- The public site now hosts an explicit opt-in endpoint backed by the actual Janitor collectors, core, HTTP handler and a dedicated Cloudflare D1 database. Ordinary page views and the original synthetic examples remain local and do not collect browser data.
+- Sixteen new real-D1 tests cover ownership, caching, competing budget claims, timeouts, billing rejection, the kill switch, retention, private responses and erasure. Four evaluator regressions cover the live Cloudflare envelope. The TypeScript suite passed 243 tests; fifteen site browser tests and strict typechecking/lint passed. The static build produces 32 HTML pages.
+- Hosted Chromium verified first visits, cookie continuity, recovery after removing the visitor cookie, private scores, mobile layout and erasure. Database counts confirmed the smoke sessions, observations and cached rows were erased while aggregate spending counters remained. The separate signed ownership cookie stays during the recovery experiment; this does not establish recovery after all cookies disappear.
+- The documented local migrations and HTTPS Wrangler boot command also passed the browser smoke flow with local D1 and inference disabled.
+- All seven v0.8.1 archives passed isolated npm, pnpm and Bun installations, factory imports and a wrapped Jev evaluation. The native Hex-format archive builds. Package versions advance together; the Elixir implementation is unchanged in this patch. Registry publication remains separate.
+- Cloudflare initially rejected inference with error 2021 (insufficient balance). The owner then purchased $10 of credits, verified as a paid $10.50 invoice with auto-top-up off. A fixed synthetic probe exposed the `{ state: "Completed", result: { answers, usage, model } }` transport envelope; the adapter and cache now validate its contents while rejecting pending or failed envelopes.
+- A subsequent hosted browser flow returned evaluation sources `jev`, `jev`, `cache`, `jev`; cookie recovery and erasure passed. This establishes real provider integration and an actual cache hit. Competing budget-claim tests still use mocked inference against real D1 SQL.
+- The pilot has a persistent ceiling of 100 model-call reservations and 20 per UTC day, counting failures. This is a call allowance, not a dollar-denominated cap on Cloudflare's invoice. Nine reservations had been consumed after the successful hosted flow, including failed and fixed diagnostic probes. No real-user accuracy or throughput claim follows from this demo.
+
 ## v0.8.0 Jev intelligence and unified identity — 2026-09-23
 
 - TypeScript strict typechecking, lint and 223 tests in thirteen files pass. Real SQL covers D1/Postgres learning defaults, namespace isolation and inference quotas across all Jev methods.

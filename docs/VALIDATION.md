@@ -19,7 +19,9 @@ The database contract tests execute real SQL using embedded Postgres (PGlite) an
 
 New checks cover bounded lookup planning, ten-candidate batch matching, cold-start/ambiguity abstention, private Jev learning on both databases, shared inference budgets and asynchronous analytics logout races. The real SDK integration also exercises `createJanitorClient` events and identity transitions. External inference remains mocked; these checks establish implementation behavior, not cross-device or bot-detection accuracy.
 
-The September 23 website and documentation refresh also passed 13 browser tests, including the introductory reading path and internal links across all documentation pages. The static build produces 31 HTML pages.
+The September 23 live playground follow-up passed **243 TypeScript tests and 15 site browser tests**. New real-D1 checks cover session isolation, atomic call allowances, cache hits, erasure, billing rejection and the inference kill switch. The site produces 32 HTML pages, with navigation and internal documentation links checked in Chromium.
+
+The deployed [live playground](PLAYGROUND.md) passed real browser cookie continuity, controlled cookie-loss recovery, private-response, mobile-layout and erasure checks. After funding Cloudflare inference, a hosted flow received fresh Jev evaluations, reused a private cached answer without another model call, and restored its visitor cookie. The live response exposed a Cloudflare `Completed` envelope absent from the model documentation example; regression tests now cover it. The documented local HTTPS Worker flow also passed with local D1 and AI disabled.
 
 See the [latest CI runs](https://github.com/Holy-Coders/janitor/actions) and [detailed dated records](VALIDATION-HISTORY.md) for exact commands, environments and historical counts.
 
@@ -68,6 +70,6 @@ The [Elixir guide](../packages/elixir/README.md) explains its Postgres test setu
 
 ## What is published
 
-The public source, documentation site and [v0.8.0 GitHub archives](https://github.com/Holy-Coders/janitor/releases/tag/v0.8.0) are available. npm publication requires release-account verification, and Hex publication requires an authenticated account; neither registry is claimed as published. Use the [documented GitHub installation paths](LANGUAGES.md).
+The public source, documentation site and [v0.8.1 GitHub archives](https://github.com/Holy-Coders/janitor/releases/tag/v0.8.1) are available. This patch includes the live Cloudflare response-envelope fix. All seven patch archives passed isolated npm, pnpm and Bun installation/import checks, including a completed-envelope evaluation; the native Hex-format archive also builds. npm publication requires release-account verification, and Hex publication requires an authenticated account; neither registry is claimed as published. Use the [documented GitHub installation paths](LANGUAGES.md).
 
 Installing the library does not create a hosted identity endpoint or configure your analytics project. Those run in your application. Live provider ingestion, real-user risk calibration and your production capacity need verification in that environment.

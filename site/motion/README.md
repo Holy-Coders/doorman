@@ -35,4 +35,4 @@ The original logo prompts are in [LOGO-PROMPTS.md](LOGO-PROMPTS.md). The current
 - Inspected the saved project's filmstrip at 0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5 and 11.967 seconds, plus desktop and mobile website screenshots at double pixel density.
 - Thirteen browser tests cover the demos, navigation, introductory documentation, internal links, copy controls, responsive pages, playback controls, reduced motion, data saving, unavailable media and no JavaScript.
 
-The site does not perform live Jev inference, collect visitor observations or send analytics requests.
+The animation performs no collection or network inference. The separate live playground collects signals only after explicit activation; it has its own cache and call budget. Ordinary page views and local example labs remain free of visitor collection and analytics requests.

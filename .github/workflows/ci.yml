@@ -23,6 +23,7 @@ jobs:
       - run: pnpm --filter @janitor/example-cloudflare build
       - run: pnpm site:check
       - run: pnpm site:test
+      - run: pnpm --filter @janitor/site exec wrangler deploy --dry-run
 
   elixir:
     runs-on: ubuntu-latest

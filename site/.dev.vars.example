@@ -1,0 +1,3 @@
+PLAYGROUND_SECRET=local-demo-only-change-this-to-a-random-secret
+# Local development must not accidentally make remote, paid AI calls.
+JEV_ENABLED=false

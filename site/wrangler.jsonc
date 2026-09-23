@@ -1,7 +1,25 @@
 {
   "name": "janitor-docs",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-09-23",
-  "assets": { "directory": "./dist", "not_found_handling": "404-page" },
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/playground/*"],
+  },
+  "d1_databases": [
+    {
+      "binding": "VISITORS",
+      "database_name": "janitor-playground",
+      "database_id": "25f64f62-4092-4f03-a084-50573912f96c",
+      "migrations_dir": "../packages/storage/d1/migrations",
+    },
+  ],
+  "ai": { "binding": "AI" },
+  // Funded one-time pilot; the persistent 100-call limit survives deployments.
+  "vars": { "JEV_ENABLED": "true" },
+  "triggers": { "crons": ["0 * * * *"] },
   "routes": [{ "pattern": "janitor.holycoders.io", "custom_domain": true }],
   "workers_dev": true,
 }

@@ -9,7 +9,7 @@ This guide assumes you already have a Phoenix app with Postgres. To try a comple
 Add Janitor to `deps` in `mix.exs`:
 
 ```elixir
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.1", sparse: "packages/elixir"}
 ```
 
 Then run `mix deps.get`. The developer preview is available through GitHub and is not yet published to Hex. It requires Elixir 1.17+, Ecto SQL 3.14+, Plug and PostgreSQL. Tests currently run on Elixir 1.20.2 / OTP 29 and Postgres 17; your app should resolve and keep its own dependency lockfile.

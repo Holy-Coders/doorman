@@ -48,7 +48,7 @@ const visitor = createCloudflareVisitor({
 });
 ```
 
-The Cloudflare binding needs no separate TypeSafe key. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Janitor.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request normally makes one planning call and one matching/risk call; learning can add one more. A known cookie needs one risk call, plus learning when enabled. Configure a shared [inference budget](HARDENING.md) for all stages.
+The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Janitor.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request normally makes one planning call and one matching/risk call; learning can add one more. A known cookie needs one risk call, plus learning when enabled. Configure a shared [inference budget](HARDENING.md) for all stages.
 
 ## Data sent to the model
 
@@ -136,6 +136,14 @@ Documented response shape (illustrative values):
 }
 ```
 
-The parser requires all three Noul types and finite numbers within `[0,1]`; it does not coerce strings, clamp invalid outputs, or parse prose. Unknown envelopes are treated as unavailable evaluation and fail open in core. Model metadata/usage is not used as identity confidence. Responses are mocked in the test suite; no paid direct Jev or Workers AI inference has been performed as part of repository validation.
+The live Cloudflare transport also returns this envelope, observed on September 23, 2026:
+
+```ts
+{ state: "Completed", result: { model: "jev-1.13.0", answers, usage }, gatewayMetadata: { keySource: "Unified" } }
+```
+
+The Cloudflare evaluator unwraps a completed result before validating it and also accepts the plain format shown in the model documentation. Pending, failed or malformed envelopes are rejected. This response wrapper is separate from the request format, which remains `{ state, questions }`.
+
+The parser requires all three Noul types and finite numbers within `[0,1]`; it does not coerce strings, clamp invalid outputs, or parse prose. Unknown envelopes are treated as unavailable evaluation and fail open in core. Model metadata/usage is not used as identity confidence. Automated tests mock inference; the [playground validation record](VALIDATION-HISTORY.md) separately records live provider checks.
 
 Question instructions explicitly treat signal strings as untrusted data. They allow ordinary drift and privacy restrictions, forbid inferring automation from missing mouse movement/APIs alone, and restrict risk to current observations. All identity decisions, thresholds, contradiction guards and persistence remain deterministic code.

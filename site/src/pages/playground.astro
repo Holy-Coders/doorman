@@ -2,11 +2,12 @@
 import Base from "../layouts/Base.astro";
 import ActorLab from "../components/ActorLab.astro";
 import Playground from "../components/Playground.astro";
+import LivePlayground from "../components/LivePlayground.astro";
 ---
 
 <Base
   title="Identity playground — Janitor"
-  description="Explore Janitor’s real browser matching and delegation checks with synthetic scenarios. Nothing is collected or sent."
+  description="Try Janitor locally with example data, or opt in to a real browser identity demo with cached Jev evaluation and a shared call budget."
 >
   <main id="main" class="container standalone-lab">
     <div class="page-breadcrumb">
@@ -15,19 +16,20 @@ import Playground from "../components/Playground.astro";
     </div>
     <h1>Try Janitor in your browser</h1>
     <p class="playground-intro">
-      Explore how a visitor ID survives browser changes, then see how people and
-      agents share an account. Both examples use made-up data and run entirely
-      on this page.
+      Try a real visitor ID with your browser, or explore the local examples
+      below. The live demo starts only when you choose to share your signals.
     </p>
+    <LivePlayground />
     <Playground />
     <ActorLab />
     <div class="experiment-note">
-      <h2>What this demo shows</h2>
+      <h2>What the local examples show</h2>
       <p>
-        The labs run <code>@janitor/core</code> in your browser against made-up
-        browser history and example login records. It does not use a real
-        cookie, collect browser signals, call Jev, or send observations to a
-        server. The same matching and delegation logic powers the library.
+        The two example labs run <code>@janitor/core</code> in your browser
+        against made-up browser history and example login records. It does not
+        use a real cookie, collect browser signals, call Jev, or send
+        observations to a server. The same matching and delegation logic powers
+        the library.
       </p>
       <p>
         The example shows scores so you can see how matching works. Production

@@ -63,6 +63,35 @@ describe("documented Jev contracts", () => {
     );
     expect(ai.run).toHaveBeenCalledWith("typesafe/jev", createJevInput(input));
   });
+  it("reads the completed envelope returned by the live Workers AI third-party transport", async () => {
+    const ai = {
+      run: async () => ({
+        state: "Completed",
+        result: jevResponse,
+        gatewayMetadata: { keySource: "Unified" },
+      }),
+    };
+    expect(await createCloudflareJevEvaluator(ai).evaluate(input)).toEqual(
+      evaluation,
+    );
+  });
+  it.each([
+    { state: "Pending", result: jevResponse },
+    { state: "Failed", result: jevResponse },
+    {
+      state: "Completed",
+      result: { answers: { automation: { type: "noul", noul: 9 } } },
+    },
+  ])(
+    "does not accept incomplete or malformed gateway envelopes",
+    async (response) => {
+      await expect(
+        createCloudflareJevEvaluator({ run: async () => response }).evaluate(
+          input,
+        ),
+      ).rejects.toThrow();
+    },
+  );
   it("sends at most five compact observations and aggregate current behavior", () => {
     const behavior = {
       pageAgeMs: 1,

@@ -25,6 +25,12 @@
         "title": "Browsers, people & agents",
         "description": "The different identities in your app, explained with one example.",
         "source": "docs/CONCEPTS.md"
+      },
+      {
+        "slug": "playground",
+        "title": "Try the playground",
+        "description": "Explore local examples or opt in to real browser matching with bounded, cached Jev calls.",
+        "source": "docs/PLAYGROUND.md"
       }
     ]
   },

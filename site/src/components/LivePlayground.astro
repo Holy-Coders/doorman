@@ -1,0 +1,300 @@
+<section
+  class="live-lab"
+  id="live"
+  data-live-playground
+  aria-labelledby="live-title"
+>
+  <div class="live-heading">
+    <div>
+      <span class="section-kicker">Janitor, running on Janitor</span>
+      <h2 id="live-title">Try your actual browser.</h2>
+    </div>
+    <span class="live-state" data-live-state>
+      Not collecting
+    </span>
+  </div>
+  <p class="live-intro">
+    Get a real visitor ID from our server. Measure again, or remove the visitor
+    cookie and see whether Janitor recognizes your saved browser history.
+  </p>
+  <div class="live-columns">
+    <div class="live-controls">
+      <label class="live-consent">
+        <input type="checkbox" data-live-consent />
+        <span>
+          I agree to send browser signals and activity counts for this demo.
+          Compact signals may go to Jev through Cloudflare. Demo history expires
+          after 24 hours; I can erase it sooner.
+        </span>
+      </label>
+      <button class="button button-primary" data-live-start disabled>
+        Start my live demo <span aria-hidden="true">↗</span>
+      </button>
+      <div class="live-actions" hidden data-live-actions>
+        <button class="button button-subtle" data-live-measure>
+          Take a new snapshot
+        </button>
+        <button class="button button-subtle" data-live-repeat>
+          Repeat saved snapshot
+        </button>
+        <button class="button button-subtle" data-live-recover>
+          Remove visitor cookie & retry
+        </button>
+        <button class="live-erase" data-live-erase>
+          Stop & erase my demo data
+        </button>
+      </div>
+      <p class="live-small">
+        Only this demo is measured. No raw keys, mouse coordinates, form values
+        or IP addresses are collected by Janitor. Your demo history is isolated
+        from other visitors.
+      </p>
+      <a class="text-link" href="/docs/playground/">
+        How the live demo works ↗
+      </a>
+    </div>
+    <div class="live-output" aria-busy="false" data-live-output>
+      <div class="live-result-top">
+        <span class="mono">Your browser → our server</span>
+        <span data-live-source>Waiting for you</span>
+      </div>
+      <p class="live-status" data-live-status role="status">
+        Nothing runs until you start. The examples below are always available
+        without sharing browser data.
+      </p>
+      <dl class="live-facts">
+        <div>
+          <dt>Visitor ID</dt>
+          <dd data-live-id>—</dd>
+        </div>
+        <div>
+          <dt>Recognized?</dt>
+          <dd data-live-returning>—</dd>
+        </div>
+        <div>
+          <dt>AI evaluation</dt>
+          <dd data-live-evaluation>—</dd>
+        </div>
+      </dl>
+      <p class="live-small">
+        Risk scores stay on the server. A returning browser is not proof of a
+        person's identity.
+      </p>
+      <details>
+        <summary>Inspect the browser response</summary>
+        <pre
+          class="live-json"
+          data-live-json
+        >// Your response will appear here.</pre>
+      </details>
+      <details>
+        <summary>Inspect the snapshot I sent</summary>
+        <pre class="live-json" data-live-snapshot>// Nothing collected.</pre>
+      </details>
+    </div>
+  </div>
+  <div class="live-budget">
+    <span class="version-dot"></span>
+    <p>
+      <strong>Small budget. Real requests.</strong> Exact Jev inputs are cached
+      privately for up to 24 hours. The pilot allows at most 20 calls a day and
+      100 total, including failures. When AI is unavailable, ordinary browser
+      matching keeps working.
+    </p>
+  </div>
+  <noscript>
+    <p>Enable JavaScript to start the live demo. No data has been collected.</p>
+  </noscript>
+</section>
+<script src="../scripts/live-playground.ts"></script>
+<style>
+  .live-lab {
+    margin: 3.5rem 0 5rem;
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+    border: 1px solid var(--line, #263e33);
+    border-radius: 16px;
+    background: #0d1914;
+  }
+  .live-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: start;
+  }
+  h2 {
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    line-height: 1.1;
+    margin: 0.65rem 0 1rem;
+  }
+  .live-state {
+    color: #acd9bf;
+    font:
+      11px "IBM Plex Mono",
+      monospace;
+    border: 1px solid #365844;
+    padding: 0.5rem 0.75rem;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .live-intro {
+    max-width: 720px;
+    color: #bbcbbf;
+    line-height: 1.6;
+  }
+  .live-columns {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 2.5rem;
+    margin-top: 2rem;
+  }
+  .live-controls,
+  .live-output {
+    min-width: 0;
+  }
+  .live-consent {
+    display: flex;
+    gap: 0.8rem;
+    align-items: start;
+    color: #d2dfd5;
+    line-height: 1.6;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+    cursor: pointer;
+  }
+  input {
+    margin-top: 0.3rem;
+    accent-color: #a9ebc4;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .live-actions {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
+  }
+  .live-actions[hidden] {
+    display: none;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .live-controls .button {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.82rem;
+    padding: 0.9rem 0.75rem;
+  }
+  .live-erase {
+    border: 0;
+    background: none;
+    padding: 0.65rem;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    color: #c2cfc5;
+  }
+  .live-small {
+    color: #9fb1a5;
+    font-size: 0.78rem;
+    line-height: 1.65;
+    margin-top: 1.25rem;
+  }
+  .live-output {
+    background: #08100c;
+    border: 1px solid #23382c;
+    border-radius: 10px;
+    padding: 1.4rem;
+  }
+  .live-result-top {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 10px;
+    color: #95b29f;
+  }
+  .live-status {
+    min-height: 3em;
+    line-height: 1.65;
+    font-size: 0.9rem;
+    margin: 1.5rem 0;
+    color: #dbe9df;
+  }
+  .live-facts {
+    margin: 0;
+  }
+  .live-facts div {
+    border-top: 1px solid #26372d;
+    padding: 0.85rem 0;
+  }
+  dt {
+    font-size: 0.7rem;
+    color: #8eac9a;
+    margin-bottom: 0.35rem;
+  }
+  dd {
+    margin: 0;
+    color: #a9ebc4;
+    font:
+      0.8rem "IBM Plex Mono",
+      monospace;
+    overflow-wrap: anywhere;
+  }
+  details {
+    border-top: 1px solid #26372d;
+    padding-top: 0.85rem;
+    margin-top: 0.85rem;
+    min-width: 0;
+  }
+  summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #aec3b6;
+  }
+  .live-json {
+    font-size: 0.7rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin-top: 1rem;
+    color: #9cbaa7;
+    max-height: 350px;
+    overflow: auto;
+  }
+  .live-budget {
+    display: flex;
+    gap: 0.75rem;
+    align-items: start;
+    margin-top: 2rem;
+    border-top: 1px solid #293d31;
+    padding-top: 1.3rem;
+  }
+  .live-budget .version-dot {
+    flex-shrink: 0;
+    margin-top: 0.45rem;
+  }
+  .live-budget p {
+    margin: 0;
+    color: #9bb5a5;
+    font-size: 0.8rem;
+    line-height: 1.7;
+  }
+  .live-budget strong {
+    color: #c4ddce;
+  }
+  @media (max-width: 760px) {
+    .live-columns {
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+    }
+    .live-heading {
+      flex-wrap: wrap;
+    }
+    .live-output {
+      padding: 1rem;
+    }
+  }
+</style>

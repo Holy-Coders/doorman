@@ -18,7 +18,7 @@ The Node and Next.js examples include a migration command:
 pnpm migrate
 ```
 
-For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.8.0 release includes all seven:
+For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.8.1 release includes all seven:
 
 | Migration                   | Creates or changes                                              |
 | --------------------------- | --------------------------------------------------------------- |

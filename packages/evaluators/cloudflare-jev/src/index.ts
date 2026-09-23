@@ -5,6 +5,22 @@ import type { JevRequest } from "@janitor/evaluator-jev";
 export interface WorkersAI {
   run(model: "typesafe/jev", input: JevRequest): Promise<unknown>;
 }
+
+/** Workers AI's third-party transport can wrap the typed Jev response. */
+export function unwrapCloudflareJevResponse(value: unknown): unknown {
+  if (value && typeof value === "object" && "state" in value) {
+    const response = value as { state?: unknown; result?: unknown };
+    if (
+      response.state !== "Completed" ||
+      !response.result ||
+      typeof response.result !== "object"
+    )
+      throw new Error("Incomplete Workers AI Jev response");
+    return response.result;
+  }
+  // Also accept the unwrapped format shown in Cloudflare's model documentation.
+  return value;
+}
 export function createCloudflareJevEvaluator(
   ai: WorkersAI,
   options: { timeoutMs?: number } = {},
@@ -24,7 +40,7 @@ export function createCloudflareJevEvaluator(
           );
         }),
       ]);
-      return response;
+      return unwrapCloudflareJevResponse(response);
     } finally {
       clearTimeout(timer);
     }

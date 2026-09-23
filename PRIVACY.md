@@ -6,6 +6,12 @@ If a cookie disappears, Janitor can use retained history to recover the ID. Expl
 
 Basic browser recognition, optional AI evaluation, verified user links and learning feedback have different data flows. This page lists them so you can choose what to enable and provide a complete deletion path.
 
+## Our public playground
+
+Reading Janitor's website and running its local examples collects no visitor observations. The optional **live playground** begins only after its collection notice and explicit start action. It uses the signals and event counts described below, two first-party HttpOnly cookies, and our Cloudflare D1 database. Compact signals may be evaluated by Jev through Cloudflare. Numeric scores remain private; there are no browser analytics integrations on this site.
+
+Demo sessions expire after 24 hours, with physical removal by an hourly cleanup. The **Stop & erase** button deletes the session's browser history and cached AI answers immediately when successful. Anonymous aggregate call counters are retained to enforce the budget. Clearing a visitor cookie alone does not erase stored history. Cross-device learning, account linking and extended behavior summaries are disabled on the public demo. [Full playground behavior and limits](docs/PLAYGROUND.md).
+
 ## What is collected
 
 Every browser observation field is optional. Each collector is guarded independently and accepts absent or blocked APIs.

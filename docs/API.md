@@ -266,7 +266,7 @@ examples/
 tests/                  Core, browser, storage, evaluator, adapter tests
   helpers/               In-memory storage and fixtures
   e2e/                   Chromium → Fastify → embedded Postgres
-site/                   Static documentation site and synthetic playground
+site/                   Documentation, local examples and opt-in live playground
   src/                    Astro pages, components, and client scripts
   content/                Site-specific guides
   public/                 Logo and social preview
