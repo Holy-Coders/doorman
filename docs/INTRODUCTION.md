@@ -1,6 +1,6 @@
 # What is Janitor?
 
-Janitor is an open-source library that helps your application recognize a returning browser. It can also estimate whether a visit looks automated or technically unusual, and connect visits to users who have signed in.
+Janitor is an open-source identity and activity-classification library. It helps you recognize returning browsers, connect verified people and agents to accounts, and add private activity estimates to the analytics tools you already use.
 
 You run Janitor inside your own server and store its data in your own database. There is no Janitor account to create and no hosted Janitor service to send your visitors to.
 
@@ -43,6 +43,12 @@ One person may have several browsers. Several people may share a browser. Recogn
 After your existing login system verifies a user, you can give Janitor that verified identity. It can then associate multiple devices with that user. You can also register an AI agent separately and record the actions it is allowed to perform for a user.
 
 Janitor does not infer those permissions from mouse movements or an AI score. Your authentication system verifies the credentials; Janitor records and checks the relationships. [Browsers, people and agents](CONCEPTS.md) explains the terms with an example.
+
+## Understand the activity behind a login
+
+An account may be used by a human, an assistant or a scheduled script. The optional operator service scores those possibilities separately from abuse. It can summarize inferred profiles within an account and attach the results to PostHog, Mixpanel or warehouse events. Uncertain activity stays unknown.
+
+This feature is experimental. Browser patterns cannot prove who is at the keyboard, name an agent brand reliably, or establish permission. [Agent classification](AGENT-CLASSIFICATION.md) explains the inputs and outputs; [public research results](EXTERNAL-BENCHMARKS.md) show the measured limits. You can [adjust scoring](SCORING.md) and evaluate settings on your own independently labeled traffic.
 
 ## Start small
 

@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-09-23T18:45:49.059Z",
+  "kind": "controlled-real-browser",
+  "hostCount": 1,
+  "logicalProfiles": 6,
+  "observations": 30,
+  "versions": {
+    "chromium": "153.0.8010.12",
+    "firefox": "155.0",
+    "webkit": "26.6"
+  },
+  "evaluator": "disabled",
+  "riskAccuracy": "not evaluated: all sessions automated; no human labels or AI inference",
+  "emulation": [
+    "viewport",
+    "screen",
+    "locale",
+    "timezone"
+  ],
+  "limitations": [
+    "Same host and browser build per engine, not a population or longitudinal benchmark",
+    "Ground truth is isolated test profile, not separate person or physical device",
+    "Timezone scenario recreates a context with copied storage state",
+    "Unseen identical profiles expose non-identifiability from these signals",
+    "No browser-version update or mobile hardware was measured"
+  ],
+  "cohorts": {
+    "isolated-return": {
+      "total": 24,
+      "correctRestorations": 24,
+      "wrongRestorations": 0,
+      "newIds": 0
+    },
+    "cookie-continuity": {
+      "total": 24,
+      "correctRestorations": 24,
+      "wrongRestorations": 0,
+      "newIds": 0
+    },
+    "ambiguous-pool": {
+      "total": 24,
+      "correctRestorations": 0,
+      "wrongRestorations": 0,
+      "newIds": 24
+    },
+    "unseen-identical-profile": {
+      "total": 6,
+      "correctRestorations": 0,
+      "wrongRestorations": 6,
+      "newIds": 0
+    }
+  }
+}

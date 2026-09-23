@@ -1,4 +1,8 @@
-import type { ApiActivitySummary, BrowserBehavior } from "@janitor/core";
+import type {
+  ApiActivitySummary,
+  BrowserBehavior,
+  BrowserObservation,
+} from "@janitor/core";
 import { ROUTE_CATEGORIES, parseFeatures } from "./schema.js";
 import type { FeatureVector, RouteCategory } from "./schema.js";
 
@@ -10,9 +14,12 @@ export function extractFeatures(input: {
   activity?: ApiActivitySummary;
   routes?: Readonly<Record<string, RouteCategory>>;
   behavior?: BrowserBehavior;
+  observation?: BrowserObservation;
   sequence?: FeatureVector;
 }): FeatureVector {
   const result: FeatureVector = {};
+  if (typeof input.observation?.automation?.webdriver === "boolean")
+    result.webdriver = Number(input.observation.automation.webdriver);
   const rows =
     input.activity?.buckets
       .slice(0, 128)
@@ -78,6 +85,28 @@ export function extractFeatures(input: {
     if (b.mousePauseCount !== undefined)
       result.mouse_pause_ratio = ratio(b.mousePauseCount / b.mouseMoveCount);
   }
+  if (b && (b.mouseSampleCount ?? 0) >= 20) {
+    if (b.mouseDistancePx !== undefined)
+      result.mouse_step_mean_px = round(
+        b.mouseDistancePx / b.mouseSampleCount!,
+        5,
+        50_000,
+      );
+    if (b.mouseLargeStepCount !== undefined)
+      result.mouse_large_step_ratio = ratio(
+        b.mouseLargeStepCount / b.mouseSampleCount!,
+      );
+    if (
+      (b.mouseIntervalCount ?? 0) >= 10 &&
+      (b.mouseIntervalMeanMs ?? 0) > 0 &&
+      b.mouseIntervalStdDevMs !== undefined
+    )
+      result.mouse_interval_cv = round(
+        b.mouseIntervalStdDevMs / b.mouseIntervalMeanMs!,
+        0.1,
+        10,
+      );
+  }
   if (
     b &&
     (b.interactionIntervalCount ?? 0) >= 10 &&
@@ -85,6 +114,17 @@ export function extractFeatures(input: {
     b.interactionIntervalStdDevMs !== undefined &&
     b.interactionIntervalMeanMs > 0
   ) {
+    if (b.interactionShortGapCount !== undefined)
+      result.interaction_short_gap_ratio = ratio(
+        b.interactionShortGapCount / b.interactionIntervalCount!,
+      );
+    if (
+      b.interactionRepeatGapCount !== undefined &&
+      (b.interactionComparableGapCount ?? 0) > 0
+    )
+      result.interaction_repeat_gap_ratio = ratio(
+        b.interactionRepeatGapCount / b.interactionComparableGapCount!,
+      );
     result.interaction_sample_count = round(
       b.interactionIntervalCount!,
       5,

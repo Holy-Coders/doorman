@@ -9,10 +9,75 @@ import { REPO } from "../content";
 
 <Base
   title="Janitor — Know who’s behind the request."
-  description="Keep your analytics. Let Janitor handle identification. Connect people, verified AI assistants and Jev-powered risk signals to PostHog, Mixpanel or Segment."
+  description="First-party identity and private agent classification for your existing analytics. Connect verified actors, assess activity with Jev, and measure uncertainty in your own database."
 >
   <main id="main">
     <Hero />
+    <section
+      class="classification-section container"
+      aria-labelledby="classification-title"
+    >
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">Identity meets activity</span>
+          <h2 id="classification-title">
+            One account.
+            <br />
+            Different operators.
+          </h2>
+        </div>
+        <div>
+          <p>
+            A login tells you which account is open. Janitor adds context about
+            the activity behind it: direct human use, an AI assistant, or a
+            conventional script.
+          </p>
+          <p>
+            Use verified credentials where available. Use private, experimental
+            scores where you need an estimate. Keep unknown activity visible in
+            your reports.
+          </p>
+          <a class="text-link" href="/docs/agent-classification/">
+            Explore agent classification
+          </a>
+        </div>
+      </div>
+      <div class="classification-grid">
+        <article>
+          <span class="section-kicker">01 / Observe</span>
+          <h3>Patterns, without recordings.</h3>
+          <p>
+            Optional movement and timing summaries meet server-owned API
+            patterns. No key values, form content or coordinate trails.
+          </p>
+          <a href="/docs/privacy/">What is collected →</a>
+        </article>
+        <article>
+          <span class="section-kicker">02 / Assess</span>
+          <h3>Assistants aren’t attacks.</h3>
+          <p>
+            Jev scores human, assistant and scripted activity separately from
+            abuse. Tune thresholds or train a classifier on confirmed outcomes.
+          </p>
+          <a href="/docs/scoring/">Adjust the scoring →</a>
+        </article>
+        <article>
+          <span class="section-kicker">03 / Understand</span>
+          <h3>Your analytics, with context.</h3>
+          <p>
+            Send assessed windows and inferred account profiles to PostHog,
+            Mixpanel and your warehouse. Verified identities stay distinct from
+            estimates.
+          </p>
+          <a href="/docs/operator-attribution/">Build an account report →</a>
+        </article>
+      </div>
+      <p class="classification-evidence">
+        Developer preview. Scores are uncalibrated; agent-brand recognition and
+        reliable headcounts are not established.{" "}
+        <a href="/docs/external-benchmarks/">Read the public-data results →</a>
+      </p>
+    </section>
     <section
       class="continuity-section container"
       id="browser-demo"
@@ -89,14 +154,15 @@ import { REPO } from "../content";
       <div class="jev-copy">
         <span class="section-kicker">Optional AI, powered by Jev</span>
         <h2 id="jev-title">
-          A second look
+          Small questions.
           <br />
-          at each visit.
+          Useful context.
         </h2>
         <p>
           Jev is an AI model from TypeSafe. It helps Janitor choose useful
           lookup signals, compare a shortlist of browser histories, and assess
-          automation and suspicious signals.
+          automation and suspicious signals. The optional operator service asks
+          separate questions about human, assistant and scripted activity.
         </p>
         <p>
           Use those estimates to inform your own checks, such as when to request
@@ -115,7 +181,7 @@ import { REPO } from "../content";
       </div>
       <div class="jev-terminal">
         <div class="terminal-caption">
-          <span class="version-dot"></span> Three questions, three scores
+          <span class="version-dot"></span> Browser matching and risk
         </div>
         <dl>
           <div>
@@ -191,9 +257,10 @@ import { REPO } from "../content";
           consistent identity context.
         </p>
         <p>
-          Keep people, AI assistants and their shared account separate, so your
-          reports can answer questions like “How many people used this account?”
-          and “Which actions came from an agent?”
+          Record verified people and agents separately from inferred activity
+          labels. Reports can show which actions have a verified agent
+          credential, which windows look assistant-operated, and where evidence
+          is still missing.
         </p>
         <a class="text-link" href="/docs/analytics/">
           Connect your analytics
@@ -291,8 +358,8 @@ import { REPO } from "../content";
       </div>
       <div>
         <p>
-          Run a local example, see the ID survive a cookie change, then add the
-          features your application needs.
+          Run a local example, inspect browser continuity, then add private
+          activity scores and analytics context as your application needs them.
         </p>
         <a href="/docs/getting-started/" class="button button-primary">
           Get started

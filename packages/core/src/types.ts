@@ -33,6 +33,15 @@ export type BrowserBehavior = {
   keyDownCount: number;
   scrollCount: number;
   visibilityChangeCount: number;
+  /** Extended collection only. Valid movement samples; coordinates are never retained. */
+  mouseSampleCount?: number;
+  mouseLargeStepCount?: number;
+  mouseIntervalCount?: number;
+  mouseIntervalMeanMs?: number;
+  mouseIntervalStdDevMs?: number;
+  interactionShortGapCount?: number;
+  interactionRepeatGapCount?: number;
+  interactionComparableGapCount?: number;
   mouseDistancePx?: number;
   mouseActiveMs?: number;
   mouseDirectionChanges?: number;

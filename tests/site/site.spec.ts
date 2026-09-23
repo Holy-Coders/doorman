@@ -112,6 +112,10 @@ for (const width of [390, 1440]) {
       "/docs/validation/",
       "/docs/extensions/",
       "/docs/benchmarks/",
+      "/docs/agent-classification/",
+      "/docs/scoring/",
+      "/docs/operator-attribution/",
+      "/docs/external-benchmarks/",
       "/docs/agentic-identity/",
     ]) {
       await page.goto(path);

@@ -285,3 +285,7 @@ Every package has an ESM export map, strict TypeScript build, version, license, 
 ## Optional evaluator capabilities
 
 A custom `VisitorEvaluator` only needs `evaluate`. It can also implement `planLookup(current)`, `evaluateCandidates({ current, candidates })`, `predictIdentity({ current, examples })` and `evaluateActivity({ activity, route, sensitive, actor? })`. Both Jev transports implement all four. Missing optional methods retain the original behavior: standard indexed lookup, at most three individual candidate evaluations, collection-only learning unless you supply a custom predictor, and API aggregates without evaluated risk. All built-in methods share the configured inference protection limits.
+
+## Configurable scoring and activity features
+
+See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.

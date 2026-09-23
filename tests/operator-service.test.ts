@@ -83,6 +83,36 @@ for (const kind of ["postgres", "d1"] as const)
       expect(persisted).not.toContain("private-session");
       expect(persisted).not.toContain("private-browser");
     });
+    it("stores label policy with windows and uses current policy for new reports", async () => {
+      const options = { thresholds: { labelThreshold: 0.99 } };
+      const evaluator = { ...base, evaluateOperator: async () => evaluation() };
+      const strict = createOperatorService(
+        db.operators,
+        identity,
+        options,
+        evaluator,
+      );
+      options.thresholds.labelThreshold = 0.5;
+      const data = input();
+      const result = await strict.observe(data);
+      expect(result.window?.thresholds?.labelThreshold).toBe(0.99);
+      const range = { since: data.startedAt - 1, until: Date.now() };
+      expect(
+        (await strict.summarize(data.accountId, range)).unresolvedWindows,
+      ).toBe(1);
+      const defaults = createOperatorService(
+        db.operators,
+        identity,
+        {},
+        evaluator,
+      );
+      expect(
+        (await defaults.observe(data)).window?.thresholds?.labelThreshold,
+      ).toBe(0.99);
+      expect(
+        (await defaults.summarize(data.accountId, range)).unresolvedWindows,
+      ).toBe(0);
+    });
     it("bounds candidates, scopes them to the account and skips future windows", async () => {
       const evaluateOperator = vi.fn(
         async (

@@ -18,7 +18,7 @@
     "site:build": "pnpm --filter @janitor/core build && pnpm --filter @janitor/site build",
     "site:check": "pnpm --filter @janitor/site typecheck",
     "site:test": "pnpm site:build && playwright test --config site/playwright.config.ts",
-    "benchmark:browser": "pnpm build && tsx tests/benchmarks/generate.ts",
+    "benchmark:browser": "pnpm build && pnpm --filter @janitor/example-node exec esbuild ../../packages/browser/src/index.ts --bundle --format=esm --outfile=../../artifacts/browser-benchmark/collector.js && tsx tests/benchmarks/generate.ts",
     "protocol:sync": "pnpm build && tsx scripts/sync-protocol.ts && pnpm --filter @janitor/example-node exec esbuild ../../packages/browser/src/index.ts --bundle --format=esm --minify --outfile=../../packages/elixir/priv/static/janitor.js",
     "test:elixir": "cd packages/elixir && mix test",
     "evaluate:learning": "pnpm build && tsx scripts/evaluate-learning.ts",
@@ -31,7 +31,8 @@
     "benchmark:external:download": "tsx scripts/benchmarks/external/download.ts",
     "benchmark:external": "pnpm build && tsx scripts/benchmarks/external/run.ts",
     "benchmark:jev": "pnpm build && tsx scripts/benchmarks/external/jev-pilot.ts",
-    "test:external": "python3 -m unittest discover -s tools/benchmarks -p \"test_*.py\" -v"
+    "test:external": "\"${CLASSIFIER_PYTHON:-tools/classifier/.venv/bin/python}\" -m unittest discover -s tools/benchmarks -p \"test_*.py\" -v",
+    "benchmark:compare": "tsx scripts/benchmarks/external/compare.ts"
   },
   "devDependencies": {
     "@amplitude/analytics-browser": "^2.46.0",

@@ -1,4 +1,4 @@
-import { agentFamily, operatorLabel } from "@janitor/core";
+import { agentFamily, operatorLabel, operatorPolicy } from "@janitor/core";
 import type {
   OperatorWindow,
   OperatorSummary,
@@ -21,7 +21,7 @@ export function operatorWindowProperties(
 ) {
   const evaluation =
     window.status === "evaluated" ? window.evaluation : undefined;
-  const family = agentFamily(evaluation);
+  const family = agentFamily(evaluation, window.thresholds);
   return Object.fromEntries(
     Object.entries({
       janitor_schema_version: 1,
@@ -32,7 +32,8 @@ export function operatorWindowProperties(
       janitor_operator_status: window.status,
       janitor_operator_basis: "model-inference",
       janitor_operator_score_kind: "uncalibrated",
-      janitor_operator_kind: operatorLabel(evaluation),
+      janitor_operator_scoring_policy: operatorPolicy(window.thresholds),
+      janitor_operator_kind: operatorLabel(evaluation, window.thresholds),
       janitor_operator_model_version: evaluation?.modelVersion,
       janitor_operator_human_score: evaluation?.scores.human,
       janitor_operator_assistant_score: evaluation?.scores.assistant,
@@ -56,6 +57,7 @@ export function operatorSummaryProperties(
     janitor_resolution_revision: boundedId(context.revisionId),
     janitor_resolution_version: summary.resolutionVersion,
     janitor_operator_score_kind: summary.scoreKind,
+    janitor_operator_scoring_policy: summary.scoringPolicy,
     janitor_operator_basis: "model-inference",
     janitor_report_since: summary.window.since,
     janitor_report_until: summary.window.until,
@@ -92,6 +94,7 @@ export function operatorProfileProperties(
     janitor_resolution_revision: boundedId(context.revisionId),
     janitor_resolution_version: summary.resolutionVersion,
     janitor_operator_score_kind: summary.scoreKind,
+    janitor_operator_scoring_policy: summary.scoringPolicy,
     janitor_operator_basis: "model-inference",
     janitor_report_since: summary.window.since,
     janitor_report_until: summary.window.until,

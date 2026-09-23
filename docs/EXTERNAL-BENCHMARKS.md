@@ -12,6 +12,46 @@ We ran Janitor against three public research datasets. The results show useful b
 
 These research evaluations ran on September 23, 2026. The three full experiments above run locally without Jev. A separate, smaller comparison below made **103 real Jev calls** across 120 cases, reusing identical inputs from a private cache. No model was promoted to production. Neither experiment measures anonymous cross-device identification, malicious intent, or performance at millions of concurrent connections.
 
+## New detection features: measured comparison
+
+We reran all three datasets after adding optional movement-step and interaction-timing summaries. The baseline retains the original five numeric features. The expanded feature set adds mean movement step, large-step fraction, movement interval variation, short press-gap fraction and repeated press-gap fraction. This is a comparison of **locally trained numeric classifiers**, not a new Jev accuracy claim.
+
+Both variants use the same groups, fitting/calibration/validation/test partitions, training procedure and validation objective: choose a cutoff with at most 2% observed validation false positives. Test false positives can exceed that objective. Feature eligibility is determined on fitting data only. All test cases remain in recall denominators, including abstentions; AUC covers only scored cases. These are previously inspected research splits, so this rerun is a development comparison, not a fresh independent validation cohort.
+
+| Held-out agent family | AUC, baseline → expanded | Recall, baseline → expanded | Human false alerts, baseline → expanded | Expanded scored / total |
+| --------------------- | -----------------------: | --------------------------: | --------------------------------------: | ----------------------: |
+| Atlas Agent           |            0.997 → 0.972 |               59.9% → 45.8% |                              2 → 0 / 68 |              664 / 1062 |
+| Browser Use           |            0.849 → 0.988 |               58.2% → 84.3% |                             10 → 1 / 68 |             1185 / 1207 |
+| ChatGPT Agent         |            0.921 → 0.980 |               29.6% → 30.0% |                             10 → 1 / 68 |              472 / 1065 |
+| Claude                |            0.964 → 1.000 |               16.7% → 42.1% |                              2 → 1 / 68 |              478 / 1070 |
+| Comet                 |            0.997 → 0.999 |               35.1% → 34.3% |                              2 → 1 / 68 |              418 / 1094 |
+| Manus                 |            0.972 → 0.999 |               64.1% → 68.7% |                             10 → 1 / 68 |              744 / 1063 |
+| Skyvern               |            0.932 → 1.000 |              34.6% → 100.0% |                              1 → 1 / 68 |             1085 / 1097 |
+
+The expanded models selected four interaction features: mean interval, interval variation, short-gap fraction and repeated-gap fraction. Mouse features did not meet the fitting coverage/variation requirements in these folds. **This result supports testing the extra timing inputs; it does not validate the new movement features for agent detection.** Detection improved for five families and fell for Atlas and Comet. Low recall for several families remains a material limitation.
+
+The 68 held-out human sessions are reused across family folds; they are not 476 independent humans. Participant IDs and physical host identity are unavailable. The separate environment-proxy holdout also ran: expanded AUC ranges from 0.980 to 1.000 on scored cases, but environment configuration is not verified physical-device independence. No model was promoted to production.
+
+On **Balabit**, the expanded numeric anomaly features raised AUC from **0.668 to 0.758**, with the same **799 of 816** test recordings scored. This compares recordings with an account owner's training behavior; it is not an AI-agent, unique-human-count or attacker-intent benchmark. The original training/test split and lack of a calibrated decision cutoff remain unchanged.
+
+The full **FP-Stalker** replay reproduced the earlier result: **1,258 correct and 2,303 wrong restores**. Default identity weights stayed unchanged, and behavior never participates in browser identity. Configurability is not evidence that tuning those weights fixes false matches.
+
+The **120-case Jev pilot replay** reused the original provider responses and made **zero new requests**. It reproduced the earlier identity and automation results below. Its frozen five-feature inputs and old questions do not evaluate the new movement/timing fields or the `operators-v2` prompt. A fresh, budgeted provider experiment on separate labeled cases is still needed before claiming those additions improve Jev.
+
+[Download the aggregate comparison, provenance and source hashes](benchmarks/detection-v2-2026-09-23.json). Raw sessions, identifiers, recordings and fitted research weights are not published.
+
+To reproduce after the local datasets and Python environment are prepared:
+
+```sh
+pnpm benchmark:external
+pnpm benchmark:external fpagent --extended
+pnpm benchmark:external balabit --extended
+pnpm benchmark:jev # cache only; fails on a missing cached response
+pnpm benchmark:compare
+```
+
+The expanded run writes separate `*-extended-*` artifacts, preserving baseline reports. `benchmark:compare` checks cohort sizes and fold partitions before producing the public aggregate. Scores remain experimental and private by default. See [agent classification](AGENT-CLASSIFICATION.md) and [adjustable scoring](SCORING.md).
+
 ## Browser identity: what failed
 
 [FP-Stalker](https://github.com/Spirals-Team/FPStalker) publishes an unfiltered sample of historical observations. We used its browser labels as evaluation truth and replayed all 15,000 observations in timestamp order, from October 2015 through August 2016.

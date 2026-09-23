@@ -6,6 +6,8 @@ import {
 import { normalizeObservation } from "./normalize.js";
 import {
   calculateSimilarity,
+  resolveSimilarityWeights,
+  type SimilarityWeights,
   evidenceCap,
   hasContradiction,
 } from "./similarity.js";
@@ -42,11 +44,77 @@ export type IdentifyMetrics = {
   isReturning: boolean;
   observationSaved: boolean;
 };
+export type ScoringOptions = {
+  similarity?: Partial<SimilarityWeights>;
+  /** Relative weights normalized to sum to one. Both entries are required when overriding. */
+  confidence?: { deterministic: number; evaluator: number };
+  candidateFloor?: number;
+  ambiguityMargin?: number;
+};
+export function resolveScoring(input: ScoringOptions = {}) {
+  if (
+    !input ||
+    typeof input !== "object" ||
+    Array.isArray(input) ||
+    Object.keys(input).some(
+      (key) =>
+        ![
+          "similarity",
+          "confidence",
+          "candidateFloor",
+          "ambiguityMargin",
+        ].includes(key),
+    )
+  )
+    throw new Error("Invalid scoring options");
+  const confidence = input.confidence ?? {
+    deterministic: MATCHING_DEFAULTS.deterministicWeight,
+    evaluator: MATCHING_DEFAULTS.evaluatorWeight,
+  };
+  if (
+    !confidence ||
+    typeof confidence !== "object" ||
+    Array.isArray(confidence) ||
+    Object.keys(confidence).some(
+      (key) => !["deterministic", "evaluator"].includes(key),
+    ) ||
+    [confidence.deterministic, confidence.evaluator].some(
+      (v) => typeof v !== "number" || !Number.isFinite(v) || v < 0,
+    )
+  )
+    throw new Error("Invalid confidence weights");
+  const total = confidence.deterministic + confidence.evaluator;
+  if (!Number.isFinite(total) || total <= 0)
+    throw new Error("Invalid confidence weights");
+  const candidateFloor =
+    input.candidateFloor ?? MATCHING_DEFAULTS.candidateFloor;
+  const ambiguityMargin =
+    input.ambiguityMargin ?? MATCHING_DEFAULTS.ambiguityMargin;
+  if (
+    !Number.isFinite(candidateFloor) ||
+    candidateFloor < 0.5 ||
+    candidateFloor > 1 ||
+    !Number.isFinite(ambiguityMargin) ||
+    ambiguityMargin <= 0 ||
+    ambiguityMargin > 1
+  )
+    throw new Error("Invalid scoring thresholds");
+  return Object.freeze({
+    similarity: resolveSimilarityWeights(input.similarity),
+    confidence: Object.freeze({
+      deterministic: confidence.deterministic / total,
+      evaluator: confidence.evaluator / total,
+    }),
+    candidateFloor,
+    ambiguityMargin,
+  });
+}
 export type EngineOptions = {
   storage: VisitorStorage;
   evaluator?: VisitorEvaluator;
   evaluatorTimeoutMs?: number;
   restoreThreshold?: number;
+  scoring?: ScoringOptions;
   /** Jev may choose fixed indexed probe families before a missing-cookie lookup. */
   lookupPlanning?: boolean;
   debug?: boolean;
@@ -67,6 +135,7 @@ export function isEvaluation(value: unknown): value is Evaluation {
 }
 export function createVisitorEngine(options: EngineOptions) {
   const { storage, evaluator } = options;
+  const scoring = resolveScoring(options.scoring);
   const timeout =
     options.evaluatorTimeoutMs ?? MATCHING_DEFAULTS.evaluatorTimeoutMs;
   const threshold =
@@ -142,15 +211,17 @@ export function createVisitorEngine(options: EngineOptions) {
           confidence = 1; // Continuity of the opaque cookie; never authentication.
           deterministicScore = Math.max(
             ...history.map(
-              (previous) => calculateSimilarity(previous, current).score,
+              (previous) =>
+                calculateSimilarity(previous, current, scoring.similarity)
+                  .score,
             ),
           );
           // A copied cookie must not teach a contradictory or sparse environment to the history.
           observationSaved = history.some(
             (previous) =>
               !hasContradiction(previous, current) &&
-              calculateSimilarity(previous, current).score >=
-                MATCHING_DEFAULTS.candidateFloor &&
+              calculateSimilarity(previous, current, scoring.similarity)
+                .score >= scoring.candidateFloor &&
               evidenceCap(previous, current) >=
                 MATCHING_DEFAULTS.restoreThreshold,
           );
@@ -208,7 +279,11 @@ export function createVisitorEngine(options: EngineOptions) {
                 const best = history
                   .filter((previous) => !hasContradiction(previous, current))
                   .map((previous) => ({
-                    score: calculateSimilarity(previous, current).score,
+                    score: calculateSimilarity(
+                      previous,
+                      current,
+                      scoring.similarity,
+                    ).score,
                     cap: evidenceCap(previous, current),
                   }))
                   .sort((a, b) => b.score - a.score)[0];
@@ -221,10 +296,7 @@ export function createVisitorEngine(options: EngineOptions) {
               }),
             )
           )
-            .filter(
-              (candidate) =>
-                candidate.score >= MATCHING_DEFAULTS.candidateFloor,
-            )
+            .filter((candidate) => candidate.score >= scoring.candidateFloor)
             .sort(
               (a, b) =>
                 b.score - a.score ||
@@ -276,8 +348,8 @@ export function createVisitorEngine(options: EngineOptions) {
               const confidence = Math.min(
                 candidate.cap,
                 result
-                  ? candidate.score * MATCHING_DEFAULTS.deterministicWeight +
-                      result.sameVisitor * MATCHING_DEFAULTS.evaluatorWeight
+                  ? candidate.score * scoring.confidence.deterministic +
+                      result.sameVisitor * scoring.confidence.evaluator
                   : candidate.score,
               );
               return { ...candidate, result, confidence };
@@ -304,7 +376,7 @@ export function createVisitorEngine(options: EngineOptions) {
             if (
               !best.lookupSaturated &&
               best.confidence >= threshold &&
-              best.confidence - runnerUp >= MATCHING_DEFAULTS.ambiguityMargin
+              best.confidence - runnerUp >= scoring.ambiguityMargin
             ) {
               visitorId = best.visitorId;
               confidence = best.confidence;

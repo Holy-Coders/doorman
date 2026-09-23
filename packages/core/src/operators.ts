@@ -23,6 +23,12 @@ export const OPERATOR_FEATURE_NAMES = [
   "api_gap_mean_ms",
   "api_gap_cv",
   "api_sequence_repeat_ratio",
+  "webdriver",
+  "mouse_step_mean_px",
+  "mouse_large_step_ratio",
+  "mouse_interval_cv",
+  "interaction_short_gap_ratio",
+  "interaction_repeat_gap_ratio",
   "mouse_speed",
   "mouse_turn_ratio",
   "mouse_pause_ratio",
@@ -74,6 +80,51 @@ export const OPERATOR_LIMITS = {
   looseLinkThreshold: 0.8,
   strictLinkThreshold: 0.98,
 } as const;
+export const OPERATOR_THRESHOLDS = Object.freeze({
+  labelThreshold: OPERATOR_LIMITS.labelThreshold,
+  labelMargin: OPERATOR_LIMITS.labelMargin,
+  familyThreshold: OPERATOR_LIMITS.familyThreshold,
+  familyMargin: OPERATOR_LIMITS.familyMargin,
+  linkThreshold: OPERATOR_LIMITS.linkThreshold,
+  looseLinkThreshold: OPERATOR_LIMITS.looseLinkThreshold,
+  strictLinkThreshold: OPERATOR_LIMITS.strictLinkThreshold,
+});
+export type OperatorThresholds = {
+  [K in keyof typeof OPERATOR_THRESHOLDS]: number;
+};
+export function resolveOperatorThresholds(
+  input?: Partial<OperatorThresholds>,
+): Readonly<OperatorThresholds> {
+  if (input === undefined) return OPERATOR_THRESHOLDS;
+  if (
+    !input ||
+    typeof input !== "object" ||
+    Array.isArray(input) ||
+    Object.keys(input).some((key) => !Object.hasOwn(OPERATOR_THRESHOLDS, key))
+  )
+    throw new Error("Invalid operator thresholds");
+  const thresholds = { ...OPERATOR_THRESHOLDS, ...input };
+  if (
+    Object.entries(thresholds).some(
+      ([key, value]) =>
+        typeof value !== "number" ||
+        !Number.isFinite(value) ||
+        value > 1 ||
+        value <= 0 ||
+        (key.endsWith("Threshold") && value < 0.5),
+    ) ||
+    thresholds.looseLinkThreshold > thresholds.linkThreshold ||
+    thresholds.linkThreshold > thresholds.strictLinkThreshold
+  )
+    throw new Error("Invalid operator thresholds");
+  return Object.freeze(thresholds);
+}
+/** Canonical settings, independent of model version; suitable for analytics provenance. */
+export function operatorPolicy(input?: Partial<OperatorThresholds>): string {
+  return (
+    "operators-v1:" + Object.values(resolveOperatorThresholds(input)).join(":")
+  );
+}
 export type OperatorWindow = {
   id: string;
   accountKey: string;
@@ -93,6 +144,7 @@ export type OperatorWindow = {
     | "disabled";
   evaluation?: OperatorEvaluation;
   referenceVersions?: Record<string, string>;
+  thresholds?: Readonly<OperatorThresholds>;
 };
 export interface OperatorStorage {
   get(accountKey: string, id: string): Promise<OperatorWindow | undefined>;
@@ -146,27 +198,31 @@ export function isOperatorEvaluation(
 }
 export function operatorLabel(
   evaluation?: OperatorEvaluation,
+  options?: Partial<OperatorThresholds>,
 ): OperatorKind | "unknown" {
+  const thresholds = resolveOperatorThresholds(options);
   if (!evaluation) return "unknown";
   const ranked = OPERATOR_KINDS.map((kind) => ({
     kind,
     score: evaluation.scores[kind],
   })).sort((a, b) => b.score - a.score);
-  return ranked[0]!.score >= OPERATOR_LIMITS.labelThreshold &&
-    ranked[0]!.score - ranked[1]!.score >= OPERATOR_LIMITS.labelMargin
+  return ranked[0]!.score >= thresholds.labelThreshold &&
+    ranked[0]!.score - ranked[1]!.score >= thresholds.labelMargin
     ? ranked[0]!.kind
     : "unknown";
 }
 export function agentFamily(
   evaluation?: OperatorEvaluation,
+  options?: Partial<OperatorThresholds>,
 ): { family: string; score: number } | undefined {
-  if (!evaluation || operatorLabel(evaluation) !== "assistant")
+  const thresholds = resolveOperatorThresholds(options);
+  if (!evaluation || operatorLabel(evaluation, thresholds) !== "assistant")
     return undefined;
   const ranked = [...evaluation.families].sort((a, b) => b.score - a.score);
   const best = ranked[0];
   return best &&
-    best.score >= OPERATOR_LIMITS.familyThreshold &&
-    best.score - (ranked[1]?.score ?? 0) >= OPERATOR_LIMITS.familyMargin
+    best.score >= thresholds.familyThreshold &&
+    best.score - (ranked[1]?.score ?? 0) >= thresholds.familyMargin
     ? best
     : undefined;
 }

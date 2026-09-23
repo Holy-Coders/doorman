@@ -64,3 +64,7 @@ This stateless `subjectLinking` option stores no account graph and needs no new 
 ## Anonymous sessions and later logins
 
 The optional [learning collector](LEARNING.md) uses the identity directory and a separate short session cookie to label pre-login snapshots from a verified login. It is disabled by default, supports application-wide or per-request collection permission, and stores data on the implementer's server. It includes no automatically trained cross-device classifier. Optional predictions run in shadow mode and never become verified account links.
+
+## Configurable scoring and activity features
+
+See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.

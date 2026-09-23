@@ -35,6 +35,12 @@ When multiple equal candidates are already stored, the ambiguity margin avoids c
 
 Risk accuracy is **not measured**. All sessions are automated and no human ground truth is present. Risk outputs remain zero because the evaluator is disabled. Extra motion summaries do not by themselves solve identity collisions or establish intent. Cross-device person/account continuity needs [verified account linking](./EXTENSIONS.md).
 
+## Detection-update rerun
+
+The new aggregate collectors were exercised again in all three engines on September 23, 2026. The 78 identity trials reproduced the table above: 24 isolated returns, 24 cookie continuities, 24 ambiguous cases left unmerged, and six incorrect restores of indistinguishable profiles. The benchmark now bundles the actual client and its dependencies before serving it locally.
+
+[Aggregate rerun report](benchmarks/browser-detection-v2-2026-09-23.json). Risk accuracy is still unmeasured in this automated-only fixture. The [expanded public-data comparison](EXTERNAL-BENCHMARKS.md#new-detection-features-measured-comparison) separately measures changes in timing-based detection and mouse-behavior anomaly scoring.
+
 ## Public research datasets
 
 Janitor has now run FP-Stalker, FP-Agent and Balabit with its existing signals. The [public dataset report](EXTERNAL-BENCHMARKS.md) documents the projections, held-out groups, source checksums and reproducible commands. The historical cookie-loss replay produced 1,258 correct restores and 2,303 wrong restores. Agent timing features showed useful separation but incomplete coverage and substantial human false positives in some folds. A separate 120-case pilot made 103 real Jev calls: fewer false restores came with more missed restores, and behavior-only automation scores detected no agents at the preset threshold. No research model was promoted to production.

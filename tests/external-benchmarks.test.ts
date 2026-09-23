@@ -18,6 +18,9 @@ describe("external dataset projection", () => {
       mouse_speed: 100,
       mouse_turn_ratio: 0,
       mouse_pause_ratio: 0,
+      mouse_step_mean_px: 10,
+      mouse_large_step_ratio: 0,
+      mouse_interval_cv: 0,
     });
   });
   it("never turns absent events into automation evidence", () => {
@@ -34,6 +37,8 @@ describe("external dataset projection", () => {
       interaction_sample_count: 10,
       interaction_mean_ms: 100,
       interaction_cv: 0,
+      interaction_short_gap_ratio: 0,
+      interaction_repeat_gap_ratio: 1,
     });
   });
   it("only accepts pinned datasets", () => {

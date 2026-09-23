@@ -1,6 +1,6 @@
 # Detection research backlog
 
-These are research hypotheses collected on 2026-09-23. They are not production rules or demonstrated agent signatures. The current priority is scored activity labels, account-scoped operator attribution, and honest analytics summaries.
+These are research hypotheses collected on 2026-09-23. They are not production rules or demonstrated agent signatures. The current implementation includes scored activity labels, account-scoped operator attribution, configurable scoring, and optional aggregate movement/timing features. See [agent classification](AGENT-CLASSIFICATION.md) and the [benchmark comparison](EXTERNAL-BENCHMARKS.md). Runtime probes, focus-based screenshot inference and hidden decoys remain research ideas, not enabled rules.
 
 | Idea                                        | Experiment before adoption                                                                                                 | Important controls                                                                                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |

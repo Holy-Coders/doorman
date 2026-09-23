@@ -5,7 +5,7 @@
       {
         "slug": "introduction",
         "title": "What is Janitor?",
-        "description": "Recognize a returning browser, understand risk and connect verified users.",
+        "description": "First-party identity and private activity classification for people, assistants and scripts.",
         "source": "docs/INTRODUCTION.md"
       },
       {
@@ -37,6 +37,18 @@
   {
     "title": "Choose your framework",
     "pages": [
+      {
+        "slug": "agent-classification",
+        "title": "Agent classification",
+        "description": "Distinguish activity labels, verified agents and trained classifiers, with measured limits.",
+        "source": "docs/AGENT-CLASSIFICATION.md"
+      },
+      {
+        "slug": "scoring",
+        "title": "Adjust scoring",
+        "description": "Tune identity weights and operator thresholds on your server.",
+        "source": "docs/SCORING.md"
+      },
       {
         "slug": "cloudflare",
         "title": "Cloudflare Workers",

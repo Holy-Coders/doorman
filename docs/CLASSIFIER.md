@@ -161,3 +161,7 @@ The hosted Worker uses `AI.run("typesafe/jev", {state:{features}, questions})`, 
 Artifacts expire within seven days or at their earliest source-data expiry. Erasing training data, disabling training or revoking a participant invalidates the shared dataset revision, so cached and stored classifiers from it stop serving. Local files cannot be remotely erased: delete or rebuild every export, enrichment cache and artifact derived from withdrawn data. A locally loaded predictor cannot check central revocation; use `/v1/classify` when that guarantee is required.
 
 After reviewing fresh outcomes, create a new versioned dataset and repeat the comparison. Keep the old report for an approved, limited audit period, not raw session data indefinitely. Reusing one test set for repeated prompt/model tuning overfits the test; reserve fresh applications or a later untouched test cohort. This version does not schedule training or automatically rewrite questions. That restraint lets us measure whether the added Jev features actually help before building a larger learning system.
+
+## Configurable scoring and activity features
+
+See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.

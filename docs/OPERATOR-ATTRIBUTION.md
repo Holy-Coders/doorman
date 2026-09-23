@@ -179,3 +179,7 @@ The automated tests cover account isolation, retries, concurrent inserts, retent
 The next validation dataset must contain independently known humans and agent instances sharing accounts and browsers. Measure per-label calibration, unknown-family rejection, false operator merges/splits, count error, and interval coverage. Only then replace the sensitivity range with a calibrated estimate. Compare numeric-only models with Jev-assisted models on the same unseen runs. The [existing public-data results](EXTERNAL-BENCHMARKS.md) measure different tasks and do not validate this feature.
 
 Additional runtime, cursor, focus and decoy ideas are tracked in the [detection research backlog](DETECTION-RESEARCH-BACKLOG.md). They are not enabled detectors.
+
+## Configurable scoring and activity features
+
+See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.

@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'classifier'))
 from train import fit_candidates
 
 FEATURES = ['mouse_speed', 'mouse_turn_ratio', 'mouse_pause_ratio', 'interaction_mean_ms', 'interaction_cv']
+EXTENDED_FEATURES = FEATURES + ['mouse_step_mean_px', 'mouse_large_step_ratio', 'mouse_interval_cv', 'interaction_short_gap_ratio', 'interaction_repeat_gap_ratio']
 
 
 def fingerprint(value):
@@ -71,8 +72,8 @@ def threshold_on_validation(rows, scores, validation):
 
 
 def evaluate_fold(rows, indices, summary):
-    fitting = [i for i in indices[0] if len(rows[i]['features']) >= 2]
-    calibration = [i for i in indices[1] if len(rows[i]['features']) >= 2]
+    fitting = [i for i in indices[0] if sum(k in rows[i]['features'] for k in FEATURES) >= 2]
+    calibration = [i for i in indices[1] if sum(k in rows[i]['features'] for k in FEATURES) >= 2]
     results, parity = [], []
     family = summary.get('heldoutAgent', summary.get('heldoutEnvironment'))
     try:
@@ -112,8 +113,8 @@ def fpagent(rows):
         indices = [[i for i,p in enumerate(parts) if p==n] for n in range(4)]
         assert not any(set(group_ids[i] for i in indices[a]) & set(group_ids[i] for i in indices[b]) for a in range(4) for b in range(a+1,4))
         # Evidence is a prerequisite to fitting, not a label. All test rows remain in denominators.
-        fitting = [i for i in indices[0] if len(rows[i]['features']) >= 2]
-        calibration = [i for i in indices[1] if len(rows[i]['features']) >= 2]
+        fitting = [i for i in indices[0] if sum(k in rows[i]['features'] for k in FEATURES) >= 2]
+        calibration = [i for i in indices[1] if sum(k in rows[i]['features'] for k in FEATURES) >= 2]
         test_env = {rows[i].get('environment') for i in indices[3]} - {None}
         training_env = {rows[i].get('environment') for i in indices[0]} - {None}
         summary = dict(heldoutAgent=family, partitions=[len(x) for x in indices],
@@ -198,18 +199,23 @@ def balabit(rows):
 
 
 def main():
+    global FEATURES
     parser=argparse.ArgumentParser()
     parser.add_argument('source',choices=['fpagent','balabit'])
     parser.add_argument('--directory',default='artifacts/external')
+    parser.add_argument('--extended', action='store_true')
     args=parser.parse_args()
+    suffix='-extended' if args.extended else ''
+    if args.extended:
+        FEATURES = EXTENDED_FEATURES
     root=Path(args.directory)
     rows=json.loads((root/(args.source+'-features.json')).read_text())['rows']
     if args.source=='fpagent':
         report, parity = fpagent(rows)
-        p=root/'fpagent-parity.json';p.write_text(json.dumps(parity,allow_nan=False));p.chmod(0o600)
+        p=root/('fpagent'+suffix+'-parity.json');p.write_text(json.dumps(parity,allow_nan=False));p.chmod(0o600)
     else:
         report=balabit(rows)
-    p=root/(args.source+'-report.json');p.write_text(json.dumps(report,indent=2,allow_nan=False)+'\n');p.chmod(0o600)
+    p=root/(args.source+suffix+'-report.json');p.write_text(json.dumps(report,indent=2,allow_nan=False)+'\n');p.chmod(0o600)
     print(json.dumps({'source':args.source,'sessions':len(rows),'report':str(p)}))
 
 if __name__=='__main__':

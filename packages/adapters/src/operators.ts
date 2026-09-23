@@ -6,6 +6,8 @@ import {
   isOperatorEvaluation,
   attemptEvaluation,
   summarizeOperators,
+  resolveOperatorThresholds,
+  type OperatorThresholds,
 } from "@janitor/core";
 import type {
   AgentFamilyReference,
@@ -34,22 +36,26 @@ export const operatorEvidenceSchema = z.strictObject({
       for (const [name, value] of Object.entries(features)) {
         if (value === undefined) continue;
         const maximum =
+          name === "webdriver" ||
           name.endsWith("_ratio") ||
           name.endsWith("_share") ||
           name.startsWith("transition_")
             ? 1
             : name.endsWith("_cv")
               ? 10
-              : name === "mouse_speed"
-                ? 10_000
-                : name.endsWith("_mean_ms")
-                  ? 60_000
-                  : name === "observation_duration_ms"
-                    ? 900_000
-                    : 1_000_000;
+              : name === "mouse_step_mean_px"
+                ? 50_000
+                : name === "mouse_speed"
+                  ? 10_000
+                  : name.endsWith("_mean_ms")
+                    ? 60_000
+                    : name === "observation_duration_ms"
+                      ? 900_000
+                      : 1_000_000;
         if (
           value > maximum ||
-          (name.endsWith("_count") && !Number.isInteger(value))
+          ((name.endsWith("_count") || name === "webdriver") &&
+            !Number.isInteger(value))
         )
           context.addIssue({
             code: "custom",
@@ -70,6 +76,17 @@ const familySchema = z.strictObject({
     .max(OPERATOR_LIMITS.familyExamples),
 });
 const configSchema = z.strictObject({
+  thresholds: z
+    .strictObject({
+      labelThreshold: z.number().optional(),
+      labelMargin: z.number().optional(),
+      familyThreshold: z.number().optional(),
+      familyMargin: z.number().optional(),
+      linkThreshold: z.number().optional(),
+      looseLinkThreshold: z.number().optional(),
+      strictLinkThreshold: z.number().optional(),
+    })
+    .optional(),
   retentionDays: z.number().int().min(1).max(90).default(30),
   families: z
     .array(familySchema)
@@ -110,6 +127,9 @@ export function createOperatorService(
   evaluatorTimeoutMs = 1200,
 ) {
   const config = configSchema.parse(options);
+  const thresholds: Readonly<OperatorThresholds> = resolveOperatorThresholds(
+    config.thresholds,
+  );
   const label = createSubjectLinker(identity);
   const key = (purpose: string, ...values: string[]) =>
     label(JSON.stringify(["operators-v1", purpose, ...values]));
@@ -195,6 +215,7 @@ export function createOperatorService(
           lease: crypto.randomUUID(),
           evidence,
           status: "pending",
+          thresholds,
         };
         check();
         if (!(await storage.claim(window))) {
@@ -355,6 +376,7 @@ export function createOperatorService(
         return summarizeOperators(
           rows.filter((w) => w.expiresAt > now),
           range,
+          thresholds,
         );
       })().finally(() => {
         inFlight--;

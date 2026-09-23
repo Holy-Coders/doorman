@@ -26,3 +26,6 @@ site/public/search-index-*.json
 .venv/
 __pycache__/
 *.egg-info/
+
+.playwright-cli/
+output/playwright/

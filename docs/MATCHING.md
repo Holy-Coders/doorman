@@ -72,3 +72,7 @@ A missing-cookie Jev request normally uses one lookup-planning call and one batc
 Use consented, independently labeled returning-browser visits with deliberate cookie deletion, browser/OS updates, resizing, timezone drift and privacy settings. Include distinct browsers with the same common configuration. Compare deterministic-only against AI-assisted operation on the same held-out visits. Measure false merges, missed restorations, ambiguity frequency, latency, evaluator failure rates and calls per visit. For risk, label actual automation and ordinary humans, including mobile/touch, keyboard-only and privacy-focused usage. Measure false positives before choosing any CAPTCHA threshold.
 
 Do not use this library's inferred IDs as its own ground-truth labels. Tune weights/thresholds using held-out data and favor avoiding false merges. The repository's synthetic/mocked tests cannot validate Jev's actual probability calibration or risk accuracy.
+
+## Configurable scoring and activity features
+
+See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.

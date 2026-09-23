@@ -2744,3 +2744,42 @@ p {
     animation: none !important;
   }
 }
+
+/* Activity classification uses the existing editorial grid and theme tokens. */
+.classification-section {
+  padding-block: 5rem;
+}
+.classification-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+.classification-grid article {
+  border-top: 1px solid currentColor;
+  padding-top: 1.25rem;
+}
+.classification-grid h3 {
+  font-size: clamp(1.3rem, 2vw, 1.75rem);
+  line-height: 1.2;
+  margin-block: 1rem;
+}
+.classification-grid p {
+  line-height: 1.7;
+}
+.classification-grid a {
+  text-underline-offset: 0.25em;
+}
+.classification-evidence {
+  margin-top: 2rem;
+  max-width: 80ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+@media (max-width: 760px) {
+  .classification-grid {
+    grid-template-columns: 1fr;
+  }
+  .classification-section {
+    padding-block: 3rem;
+  }
+}

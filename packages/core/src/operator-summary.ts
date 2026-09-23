@@ -1,5 +1,15 @@
-import { agentFamily, operatorLabel, OPERATOR_LIMITS } from "./operators.js";
-import type { OperatorKind, OperatorWindow } from "./operators.js";
+import {
+  agentFamily,
+  operatorLabel,
+  OPERATOR_LIMITS,
+  resolveOperatorThresholds,
+  operatorPolicy,
+} from "./operators.js";
+import type {
+  OperatorKind,
+  OperatorWindow,
+  OperatorThresholds,
+} from "./operators.js";
 
 export type OperatorProfile = {
   /** Report-local inference ID. Never use as an authenticated or analytics distinct ID. */
@@ -14,6 +24,8 @@ export type OperatorSummary = {
   schemaVersion: 1;
   resolutionVersion: "complete-link-v1";
   scoreKind: "uncalibrated";
+  scoringPolicy: string;
+  thresholds: Readonly<OperatorThresholds>;
   window: { since: number; until: number };
   complete: boolean;
   observedWindows: number;
@@ -43,7 +55,9 @@ export type OperatorSummary = {
 export function summarizeOperators(
   input: readonly OperatorWindow[],
   range: { since: number; until: number },
+  options?: Partial<OperatorThresholds>,
 ): OperatorSummary {
+  const thresholds = resolveOperatorThresholds(options);
   if (
     !Number.isSafeInteger(range.since) ||
     !Number.isSafeInteger(range.until) ||
@@ -85,10 +99,11 @@ export function summarizeOperators(
     }
   const labeled = windows.filter(
     (w) =>
-      w.status === "evaluated" && operatorLabel(w.evaluation) !== "unknown",
+      w.status === "evaluated" &&
+      operatorLabel(w.evaluation, thresholds) !== "unknown",
   );
   const n = labeled.length;
-  const kinds = labeled.map((w) => operatorLabel(w.evaluation));
+  const kinds = labeled.map((w) => operatorLabel(w.evaluation, thresholds));
   const distances = new Float64Array(n * n).fill(-1);
   const missingByKind: Record<OperatorKind, number> = {
     human: 0,
@@ -136,14 +151,15 @@ export function summarizeOperators(
     }
     return groups.filter((_, i) => active[i]);
   }
-  const groups = clusters(OPERATOR_LIMITS.linkThreshold);
+  const groups = clusters(thresholds.linkThreshold);
   const alternatives = [
-    clusters(OPERATOR_LIMITS.looseLinkThreshold),
+    clusters(thresholds.looseLinkThreshold),
     groups,
-    clusters(OPERATOR_LIMITS.strictLinkThreshold),
+    clusters(thresholds.strictLinkThreshold),
   ];
   const count = (rows: OperatorWindow[][], kind: OperatorKind) =>
-    rows.filter((g) => operatorLabel(g[0]!.evaluation) === kind).length;
+    rows.filter((g) => operatorLabel(g[0]!.evaluation, thresholds) === kind)
+      .length;
   const missingPairs = (kind: OperatorKind) => missingByKind[kind];
   const reportable = (kind: OperatorKind) =>
     complete &&
@@ -154,6 +170,8 @@ export function summarizeOperators(
     schemaVersion: 1,
     resolutionVersion: "complete-link-v1",
     scoreKind: "uncalibrated",
+    scoringPolicy: operatorPolicy(thresholds),
+    thresholds,
     window: range,
     complete,
     observedWindows: windows.length,
@@ -172,8 +190,8 @@ export function summarizeOperators(
       ),
     ].sort(),
     profiles: groups.map((g) => {
-      const kind = operatorLabel(g[0]!.evaluation) as OperatorKind;
-      const families = g.map((w) => agentFamily(w.evaluation));
+      const kind = operatorLabel(g[0]!.evaluation, thresholds) as OperatorKind;
+      const families = g.map((w) => agentFamily(w.evaluation, thresholds));
       const family = families[0];
       return {
         id: `op_${g.map((w) => w.id).sort()[0]}`,

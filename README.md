@@ -4,7 +4,7 @@
 
 Durable first-party visitor identity from browser history, with optional AI-assisted matching and risk scoring.
 
-Janitor is an open-source library for recognizing returning browsers. It runs on your server, stores a small history in your database, and can use **Jev**, an AI model from TypeSafe, to help assess matches and technical risk.
+Janitor is an open-source identity and activity-classification library. Recognize returning browsers, connect verified people and agents, and add private activity scores to PostHog, Mixpanel or your warehouse. It runs on your server, keeps history in your database, and can use **Jev**, an AI model from TypeSafe, to assess evidence.
 
 [Introduction](https://janitor.holycoders.io/docs/introduction/) · [Quickstart](docs/GETTING-STARTED.md) · [Playground](https://janitor.holycoders.io/playground/) · [GitHub release](https://github.com/Holy-Coders/janitor/releases/tag/v0.9.0)
 
@@ -49,6 +49,14 @@ With Jev and the identity directory configured, `learning: { enabled: true, coll
 The separate opt-in [learning service](docs/LEARNING-NETWORK.md) can discover recurring assistant and abuse patterns from sampled summaries and independently confirmed outcomes. It includes authenticated ingestion, Postgres/D1 storage, readable pattern discovery, future-session/application holdouts, shadow/canary rollout and erasure. Remote evaluation, contribution and training are separate choices; ordinary installations send it no data. This pilot is available from source and has not established real-world detection accuracy.
 
 The [classifier pipeline](docs/CLASSIFIER.md) now compares numeric logistic and boosted-tree models, with optional versioned Jev features. It trains offline and serves private assistant/abuse assessments in TypeScript. Start with `pnpm classifier demo`: 3,000 generated sessions, no paid calls, and models that cannot qualify for production promotion. [Research and limits](docs/CLASSIFIER-RESEARCH.md).
+
+## Classify activity behind an account
+
+The opt-in [operator service](docs/OPERATOR-ATTRIBUTION.md) scores human, assistant, scripted automation and abuse independently. It can compare closed activity windows and suggest agent families from independently labeled reference runs. Unknown activity stays unknown; inferred profiles never become login identities or analytics merges.
+
+[Agent classification](docs/AGENT-CLASSIFICATION.md) explains the new aggregate movement/timing features, server evidence, and trained classifiers. [Scoring configuration](docs/SCORING.md) lets you adjust browser-feature weights, the deterministic/Jev blend and operator thresholds. These additions are available in the current TypeScript source packages, not the older v0.9.0 release archive.
+
+The [public-data benchmarks](docs/EXTERNAL-BENCHMARKS.md) report errors and coverage as well as detections. Reliable headcounts, agent-brand recognition and calibrated scores remain experimental.
 
 ## Choose your server
 

@@ -1,7 +1,7 @@
 import type { NormalizedObservation } from "./types.js";
 
 // Identity weights only. Automation and behavior never affect identity similarity.
-export const SIMILARITY_WEIGHTS = {
+export const SIMILARITY_WEIGHTS = Object.freeze({
   samePlatform: 0.18,
   sameBrowser: 0.12,
   sameTimezone: 0.05,
@@ -13,9 +13,41 @@ export const SIMILARITY_WEIGHTS = {
   sameTouchCapabilities: 0.05,
   sameWebglVendor: 0.07,
   sameWebglRenderer: 0.13,
-} as const;
+} as const);
 export const MIN_EVIDENCE_WEIGHT = 0.55;
 export const CONTRADICTION_CAP = 0.5;
+
+export type SimilarityWeights = Record<keyof typeof SIMILARITY_WEIGHTS, number>;
+/** Relative nonnegative weights; unspecified features retain their default weight. */
+export function resolveSimilarityWeights(
+  input?: Partial<SimilarityWeights>,
+): Readonly<SimilarityWeights> {
+  if (input === undefined) return SIMILARITY_WEIGHTS;
+  if (
+    !input ||
+    typeof input !== "object" ||
+    Array.isArray(input) ||
+    Object.keys(input).some((key) => !Object.hasOwn(SIMILARITY_WEIGHTS, key))
+  )
+    throw new Error("Invalid similarity weights");
+  const weights = { ...SIMILARITY_WEIGHTS, ...input };
+  const values = Object.values(weights);
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (
+    values.some(
+      (value) =>
+        typeof value !== "number" || !Number.isFinite(value) || value < 0,
+    ) ||
+    !Number.isFinite(total) ||
+    total <= 0
+  )
+    throw new Error("Invalid similarity weights");
+  return Object.freeze(
+    Object.fromEntries(
+      Object.entries(weights).map(([key, value]) => [key, value / total]),
+    ) as SimilarityWeights,
+  );
+}
 
 export type SimilarityFeatures = {
   samePlatform?: boolean;
@@ -72,6 +104,7 @@ export function hasContradiction(
 export function calculateSimilarity(
   a: NormalizedObservation,
   b: NormalizedObservation,
+  weights?: Partial<SimilarityWeights>,
 ): {
   score: number;
   features: SimilarityFeatures;
@@ -102,6 +135,8 @@ export function calculateSimilarity(
         ? true
         : undefined,
   };
+  const resolved = resolveSimilarityWeights(weights);
+  let baseAvailable = 0;
   let available = 0;
   let matched = 0;
   for (const name of Object.keys(
@@ -109,11 +144,16 @@ export function calculateSimilarity(
   ) as (keyof typeof SIMILARITY_WEIGHTS)[]) {
     const value = features[name];
     if (value === undefined) continue;
-    available += SIMILARITY_WEIGHTS[name];
-    matched += Number(value) * SIMILARITY_WEIGHTS[name];
+    baseAvailable += SIMILARITY_WEIGHTS[name];
+    available += resolved[name];
+    matched += Number(value) * resolved[name];
   }
   return {
-    score: Math.min(1, matched / Math.max(available, MIN_EVIDENCE_WEIGHT)),
+    score: Math.min(
+      1,
+      baseAvailable / MIN_EVIDENCE_WEIGHT,
+      matched / Math.max(available, MIN_EVIDENCE_WEIGHT),
+    ),
     features,
   };
 }

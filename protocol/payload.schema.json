@@ -157,6 +157,46 @@
           "minimum": 0,
           "maximum": 1000000000
         },
+        "mouseSampleCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "mouseLargeStepCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "mouseIntervalCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "mouseIntervalMeanMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "mouseIntervalStdDevMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "interactionShortGapCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "interactionRepeatGapCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "interactionComparableGapCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
         "mouseDirectionChanges": {
           "type": "integer",
           "minimum": 0,

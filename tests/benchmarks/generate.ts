@@ -13,15 +13,12 @@ type CollectorWindow = Window & { capture: () => Capture };
 const samples: Sample[] = [];
 const versions: Record<string, string> = {};
 const server = createServer((request, response) => {
-  const path =
-    request.url === "/collector.js"
-      ? "index.js"
-      : request.url === "/behavior.js"
-        ? "behavior.js"
-        : undefined;
-  if (path) {
+  if (request.url === "/collector.js") {
     void readFile(
-      new URL(`../../packages/browser/dist/${path}`, import.meta.url),
+      new URL(
+        "../../artifacts/browser-benchmark/collector.js",
+        import.meta.url,
+      ),
     )
       .then((body) => {
         response.writeHead(200, { "Content-Type": "text/javascript" });

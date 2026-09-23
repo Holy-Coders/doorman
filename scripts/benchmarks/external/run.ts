@@ -11,6 +11,8 @@ import { classifierCandidateSchema } from "../../../packages/network/src/classif
 import type { FeatureVector } from "../../../packages/network/src/schema.js";
 
 const execute = promisify(execFile);
+const extended = process.argv.includes("--extended");
+const suffix = extended ? "-extended" : "";
 const directory = resolve("artifacts/external");
 const python =
   process.env.CLASSIFIER_PYTHON ?? resolve("tools/classifier/.venv/bin/python");
@@ -37,18 +39,30 @@ for (const source of sourceNames(process.argv[2])) {
     coverage = await projectBehavior(source, directory);
     await execute(
       python,
-      ["tools/benchmarks/evaluate.py", source, "--directory", directory],
+      [
+        "tools/benchmarks/evaluate.py",
+        source,
+        "--directory",
+        directory,
+        ...(extended ? ["--extended"] : []),
+      ],
       { maxBuffer: 1_000_000 },
     );
     report = JSON.parse(
-      await readFile(resolve(directory, `${source}-report.json`), "utf8"),
+      await readFile(
+        resolve(directory, `${source}${suffix}-report.json`),
+        "utf8",
+      ),
     );
     if (source === "fpagent") {
       const { rows } = JSON.parse(
         await readFile(resolve(directory, "fpagent-features.json"), "utf8"),
       ) as { rows: { features: FeatureVector }[] };
       const models = JSON.parse(
-        await readFile(resolve(directory, "fpagent-parity.json"), "utf8"),
+        await readFile(
+          resolve(directory, `fpagent${suffix}-parity.json`),
+          "utf8",
+        ),
       ) as { candidate: unknown; scores: (number | null)[] }[];
       for (const model of models) {
         const candidate = classifierCandidateSchema.parse(model.candidate);
@@ -72,6 +86,7 @@ for (const source of sourceNames(process.argv[2])) {
   }
   const output = {
     version: 1,
+    featureSet: extended ? "behavior-v2" : "behavior-v1",
     generatedAt: new Date().toISOString(),
     revision,
     worktreeModified: dirty,
@@ -82,12 +97,15 @@ for (const source of sourceNames(process.argv[2])) {
     coverage,
     result: report,
   };
-  await privateJson(resolve(directory, `${source}-aggregate.json`), output);
+  await privateJson(
+    resolve(directory, `${source}${suffix}-aggregate.json`),
+    output,
+  );
   console.log(
     JSON.stringify({
       source,
       parityChecked,
-      report: `artifacts/external/${source}-aggregate.json`,
+      report: `artifacts/external/${source}${suffix}-aggregate.json`,
     }),
   );
 }
