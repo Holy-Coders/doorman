@@ -3,6 +3,7 @@ import {
   collectBrowserSignals,
   createBehaviorTracker,
   createVisitorClient,
+  createJanitorClient,
 } from "@janitor/browser";
 import { createVisitorId } from "@janitor/core";
 const identity = {
@@ -291,4 +292,109 @@ it("accepts private-score responses and rejects partially exposed scores", async
   );
   await expect(visitor.identify()).rejects.toThrow("Invalid visitor response");
   visitor.destroy();
+});
+
+describe("Janitor identity lifecycle", () => {
+  it("owns identify, profile updates, events and logout across destinations", async () => {
+    documentStub();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ visitorId: identity.visitorId, isReturning: false }),
+      ),
+    );
+    const posthog = { identify: vi.fn(), reset: vi.fn(), capture: vi.fn() };
+    const mixpanel = {
+      identify: vi.fn(),
+      reset: vi.fn(),
+      track: vi.fn(),
+      people: { set: vi.fn() },
+    };
+    const segment = { identify: vi.fn(), reset: vi.fn(), track: vi.fn() };
+    const janitor = createJanitorClient({
+      analytics: { posthog, mixpanel, segment },
+    });
+    await janitor.identify();
+    expect(posthog.identify).not.toHaveBeenCalled();
+    await janitor.track("page viewed", { page: "pricing" });
+    expect(segment.track).toHaveBeenCalledWith("page viewed", {
+      page: "pricing",
+      janitor_visitor_id: identity.visitorId,
+    });
+    await janitor.identify("alex", { plan: "free" });
+    await janitor.update({ plan: "pro" });
+    expect(segment.identify).toHaveBeenLastCalledWith("alex", { plan: "pro" });
+    await janitor.identify("sam");
+    expect(posthog.reset).toHaveBeenCalledOnce();
+    await janitor.reset();
+    expect(segment.reset).toHaveBeenCalledTimes(2);
+    await expect(janitor.update({ name: "forgot login" })).rejects.toThrow(
+      "authenticated",
+    );
+    janitor.destroy();
+  });
+  it("does not publish while paused and isolates failed destinations", async () => {
+    documentStub();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ visitorId: identity.visitorId, isReturning: false }),
+      ),
+    );
+    const posthog = {
+      identify: vi.fn(),
+      reset: vi.fn(),
+      capture: vi.fn(() => {
+        throw Error("blocked");
+      }),
+    };
+    const segment = { identify: vi.fn(), reset: vi.fn(), track: vi.fn() };
+    const janitor = createJanitorClient({
+      enabled: false,
+      analytics: { posthog, segment },
+    });
+    await expect(janitor.identify("alex")).rejects.toThrow("paused");
+    expect(posthog.identify).not.toHaveBeenCalled();
+    expect(() => janitor.track("page")).toThrow("paused");
+    janitor.setEnabled(true);
+    await janitor.identify("alex");
+    expect(await janitor.track("page")).toEqual({
+      posthog: "unavailable",
+      segment: "queued",
+    });
+    expect(() => janitor.track("page", { distinct_id: "other" })).toThrow(
+      "Reserved",
+    );
+    expect(() => janitor.track("page", { janitor_confidence: 0.9 })).toThrow(
+      "Reserved",
+    );
+    janitor.destroy();
+  });
+  it("discards measurements racing with an account switch", async () => {
+    documentStub();
+    const replies: ((r: Response) => void)[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            replies.push(resolve);
+          }),
+      ),
+    );
+    const janitor = createJanitorClient();
+    const old = janitor.identify("alex");
+    await Promise.resolve();
+    const discarded = expect(old).rejects.toThrow("reset");
+    const next = janitor.identify("sam");
+    await Promise.resolve();
+    replies[0]!(
+      Response.json({ visitorId: identity.visitorId, isReturning: false }),
+    );
+    await discarded;
+    const nextId = createVisitorId();
+    replies[1]!(Response.json({ visitorId: nextId, isReturning: false }));
+    expect((await next).visitorId).toBe(nextId);
+    janitor.destroy();
+  });
 });

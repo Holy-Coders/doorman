@@ -2,6 +2,7 @@ import type {
   LearningStorage,
   LearningSession,
   LearningReport,
+  LearningExample,
 } from "@janitor/core";
 import type { PostgresDatabase } from "./index.js";
 function decode(row: Record<string, unknown>): LearningSession {
@@ -45,6 +46,46 @@ export function createPostgresLearningStorage(
     s.prediction.score ?? null,
   ];
   return {
+    async findExamples(scope, current, cutoff) {
+      const predicates: [string, string][] = [];
+      if (current.languages?.[0])
+        predicates.push([
+          "(signals_json #>> '{languages,0}')",
+          current.languages[0],
+        ]);
+      if (current.timezone)
+        predicates.push(["(signals_json ->> 'timezone')", current.timezone]);
+      const groups = await Promise.all(
+        predicates.map(([column, value]) =>
+          rows(
+            `SELECT * FROM learning_sessions WHERE scope = $1 AND ${column} = $2 AND verified_at >= $3 AND observed_at >= $3 AND subject_id IS NOT NULL AND disputed = 0 ORDER BY verified_at DESC, id DESC LIMIT 101`,
+            [scope, value, cutoff],
+          ),
+        ),
+      );
+      const unique = new Map<string, LearningExample>();
+      for (const row of groups.flat()) {
+        const session = decode(row);
+        unique.set(session.id, {
+          sessionId: session.id,
+          subjectId: session.subjectId!,
+          observation: session.observation,
+          observedAt: session.observedAt,
+          verifiedAt: Number(row.verified_at),
+        });
+      }
+      return {
+        examples: [...unique.values()]
+          .sort(
+            (a, b) =>
+              b.verifiedAt - a.verifiedAt ||
+              a.sessionId.localeCompare(b.sessionId),
+          )
+          .slice(0, 100),
+        saturated:
+          groups.some((group) => group.length > 100) || unique.size > 100,
+      };
+    },
     async insertSession(s) {
       await rows(
         "INSERT INTO learning_sessions (scope, id, started_at, expires_at, observed_at, signals_json, prediction_status, predicted_subject_id, prediction_score) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)",

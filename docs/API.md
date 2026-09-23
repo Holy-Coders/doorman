@@ -27,6 +27,22 @@ createVisitorClient(options?: {
 
 `collectBrowserSignals`, `createBehaviorTracker`, and `safe` are exported for advanced integrations/testing. The normal application API requires only `createVisitorClient`. `enabled: false` creates no event listeners; `setEnabled(false)` pauses and clears collection. `reset()` discards pending results and restarts aggregate counts, useful after logout/account changes. Neither changes HttpOnly cookies. `headers()` supplies framework CSRF tokens at request time.
 
+## Application identity client
+
+`createJanitorClient({ ...browserOptions, analytics: { posthog?, mixpanel?, segment? } })` is the application-facing identity layer. It accepts your existing initialized SDK instances.
+
+| Method                             | Behavior                                                                                      |
+| ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| `identify()`                       | Measure the current browser without identifying a person to analytics.                        |
+| `identify(userId, traits?)`        | Use an authenticated application user ID across destinations, then measure the browser again. |
+| `update({ name?, email?, plan? })` | Update the current identified person's profile.                                               |
+| `track(event, properties?)`        | Send an event to each destination with the known Janitor visitor ID.                          |
+| `reset()`                          | Clear local identity state and reset destinations on logout/account changes.                  |
+| `setEnabled(boolean)`              | Pause/resume Janitor collection and its analytics calls.                                      |
+| `destroy()`                        | Remove browser listeners and discard pending measurements.                                    |
+
+Provider SDKs own delivery and anonymous IDs. Inferred person suggestions never enter this API. See [provider setup, login flow and limitations](ANALYTICS.md).
+
 ## Server adapters
 
 All return this lifecycle/HTTP surface (the optional `identities` directory methods are documented below):
@@ -34,7 +50,7 @@ All return this lifecycle/HTTP surface (the optional `identities` directory meth
 ```ts
 {
   handle(request: Request, context?: VisitorRequestContext): Promise<Response>;
-  assess(request: Request, context?: VisitorRequestContext): Promise<{ response: Response; identity?: VisitorIdentity; evidence?: RequestEvidence }>;
+  assess(request: Request, context?: VisitorRequestContext): Promise<{ response: Response; identity?: VisitorIdentity; evidence?: RequestEvidence; learning?: LearningPrediction }>;
   cleanup(options?: { batchSize?: number; afterVisitorId?: string }): Promise<{ nextVisitorId?: string; hasMoreExpired: boolean } | void>;
   deleteVisitor(visitorId: string): Promise<void>;
   learning?: { reports(limit?: number): Promise<LearningReport[]>; deleteSession(id: string): Promise<void> };
@@ -47,20 +63,21 @@ Node/Vercel accept `{ db, evaluator?: { apiKey, model?, timeoutMs? } | VisitorEv
 
 ### Common options
 
-| Option | Default | Purpose |
-| --- | --- | --- |
-| `observationRetentionDays` | `90` | How long browser observations can be used. |
-| `maxObservationsPerVisitor` | `10` | Stored observations per visitor; accepts 1–100. |
-| `evaluatorTimeoutMs` | `1200` | How long to wait for an evaluator, in milliseconds. |
-| `restoreThreshold` | `0.90` | Minimum recovery score; accepts 0.8–1. Other evidence and ambiguity checks still apply. |
-| `cookie` | `__visitor`, 90 days, Secure | Configure `name`, `maxAgeDays` and the development-only `secure` exception. |
-| `maxBodyBytes` | `16384` | Maximum request body size; up to 65536. |
-| `requestTimeoutMs` | `5000` | HTTP request deadline; accepts 100–30000. Deadline errors return 408. |
-| `endpointPath` | `/api/visitor` | The route the adapter handles. |
-| `environment` | `production` | Controls development-only options. |
-| `debug` | `false` | Enables gated diagnostics outside production. |
-| `exposeClientScores` | `false` | Deliberately includes private score/attribution fields in browser JSON. |
-| `onMetrics` | None | Receives summary counts, scores and timing without raw browser signals. |
+| Option                      | Default                      | Purpose                                                                                 |
+| --------------------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
+| `observationRetentionDays`  | `90`                         | How long browser observations can be used.                                              |
+| `maxObservationsPerVisitor` | `10`                         | Stored observations per visitor; accepts 1–100.                                         |
+| `lookupPlanning`            | `true`                       | Let a capable evaluator select bounded lookup families before a missing-cookie search.  |
+| `evaluatorTimeoutMs`        | `1200`                       | How long to wait for an evaluator, in milliseconds.                                     |
+| `restoreThreshold`          | `0.90`                       | Minimum recovery score; accepts 0.8–1. Other evidence and ambiguity checks still apply. |
+| `cookie`                    | `__visitor`, 90 days, Secure | Configure `name`, `maxAgeDays` and the development-only `secure` exception.             |
+| `maxBodyBytes`              | `16384`                      | Maximum request body size; up to 65536.                                                 |
+| `requestTimeoutMs`          | `5000`                       | HTTP request deadline; accepts 100–30000. Deadline errors return 408.                   |
+| `endpointPath`              | `/api/visitor`               | The route the adapter handles.                                                          |
+| `environment`               | `production`                 | Controls development-only options.                                                      |
+| `debug`                     | `false`                      | Enables gated diagnostics outside production.                                           |
+| `exposeClientScores`        | `false`                      | Deliberately includes private score/attribution fields in browser JSON.                 |
+| `onMetrics`                 | None                         | Receives summary counts, scores and timing without raw browser signals.                 |
 
 Configuration is validated when the adapter is created. Environment variables such as database URLs are read by your application, not by the core library.
 
@@ -136,7 +153,7 @@ High-level adapters accept `subjectLinking: { secret, namespace }`. Supply at le
 
 ## Optional learning
 
-`learning?: false | LearningOptions` is disabled by default and requires `identity` plus migration `0003_learning.sql`. Explicit `learning: { enabled: true, mode: "collect" }` and trusted `handle(request, { learningConsent: true })` enable short-session feedback. `mode: "shadow"` additionally requires a `predict({ current, examples })` callback returning `{ subjectId?, score? }`. Reports and guesses stay server-only. See [all limits, lifecycle rules and examples](LEARNING.md). No built-in cross-device model is trained or automatically enabled.
+`learning?: false | LearningOptions` is opt-in and requires `identity` plus migrations through `0007_learning_lookup.sql`. With Jev configured, `learning: { enabled: true }` automatically enables its built-in shadow predictor. Use `collectionPolicy: "application"` or trusted `learningConsent: true` to allow collection. `mode: "collect"` disables learning inference. A custom `predict({ current, examples })` callback can replace Jev. `assess()` returns the private `learning` result; browser JSON never includes it. See [learning](LEARNING.md).
 
 ## Native Elixir and optional utilities
 
@@ -262,3 +279,7 @@ LICENSE
 ```
 
 Every package has an ESM export map, strict TypeScript build, version, license, and declaration files. `@janitor/adapters` has three public subpath entrypoints, not three conflicting npm packages. Storage migration files are exported as `@janitor/storage-d1/migrations/0001_visitors.sql` and the corresponding Postgres subpath.
+
+## Optional evaluator capabilities
+
+A custom `VisitorEvaluator` only needs `evaluate`. It can also implement `planLookup(current)`, `evaluateCandidates({ current, candidates })` and `predictIdentity({ current, examples })`. Both Jev transports implement all three. Missing optional methods retain the original behavior: standard indexed lookup, at most three individual candidate evaluations, and collection-only learning unless you supply a custom predictor. All built-in methods share the configured inference protection limits.

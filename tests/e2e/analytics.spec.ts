@@ -1,5 +1,9 @@
 import { test, expect, type Route } from "@playwright/test";
 
+test.beforeEach(async ({ request }) => {
+  expect((await request.post("/test/reset")).ok()).toBe(true);
+});
+
 test("real analytics SDKs link login to their anonymous device, then separate another user on the same browser", async ({
   page,
   browser,
@@ -128,6 +132,37 @@ test("real analytics SDKs link login to their anonymous device, then separate an
   expect(after.posthog).not.toBe("user-b");
   expect(after.mixpanel).not.toBe("user-b");
   expect(after.device).not.toBe(second.device);
+  const measured = await page.evaluate(() =>
+    window.analyticsDemo.janitor.identify("user-c", { plan: "pro" }),
+  );
+  expect(measured.visitorId).toMatch(/^vis_/);
+  await page.evaluate(() =>
+    window.analyticsDemo.janitor.track("checkout opened", { plan: "pro" }),
+  );
+  await expect
+    .poll(() =>
+      mixpanelEvents.some(
+        (e) =>
+          e.event === "checkout opened" &&
+          e.properties.$user_id === "user-c" &&
+          e.properties.janitor_visitor_id === measured.visitorId,
+      ),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      posthogEvents.some(
+        (e) =>
+          e.event === "checkout opened" &&
+          e.properties.distinct_id === "user-c" &&
+          e.properties.janitor_visitor_id === measured.visitorId,
+      ),
+    )
+    .toBe(true);
+  await page.evaluate(() => window.analyticsDemo.janitor.reset());
+  expect(
+    (await page.evaluate(() => window.analyticsDemo.snapshot())).posthog,
+  ).not.toBe("user-c");
   expect(JSON.stringify([mixpanelEvents, posthogEvents])).not.toMatch(
     /janitor_automation|janitor_confidence|collectedSignals/,
   );

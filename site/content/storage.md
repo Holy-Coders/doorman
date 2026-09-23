@@ -18,16 +18,17 @@ The Node and Next.js examples include a migration command:
 pnpm migrate
 ```
 
-For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.7.0 release includes all six:
+For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.8.0 release includes all seven:
 
-| Migration | Creates or changes |
-| --- | --- |
-| `0001_visitors.sql` | Visitor records and browser observations. |
-| `0002_identity.sql` | People, agents, verified keys and delegations. |
-| `0003_learning.sql` | Optional pre-login feedback sessions. |
-| `0004_candidate_lookup.sql` | Indexes for finding plausible previous visitors efficiently. |
-| `0005_protection.sql` | Shared request counters and evaluator budgets. |
-| `0006_evidence.sql` | Verified application events and device associations. |
+| Migration                   | Creates or changes                                              |
+| --------------------------- | --------------------------------------------------------------- |
+| `0001_visitors.sql`         | Visitor records and browser observations.                       |
+| `0002_identity.sql`         | People, agents, verified keys and delegations.                  |
+| `0003_learning.sql`         | Optional pre-login feedback sessions.                           |
+| `0004_candidate_lookup.sql` | Indexes for finding plausible previous visitors efficiently.    |
+| `0005_protection.sql`       | Shared request counters and evaluator budgets.                  |
+| `0006_evidence.sql`         | Verified application events and device associations.            |
+| `0007_learning_lookup.sql`  | Indexed retrieval of login-confirmed sessions for Jev learning. |
 
 Creating an optional feature’s tables does not enable that feature. For an existing large Postgres installation, read the [index migration instructions](../../docs/SCALING.md) before applying lookup indexes to a busy table.
 
@@ -37,12 +38,12 @@ Native Elixir applications use `Janitor.Migration.up()` for a fresh installation
 
 `visitors` holds the random ID, creation time and last-seen time. `observations` holds the normalized browser signals, timestamp and visitor ID. A few columns are indexed so Janitor can find candidates without comparing every visitor:
 
-| Field | Purpose |
-| --- | --- |
-| `platform`, `browser` | Find broadly compatible browser environments. |
-| `timezone`, `webgl_renderer` | Narrow the lookup when these values are available. |
-| `signals_json` | Keep the complete normalized observation, including optional behavior totals. |
-| `seen_at` | Select recent history and enforce retention. |
+| Field                        | Purpose                                                                       |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| `platform`, `browser`        | Find broadly compatible browser environments.                                 |
+| `timezone`, `webgl_renderer` | Narrow the lookup when these values are available.                            |
+| `signals_json`               | Keep the complete normalized observation, including optional behavior totals. |
+| `seen_at`                    | Select recent history and enforce retention.                                  |
 
 D1 stores JSON as text. Postgres uses JSONB. Both delete a visitor’s observations when the visitor record is erased.
 

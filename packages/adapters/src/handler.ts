@@ -13,6 +13,7 @@ import {
 } from "@janitor/core";
 import type {
   LearningStorage,
+  LearningPrediction,
   LearningOptions,
   IdentityStorage,
   VerifiedIdentityContext,
@@ -58,6 +59,8 @@ export type VisitorAssessment = {
   response: Response;
   identity?: VisitorIdentity;
   evidence?: RequestEvidence;
+  /** Private, unverified suggestion. Never used as authenticated identity. */
+  learning?: LearningPrediction;
 };
 export function createVisitorHandler(
   storage: ManagedVisitorStorage,
@@ -107,9 +110,16 @@ export function createVisitorHandler(
     throw new Error(
       "Learning requires explicit enablement, identity configuration and learning storage",
     );
+  const guardedEvaluator =
+    evaluator && protection ? protection.wrap(evaluator) : evaluator;
   const learner =
     options.learning && options.identity && learningStorage
-      ? createLearning(learningStorage, options.identity, options.learning)
+      ? createLearning(
+          learningStorage,
+          options.identity,
+          options.learning,
+          guardedEvaluator,
+        )
       : undefined;
   const linkSubject = options.subjectLinking
     ? createSubjectLinker(options.subjectLinking)
@@ -149,7 +159,7 @@ export function createVisitorHandler(
       ? (options.evaluatorTimeoutMs ?? 1200) + EVALUATOR_STORAGE_GRACE_MS
       : options.evaluatorTimeoutMs,
     storage,
-    evaluator: evaluator && protection ? protection.wrap(evaluator) : evaluator,
+    evaluator: guardedEvaluator,
   });
   const json = (body: unknown, status: number, headers?: HeadersInit) =>
     Response.json(body, {
@@ -164,7 +174,11 @@ export function createVisitorHandler(
   async function processRequest(
     request: Request,
     context: VisitorRequestContext = {},
-    capture?: (identity: VisitorIdentity, evidence: RequestEvidence) => void,
+    capture?: (
+      identity: VisitorIdentity,
+      evidence: RequestEvidence,
+      learning?: LearningPrediction,
+    ) => void,
   ): Promise<Response> {
     if (
       new URL(request.url).pathname !== (options.endpointPath ?? "/api/visitor")
@@ -259,7 +273,7 @@ export function createVisitorHandler(
             ),
           })
         : learningCookies.length
-          ? { maxAge: 0, id: undefined }
+          ? { maxAge: 0, id: undefined, prediction: undefined }
           : undefined;
       const secure = options.cookie?.secure === false ? "" : "; Secure";
       const fullIdentity: VisitorIdentity = {
@@ -267,7 +281,7 @@ export function createVisitorHandler(
         ...(subjectId ? { subjectId } : {}),
         ...(attribution ? { attribution } : {}),
       };
-      capture?.(fullIdentity, trustedEvidence);
+      capture?.(fullIdentity, trustedEvidence, learningCookie?.prediction);
       const response = json(
         options.exposeClientScores === true
           ? fullIdentity
@@ -295,7 +309,11 @@ export function createVisitorHandler(
   async function handle(
     request: Request,
     context?: VisitorRequestContext,
-    capture?: (identity: VisitorIdentity, evidence: RequestEvidence) => void,
+    capture?: (
+      identity: VisitorIdentity,
+      evidence: RequestEvidence,
+      learning?: LearningPrediction,
+    ) => void,
   ): Promise<Response> {
     if (inFlight >= maxInFlight) {
       try {
@@ -324,13 +342,21 @@ export function createVisitorHandler(
     ): Promise<VisitorAssessment> {
       let identity: VisitorIdentity | undefined;
       let evidence: RequestEvidence | undefined;
-      const response = await handle(request, context, (result, trusted) => {
-        identity = result;
-        evidence = trusted;
-      });
+      let learning: LearningPrediction | undefined;
+      const response = await handle(
+        request,
+        context,
+        (result, trusted, prediction) => {
+          learning = prediction;
+          identity = result;
+          evidence = trusted;
+        },
+      );
       return {
         response,
-        ...(response.ok && identity ? { identity, evidence } : {}),
+        ...(response.ok && identity
+          ? { identity, evidence, ...(learning ? { learning } : {}) }
+          : {}),
       };
     },
     identities,

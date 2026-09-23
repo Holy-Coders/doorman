@@ -6,7 +6,7 @@ Use Postgres when you expect a large amount of retained history. D1 remains an o
 
 ## Does a limit of ten miss the rest of the database?
 
-Ten is the number of visitors sent to the matching engine, not the number of visitors the database can contain. Several indexed lookups first return a larger pool. Janitor ranks that pool before selecting ten visitors and asking Jev about at most three.
+Ten is the number of visitors sent to the matching engine, not the number of visitors the database can contain. Several indexed lookups first return a larger pool. Janitor ranks that pool before selecting ten visitors and asking Jev about that shortlist in one batched request.
 
 This keeps request work predictable, but it is not an exhaustive search. An older match can fall outside the lookup windows. When a group is too crowded to distinguish safely, Janitor can decline to restore an ID rather than force a match.
 
@@ -27,7 +27,7 @@ A **probe** is an indexed lookup using one combination of browser signals. Each 
 
 Screen orientation is normalized before lookup. Missing fields simply omit a probe. Risk, behavior, IP addresses and account IDs are not part of these browser-identity indexes. There is no immutable fingerprint hash standing in for a visitor ID.
 
-At most 606 rows enter deterministic scoring. Obvious contradictions and weak matches are removed; observations are deduplicated by visitor; the best ten are selected by similarity, then recency and ID. Five recent observations per selected visitor are loaded using one Postgres `LATERAL` query or one D1 binding batch. Custom storage can retain the original single-history method. Jev evaluates at most three histories; valid cookies skip global retrieval entirely.
+At most 606 rows enter deterministic scoring per lookup pass. With planning enabled, an empty restricted lookup can trigger one standard fallback pass (at most 1,212 rows across both). Obvious contradictions and weak matches are removed; observations are deduplicated by visitor; the best ten are selected by similarity, then recency and ID. Five recent observations per selected visitor are loaded using one Postgres `LATERAL` query or one D1 binding batch. Custom storage can retain the original single-history method. Jev evaluates up to ten histories in one batch; valid cookies skip global retrieval entirely.
 
 If every bucket containing a selected candidate was saturated, restoration abstains even if Jev reports high confidence. Common indistinguishable browsers can remain impossible to separate. A complete matching bucket is a retrieval safeguard, not mathematical proof of uniqueness. Bounded search can miss older matches; expired observations are intentionally ignored. Report recall, false merges and abstentions separately.
 

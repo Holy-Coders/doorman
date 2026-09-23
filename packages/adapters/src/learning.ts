@@ -4,6 +4,7 @@ import type {
   LearningPrediction,
   LearningStorage,
   NormalizedObservation,
+  VisitorEvaluator,
 } from "@janitor/core";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
@@ -12,11 +13,14 @@ export function createLearning(
   storage: LearningStorage,
   identity: SubjectLinkingOptions,
   options: LearningOptions,
+  evaluator?: VisitorEvaluator,
 ) {
   const retention = options.retentionDays ?? 30;
   const sessionMinutes = options.sessionMinutes ?? 30;
   const timeoutMs = options.evaluatorTimeoutMs ?? 1200;
-  const mode = options.mode ?? "collect";
+  const predictor =
+    options.predict ?? evaluator?.predictIdentity?.bind(evaluator);
+  const mode = options.mode ?? (predictor ? "shadow" : "collect");
   if (
     !["per-request", "application"].includes(
       options.collectionPolicy ?? "per-request",
@@ -37,11 +41,11 @@ export function createLearning(
     throw new Error("Invalid learning limits");
   if (
     !["collect", "shadow"].includes(mode) ||
-    (mode === "shadow" && typeof options.predict !== "function") ||
+    (mode === "shadow" && !predictor) ||
     (mode === "collect" && options.predict)
   )
     throw new Error(
-      "Shadow learning requires an explicit predictor; collect mode does not run one",
+      "Shadow learning requires Jev or a predictor; collect mode does not run one",
     );
   const scope = createSubjectLinker(identity)("janitor-learning-scope-v1");
   const validSession = (id?: string) =>
@@ -57,7 +61,11 @@ export function createLearning(
   ): Promise<LearningPrediction> {
     if (mode !== "shadow") return { status: "not-run" };
     // No previous predictions are supplied as evidence. Only completed verified flows.
-    const examples = (await reports()).map(
+    const pool = storage.findExamples
+      ? await storage.findExamples(await scope, current, cutoff())
+      : { examples: await reports(), saturated: false };
+    if (pool.saturated) return { status: "abstained" };
+    const examples = pool.examples.map(
       ({ sessionId, subjectId, observation, observedAt, verifiedAt }) => ({
         sessionId,
         subjectId,
@@ -70,7 +78,7 @@ export function createLearning(
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const answer = await Promise.race([
-        Promise.resolve().then(() => options.predict!({ current, examples })),
+        Promise.resolve().then(() => predictor!({ current, examples })),
         new Promise<never>((_, reject) => {
           timer = setTimeout(() => reject(new Error("timeout")), timeoutMs);
         }),
@@ -104,7 +112,11 @@ export function createLearning(
       authenticated: boolean;
       attribution?: IdentityAttribution;
       observation: NormalizedObservation;
-    }): Promise<{ id?: string; maxAge: number }> {
+    }): Promise<{
+      id?: string;
+      maxAge: number;
+      prediction?: LearningPrediction;
+    }> {
       const currentScope = await scope;
       const id = validSession(input.sessionId);
       if (!input.allowed) {
@@ -166,6 +178,7 @@ export function createLearning(
       else await storage.insertSession(session);
       return {
         id: session.id,
+        prediction: session.prediction,
         maxAge: Math.max(
           0,
           Math.floor((session.expiresAt - Date.now()) / 1000),

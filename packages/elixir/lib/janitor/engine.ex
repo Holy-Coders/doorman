@@ -17,7 +17,27 @@ defmodule Janitor.Engine do
         {evaluation, latency} = evaluate(c, history, current, score)
         {context.visitor_id, 1, true, score, 0, evaluation, not is_nil(evaluation), latency}
       else
-        candidates = Storage.candidates(c, current)
+        scope =
+          if is_list(c.evaluator) and c.lookup_planning do
+            case Janitor.Protection.evaluate(
+                   c,
+                   fn -> Janitor.Jev.plan_lookup(current, c.evaluator) end,
+                   &is_map/1
+                 ) do
+              {:ok, value} -> value
+              _ -> %{}
+            end
+          else
+            %{}
+          end
+
+        found = Storage.candidates(c, current, scope)
+
+        candidates =
+          if found == [] and Enum.any?(Map.values(scope), &(&1 == false)),
+            do: Storage.candidates(c, current),
+            else: found
+
         histories = Storage.histories(c, Enum.map(candidates, & &1["visitor_id"]))
 
         ranked =
@@ -49,11 +69,33 @@ defmodule Janitor.Engine do
           |> Enum.filter(&(&1.score >= @candidate_floor))
           |> Enum.sort_by(&{-&1.score, -&1.seen, &1.id})
 
+        selected = Enum.take(ranked, if(is_list(c.evaluator), do: 10, else: @evaluation_limit))
+        batch_started = System.monotonic_time(:millisecond)
+
+        batch =
+          if selected != [] and is_list(c.evaluator) do
+            case Janitor.Protection.evaluate(
+                   c,
+                   fn -> Janitor.Jev.evaluate_candidates(current, selected, c.evaluator) end,
+                   &is_list/1
+                 ) do
+              {:ok, value} -> value
+              _ -> []
+            end
+          else
+            []
+          end
+
+        batch_latency = System.monotonic_time(:millisecond) - batch_started
+
         evaluated =
-          ranked
-          |> Enum.take(@evaluation_limit)
-          |> Enum.map(fn candidate ->
-            {result, latency} = evaluate(c, candidate.history, current, candidate.score)
+          selected
+          |> Enum.with_index()
+          |> Enum.map(fn {candidate, index} ->
+            {result, latency} =
+              if is_list(c.evaluator),
+                do: {Enum.at(batch, index), if(index == 0, do: batch_latency, else: 0)},
+                else: evaluate(c, candidate.history, current, candidate.score)
 
             confidence =
               min(

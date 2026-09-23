@@ -4,18 +4,20 @@ Janitor’s tests check whether the implementation behaves as documented: matchi
 
 ## What is verified
 
-The v0.7.0 release passed these checks on September 23, 2026:
+The v0.8.0 release passed these checks on September 23, 2026:
 
-| Area | Evidence |
-| --- | --- |
-| TypeScript library | 204 tests across twelve files, plus strict typechecking and lint. |
-| Native Elixir | 51 tests against Postgres, plus a Phoenix endpoint test. |
-| Browser integration | Two Chromium tests, including real PostHog and Mixpanel browser SDKs with analytics traffic intercepted locally. |
-| Public site | Browser tests cover matching demos, navigation, copy controls, mobile layout and motion fallbacks. |
-| Examples | Next.js production build, Cloudflare dry-run build and native Phoenix migrations pass. |
-| Installation | All seven JavaScript archives install in isolated npm, pnpm and Bun projects. The Elixir package builds as a Hex-format archive. |
+| Area                | Evidence                                                                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| TypeScript library  | 223 tests across thirteen files, plus strict typechecking and lint.                                                                                                                              |
+| Native Elixir       | 52 tests against Postgres, plus a Phoenix endpoint test.                                                                                                                                         |
+| Browser integration | Two Chromium tests, including real PostHog and Mixpanel browser SDKs with analytics traffic intercepted locally.                                                                                 |
+| Public site         | Browser tests cover matching demos, navigation, copy controls, mobile layout and motion fallbacks.                                                                                               |
+| Examples            | Next.js production build, Cloudflare dry-run build and native Phoenix migrations pass.                                                                                                           |
+| Installation        | All seven v0.8.0 JavaScript archives install in isolated npm, pnpm and Bun projects; new client/evaluator exports and migration 0007 resolve. The Elixir package builds as a Hex-format archive. |
 
 The database contract tests execute real SQL using embedded Postgres (PGlite) and Cloudflare’s local D1 runtime (Miniflare). Core matching is not mocked. External Jev and analytics responses are mocked or intercepted so automated tests do not make paid inference calls or send test users to analytics projects.
+
+New checks cover bounded lookup planning, ten-candidate batch matching, cold-start/ambiguity abstention, private Jev learning on both databases, shared inference budgets and asynchronous analytics logout races. The real SDK integration also exercises `createJanitorClient` events and identity transitions. External inference remains mocked; these checks establish implementation behavior, not cross-device or bot-detection accuracy.
 
 The September 23 website and documentation refresh also passed 13 browser tests, including the introductory reading path and internal links across all documentation pages. The static build produces 31 HTML pages.
 
@@ -25,11 +27,11 @@ See the [latest CI runs](https://github.com/Holy-Coders/janitor/actions) and [de
 
 The benchmarks answer different questions. Keep their results separate:
 
-| Benchmark | What it tests | What it does not establish |
-| --- | --- | --- |
-| [Controlled browser visits](BENCHMARKS.md) | Browser signals and recovery after controlled changes. | Accuracy across a representative real-user population. |
-| [Millions of stored observations](SCALING.md) | Indexed candidate lookup and history-read latency. | Sustained production throughput or correct person identity. |
-| [Connection and workload tests](CAPACITY.md) | Open connections, successful responses, overload and recovery. | 200,000 simultaneous successful identifications or real Jev capacity. |
+| Benchmark                                     | What it tests                                                  | What it does not establish                                            |
+| --------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Controlled browser visits](BENCHMARKS.md)    | Browser signals and recovery after controlled changes.         | Accuracy across a representative real-user population.                |
+| [Millions of stored observations](SCALING.md) | Indexed candidate lookup and history-read latency.             | Sustained production throughput or correct person identity.           |
+| [Connection and workload tests](CAPACITY.md)  | Open connections, successful responses, overload and recovery. | 200,000 simultaneous successful identifications or real Jev capacity. |
 
 The browser experiment includes a false match between indistinguishable profiles. The connection experiment includes controlled `503` overload responses. Those are part of the findings, not successes hidden inside headline counts.
 
@@ -66,6 +68,6 @@ The [Elixir guide](../packages/elixir/README.md) explains its Postgres test setu
 
 ## What is published
 
-The public source, documentation site and [v0.7.0 GitHub archives](https://github.com/Holy-Coders/janitor/releases/tag/v0.7.0) are available. npm publication requires release-account verification, and Hex publication requires an authenticated account; neither registry is claimed as published. Use the [documented GitHub installation paths](LANGUAGES.md).
+The public source, documentation site and [v0.8.0 GitHub archives](https://github.com/Holy-Coders/janitor/releases/tag/v0.8.0) are available. npm publication requires release-account verification, and Hex publication requires an authenticated account; neither registry is claimed as published. Use the [documented GitHub installation paths](LANGUAGES.md).
 
 Installing the library does not create a hosted identity endpoint or configure your analytics project. Those run in your application. Live provider ingestion, real-user risk calibration and your production capacity need verification in that environment.

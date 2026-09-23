@@ -1,3 +1,9 @@
+import type {
+  LookupScope,
+  CandidateEvaluationInput,
+  CrossDeviceInput,
+  CrossDevicePrediction,
+} from "./intelligence.js";
 import type { IdentityAttribution } from "./identity.js";
 export type BrowserObservation = {
   userAgent?: string;
@@ -79,6 +85,7 @@ export interface VisitorStorage {
   findCandidates(
     observation: NormalizedObservation,
     limit: number,
+    scope?: LookupScope,
   ): Promise<VisitorCandidate[]>;
   getRecentObservations(
     visitorId: string,
@@ -109,6 +116,9 @@ export type Evaluation = {
 };
 export interface VisitorEvaluator {
   evaluate(input: EvaluationInput): Promise<Evaluation>;
+  planLookup?(current: NormalizedObservation): Promise<LookupScope>;
+  evaluateCandidates?(input: CandidateEvaluationInput): Promise<Evaluation[]>;
+  predictIdentity?(input: CrossDeviceInput): Promise<CrossDevicePrediction>;
 }
 
 export type RetentionOptions = {

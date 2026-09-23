@@ -2,24 +2,28 @@
 
 Suppose a visitor browses your app anonymously and then signs in. That login gives you a verified account label for the short session leading up to it. Janitor can optionally save those examples in your database so you can study whether past visits help predict later logins.
 
-This feature collects feedback. It does not train Jev automatically or identify anonymous people across devices out of the box. You can supply a predictor and compare its guesses with actual logins without using those guesses to change access. This is called **shadow mode**.
+With Jev configured, Janitor now uses those examples automatically to evaluate later anonymous visits, including visits from another device. You do not need to write a predictor. The result is a private suggestion, separate from a verified login. Predictions are recorded before the person signs in so you can compare them with the eventual login. This is called **shadow mode**.
 
-Browser recognition, user updates and risk scoring all work with this feature off. Enable it only if you want to run this experiment. First set up the [identity directory](AGENTIC-IDENTITY.md); it supplies the verified user labels.
+This is learning from a growing history of confirmed sessions, not retraining Jev. A brand-new installation has no person history. Jev cannot know who an anonymous person is just because it is enabled.
+
+Browser recognition, user updates and risk scoring all work with this feature off. Enable it when your application wants to collect login feedback and evaluate these suggestions. First set up the [identity directory](AGENTIC-IDENTITY.md); it supplies the verified user labels.
 
 ## Enable collection explicitly
 
-Apply `0003_learning.sql` after the visitor and identity migrations. Configure the identity directory and opt in on the server:
+Apply all migrations through `0007_learning_lookup.sql`; the last migration adds indexes for learning retrieval. Configure the identity directory and opt in on the server:
 
 ```ts
 const visitor = createNodeVisitor({
   db,
+  evaluator: { apiKey: process.env.JEV_API_KEY! },
   identity: {
     secret: process.env.JANITOR_IDENTITY_SECRET!,
     namespace: "my-app",
   },
   learning: {
     enabled: true,
-    mode: "collect", // Default; no prediction or extra Jev calls.
+    collectionPolicy: "application", // No separate per-request flag required.
+    // With Jev configured, shadow predictions are automatic.
     retentionDays: 30,
     sessionMinutes: 30,
   },
@@ -80,9 +84,44 @@ const examples = await visitor.learning!.reports(100); // Limit 1–100.
 
 Reports contain recent, undisputed, verified examples only. Treat this export as sensitive pseudonymous data. Do not expose it through a public endpoint or send it to ordinary logs. Only opaque subject IDs are stored here; verified key values and raw emails are not included.
 
-## Optional shadow predictions
+## Read a cross-device suggestion
 
-For an experiment, supply your own predictor. It may use Jev, a local classifier, or a deterministic baseline; the default browser-history evaluator does not implement this separate task.
+```ts
+const assessment = await visitor.assess(request, trustedContext);
+console.log(assessment.learning);
+// { status: "suggested", subjectId: "sub_...", score: 0.96 }
+// or { status: "abstained" | "not-run" | "unavailable" }
+return assessment.response; // The suggestion is not in this browser response.
+```
+
+In Phoenix the same result is in `conn.assigns.janitor_learning` after `Janitor.handle`. Enable it with:
+
+```elixir
+Janitor.new(
+  repo: MyApp.Repo,
+  evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
+  identity: [secret: System.fetch_env!("JANITOR_IDENTITY_SECRET"), namespace: "my-app"],
+  learning: [enabled: true, collection_policy: :application]
+)
+```
+
+The server must still report verified logins as shown above. The [Janitor browser client](ANALYTICS.md) calls the measurement endpoint again when you call `janitor.identify(user.id)` after login.
+
+## How Jev uses the history
+
+1. Two indexed queries retrieve login-confirmed sessions with a matching normalized language bucket or timezone within your application namespace. These are search hints, not person-identity proof. Each query reads at most 101 rows.
+2. If either bucket or the combined unique set exceeds 100 sessions, Janitor abstains. It does not guess from a crowded, truncated cohort. This favors missed suggestions over false person links; common locales in a large application may often abstain.
+3. Janitor groups the retained examples into at most ten people and sends up to three examples per person. A person needs at least two independently confirmed sessions. If more than ten people qualify, Janitor abstains instead of hiding alternatives from the model. Previous predictions never become examples.
+4. Jev answers one typed question per candidate person in a single request. It is asked to allow device changes and to treat matching locale alone as insufficient evidence.
+5. A suggestion needs a score of at least `0.90` and a `0.10` lead over alternatives. Otherwise it abstains. These are experimental thresholds, not measured accuracy guarantees.
+
+Only compact observations and observation times enter the model. Persistent subject IDs and session IDs are replaced with request-local array indexes and mapped back on your server. Protected adapters share the same inference quota across lookup planning, browser evaluation and learning.
+
+A suggestion never merges an analytics profile, populates authenticated `subjectId`, grants a permission or changes browser matching. A verified login remains the point at which Janitor connects the known person across devices in PostHog, Mixpanel or Segment.
+
+## Collection only or a custom predictor
+
+Set `mode: "collect"` to save feedback without making learning inference calls. Without Jev or a custom predictor, collection is the default. To replace Jev's cross-device evaluation, supply a callback:
 
 ```ts
 learning: {
@@ -97,7 +136,7 @@ learning: {
 }
 ```
 
-The predictor receives at most 100 recent examples whose users later signed in. Janitor keeps up to 20 examples for each user. Previous predictions are removed from its input. Without examples, it abstains without calling the predictor. This is a small recent sample, so an account outside that sample cannot be predicted.
+A custom predictor receives the bounded indexed cohort (at most 100 examples), without previous predictions. Janitor keeps up to 20 confirmed sessions per person. Custom storage without `findExamples` can fall back to its bounded `reports` method. A person outside the retrieved cohort cannot be predicted.
 
 Predictions are recorded before login and compared with the subsequently verified account in `reports()`. They never populate browser responses, authenticate a person, merge subjects, affect visitor matching, change risk scores, or grant permissions. Scores are uncalibrated. Unknown subject IDs, out-of-range values, exceptions and timeout produce `prediction.status: "unavailable"`; returning `{}` produces `"abstained"`. Collection mode records `"not-run"`.
 

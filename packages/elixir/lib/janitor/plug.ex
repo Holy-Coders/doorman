@@ -48,7 +48,7 @@ defmodule Janitor.Plug do
             learning_cookie =
               if c.learning,
                 do: Janitor.Learning.observe(c, learning_id, context, identity, payload),
-                else: {nil, 0}
+                else: {nil, 0, nil}
 
             conn =
               put_resp_cookie(
@@ -58,7 +58,7 @@ defmodule Janitor.Plug do
                 cookie_opts(c, c.cookie_max_age_days * 86400)
               )
 
-            {next_id, max_age} = learning_cookie
+            {next_id, max_age, prediction} = learning_cookie
 
             conn =
               if next_id || learning_id,
@@ -87,6 +87,7 @@ defmodule Janitor.Plug do
 
             conn
             |> assign(:janitor_identity, identity)
+            |> assign(:janitor_learning, prediction)
             |> assign(:janitor_evidence, evidence)
             |> reply(200, public)
 

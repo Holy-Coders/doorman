@@ -87,7 +87,7 @@
       {
         "slug": "analytics",
         "title": "PostHog, Mixpanel & Segment",
-        "description": "Connect anonymous visits to logins and report on people, agents and accounts.",
+        "description": "Manage identify, profile updates, events and logout through one Janitor client.",
         "source": "docs/ANALYTICS.md"
       },
       {
@@ -145,7 +145,7 @@
       {
         "slug": "learning",
         "title": "Learn from later logins",
-        "description": "Optionally label anonymous visits when a user signs in.",
+        "description": "Use Jev to evaluate cross-device suggestions from login-confirmed history.",
         "source": "docs/LEARNING.md"
       },
       {

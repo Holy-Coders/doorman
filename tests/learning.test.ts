@@ -12,6 +12,7 @@ import {
   type LearningStorage,
   type LearningSession,
 } from "@janitor/core";
+import { createJevMethods } from "@janitor/evaluator-jev";
 import { signals } from "./helpers/fixtures.js";
 
 const request = (cookie = "", observation = signals, extra = {}) =>
@@ -58,6 +59,7 @@ for (const backend of ["postgres", "d1"] as const) {
           "0002_identity",
           "0003_learning",
           "0004_candidate_lookup",
+          "0007_learning_lookup",
         ].map((name) =>
           readFile(
             new URL(
@@ -90,6 +92,83 @@ for (const backend of ["postgres", "d1"] as const) {
     afterAll(async () => {
       await pg?.close();
       await mf?.dispose();
+    });
+
+    it("uses Jev by default after two verified flows and returns suggestions only to the server", async () => {
+      const evaluate = vi.fn(
+        async (input: { questions: Record<string, unknown> }) => ({
+          answers: Object.fromEntries(
+            Object.keys(input.questions).map((k) => [
+              k,
+              { type: "noul", noul: k.startsWith("person") ? 0.97 : 0.1 },
+            ]),
+          ),
+        }),
+      );
+      const options = {
+        identity: {
+          secret: "l".repeat(64),
+          namespace: `built-in-${++namespace}`,
+        },
+        learning: {
+          enabled: true as const,
+          collectionPolicy: "application" as const,
+        },
+      };
+      const visitor =
+        backend === "postgres"
+          ? createNodeVisitor({
+              db: pg,
+              evaluator: createJevMethods(evaluate),
+              ...options,
+            })
+          : createCloudflareVisitor({
+              db,
+              ai: { run: async (_model, input) => evaluate(input) },
+              ...options,
+            });
+      const owner = await visitor.identities!.updateSubject({
+        id: "alex",
+        kind: "person",
+      });
+      for (let i = 0; i < 2; i++) {
+        const anon = await visitor.handle(request());
+        await visitor.handle(request(cookie(anon)), {
+          verified: { subjectId: owner.id, actorId: owner.id },
+        });
+      }
+      const result = await visitor.assess(request());
+      expect(result.learning).toEqual({
+        status: "suggested",
+        subjectId: owner.id,
+        score: 0.97,
+      });
+      expect(result.identity?.attribution?.subject.status).toBe("unknown");
+      expect(await result.response.json()).toEqual({
+        visitorId: result.identity!.visitorId,
+        isReturning: result.identity!.isReturning,
+      });
+      const other =
+        backend === "postgres"
+          ? createNodeVisitor({
+              db: pg,
+              evaluator: createJevMethods(evaluate),
+              ...options,
+              identity: { ...options.identity, namespace: "different-tenant" },
+            })
+          : createCloudflareVisitor({
+              db,
+              ai: { run: async (_model, input) => evaluate(input) },
+              ...options,
+              identity: { ...options.identity, namespace: "different-tenant" },
+            });
+      expect((await other.assess(request())).learning).toEqual({
+        status: "abstained",
+      });
+      const denied = await visitor.assess(request(cookie(result.response)), {
+        learningConsent: false,
+      });
+      expect(denied.learning).toBeUndefined();
     });
 
     it("requires both configuration and server-side session permission", async () => {

@@ -1,7 +1,11 @@
 import { writeFileSync, mkdirSync, copyFileSync } from "node:fs";
 import { z } from "zod";
 import { payloadSchema } from "../packages/adapters/src/validation.js";
-import { JEV_QUESTIONS, createJevInput } from "@janitor/evaluator-jev";
+import {
+  JEV_QUESTIONS,
+  INTELLIGENCE_QUESTIONS,
+  createJevInput,
+} from "@janitor/evaluator-jev";
 import {
   normalizeObservation,
   calculateSimilarity,
@@ -89,6 +93,10 @@ const shared = {
   ),
 };
 for (const dir of ["protocol", "packages/elixir/priv"]) {
+  writeFileSync(
+    `${dir}/jev-intelligence.json`,
+    JSON.stringify(INTELLIGENCE_QUESTIONS, null, 2) + "\n",
+  );
   mkdirSync(dir, { recursive: true });
   writeFileSync(
     `${dir}/payload.schema.json`,
@@ -110,6 +118,7 @@ for (const migration of [
   "0004_candidate_lookup",
   "0005_protection",
   "0006_evidence",
+  "0007_learning_lookup",
 ])
   copyFileSync(
     `packages/storage/postgres/migrations/${migration}.sql`,
@@ -150,7 +159,7 @@ writeFileSync(
       openapi: "3.1.0",
       info: {
         title: "Janitor first-party browser protocol",
-        version: "0.7.0",
+        version: "0.8.0",
         description:
           "Self-hosted by each implementer. Measurements never establish authenticated account claims.",
       },

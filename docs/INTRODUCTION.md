@@ -30,7 +30,7 @@ The client needs a Janitor server endpoint and database behind it. Follow [your 
 
 ## What Jev adds
 
-**Jev** is an AI model made by TypeSafe. Janitor can ask it whether a browser fits its past history, whether a session looks automated, and whether the technical signals look inconsistent. Jev returns a score between 0 and 1 for each question.
+**Jev** is an AI model made by TypeSafe. Janitor can ask it whether a browser fits its past history, whether a session looks automated, and whether the technical signals look inconsistent. Jev returns a score between 0 and 1 for each question. It also helps choose bounded lookup paths and, when learning is enabled, compares anonymous visits with earlier login-confirmed sessions to suggest a person across devices. Suggestions remain separate from verified logins.
 
 Jev is optional. Without it, Janitor uses its built-in comparison rules for browser matching and marks risk as disabled. If an enabled evaluator fails, matching falls back to those rules and risk is marked unavailable.
 
@@ -48,12 +48,12 @@ Janitor does not infer those permissions from mouse movements or an AI score. Yo
 
 You can use each feature as you need it:
 
-| You want to… | Start with… |
-| --- | --- |
-| Recognize returning browsers | [The local example](GETTING-STARTED.md) |
-| Understand the optional risk scores | [Jev and risk scoring](JEV.md) |
-| Connect a signed-in user across devices | [People and agents](AGENTIC-IDENTITY.md) |
-| Connect visits to product analytics | [PostHog and Mixpanel](ANALYTICS.md) |
-| Decide what data to collect and keep | [Privacy](../PRIVACY.md) and [storage](../site/content/storage.md) |
+| You want to…                            | Start with…                                                        |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| Recognize returning browsers            | [The local example](GETTING-STARTED.md)                            |
+| Understand the optional risk scores     | [Jev and risk scoring](JEV.md)                                     |
+| Connect a signed-in user across devices | [People and agents](AGENTIC-IDENTITY.md)                           |
+| Connect visits to product analytics     | [PostHog and Mixpanel](ANALYTICS.md)                               |
+| Decide what data to collect and keep    | [Privacy](../PRIVACY.md) and [storage](../site/content/storage.md) |
 
 Janitor is a developer preview. Its matching and risk scores are experimental. Use your existing authentication and authorization to protect accounts and sensitive actions.

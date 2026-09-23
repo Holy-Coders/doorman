@@ -10,3 +10,5 @@ export * from "./evaluation.js";
 export * from "./candidates.js";
 export * from "./protection.js";
 export * from "./evidence.js";
+
+export * from "./intelligence.js";

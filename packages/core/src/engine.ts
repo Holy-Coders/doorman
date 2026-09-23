@@ -1,3 +1,8 @@
+import {
+  attemptEvaluation,
+  isLookupScope,
+  isCandidateEvaluations,
+} from "./intelligence.js";
 import { normalizeObservation } from "./normalize.js";
 import {
   calculateSimilarity,
@@ -27,6 +32,8 @@ export const MATCHING_DEFAULTS = {
 } as const;
 export type IdentifyMetrics = {
   candidateCount: number;
+  lookupPlanned: boolean;
+  candidatesEvaluated: number;
   lookupSaturated: boolean;
   deterministicScore: number;
   finalConfidence: number;
@@ -40,6 +47,8 @@ export type EngineOptions = {
   evaluator?: VisitorEvaluator;
   evaluatorTimeoutMs?: number;
   restoreThreshold?: number;
+  /** Jev may choose fixed indexed probe families before a missing-cookie lookup. */
+  lookupPlanning?: boolean;
   debug?: boolean;
   onMetrics?: (metrics: IdentifyMetrics) => void;
 };
@@ -75,20 +84,11 @@ export function createVisitorEngine(options: EngineOptions) {
     input: EvaluationInput,
   ): Promise<Evaluation | undefined> {
     if (!evaluator) return undefined;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const result = await Promise.race([
-        Promise.resolve().then(() => evaluator.evaluate(input)),
-        new Promise<undefined>((resolve) => {
-          timer = setTimeout(() => resolve(undefined), timeout);
-        }),
-      ]);
-      return isEvaluation(result) ? result : undefined;
-    } catch {
-      return undefined;
-    } finally {
-      clearTimeout(timer);
-    }
+    return attemptEvaluation(
+      () => evaluator.evaluate(input),
+      timeout,
+      isEvaluation,
+    );
   }
 
   return {
@@ -100,6 +100,8 @@ export function createVisitorEngine(options: EngineOptions) {
     }): Promise<VisitorIdentity> {
       const current = normalizeObservation(input.signals, input.behavior);
       let candidateCount = 0;
+      let lookupPlanned = false;
+      let candidatesEvaluated = 0;
       let lookupSaturated = false;
       let deterministicScore = 0;
       let evaluatorUsed = false;
@@ -159,12 +161,27 @@ export function createVisitorEngine(options: EngineOptions) {
           });
           useRisk(result);
         } else {
-          const candidates = (
-            await storage.findCandidates(
+          const scope =
+            options.lookupPlanning !== false && evaluator?.planLookup
+              ? await attemptEvaluation(
+                  () => evaluator.planLookup!(current),
+                  timeout,
+                  isLookupScope,
+                )
+              : undefined;
+          lookupPlanned = !!scope;
+          let found = await storage.findCandidates(
+            current,
+            MATCHING_DEFAULTS.candidateLimit,
+            scope,
+          );
+          // A planner cannot turn an empty restricted search into evidence of a new browser.
+          if (!found.length && scope && (!scope.graphics || !scope.locale))
+            found = await storage.findCandidates(
               current,
               MATCHING_DEFAULTS.candidateLimit,
-            )
-          ).slice(0, MATCHING_DEFAULTS.candidateLimit);
+            );
+          const candidates = found.slice(0, MATCHING_DEFAULTS.candidateLimit);
           const unique = [
             ...new Map(
               candidates.map((candidate) => [candidate.visitorId, candidate]),
@@ -214,24 +231,57 @@ export function createVisitorEngine(options: EngineOptions) {
                 b.lastSeenAt - a.lastSeenAt ||
                 a.visitorId.localeCompare(b.visitorId),
             );
+          const selected = ranked.slice(
+            0,
+            evaluator?.evaluateCandidates
+              ? MATCHING_DEFAULTS.candidateLimit
+              : MATCHING_DEFAULTS.evaluationLimit,
+          );
+          const batchStarted = Date.now();
+          const batch =
+            selected.length && evaluator?.evaluateCandidates
+              ? await attemptEvaluation(
+                  () =>
+                    evaluator.evaluateCandidates!({
+                      current,
+                      candidates: selected.map((c) => ({
+                        history: c.history,
+                        deterministicSimilarity: c.score,
+                      })),
+                    }),
+                  timeout,
+                  isCandidateEvaluations,
+                )
+              : undefined;
+          const validBatch =
+            batch?.length === selected.length ? batch : undefined;
+          if (evaluator?.evaluateCandidates && selected.length) {
+            evaluatorLatency = Math.max(
+              evaluatorLatency,
+              Date.now() - batchStarted,
+            );
+            evaluatorUsed ||= !!validBatch;
+          }
+          candidatesEvaluated = evaluator ? selected.length : 0;
           const evaluated = await Promise.all(
-            ranked
-              .slice(0, MATCHING_DEFAULTS.evaluationLimit)
-              .map(async (candidate) => {
-                const result = await run({
-                  history: candidate.history,
-                  current,
-                  deterministicSimilarity: candidate.score,
-                });
-                const confidence = Math.min(
-                  candidate.cap,
-                  result
-                    ? candidate.score * MATCHING_DEFAULTS.deterministicWeight +
-                        result.sameVisitor * MATCHING_DEFAULTS.evaluatorWeight
-                    : candidate.score,
-                );
-                return { ...candidate, result, confidence };
-              }),
+            selected.map(async (candidate, index) => {
+              // A failed batch falls back locally; do not amplify an outage with retries.
+              const result = evaluator?.evaluateCandidates
+                ? validBatch?.[index]
+                : await run({
+                    history: candidate.history,
+                    current,
+                    deterministicSimilarity: candidate.score,
+                  });
+              const confidence = Math.min(
+                candidate.cap,
+                result
+                  ? candidate.score * MATCHING_DEFAULTS.deterministicWeight +
+                      result.sameVisitor * MATCHING_DEFAULTS.evaluatorWeight
+                  : candidate.score,
+              );
+              return { ...candidate, result, confidence };
+            }),
           );
           evaluated.sort(
             (a, b) =>
@@ -291,6 +341,8 @@ export function createVisitorEngine(options: EngineOptions) {
         try {
           options.onMetrics?.({
             candidateCount,
+            lookupPlanned,
+            candidatesEvaluated,
             lookupSaturated,
             deterministicScore,
             finalConfidence: confidence,

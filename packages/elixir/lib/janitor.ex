@@ -4,6 +4,7 @@ defmodule Janitor do
             prefix: "janitor",
             evaluator: nil,
             evaluator_timeout_ms: 1200,
+            lookup_planning: true,
             restore_threshold: 0.9,
             observation_retention_days: 90,
             max_observations_per_visitor: 10,
@@ -63,6 +64,9 @@ defmodule Janitor do
              byte_size(config.endpoint_path) <= 256 and
              not String.contains?(config.endpoint_path, ["?", "#", " "]),
            do: raise(ArgumentError, "invalid endpoint path")
+
+    unless is_boolean(config.lookup_planning),
+      do: raise(ArgumentError, "invalid lookup planning option")
 
     unless is_nil(config.evaluator) or is_function(config.evaluator, 1) or
              (is_list(config.evaluator) and Keyword.keyword?(config.evaluator) and

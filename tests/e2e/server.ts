@@ -12,6 +12,10 @@ await db.exec(
   ),
 );
 const app = createApp(db, { origin: "http://127.0.0.1:4318" });
+app.post("/test/reset", async () => {
+  await db.exec("TRUNCATE visitors CASCADE");
+  return { ok: true };
+});
 app.get("/analytics-test", async (_request, reply) =>
   reply
     .type("text/html")

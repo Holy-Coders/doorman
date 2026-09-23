@@ -216,3 +216,36 @@ it("records a server agent without manufacturing browser identity or a zero risk
   ])
     expect(properties).not.toHaveProperty(field);
 });
+
+it("serializes asynchronous Segment resets and drops events racing with logout", async () => {
+  const calls: string[] = [];
+  let release!: () => void;
+  const segment = {
+    identify: vi.fn(async (id: string) => {
+      calls.push(id);
+    }),
+    reset: vi.fn(async () => {
+      await new Promise<void>((r) => {
+        release = r;
+      });
+      calls.push("reset");
+    }),
+    track: vi.fn(),
+  };
+  const bridge = createIdentityAnalytics({ segment });
+  bridge.identifyUser("alex");
+  await bridge.flush();
+  bridge.identifyUser("sam");
+  await Promise.resolve();
+  expect(calls).toEqual(["alex"]);
+  release();
+  await bridge.flush();
+  expect(calls).toEqual(["alex", "reset", "sam"]);
+  const pending = bridge.track("old account event");
+  bridge.reset();
+  expect(await pending).toEqual({ segment: "skipped" });
+  expect(segment.track).not.toHaveBeenCalled();
+  await Promise.resolve();
+  release();
+  await bridge.flush();
+});

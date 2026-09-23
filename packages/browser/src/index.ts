@@ -1,6 +1,13 @@
 import { isIdentityAttribution } from "@janitor/core";
 import { createExtendedBehavior } from "./behavior.js";
+import { createIdentityAnalytics } from "./analytics.js";
+import type { IdentityAnalyticsOptions, Profile } from "./analytics.js";
 export { createIdentityAnalytics } from "./analytics.js";
+export type {
+  IdentityAnalyticsOptions,
+  AnalyticsResult,
+  Profile,
+} from "./analytics.js";
 import type {
   BrowserBehavior,
   BrowserObservation,
@@ -251,6 +258,125 @@ export function createVisitorClient(
       generation++;
       tracker?.destroy();
       controller?.abort();
+    },
+  };
+}
+
+/** One identity lifecycle for your application and its existing analytics SDKs. */
+export function createJanitorClient(
+  options: NonNullable<Parameters<typeof createVisitorClient>[0]> & {
+    analytics?: Omit<IdentityAnalyticsOptions, "visitor">;
+  } = {},
+) {
+  const visitor = createVisitorClient(options);
+  const analytics = createIdentityAnalytics({ ...options.analytics, visitor });
+  let collecting = options.enabled !== false;
+  let userId: string | undefined;
+  let visitorId: string | undefined;
+  let generation = 0;
+  let destroyed = false;
+  const active = () => {
+    if (destroyed) throw new Error("Janitor client has been destroyed");
+  };
+  return {
+    /** With a user ID: call after your application has authenticated that user. */
+    async identify(id?: string, traits: Profile = {}) {
+      active();
+      if (!collecting) throw new Error("Janitor collection is paused");
+      if (id !== undefined) {
+        analytics.identifyUser(id, traits);
+        if (userId !== id) {
+          generation++;
+          visitorId = undefined;
+        }
+        userId = id;
+      }
+      const current = generation;
+      const identity = await visitor.identify();
+      if (current !== generation || destroyed)
+        throw new Error("Janitor identity changed during request");
+      visitorId = identity.visitorId;
+      return identity;
+    },
+    async update(traits: Profile) {
+      active();
+      if (!collecting) throw new Error("Janitor collection is paused");
+      if (!userId)
+        throw new Error(
+          "Identify an authenticated user before updating a profile",
+        );
+      const result = analytics.identifyUser(userId, traits);
+      await analytics.flush();
+      return result;
+    },
+    track(
+      event: string,
+      properties: Record<string, string | number | boolean | null> = {},
+    ) {
+      active();
+      if (!collecting) throw new Error("Janitor collection is paused");
+      if (
+        typeof event !== "string" ||
+        !event.trim() ||
+        event.length > 200 ||
+        Object.keys(properties).length > 50
+      )
+        throw new Error("Invalid analytics event");
+      const clean: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(properties)) {
+        if (
+          !/^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(key) ||
+          key.startsWith("janitor_") ||
+          [
+            "distinct_id",
+            "user_id",
+            "anonymous_id",
+            "token",
+            "ip",
+            "risk",
+            "signals",
+            "confidence",
+            "__proto__",
+            "constructor",
+            "prototype",
+          ].includes(key)
+        )
+          throw new Error("Reserved analytics property");
+        if (
+          value !== null &&
+          typeof value !== "boolean" &&
+          !(typeof value === "string" && value.length <= 1024) &&
+          !(typeof value === "number" && Number.isFinite(value))
+        )
+          throw new Error("Invalid analytics property");
+        clean[key] = value;
+      }
+      return analytics.track(event, {
+        ...clean,
+        ...(visitorId ? { janitor_visitor_id: visitorId } : {}),
+      });
+    },
+    async reset() {
+      active();
+      generation++;
+      userId = undefined;
+      visitorId = undefined;
+      const result = analytics.reset();
+      await analytics.flush();
+      return result;
+    },
+    setEnabled(enabled: boolean) {
+      active();
+      generation++;
+      visitorId = undefined;
+      collecting = enabled;
+      visitor.setEnabled(enabled);
+    },
+    destroy() {
+      generation++;
+      destroyed = true;
+      visitorId = undefined;
+      visitor.destroy();
     },
   };
 }

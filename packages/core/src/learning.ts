@@ -28,6 +28,12 @@ export type LearningReport = LearningExample & {
   prediction: LearningPrediction;
 };
 export interface LearningStorage {
+  /** Indexed, tenant-scoped examples for prediction; reports remain an export API. */
+  findExamples?(
+    scope: string,
+    current: NormalizedObservation,
+    cutoff: number,
+  ): Promise<{ examples: LearningExample[]; saturated: boolean }>;
   insertSession(session: LearningSession): Promise<void>;
   getSession(scope: string, id: string): Promise<LearningSession | undefined>;
   updateSession(session: LearningSession, now: number): Promise<void>;
@@ -47,13 +53,13 @@ export interface LearningStorage {
 }
 export type LearningOptions = {
   enabled: true;
-  /** Collection is the default. Shadow output never changes returned identity or permissions. */
+  /** With Jev, shadow predictions are the default; they never change identity or permissions. */
   mode?: "collect" | "shadow";
   collectionPolicy?: "per-request" | "application";
   retentionDays?: number;
   sessionMinutes?: number;
   evaluatorTimeoutMs?: number;
-  /** Optional implementer-owned experiment. This does not train Jev automatically. */
+  /** Optional replacement for the built-in Jev predictor. History supplies examples, not model training. */
   predict?: (input: {
     current: NormalizedObservation;
     examples: LearningExample[];

@@ -26,7 +26,7 @@ export function createPostgresStorage(
   const retention = retentionOptions(options);
   const cutoff = () => Date.now() - retention.observationRetentionDays * DAY_MS;
   return {
-    async findCandidates(observation, limit) {
+    async findCandidates(observation, limit, scope) {
       const values: unknown[] = [];
       const bind = (value: unknown) => {
         values.push(value);
@@ -52,20 +52,25 @@ export function createPostgresStorage(
             add(
               `${base()} AND ${dimensions()} AND (signals_json #>> '{hardware,hardwareConcurrency}') = ${bind(String(hardware.hardwareConcurrency))}`,
             );
-          if (timezone)
+          if (timezone && scope?.locale !== false)
             add(
               `${base()} AND ${dimensions()} AND timezone = ${bind(timezone)}`,
             );
         }
-        if (graphics?.webglRenderer && timezone)
+        if (
+          graphics?.webglRenderer &&
+          timezone &&
+          scope?.graphics !== false &&
+          scope?.locale !== false
+        )
           add(
             `${base()} AND webgl_renderer = ${bind(graphics.webglRenderer)} AND timezone = ${bind(timezone)}`,
           );
         add(base());
       }
-      if (graphics?.webglRenderer)
+      if (graphics?.webglRenderer && scope?.graphics !== false)
         add(`webgl_renderer = ${bind(graphics.webglRenderer)}`);
-      if (timezone && browser)
+      if (timezone && browser && scope?.locale !== false)
         add(`timezone = ${bind(timezone)} AND browser = ${bind(browser)}`);
       if (!branches.length) return [];
       const rows = (await db.query(branches.join(" UNION ALL "), values)).rows;

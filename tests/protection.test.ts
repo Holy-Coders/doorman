@@ -38,6 +38,28 @@ for (const kind of ["postgres", "d1"] as const)
     afterAll(async () => sql.close());
     afterEach(() => vi.restoreAllMocks());
 
+    it("shares one inference budget across lookup, batch matching and learning", async () => {
+      const methods = {
+        evaluate: vi.fn(async () => result),
+        planLookup: vi.fn(async () => ({ graphics: true, locale: true })),
+        evaluateCandidates: vi.fn(async () => [result]),
+        predictIdentity: vi.fn(async () => ({})),
+      };
+      const evaluator = createProtection(
+        sql.protection,
+        { ...options(), evaluator: { maxCalls: 2 } },
+        1000,
+      ).wrap(methods);
+      await evaluator.planLookup!(input.current);
+      await evaluator.evaluateCandidates!({
+        current: input.current,
+        candidates: [{ history: [], deterministicSimilarity: 0 }],
+      });
+      await expect(
+        evaluator.predictIdentity!({ current: input.current, examples: [] }),
+      ).rejects.toThrow("admission");
+      expect(methods.predictIdentity).not.toHaveBeenCalled();
+    });
     it("atomically caps competing quota claims", async () => {
       const key = crypto.randomUUID();
       const accepted = await Promise.all(

@@ -141,6 +141,57 @@ defmodule JanitorTest do
     end
   end
 
+  test "Jev plans lookup, batches candidates and predicts from verified flows without a custom callback" do
+    parent = self()
+
+    Req.Test.stub(:intelligence, fn conn ->
+      {:ok, raw, conn} = read_body(conn)
+      payload = Jason.decode!(raw)
+      send(parent, {:intelligence, payload})
+
+      answers =
+        Map.new(payload["questions"], fn {key, _} ->
+          score = if String.starts_with?(key, "person"), do: 0.97, else: 0.1
+          {key, %{type: "noul", noul: score}}
+        end)
+
+      Req.Test.json(conn, %{answers: answers})
+    end)
+
+    c =
+      with_identity(
+        evaluator: [api_key: "test", request_options: [plug: {Req.Test, :intelligence}]],
+        expose_client_scores: false,
+        learning: [enabled: true, collection_policy: :application]
+      )
+
+    owner = Identity.update_subject(c, %{id: "alex", kind: :person})
+
+    for _ <- 1..2 do
+      anon = Janitor.handle(req(), c)
+      assert anon.status == 200
+
+      assert Janitor.handle(req(@signals, learning_cookie(anon)), c, %{
+               verified: %{subject_id: owner["id"], actor_id: owner["id"]}
+             }).status == 200
+    end
+
+    next = Janitor.handle(req(), c)
+
+    assert next.assigns.janitor_learning == %{
+             "status" => "suggested",
+             "subjectId" => owner["id"],
+             "score" => 0.97
+           }
+
+    assert next.assigns.janitor_identity["attribution"]["subject"]["status"] == "unknown"
+    assert Map.keys(body(next)) |> Enum.sort() == ~w(isReturning visitorId)
+    assert_receive {:intelligence, %{"questions" => %{"graphics" => _}}}
+    assert_receive {:intelligence, %{"questions" => %{"candidate0" => _}}}
+    assert_receive {:intelligence, %{"questions" => %{"person0" => _}, "state" => state}}
+    refute Jason.encode!(state) =~ owner["id"]
+  end
+
   test "typed Jev requests follow the documented API" do
     parent = self()
 

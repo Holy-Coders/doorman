@@ -1,14 +1,15 @@
-type Profile = { name?: string; email?: string; plan?: string };
+export type Profile = { name?: string; email?: string; plan?: string };
 type Status = "queued" | "unavailable" | "skipped";
-type Provider = "posthog" | "mixpanel";
-type Result = Partial<Record<Provider, Status>>;
+type Provider = "posthog" | "mixpanel" | "segment";
+export type AnalyticsResult = Partial<Record<Provider, Status>>;
 
 /** Browser SDK lifecycle only. Private Janitor results never enter this bridge. */
-export function createIdentityAnalytics(options: {
+export type IdentityAnalyticsOptions = {
   visitor?: { reset(): void };
   posthog?: {
     identify(id: string, properties?: Record<string, string>): unknown;
     reset(): unknown;
+    capture?(event: string, properties?: Record<string, unknown>): unknown;
   };
   mixpanel?: {
     identify(id: string): unknown;
@@ -16,12 +17,19 @@ export function createIdentityAnalytics(options: {
     reset(): unknown;
     people: { set(properties: Record<string, string>): unknown };
   };
-}) {
+  segment?: {
+    identify(id: string, traits?: Record<string, string>): unknown;
+    track(event: string, properties?: Record<string, unknown>): unknown;
+    reset(): unknown;
+  };
+};
+export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
   // One instance per app lifecycle. Providers retain their own anonymous IDs.
   const previous: Partial<Record<Provider, string>> = {};
   const profiles: Partial<Record<Provider, string>> = {};
   const needsReset = new Set<Provider>();
   let userId: string | undefined;
+  let generation = 0;
   const resetVisitor = () => {
     try {
       options.visitor?.reset();
@@ -29,8 +37,14 @@ export function createIdentityAnalytics(options: {
       /* Never interrupt authentication. */
     }
   };
+  let segmentQueue: Promise<void> = Promise.resolve();
+  const queueSegment = (run: () => Promise<void>) => {
+    segmentQueue = segmentQueue.then(run).catch(() => {
+      needsReset.add("segment");
+    });
+  };
   return {
-    identifyUser(id: string, traits: Profile = {}): Result {
+    identifyUser(id: string, traits: Profile = {}): AnalyticsResult {
       if (
         typeof id !== "string" ||
         !id.trim() ||
@@ -47,13 +61,36 @@ export function createIdentityAnalytics(options: {
           profile[key] = value;
         }
       }
-      if (userId !== id) resetVisitor();
+      if (userId !== id) {
+        generation++;
+        resetVisitor();
+      }
       userId = id;
       const signature = JSON.stringify(profile);
-      const result: Result = {};
-      for (const provider of ["posthog", "mixpanel"] as const) {
+      const result: AnalyticsResult = {};
+      for (const provider of ["posthog", "mixpanel", "segment"] as const) {
         const client = options[provider];
         if (!client) continue;
+        if (provider === "segment") {
+          queueSegment(async () => {
+            if (
+              needsReset.has("segment") ||
+              (previous.segment && previous.segment !== id)
+            ) {
+              await options.segment!.reset();
+              delete previous.segment;
+              delete profiles.segment;
+              needsReset.delete("segment");
+            }
+            if (previous.segment === id && profiles.segment === signature)
+              return;
+            await options.segment!.identify(id, profile);
+            previous.segment = id;
+            profiles.segment = signature;
+          });
+          result.segment = "queued";
+          continue;
+        }
         try {
           if (
             needsReset.has(provider) ||
@@ -96,16 +133,71 @@ export function createIdentityAnalytics(options: {
       }
       return result;
     },
-    reset(): Result {
-      resetVisitor();
-      userId = undefined;
-      const result: Result = {};
-      for (const provider of ["posthog", "mixpanel"] as const) {
+    flush: () => segmentQueue,
+    async track(
+      event: string,
+      properties: Record<string, unknown> = {},
+    ): Promise<AnalyticsResult> {
+      const current = generation;
+      await segmentQueue;
+      const result: AnalyticsResult = {};
+      for (const provider of ["posthog", "mixpanel", "segment"] as const) {
         const client = options[provider];
         if (!client) continue;
+        if (current !== generation) {
+          result[provider] = "skipped";
+          continue;
+        }
+        if (needsReset.has(provider)) {
+          result[provider] = "unavailable";
+          continue;
+        }
+        try {
+          if (provider === "posthog") {
+            if (!options.posthog!.capture) {
+              result[provider] = "skipped";
+              continue;
+            }
+            await options.posthog!.capture(event, properties);
+          } else if (provider === "mixpanel")
+            await options.mixpanel!.track(event, properties);
+          else await options.segment!.track(event, properties);
+          result[provider] = "queued";
+        } catch {
+          result[provider] = "unavailable";
+        }
+      }
+      return result;
+    },
+    reset(): AnalyticsResult {
+      generation++;
+      resetVisitor();
+      userId = undefined;
+      const result: AnalyticsResult = {};
+      for (const provider of ["posthog", "mixpanel", "segment"] as const) {
+        const client = options[provider];
+        if (!client) continue;
+        if (provider === "segment") {
+          queueSegment(async () => {
+            needsReset.add("segment");
+            await options.segment!.reset();
+            delete previous.segment;
+            delete profiles.segment;
+            needsReset.delete("segment");
+          });
+          result.segment = "queued";
+          continue;
+        }
         needsReset.add(provider);
         try {
-          client.reset();
+          const reset = client.reset();
+          if (
+            reset &&
+            typeof (reset as PromiseLike<unknown>).then === "function"
+          )
+            void Promise.resolve(reset).catch(() => {
+              needsReset.add(provider);
+            });
           delete previous[provider];
           delete profiles[provider];
           needsReset.delete(provider);

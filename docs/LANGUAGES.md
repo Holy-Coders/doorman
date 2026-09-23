@@ -2,7 +2,7 @@
 
 Choose the package for the code that runs on your server. TypeScript applications use `@janitor/*`; Phoenix applications use the native `janitor` Mix dependency. Both can serve the same browser client.
 
-Janitor v0.7.0 is a developer preview distributed through GitHub. The packages are not yet published to npm or Hex, so use the release archive or Git dependency below. You do not need a Janitor API key. An optional Jev evaluation uses credentials for your chosen AI provider.
+Janitor v0.8.0 is a developer preview distributed through GitHub. The packages are not yet published to npm or Hex, so use the release archive or Git dependency below. You do not need a Janitor API key. An optional Jev evaluation uses credentials for your chosen AI provider.
 
 Want to try it before adding dependencies to an existing app? Follow [your first visitor ID](GETTING-STARTED.md).
 
@@ -10,7 +10,7 @@ Want to try it before adding dependencies to an existing app? Follow [your first
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.7.0/janitor-0.7.0.tar.gz -o janitor.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.8.0/janitor-0.8.0.tar.gz -o janitor.tar.gz
 tar -xzf janitor.tar.gz
 # Choose your package manager:
 npm install
@@ -23,14 +23,14 @@ The archive extracts seven compiled JavaScript packages and a ready-to-use `pack
 ### Add it to an existing app
 
 The bundled packages depend on each other. Until they are on npm, your package manager needs local overrides for those dependencies. The supplied manifest already contains them.
- npm/Bun use its `overrides`; pnpm uses `pnpm.overrides`. Both maps point all Janitor sibling dependencies at local archives. In an existing app, copy the archives into a vendor directory and merge `dependencies` plus the matching override map into your existing manifest, updating **every** `file:` path. Keep your application's own scripts/dependencies. Do not run `npm install @janitor/browser` against the public registry yet. These managers install the distributed packages; the source monorepo itself uses pnpm.
+npm/Bun use its `overrides`; pnpm uses `pnpm.overrides`. Both maps point all Janitor sibling dependencies at local archives. In an existing app, copy the archives into a vendor directory and merge `dependencies` plus the matching override map into your existing manifest, updating **every** `file:` path. Keep your application's own scripts/dependencies. Do not run `npm install @janitor/browser` against the public registry yet. These managers install the distributed packages; the source monorepo itself uses pnpm.
 
 Use Node 22.12+ for Node/Next.js examples. Bun can install and import the same Web API packages. This is not a claim that all third-party hosting frameworks are tested on Bun. `pg` remains the application's connection pool, and its supported runtime applies.
 
 ## Elixir / Mix / Phoenix
 
 ```elixir
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.7.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.0", sparse: "packages/elixir"}
 ```
 
 ```sh

@@ -9,7 +9,7 @@ This guide assumes you already have a Phoenix app with Postgres. To try a comple
 Add Janitor to `deps` in `mix.exs`:
 
 ```elixir
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.7.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.0", sparse: "packages/elixir"}
 ```
 
 Then run `mix deps.get`. The developer preview is available through GitHub and is not yet published to Hex. It requires Elixir 1.17+, Ecto SQL 3.14+, Plug and PostgreSQL. Tests currently run on Elixir 1.20.2 / OTP 29 and Postgres 17; your app should resolve and keep its own dependency lockfile.
@@ -177,3 +177,11 @@ For erasure, stop collection and clear the browser cookie as well as deleting st
 Use HTTPS, production cookie settings, strong server secrets and your normal database TLS/pool configuration. Keep Phoenix CSRF protection enabled. Janitor limits its payload to 16 KiB; if `Plug.Parsers` runs first, configure its body-size and read-time limits too. Filter `signals`, `behavior`, tokens and identity keys from application logs.
 
 To run this package’s tests from the repository, start the Postgres instance described in the [Phoenix example](../../examples/phoenix/README.md), then run `mix deps.get && mix test` from `packages/elixir`. SQL tests use real Postgres; Jev and analytics transport are mocked. Shared fixtures check compatibility with the TypeScript implementation.
+
+## Built-in Jev learning and analytics identity
+
+With Jev and `identity` configured, add `learning: [enabled: true, collection_policy: :application]`. Janitor automatically evaluates anonymous sessions against earlier login-confirmed examples. Report verified self-person logins in the server context, then read suggestions from `conn.assigns.janitor_learning`. No custom predictor is required. Suggestions are private and never establish authentication. See [learning setup and cold-start behavior](../../docs/LEARNING.md).
+
+The bundled browser module exports `createJanitorClient`. Use `identify(user.id)`, `update`, `track` and `reset` to manage PostHog, Mixpanel and Segment through one interface. It supports the same Phoenix CSRF `headers` callback as `createVisitorClient`. See [the complete analytics flow](../../docs/ANALYTICS.md).
+
+For an existing v0.7 installation, create a new Ecto migration whose `up` calls `Janitor.Migration.upgrade_learning()`. This adds migration 0007's two indexes without rebuilding the existing tables. Fresh installations use `Janitor.Migration.up()` as before. On a large active database, use your normal online index deployment procedure before enabling learning.

@@ -9,12 +9,12 @@ defmodule Janitor.Learning do
     unless is_list(opts) and opts[:enabled] == true and c.identity,
       do: raise(ArgumentError, "learning needs explicit enablement and identity configuration")
 
-    mode = opts[:mode] || :collect
+    mode = mode(c)
 
     unless mode in [:collect, :shadow] and
-             ((mode == :shadow and is_function(opts[:predict], 1)) or
+             ((mode == :shadow and (is_function(opts[:predict], 1) or is_list(c.evaluator))) or
                 (mode == :collect and is_nil(opts[:predict]))),
-           do: raise(ArgumentError, "shadow mode requires a predictor")
+           do: raise(ArgumentError, "shadow mode requires Jev or a predictor")
 
     unless (opts[:collection_policy] || :per_request) in [:per_request, :application],
       do: raise(ArgumentError, "invalid collection policy")
@@ -26,6 +26,55 @@ defmodule Janitor.Learning do
         ],
         not (is_integer(value) and value >= min and value <= max),
         do: raise(ArgumentError, "invalid learning limits")
+  end
+
+  defp mode(c),
+    do:
+      c.learning[:mode] ||
+        if(is_function(c.learning[:predict], 1) or is_list(c.evaluator),
+          do: :shadow,
+          else: :collect
+        )
+
+  defp examples(c, current) do
+    probes = [
+      {"(signals_json #>> '{languages,0}')", List.first(current["languages"] || [])},
+      {"(signals_json ->> 'timezone')", current["timezone"]}
+    ]
+
+    groups =
+      probes
+      |> Enum.reject(fn {_, value} -> is_nil(value) end)
+      |> Enum.map(fn {column, value} ->
+        S.query(
+          c,
+          "SELECT * FROM #{S.table(c, "learning_sessions")} WHERE scope = $1 AND #{column} = $2 AND verified_at >= $3 AND observed_at >= $3 AND subject_id IS NOT NULL AND disputed = 0 ORDER BY verified_at DESC,id DESC LIMIT 101",
+          [scope(c), value, cutoff(c)]
+        )
+      end)
+
+    rows =
+      groups
+      |> List.flatten()
+      |> Enum.uniq_by(& &1["id"])
+      |> Enum.sort_by(&{-&1["verified_at"], &1["id"]})
+
+    saturated = length(rows) > 100 or Enum.any?(groups, &(length(&1) > 100))
+
+    values =
+      rows
+      |> Enum.take(100)
+      |> Enum.map(fn row ->
+        %{
+          "sessionId" => row["id"],
+          "subjectId" => row["subject_id"],
+          "observation" => row["signals_json"],
+          "observedAt" => row["observed_at"],
+          "verifiedAt" => row["verified_at"]
+        }
+      end)
+
+    {values, saturated}
   end
 
   defp scope(c), do: Janitor.Identity.label(c.identity, "janitor-learning-scope-v1")
@@ -76,7 +125,7 @@ defmodule Janitor.Learning do
 
     if not allowed do
       if id, do: delete_session(c, id)
-      {nil, 0}
+      {nil, 0, nil}
     else
       existing =
         if id,
@@ -110,7 +159,7 @@ defmodule Janitor.Learning do
             :ok
         end
 
-        {nil, 0}
+        {nil, 0, nil}
       else
         observation = Janitor.Observation.normalize(payload["signals"], payload["behavior"])
         prediction = predict(c, observation)
@@ -151,7 +200,7 @@ defmodule Janitor.Learning do
           )
         end
 
-        {id, max(0, div(expires - Janitor.now(), 1000))}
+        {id, max(0, div(expires - Janitor.now(), 1000)), prediction}
       end
     end
   end
@@ -171,18 +220,31 @@ defmodule Janitor.Learning do
   end
 
   defp predict(%{learning: opts} = c, observation) do
-    if opts[:mode] != :shadow do
+    if mode(c) != :shadow do
       %{"status" => "not-run"}
     else
-      examples = Enum.map(reports(c), &Map.delete(&1, "prediction"))
+      {examples, saturated} = examples(c, observation)
 
-      if examples == [] do
+      if examples == [] or saturated do
         %{"status" => "abstained"}
       else
-        case Janitor.Bounded.run(
-               fn -> opts[:predict].(%{current: observation, examples: examples}) end,
-               opts[:evaluator_timeout_ms] || 1200
-             ) do
+        input = %{current: observation, examples: examples}
+
+        result =
+          if is_function(opts[:predict], 1) do
+            Janitor.Bounded.run(
+              fn -> opts[:predict].(input) end,
+              opts[:evaluator_timeout_ms] || 1200
+            )
+          else
+            Janitor.Protection.evaluate(
+              %{c | evaluator_timeout_ms: opts[:evaluator_timeout_ms] || 1200},
+              fn -> Janitor.Jev.predict_identity(input, c.evaluator) end,
+              &is_map/1
+            )
+          end
+
+        case result do
           {:ok, %{subject_id: id, score: score}}
           when is_binary(id) and is_number(score) and score >= 0 and score <= 1 ->
             if Enum.any?(examples, &(&1["subjectId"] == id)),

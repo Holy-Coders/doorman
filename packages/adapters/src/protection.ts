@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { isEvaluation } from "@janitor/core";
+import {
+  isEvaluation,
+  isLookupScope,
+  isCandidateEvaluations,
+  isCrossDevicePrediction,
+} from "@janitor/core";
 import type {
   EvaluationControl,
   EvaluationLease,
@@ -188,107 +193,147 @@ export function createProtection(
       return { allowed: true, retryAfterSeconds: 0 };
     },
     wrap(evaluator: VisitorEvaluator): VisitorEvaluator {
-      return {
-        async evaluate(input) {
-          let reservation: {
+      async function guarded<T>(
+        run: () => Promise<T>,
+        validate: (value: unknown) => value is T,
+      ): Promise<T> {
+        let reservation: {
+          lease?: EvaluationLease;
+          reason?: ProtectionReason;
+        };
+        try {
+          reservation = await change<{
             lease?: EvaluationLease;
             reason?: ProtectionReason;
-          };
-          try {
-            reservation = await change<{
-              lease?: EvaluationLease;
-              reason?: ProtectionReason;
-            }>((s, now) => {
-              s.leases = s.leases.filter((l) => l.expiresAt > now);
-              if (s.openUntil > now)
-                return { result: { reason: "circuit-open" as const } };
-              if (now - s.windowStart >= limits.evaluator.windowMs) {
-                s.windowStart = now;
-                s.used = 0;
-              }
-              if (s.used >= limits.evaluator.maxCalls)
-                return { result: { reason: "budget" as const } };
-              const probe = s.openUntil !== 0;
-              if (
-                s.leases.length >= limits.evaluator.maxConcurrent ||
-                (probe && s.leases.some((l) => l.probe))
-              )
-                return { result: { reason: "concurrency" as const } };
-              const lease = {
-                id: crypto.randomUUID(),
-                expiresAt: now + timeoutMs + 5000,
-                epoch: s.epoch,
-                probe,
-              };
-              s.leases.push(lease);
-              s.used++;
-              return { state: s, result: { lease } };
-            });
-          } catch {
-            emit("evaluator", "storage");
-            throw new Error("Evaluation protection unavailable");
-          }
-          const { lease, reason } = reservation;
-          if (!lease) {
-            emit("evaluator", reason!);
-            throw new Error("Evaluation admission denied");
-          }
-          let failure: ProtectionReason | undefined;
-          let timer: ReturnType<typeof setTimeout> | undefined;
-          try {
-            const value = await Promise.race([
-              Promise.resolve().then(() => evaluator.evaluate(input)),
-              new Promise<never>((_, reject) => {
-                timer = setTimeout(() => {
-                  failure = "timeout";
-                  reject(new Error("Evaluation timeout"));
-                }, timeoutMs);
-              }),
-            ]);
-            if (!isEvaluation(value)) {
-              failure = "malformed";
-              throw new Error("Malformed evaluation");
+          }>((s, now) => {
+            s.leases = s.leases.filter((l) => l.expiresAt > now);
+            if (s.openUntil > now)
+              return { result: { reason: "circuit-open" as const } };
+            if (now - s.windowStart >= limits.evaluator.windowMs) {
+              s.windowStart = now;
+              s.used = 0;
             }
-            return value;
-          } catch (error) {
-            failure ??= "provider";
-            emit("evaluator", failure);
-            throw error;
-          } finally {
-            clearTimeout(timer);
-            try {
-              await change((s, now) => {
-                if (!s.leases.some((l) => l.id === lease.id))
-                  return { result: undefined };
-                // A timed-out provider may still be running. Keep its lease until expiry.
-                if (failure !== "timeout")
-                  s.leases = s.leases.filter((l) => l.id !== lease.id);
-                // Old completions cannot close a newer breaker or release another lease.
-                if (lease.epoch === s.epoch) {
-                  if (!failure) {
-                    s.failures = 0;
-                    if (lease.probe) {
-                      s.openUntil = 0;
-                      s.epoch++;
-                    }
-                  } else if (
-                    lease.probe ||
-                    ++s.failures >= limits.evaluator.failureThreshold
-                  ) {
-                    s.openUntil = now + limits.evaluator.cooldownMs;
+            if (s.used >= limits.evaluator.maxCalls)
+              return { result: { reason: "budget" as const } };
+            const probe = s.openUntil !== 0;
+            if (
+              s.leases.length >= limits.evaluator.maxConcurrent ||
+              (probe && s.leases.some((l) => l.probe))
+            )
+              return { result: { reason: "concurrency" as const } };
+            const lease = {
+              id: crypto.randomUUID(),
+              expiresAt: now + timeoutMs + 5000,
+              epoch: s.epoch,
+              probe,
+            };
+            s.leases.push(lease);
+            s.used++;
+            return { state: s, result: { lease } };
+          });
+        } catch {
+          emit("evaluator", "storage");
+          throw new Error("Evaluation protection unavailable");
+        }
+        const { lease, reason } = reservation;
+        if (!lease) {
+          emit("evaluator", reason!);
+          throw new Error("Evaluation admission denied");
+        }
+        let failure: ProtectionReason | undefined;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const value = await Promise.race([
+            Promise.resolve().then(() => run()),
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(() => {
+                failure = "timeout";
+                reject(new Error("Evaluation timeout"));
+              }, timeoutMs);
+            }),
+          ]);
+          if (!validate(value)) {
+            failure = "malformed";
+            throw new Error("Malformed evaluation");
+          }
+          return value;
+        } catch (error) {
+          failure ??= "provider";
+          emit("evaluator", failure);
+          throw error;
+        } finally {
+          clearTimeout(timer);
+          try {
+            await change((s, now) => {
+              if (!s.leases.some((l) => l.id === lease.id))
+                return { result: undefined };
+              // A timed-out provider may still be running. Keep its lease until expiry.
+              if (failure !== "timeout")
+                s.leases = s.leases.filter((l) => l.id !== lease.id);
+              // Old completions cannot close a newer breaker or release another lease.
+              if (lease.epoch === s.epoch) {
+                if (!failure) {
+                  s.failures = 0;
+                  if (lease.probe) {
+                    s.openUntil = 0;
                     s.epoch++;
                   }
+                } else if (
+                  lease.probe ||
+                  ++s.failures >= limits.evaluator.failureThreshold
+                ) {
+                  s.openUntil = now + limits.evaluator.cooldownMs;
+                  s.epoch++;
                 }
-                return { state: s, result: undefined };
-              });
-            } catch {
-              emit(
-                "evaluator",
-                "storage",
-              ); /* Abandoned leases expire; never retry inference. */
-            }
+              }
+              return { state: s, result: undefined };
+            });
+          } catch {
+            emit(
+              "evaluator",
+              "storage",
+            ); /* Abandoned leases expire; never retry inference. */
           }
-        },
+        }
+      }
+      return {
+        evaluate: (input) =>
+          guarded(() => evaluator.evaluate(input), isEvaluation),
+        ...(evaluator.planLookup
+          ? {
+              planLookup: (
+                input: Parameters<
+                  NonNullable<VisitorEvaluator["planLookup"]>
+                >[0],
+              ) => guarded(() => evaluator.planLookup!(input), isLookupScope),
+            }
+          : {}),
+        ...(evaluator.evaluateCandidates
+          ? {
+              evaluateCandidates: (
+                input: Parameters<
+                  NonNullable<VisitorEvaluator["evaluateCandidates"]>
+                >[0],
+              ) =>
+                guarded(
+                  () => evaluator.evaluateCandidates!(input),
+                  isCandidateEvaluations,
+                ),
+            }
+          : {}),
+        ...(evaluator.predictIdentity
+          ? {
+              predictIdentity: (
+                input: Parameters<
+                  NonNullable<VisitorEvaluator["predictIdentity"]>
+                >[0],
+              ) =>
+                guarded(
+                  () => evaluator.predictIdentity!(input),
+                  isCrossDevicePrediction,
+                ),
+            }
+          : {}),
       };
     },
     cleanup: () => storage.cleanupProtection(Date.now(), 100),

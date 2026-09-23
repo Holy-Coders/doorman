@@ -44,7 +44,7 @@ The report includes:
 - **Recall:** how often it found the user when that user appeared among the available examples.
 - **Calibration:** how reported confidence compares with observed correctness, including a Brier score for answered predictions.
 - **p95 latency:** the duration below which 95% of predictor calls completed.
- Null rates mean no denominator. The Brier score covers non-abstained predictions only and must be read with coverage. Latency excludes cold-start trials and includes failures/timeouts. This runner measures no provider billing; record actual provider usage separately.
+  Null rates mean no denominator. The Brier score covers non-abstained predictions only and must be read with coverage. Latency excludes cold-start trials and includes failures/timeouts. This runner measures no provider billing; record actual provider usage separately.
 
 ## Command-line deterministic baseline
 
@@ -54,7 +54,7 @@ Save a version-1 export as `feedback.json`, then:
 pnpm evaluate:learning feedback.json report.json
 ```
 
-The command enables device holdout, uses a 0.90 similarity threshold and 0.03 account-margin abstention, and writes only an aggregate JSON report. It does not write observations to the report. This baseline often abstains across distinct devices; it is a comparison, not a trained cross-device classifier. To compare Jev fairly, use `evaluateLearning` with a separately approved predictor and exactly the same immutable holdout export. Freeze thresholds before final testing. Keep a development dataset separate from your final pilot evaluation.
+The command enables device holdout, uses a 0.90 similarity threshold and 0.03 account-margin abstention, and writes only an aggregate JSON report. It does not write observations to the report. This baseline often abstains across distinct devices; it is a comparison, not a trained cross-device classifier. To compare Jev fairly, use `evaluateLearning` with `createJevEvaluator(...).predictIdentity!` (or a separately approved predictor) and exactly the same immutable holdout export. Freeze thresholds before final testing. Keep a development dataset separate from your final pilot evaluation.
 
 ## Revocable exports
 

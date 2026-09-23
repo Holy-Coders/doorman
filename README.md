@@ -6,7 +6,7 @@ Durable first-party visitor identity from browser history, with optional AI-assi
 
 Janitor is an open-source library for recognizing returning browsers. It runs on your server, stores a small history in your database, and can use **Jev**, an AI model from TypeSafe, to help assess matches and technical risk.
 
-[Introduction](https://janitor.holycoders.io/docs/introduction/) · [Quickstart](docs/GETTING-STARTED.md) · [Playground](https://janitor.holycoders.io/playground/) · [GitHub release](https://github.com/Holy-Coders/janitor/releases/tag/v0.7.0)
+[Introduction](https://janitor.holycoders.io/docs/introduction/) · [Quickstart](docs/GETTING-STARTED.md) · [Playground](https://janitor.holycoders.io/playground/) · [GitHub release](https://github.com/Holy-Coders/janitor/releases/tag/v0.8.0)
 
 ## In the browser
 
@@ -25,6 +25,27 @@ The client needs a Janitor endpoint in your application. That endpoint sets an H
 
 Confidence and risk stay on your server by default. Janitor never automatically blocks a user or displays a CAPTCHA. Your application decides what to do with the information.
 
+## One identity layer for your analytics
+
+```ts
+import { createJanitorClient } from "@janitor/browser";
+const janitor = createJanitorClient({
+  endpoint: "/api/visitor",
+  analytics: { posthog, mixpanel, segment: analytics }, // Your initialized SDKs.
+});
+await janitor.identify();
+// After your application verifies login:
+await janitor.identify(user.id, { email: user.email });
+await janitor.update({ plan: "team" });
+await janitor.track("Project created", { plan: "team" });
+// On logout:
+await janitor.reset();
+```
+
+Janitor manages provider identification, profile updates and account switching. Providers retain their anonymous IDs for correct login joins; events sent through Janitor carry its browser ID. See [the analytics guide](docs/ANALYTICS.md).
+
+With Jev and the identity directory configured, `learning: { enabled: true, collectionPolicy: "application" }` also enables built-in cross-device suggestions from login-confirmed history. No custom predictor is required. Suggestions stay private and never become a login or analytics merge. [Set up learning](docs/LEARNING.md).
+
 ## Choose your server
 
 ### Cloudflare Workers
@@ -34,7 +55,7 @@ import { createCloudflareVisitor } from "@janitor/adapters/cloudflare";
 
 const visitor = createCloudflareVisitor({
   db: env.VISITORS, // Your D1 binding.
-  ai: env.AI,      // Optional Workers AI binding for Jev.
+  ai: env.AI, // Optional Workers AI binding for Jev.
 });
 return visitor.handle(request);
 ```
@@ -75,7 +96,7 @@ The handler uses standard Web Request/Response APIs. The [Fastify example](examp
 
 ```elixir
 # mix.exs
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.7.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.8.0", sparse: "packages/elixir"}
 ```
 
 ```elixir
@@ -85,7 +106,7 @@ Janitor.handle(conn, janitor)
 
 This implementation runs natively in Elixir with Ecto/Postgres. The package includes the browser client. [Phoenix installation](packages/elixir/README.md).
 
-Apply the database migrations before using any adapter. The v0.7.0 JavaScript release includes migrations `0001` through `0006`; the Elixir package provides Ecto migration functions. Each app should use its own database or schema.
+Apply the database migrations before using any adapter. The v0.8.0 JavaScript release includes migrations `0001` through `0007`; the Elixir package provides Ecto migration functions. Each app should use its own database or schema.
 
 ## Read risk privately
 
@@ -116,7 +137,7 @@ Your existing authentication system verifies people and agents. Janitor can reco
 
 ## Install or run an example
 
-Janitor v0.7.0 is a developer preview. Packages are available as GitHub archives; they are not yet published to npm or Hex. [Installation instructions](docs/LANGUAGES.md) cover npm, pnpm, Bun, Mix and existing applications.
+Janitor v0.8.0 is a developer preview. Packages are available as GitHub archives; they are not yet published to npm or Hex. [Installation instructions](docs/LANGUAGES.md) cover npm, pnpm, Bun, Mix and existing applications.
 
 To work from source:
 
@@ -140,7 +161,7 @@ Browser observation → normalize signals → look up plausible history
                     → compare → optional Jev evaluation → save visitor ID
 ```
 
-Most visits use the cookie directly. Without it, indexed queries produce at most ten candidate visitors. Janitor compares up to five observations per candidate and sends at most three plausible histories to Jev. A match must be strong enough and clearly ahead of alternatives; otherwise Janitor creates a new ID.
+Most visits use the cookie directly. Without it, indexed queries produce at most ten candidate visitors. Janitor compares up to five observations per candidate and asks Jev about the full shortlist in one request. Jev can also select indexed lookup families before the search. A match must be strong enough and clearly ahead of alternatives; otherwise Janitor creates a new ID.
 
 The core knows nothing about hosting providers, databases or Jev. Storage and evaluator interfaces let you replace those pieces. See the [matching rules](docs/MATCHING.md), [API reference](docs/API.md), [database scaling](docs/SCALING.md) and [capacity results](docs/CAPACITY.md).
 

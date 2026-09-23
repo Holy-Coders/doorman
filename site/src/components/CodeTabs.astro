@@ -36,6 +36,24 @@ Janitor.handle(conn, janitor)
 # Optional server-side profile updates
 # Janitor.Identity.identify_user(config, user.id)`,
   },
+  {
+    name: "Analytics",
+    file: "identity.ts",
+    code: `import { createJanitorClient } from "@janitor/browser";
+
+const janitor = createJanitorClient({
+  endpoint: "/api/visitor",
+  analytics: { posthog, mixpanel }, // Initialized SDKs.
+});
+
+await janitor.identify();
+// After your app verifies login:
+await janitor.identify(user.id, { email: user.email });
+await janitor.update({ plan: "team" });
+await janitor.track("Project created");
+// On logout:
+await janitor.reset();`,
+  },
 ];
 ---
 

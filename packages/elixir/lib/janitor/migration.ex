@@ -7,7 +7,7 @@ defmodule Janitor.Migration do
 
     apply_sql(
       prefix,
-      ~w(0001_visitors 0002_identity 0003_learning 0004_candidate_lookup 0005_protection 0006_evidence)
+      ~w(0001_visitors 0002_identity 0003_learning 0004_candidate_lookup 0005_protection 0006_evidence 0007_learning_lookup)
     )
   end
 
@@ -20,6 +20,9 @@ defmodule Janitor.Migration do
 
   def upgrade_security(opts \\ []),
     do: apply_sql(prefix!(opts), ~w(0005_protection 0006_evidence))
+
+  @doc "Add indexed cross-device learning retrieval to a v0.7 installation."
+  def upgrade_learning(opts \\ []), do: apply_sql(prefix!(opts), ~w(0007_learning_lookup))
 
   defp apply_sql(prefix, names) do
     for name <- names do

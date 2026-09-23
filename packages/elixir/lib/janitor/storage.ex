@@ -11,7 +11,7 @@ defmodule Janitor.Storage do
 
   @rows_per_probe 100
   @candidate_limit 10
-  def candidates(c, o) do
+  def candidates(c, o, scope \\ %{}) do
     screen = o["screen"] || %{}
     hardware = o["hardware"] || %{}
     renderer = get_in(o, ["graphics", "webglRenderer"])
@@ -37,6 +37,10 @@ defmodule Janitor.Storage do
 
     {branches, params} =
       probes
+      |> Enum.filter(fn {fields, _} ->
+        (scope["graphics"] != false or "webgl_renderer" not in fields) and
+          (scope["locale"] != false or "timezone" not in fields)
+      end)
       |> Enum.filter(fn {_, values} -> Enum.all?(values, &(not is_nil(&1))) end)
       |> Enum.with_index()
       |> Enum.reduce({[], [cutoff(c)]}, fn {{fields, values}, probe}, {branches, params} ->

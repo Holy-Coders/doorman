@@ -135,7 +135,7 @@ describe("candidate ranking", () => {
     const find = vi.spyOn(storage, "findCandidates");
     const history = vi.spyOn(storage, "getRecentObservations");
     const result = await engine.identify({ signals, debug: true });
-    expect(find).toHaveBeenCalledWith(expect.anything(), 10);
+    expect(find).toHaveBeenCalledWith(expect.anything(), 10, undefined);
     expect(history.mock.calls.every((call) => call[1] === 5)).toBe(true);
     expect(evaluator.evaluate).toHaveBeenCalledTimes(3);
     expect(result.debug?.candidateCount).toBe(10);

@@ -106,9 +106,12 @@ defmodule Janitor.Protection do
          )
   end
 
-  def evaluate(%{protection: nil} = c, fun), do: Janitor.Bounded.run(fun, c.evaluator_timeout_ms)
+  def evaluate(c, fun, validate \\ &Janitor.Engine.valid_evaluation?/1)
 
-  def evaluate(c, fun) do
+  def evaluate(%{protection: nil} = c, fun, _validate),
+    do: Janitor.Bounded.run(fun, c.evaluator_timeout_ms)
+
+  def evaluate(c, fun, validate) do
     limits = c.protection[:evaluator]
 
     reservation =
@@ -156,7 +159,7 @@ defmodule Janitor.Protection do
 
         reason =
           case result do
-            {:ok, value} -> if Janitor.Engine.valid_evaluation?(value), do: nil, else: :malformed
+            {:ok, value} -> if validate.(value), do: nil, else: :malformed
             :timeout -> :timeout
             _ -> :provider
           end

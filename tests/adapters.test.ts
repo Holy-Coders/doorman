@@ -221,6 +221,8 @@ describe("HTTP boundary", () => {
     );
     expect(Object.keys(onMetrics.mock.calls[0]?.[0])).toEqual([
       "candidateCount",
+      "lookupPlanned",
+      "candidatesEvaluated",
       "lookupSaturated",
       "deterministicScore",
       "finalConfidence",

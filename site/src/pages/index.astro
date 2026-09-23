@@ -91,9 +91,9 @@ import { REPO } from "../content";
           at each visit.
         </h2>
         <p>
-          Jev is an AI model from TypeSafe. Janitor asks it three focused
-          questions about browser history and behavior, then receives a score
-          between 0 and 1 for each answer.
+          Jev is an AI model from TypeSafe. It helps Janitor choose useful
+          lookup signals, compare a shortlist of browser histories, and assess
+          automation and suspicious signals.
         </p>
         <p>
           Use those estimates to inform your own checks, such as when to request
@@ -101,8 +101,14 @@ import { REPO } from "../content";
           next.
         </p>
         <a class="text-link" href="/docs/evaluators/">
-          Meet Jev and the three scores
+          Meet Jev and the scores
         </a>
+        <p>
+          Enable learning to ask Jev about anonymous visits across devices using
+          earlier login-confirmed sessions. Suggestions stay private until a
+          login confirms the person.{" "}
+          <a href="/docs/learning/">Set up learning →</a>
+        </p>
       </div>
       <div class="jev-terminal">
         <div class="terminal-caption">
@@ -222,6 +228,7 @@ import { REPO } from "../content";
           <span>Send identity events to</span>
           <a href="/docs/analytics/">PostHog</a>
           <a href="/docs/analytics/">Mixpanel</a>
+          <a href="/docs/analytics/">Segment</a>
         </div>
         <p>Illustrative data. Your app supplies verified identities.</p>
       </div>

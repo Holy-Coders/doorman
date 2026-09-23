@@ -6,13 +6,50 @@ There are two parts: a browser helper calls your SDK’s identify/reset methods 
 
 If you are new to Janitor, set up [browser identification](GETTING-STARTED.md) first. For agent or shared-account reports, also configure the [identity directory](AGENTIC-IDENTITY.md).
 
+## One client for your identity lifecycle
+
+Use Janitor in application code instead of calling each provider's identify, profile-update and reset methods separately. Initialize your existing SDKs with your project configuration, then pass them to Janitor:
+
+```ts
+import { createJanitorClient } from "@janitor/browser";
+
+// posthog, mixpanel and analytics are SDK instances already initialized by your app.
+const janitor = createJanitorClient({
+  endpoint: "/api/visitor",
+  analytics: { posthog, mixpanel, segment: analytics }, // Include only providers you use.
+});
+
+await janitor.identify(); // Measure the anonymous browser; no person profile merge.
+await janitor.track("Pricing viewed", { plan: "team" });
+
+// After your application's login succeeds:
+await janitor.identify(user.id, { name: user.name, email: user.email });
+await janitor.update({ plan: "team" });
+await janitor.track("Checkout opened", { plan: "team" });
+
+// After logout, before recording another person's activity:
+await janitor.reset();
+// On app teardown:
+janitor.destroy();
+```
+
+Janitor manages one known-user identity and forwards it consistently to your destinations. It calls their supported APIs internally because each provider owns its storage and merge semantics. SDKs keep their anonymous device IDs so their anonymous-to-login joins keep working. Janitor adds `janitor_visitor_id` to events sent through `janitor.track` after successful browser measurement. A recovered browser ID is not used as an authenticated person's ID.
+
+The same `user.id` on a phone and laptop joins the known person across devices. You can instead use the canonical subject ID returned by Janitor’s server identity directory; use the same choice in every browser and server destination. Never substitute an unverified suggestion. A different user on a shared browser triggers provider resets before identification. The initial login preserves the provider's anonymous ID; logout resets it. Your app still authenticates users and supplies the server's verified identity context. Calling a browser method alone never authenticates that user to Janitor's server.
+
+`update` accepts `name`, `email` and `plan`; identify a known user first. `track` accepts a bounded event name and up to 50 flat string, number, boolean or null properties. Reserved identity fields and private Janitor score fields are rejected. Provider failures are isolated; `track` returns a status per destination (`queued`, `unavailable` or `skipped`). Queued means submitted to the SDK, not confirmed ingestion.
+
+`enabled: false` starts the Janitor client paused; `setEnabled(true)` starts collection. While paused, Janitor's identify, update and track calls do not publish. Separately configure each SDK's autocapture, replay and consent settings: Janitor does not control calls made directly to those SDKs. `destroy()` removes Janitor's listeners but does not shut down provider SDKs.
+
+For gradual adoption, the smaller `createIdentityAnalytics` bridge remains available below. Avoid running two identity managers against the same provider instances at once.
+
 ## Keep three IDs separate
 
-| ID | Example | Use it for |
-| --- | --- | --- |
-| Your authenticated user or agent ID | `user_123`, `agent_456` | The analytics person’s distinct ID. |
-| Your account or workspace ID | `studio_789` | Grouping activity within a shared account. |
-| Janitor’s visitor ID | `vis_…` | Browser context on an event. |
+| ID                                  | Example                 | Use it for                                 |
+| ----------------------------------- | ----------------------- | ------------------------------------------ |
+| Your authenticated user or agent ID | `user_123`, `agent_456` | The analytics person’s distinct ID.        |
+| Your account or workspace ID        | `studio_789`            | Grouping activity within a shared account. |
+| Janitor’s visitor ID                | `vis_…`                 | Browser context on an event.               |
 
 One person can use several browsers, and several people can share one browser. Do not use a visitor ID as the analytics person ID. See [the identity terms](CONCEPTS.md) for a worked example.
 

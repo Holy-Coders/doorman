@@ -1,6 +1,6 @@
 import { posthog } from "posthog-js";
 import mixpanel from "mixpanel-browser";
-import { createIdentityAnalytics } from "@janitor/browser";
+import { createIdentityAnalytics, createJanitorClient } from "@janitor/browser";
 
 posthog.init("phc_local_test", {
   api_host: location.origin + "/vendor/posthog",
@@ -24,9 +24,11 @@ mixpanel.init("local_test", {
   ip: false,
 });
 const analytics = createIdentityAnalytics({ posthog, mixpanel });
+const janitor = createJanitorClient({ analytics: { posthog, mixpanel } });
 posthog.capture("demo viewed");
 mixpanel.track("demo viewed");
 const demo = {
+  janitor,
   login(id: string) {
     return analytics.identifyUser(id, { plan: "test" });
   },

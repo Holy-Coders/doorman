@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
 import type { VisitorClientIdentity } from "@janitor/core";
+test.beforeEach(async ({ request }) => {
+  expect((await request.post("/test/reset")).ok()).toBe(true);
+});
+
 test("browser → Fastify → Postgres: first visit, cookie continuity, cookie loss and resizing", async ({
   page,
   context,

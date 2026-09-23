@@ -1,5 +1,13 @@
 # Historical validation records
 
+## v0.8.0 Jev intelligence and unified identity — 2026-09-23
+
+- TypeScript strict typechecking, lint and 223 tests in thirteen files pass. Real SQL covers D1/Postgres learning defaults, namespace isolation and inference quotas across all Jev methods.
+- Native Elixir: 52 Postgres-backed tests pass, including automatic Jev learning and private Plug assigns. The migration adds language/timezone learning indexes; Hex-format packaging includes the shared questions and browser module.
+- Two Chromium integration tests pass with real PostHog/Mixpanel SDKs and intercepted local delivery, including the unified Janitor client. Thirteen site browser tests and Astro checks pass.
+- Fresh npm, pnpm and Bun consumers install all seven v0.8.0 tarballs and import the new client, three evaluator capabilities and migration 0007.
+- No paid provider inference or live analytics ingestion was used. Prediction accuracy and production performance of the additional stages remain unmeasured. Earlier capacity benchmarks below describe their original versions.
+
 ## v0.7.0 release verification — 2026-09-23
 
 - The functional changes and site redesign passed [GitHub CI](https://github.com/Holy-Coders/janitor/actions/runs/35842422160), including TypeScript, native Elixir/Postgres, Phoenix, browser integration, example builds and website tests.
