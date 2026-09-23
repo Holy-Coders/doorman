@@ -69,6 +69,24 @@ defmodule Janitor.ProtectionTest do
     assert next["risk"] == %{"automation" => 0, "suspicious" => 0}
   end
 
+  test "sharded request quotas preserve one global maximum across concurrent callers" do
+    c =
+      config(
+        protection: [
+          secret: String.duplicate("s", 64),
+          namespace: Janitor.random_id("shards_"),
+          requests: [global: 21, shards: 4, window_ms: 3_600_000]
+        ]
+      )
+
+    outcomes =
+      1..200
+      |> Task.async_stream(fn _ -> Protection.admit(c, %{}) end, max_concurrency: 5)
+      |> Enum.to_list()
+
+    assert Enum.count(outcomes, &(&1 == {:ok, :ok})) == 21
+  end
+
   test "timeout retains a bounded lease and a new instance cannot immediately retry" do
     c =
       config(

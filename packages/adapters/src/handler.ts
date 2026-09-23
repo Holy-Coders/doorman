@@ -38,6 +38,9 @@ export type AdapterOptions = RetentionOptions &
     cookie?: { name?: string; maxAgeDays?: number; secure?: boolean };
     maxBodyBytes?: number;
     requestTimeoutMs?: number;
+    /** Per reusable handler instance. Excess measurement requests get 503 without database work. */
+    maxInFlightRequests?: number;
+    onOverload?: () => void;
     endpointPath?: string;
     subjectLinking?: SubjectLinkingOptions;
     identity?: SubjectLinkingOptions;
@@ -65,6 +68,10 @@ export function createVisitorHandler(
   protectionStorage?: ProtectionStorage,
   evidenceStorage?: EvidenceStorage,
 ) {
+  const maxInFlight = options.maxInFlightRequests ?? 64;
+  if (!Number.isInteger(maxInFlight) || maxInFlight < 1 || maxInFlight > 1024)
+    throw new Error("Request concurrency must be 1–1024");
+  let inFlight = 0;
   if (options.evidence && (!options.identity || !evidenceStorage))
     throw new Error(
       "Evidence requires identity configuration and evidence storage",
@@ -154,7 +161,7 @@ export function createVisitorHandler(
         ...headers,
       },
     });
-  async function handle(
+  async function processRequest(
     request: Request,
     context: VisitorRequestContext = {},
     capture?: (identity: VisitorIdentity, evidence: RequestEvidence) => void,
@@ -283,6 +290,28 @@ export function createVisitorHandler(
       if (error instanceof RequestError)
         return json({ error: error.message }, error.status);
       return json({ error: "Visitor storage is unavailable" }, 503);
+    }
+  }
+  async function handle(
+    request: Request,
+    context?: VisitorRequestContext,
+    capture?: (identity: VisitorIdentity, evidence: RequestEvidence) => void,
+  ): Promise<Response> {
+    if (inFlight >= maxInFlight) {
+      try {
+        options.onOverload?.();
+      } catch {
+        /* Metrics cannot change admission. */
+      }
+      return json({ error: "Visitor measurement is busy" }, 503, {
+        "Retry-After": "1",
+      });
+    }
+    inFlight++;
+    try {
+      return await processRequest(request, context, capture);
+    } finally {
+      inFlight--;
     }
   }
   return {

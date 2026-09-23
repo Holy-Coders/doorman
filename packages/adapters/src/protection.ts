@@ -18,10 +18,17 @@ const config = z
         global: limit.default(600),
         account: limit.default(60),
         session: limit.default(30),
+        shards: z.number().int().min(1).max(128).default(1),
         windowMs: windowMs.default(60_000),
       })
       .strict()
-      .default({ global: 600, account: 60, session: 30, windowMs: 60_000 }),
+      .default({
+        global: 600,
+        account: 60,
+        session: 30,
+        shards: 1,
+        windowMs: 60_000,
+      }),
     evaluator: z
       .object({
         maxCalls: limit.default(120),
@@ -89,6 +96,8 @@ export function createProtection(
     }
   };
   const controlKey = key("evaluator");
+  const shards = Math.min(limits.requests.shards, limits.requests.global);
+  let nextShard = crypto.getRandomValues(new Uint32Array(1))[0]! % shards;
   const ttl =
     Math.max(
       limits.evaluator.windowMs,
@@ -131,26 +140,42 @@ export function createProtection(
   return {
     async admit(context: AdmissionContext = {}) {
       const parsed = admission.parse(context);
-      const checks: [string, number][] = [["global", limits.requests.global]];
+      const now = Date.now();
+      const shard = nextShard;
+      nextShard = (nextShard + 1) % shards;
+      // Static slices sum to the configured global maximum. No borrowing or retry.
+      // Epoch-aligned windows keep every slice on the same clock boundary.
+      const checks: [string, number, number][] = [
+        shards === 1
+          ? ["global", limits.requests.global, now]
+          : [
+              JSON.stringify(["global-shard-v1", shards, shard]),
+              Math.floor(limits.requests.global / shards) +
+                Number(shard < limits.requests.global % shards),
+              Math.floor(now / limits.requests.windowMs) *
+                limits.requests.windowMs,
+            ],
+      ];
       if (parsed.account)
         checks.push([
           JSON.stringify(["account", parsed.account]),
           limits.requests.account,
+          now,
         ]);
       if (parsed.session)
         checks.push([
           JSON.stringify(["session", parsed.session]),
           limits.requests.session,
+          now,
         ]);
-      const now = Date.now();
       // Earlier quotas count denied attempts too. Each UPSERT is atomic across replicas.
-      for (const [value, maximum] of checks) {
+      for (const [value, maximum, windowTime] of checks) {
         if (
           !(await storage.consumeQuota(
             await key(value),
             maximum,
             limits.requests.windowMs,
-            now,
+            windowTime,
           ))
         ) {
           emit("request", "request-limit");

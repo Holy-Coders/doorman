@@ -93,6 +93,13 @@ export const sections = [
     title: "Under the hood",
     pages: [
       {
+        slug: "capacity",
+        title: "Connection capacity & load",
+        description:
+          "Measured connection limits, successful throughput and overload recovery.",
+        source: "docs/CAPACITY.md",
+      },
+      {
         slug: "hardening",
         title: "Abuse controls & evidence",
         description:

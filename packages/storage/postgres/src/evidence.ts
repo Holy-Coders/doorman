@@ -59,10 +59,10 @@ export function createPostgresEvidenceStorage(
       if (q.action) values.push(q.action);
       return (
         await db.query(
-          `SELECT record FROM application_events WHERE scope=$1 AND ${field}=$2 AND occurred_at >= $3 AND occurred_at <= $4 AND expires_at > $4 ${q.action ? "AND action=$6" : ""} ORDER BY occurred_at DESC,id DESC LIMIT $5`,
+          `SELECT record->>'type' AS type FROM application_events WHERE scope=$1 AND ${field}=$2 AND occurred_at >= $3 AND occurred_at <= $4 AND expires_at > $4 ${q.action ? "AND action=$6" : ""} ORDER BY occurred_at DESC,id DESC LIMIT $5`,
           values,
         )
-      ).rows.map((r) => record<ApplicationEvent>(r)!);
+      ).rows.map((r) => ({ type: r.type as ApplicationEvent["type"] }));
     },
     async putDeviceLink(link) {
       const rows = (

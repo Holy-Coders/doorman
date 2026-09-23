@@ -115,11 +115,11 @@ defmodule Janitor.Evidence do
     rows =
       S.query(
         c,
-        "SELECT record FROM #{S.table(c, "application_events")} WHERE scope=$1 AND #{field}=$2 AND occurred_at >= $3 AND occurred_at <= $4 AND expires_at > $4 #{if action, do: "AND action=$6", else: ""} ORDER BY occurred_at DESC,id DESC LIMIT $5",
+        "SELECT record->>'type' AS type FROM #{S.table(c, "application_events")} WHERE scope=$1 AND #{field}=$2 AND occurred_at >= $3 AND occurred_at <= $4 AND expires_at > $4 #{if action, do: "AND action=$6", else: ""} ORDER BY occurred_at DESC,id DESC LIMIT $5",
         args
       )
 
-    counts = rows |> Enum.take(limit) |> Enum.frequencies_by(& &1["record"]["type"])
+    counts = rows |> Enum.take(limit) |> Enum.frequencies_by(& &1["type"])
 
     clean(%{
       "source" => "application",

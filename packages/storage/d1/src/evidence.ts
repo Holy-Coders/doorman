@@ -10,7 +10,12 @@ export function createD1EvidenceStorage(db: D1Database): EvidenceStorage {
     const result = await db
       .prepare(sql)
       .bind(...args)
-      .all<{ record: string; digest: string; id: string }>();
+      .all<{
+        record: string;
+        digest: string;
+        id: string;
+        type: ApplicationEvent["type"];
+      }>();
     if (!result.success) throw new Error("D1 evidence operation failed");
     return result.results;
   }
@@ -56,10 +61,10 @@ export function createD1EvidenceStorage(db: D1Database): EvidenceStorage {
       values.push(Math.min(q.limit, 1001));
       return (
         await rows(
-          `SELECT record FROM application_events WHERE scope=? AND ${field}=? AND occurred_at >= ? AND occurred_at <= ? AND expires_at > ? ${q.action ? "AND action=?" : ""} ORDER BY occurred_at DESC,id DESC LIMIT ?`,
+          `SELECT json_extract(record,'$.type') AS type FROM application_events WHERE scope=? AND ${field}=? AND occurred_at >= ? AND occurred_at <= ? AND expires_at > ? ${q.action ? "AND action=?" : ""} ORDER BY occurred_at DESC,id DESC LIMIT ?`,
           values,
         )
-      ).map((r) => record<ApplicationEvent>(r)!);
+      ).map((r) => ({ type: r.type }));
     },
     async putDeviceLink(link) {
       const result = await rows(

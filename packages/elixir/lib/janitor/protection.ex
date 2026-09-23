@@ -10,7 +10,7 @@ defmodule Janitor.Protection do
 
     requests =
       Keyword.merge(
-        [global: 600, account: 60, session: 30, window_ms: 60_000],
+        [global: 600, account: 60, session: 30, shards: 1, window_ms: 60_000],
         Keyword.get(opts, :requests, [])
       )
 
@@ -26,7 +26,7 @@ defmodule Janitor.Protection do
         Keyword.get(opts, :evaluator, [])
       )
 
-    allowed!(requests, [:global, :account, :session, :window_ms])
+    allowed!(requests, [:global, :account, :session, :shards, :window_ms])
 
     allowed!(evaluator, [
       :max_calls,
@@ -41,6 +41,7 @@ defmodule Janitor.Protection do
         cond do
           k in [:window_ms, :cooldown_ms] -> {1000, 3_600_000}
           k == :max_concurrent -> {1, 32}
+          k == :shards -> {1, 128}
           k == :failure_threshold -> {1, 100}
           true -> {1, 1_000_000}
         end
@@ -69,22 +70,32 @@ defmodule Janitor.Protection do
            do: raise(ArgumentError, "invalid admission context")
 
     limits = c.protection[:requests]
+    now = Janitor.now()
+    shards = min(limits.shards, limits.global)
+    shard = :rand.uniform(shards) - 1
+
+    global =
+      if shards == 1 do
+        {"global", limits.global, now}
+      else
+        {Jason.encode!(["global-shard-v1", shards, shard]),
+         div(limits.global, shards) + if(shard < rem(limits.global, shards), do: 1, else: 0),
+         div(now, limits.window_ms) * limits.window_ms}
+      end
 
     checks =
-      [{"global", limits.global}] ++
+      [global] ++
         for(
           k <- [:account, :session],
           context[k],
-          do: {Jason.encode!([to_string(k), context[k]]), limits[k]}
+          do: {Jason.encode!([to_string(k), context[k]]), limits[k], now}
         )
 
-    now = Janitor.now()
-
-    if Enum.all?(checks, fn {value, limit} ->
+    if Enum.all?(checks, fn {value, limit, window_time} ->
          S.query(
            c,
            "INSERT INTO #{S.table(c, "protection_quotas")} AS q (id,used,reset_at) VALUES ($1,1,$2) ON CONFLICT (id) DO UPDATE SET used = CASE WHEN q.reset_at <= $3 THEN 1 ELSE q.used + 1 END, reset_at = CASE WHEN q.reset_at <= $3 THEN $2 ELSE q.reset_at END WHERE q.reset_at <= $3 OR q.used < $4 RETURNING id",
-           [key(c, value), now + limits.window_ms, now, limit]
+           [key(c, value), window_time + limits.window_ms, window_time, limit]
          ) != []
        end),
        do: :ok,

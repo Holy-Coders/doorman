@@ -97,6 +97,8 @@ Any compatible Postgres pool works. Isolate each application in its own database
 
 The unreleased checkout adds optional database-backed request limits, shared Jev call budgets and circuit breaking, plus private edge/authentication evidence, narrow application events and auditable, revocable device associations. TypeScript and native Elixir share the same storage contract. These features preserve the application's control over access decisions; they do not authenticate a person from a fingerprint. See [configuration, APIs and migration instructions](docs/HARDENING.md). They have not been published or integrated into an application yet.
 
+[Capacity benchmarks](docs/CAPACITY.md) include one million events and 200,000 live HTTP connections, with separate successful-throughput and overload results. The checkout adds per-handler admission, optional sharded global quotas and smaller activity-query results; these are local measurements, not a production SLA or paid Jev capacity claim.
+
 ## Node
 
 ```ts

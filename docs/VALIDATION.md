@@ -1,6 +1,14 @@
 # Validation record
 
-## Unreleased abuse controls and evidence — 2026-09-23
+## Unreleased capacity work — 2026-09-23
+
+- Local real-SQL evidence/protection benchmarks completed with one million synthetic events; raw before/after results and index plans are in the [capacity report](CAPACITY.md).
+- An eight-process Node HTTP tier sustained 200,000 warmed keep-alive connections through active identity requests, a simultaneous burst and recovery without dropped connections. Overload responses are counted separately from successful identities. Higher-rate repeats expose overload and generator jitter; no production SLA is claimed.
+- Added bounded per-handler admission (no request queue), optional sharded global quotas with the same Elixir contract, and type-only activity projections. TypeScript: **196 tests across eleven files**. Native Elixir: **46 tests against Postgres**, including sharded quota invariants and shared HMAC vectors. Typecheck and lint pass.
+- The new benchmark sources are included in strict TypeScript checks. Publication, production deployment, paid inference and Open Calls integration remain separate.
+- The complete local launcher was also exercised with a reduced 10,000-event dataset and 1,000 initial connections, followed by its full 10,000-connection rate sweep; automatic cleanup removed its containers, network and database volume. Cloudflare's example dry-run build passed. The repeat's overload counts are recorded alongside the initial results.
+
+## Previous unreleased abuse controls and evidence — 2026-09-23
 
 The current checkout adds the [shared protection and trusted evidence APIs](HARDENING.md). These changes have not been published or integrated into Open Calls. Validation is local and uses mocked external inference.
 
@@ -67,7 +75,7 @@ Example boot commands and environment variables are in each example's README and
 
 ## Public website checks
 
-`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all 27 primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The current checkout produces 28 HTML pages including the 404 page, a sitemap, and an `llms.txt` index. The new hardening page is local and not deployed yet. The site makes no third-party browser requests or fingerprint-collection calls.
+`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all 28 primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The current checkout produces 29 HTML pages including the 404 page, a sitemap, and an `llms.txt` index. The new hardening and capacity pages are local and not deployed yet. The site makes no third-party browser requests or fingerprint-collection calls.
 
 ## Controlled browser dataset
 

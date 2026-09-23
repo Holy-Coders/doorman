@@ -47,6 +47,24 @@ for (const kind of ["postgres", "d1"] as const)
       );
       expect(accepted.filter(Boolean)).toHaveLength(7);
     });
+    it("shares sharded global quotas without multiplying the limit and resets at aligned boundaries", async () => {
+      const opts = {
+        ...options(),
+        requests: { global: 21, shards: 4, windowMs: 1000 },
+      };
+      const a = createProtection(sql.protection, opts, 100);
+      const b = createProtection(sql.protection, opts, 100);
+      const clock = vi.spyOn(Date, "now").mockReturnValue(1_900_000_000_200);
+      const admitted = await Promise.all(
+        Array.from({ length: 100 }, (_, i) => (i % 2 ? a : b).admit()),
+      );
+      expect(admitted.filter((r) => r.allowed)).toHaveLength(21);
+      clock.mockReturnValue(1_900_000_001_001);
+      const next = await Promise.all(
+        Array.from({ length: 100 }, (_, i) => (i % 2 ? a : b).admit()),
+      );
+      expect(next.filter((r) => r.allowed)).toHaveLength(21);
+    });
     it("uses shared account/session limits, hashes keys, and resets expired windows", async () => {
       const opts = {
         ...options(),

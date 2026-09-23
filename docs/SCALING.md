@@ -4,6 +4,8 @@
 
 For a large deployment, use Postgres in the implementer's infrastructure. D1 remains available for smaller installations. A database containing millions of visitors is different from serving millions of requests per second; the latter is not a claim made here.
 
+The new [connection and workload benchmark](CAPACITY.md) tests one million application events, database-shared protection, 200,000 live HTTP connections, overload recovery and a sustained identity-rate sweep. It includes raw results and reproducible local commands. Connection capacity, successful identity throughput and inference capacity are reported separately.
+
 ## Bounded retrieval
 
 Each eligible probe returns at most 101 retained observation rows. The extra row identifies a crowded/truncated bucket:

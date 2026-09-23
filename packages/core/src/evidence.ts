@@ -102,7 +102,7 @@ export interface EvidenceStorage {
     until: number;
     action?: EvidenceAction;
     limit: number;
-  }): Promise<ApplicationEvent[]>;
+  }): Promise<Pick<ApplicationEvent, "type">[]>;
   putDeviceLink(link: DeviceLink): Promise<DeviceLink>;
   getDeviceLink(scope: string, id: string): Promise<DeviceLink | undefined>;
   listDeviceLinks(

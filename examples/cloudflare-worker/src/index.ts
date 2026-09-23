@@ -6,10 +6,12 @@ interface Env {
   ASSETS: Fetcher;
   JEV_ENABLED: string;
 }
+// Reuse within an isolate so its in-flight admission limit covers concurrent requests.
+let visitor: ReturnType<typeof createCloudflareVisitor> | undefined;
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (new URL(request.url).pathname === "/api/visitor") {
-      const visitor = createCloudflareVisitor({
+      visitor ??= createCloudflareVisitor({
         db: env.VISITORS,
         ai: env.JEV_ENABLED === "true" ? env.AI : undefined,
       });

@@ -6,6 +6,12 @@ const output = resolve(root, "site/src/generated");
 mkdirSync(output, { recursive: true });
 const entries = [
   [
+    "capacity",
+    "Connection capacity & load",
+    "Measured connection limits, successful throughput and overload recovery.",
+    "docs/CAPACITY.md",
+  ],
+  [
     "hardening",
     "Abuse controls & evidence",
     "Shared inference budgets, trusted events and revocable device associations.",

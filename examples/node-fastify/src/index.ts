@@ -1,7 +1,12 @@
 import { Pool } from "pg";
 import { createApp } from "./app.js";
 if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL in .env");
-const db = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 5,
+  connectionTimeoutMillis: 1000,
+  statement_timeout: 2000,
+});
 const app = createApp(db, {
   apiKey: process.env.JEV_API_KEY,
   origin: process.env.APP_ORIGIN,

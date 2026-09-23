@@ -87,6 +87,8 @@ Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10
 
 `createVisitorHandler` from `@janitor/adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
 
+The unreleased checkout adds `maxInFlightRequests` (default 64, 1–1,024) and `onOverload`. The limit applies per reusable TypeScript handler instance and rejects excess measurement calls with 503/Retry-After before database work. `protection.requests.shards` optionally distributes the global allowance across 1–128 rows. See [benchmarks and operational semantics](CAPACITY.md). No automatic request retries are performed.
+
 ### Unreleased: abuse controls and trusted evidence
 
 `protection: { secret, namespace, requests?, evaluator?, onEvent? }` enables shared request quotas and evaluator budgets/concurrency/circuit breaking in the existing database. `VisitorRequestContext.admission` accepts server-owned `account` and `session` keys; the browser cannot supply these. Measurement quota exhaustion returns HTTP 429. Inference denial preserves deterministic identity and unavailable risk.

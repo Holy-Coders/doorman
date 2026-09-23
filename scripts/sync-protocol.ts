@@ -63,15 +63,18 @@ const shared = {
     })),
   ),
   protectionLabels: await Promise.all(
-    ["global", "evaluator", JSON.stringify(["account", "account-123"])].map(
-      async (value) => ({
-        value,
-        expected: await createSubjectLinker({
-          secret: "a".repeat(64),
-          namespace: "fixture",
-        })(JSON.stringify(["protection-v1", value])),
-      }),
-    ),
+    [
+      "global",
+      "evaluator",
+      JSON.stringify(["account", "account-123"]),
+      JSON.stringify(["global-shard-v1", 4, 0]),
+    ].map(async (value) => ({
+      value,
+      expected: await createSubjectLinker({
+        secret: "a".repeat(64),
+        namespace: "fixture",
+      })(JSON.stringify(["protection-v1", value])),
+    })),
   ),
   subjects: await Promise.all(
     ["account-123", "משתמש", "é", 'a"b'].map(async (id) => ({

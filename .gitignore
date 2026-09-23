@@ -12,6 +12,7 @@ examples/*/public/visitor.js
 playwright-report/
 test-results/
 artifacts/
+docs/benchmarks/*-current.json
 site/.astro/
 site/src/generated/
 site/public/search-index.json

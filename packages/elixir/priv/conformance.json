@@ -762,6 +762,10 @@
     {
       "value": "[\"account\",\"account-123\"]",
       "expected": "sub_3270e5c2f8f309ab0c42955bb143c499f10aad4f8b766ef1e6a107f17e5cde50"
+    },
+    {
+      "value": "[\"global-shard-v1\",4,0]",
+      "expected": "sub_fc3f14500df49bf3b12708ca2f66c29177186d66118c6fed1fe1066167e49d31"
     }
   ],
   "subjects": [
