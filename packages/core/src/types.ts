@@ -1,3 +1,4 @@
+import type { IdentityAttribution } from "./identity.js";
 export type BrowserObservation = {
   userAgent?: string;
   platform?: string;
@@ -46,6 +47,7 @@ export type VisitorIdentity = {
   visitorId: string;
   /** Present only when the server supplies a verified account identity. */
   subjectId?: string;
+  attribution?: IdentityAttribution;
   confidence: number;
   isReturning: boolean;
   risk: { automation: number; suspicious: number };

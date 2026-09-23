@@ -3,3 +3,4 @@ export * from "./normalize.js";
 export * from "./similarity.js";
 export * from "./engine.js";
 export * from "./storage-utils.js";
+export * from "./identity.js";

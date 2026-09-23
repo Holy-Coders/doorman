@@ -1,7 +1,10 @@
+import { createIdentityDirectory } from "./identity.js";
 import { createSubjectLinker } from "./subject.js";
 import type { SubjectLinkingOptions } from "./subject.js";
 import { createVisitorEngine, isVisitorId } from "@janitor/core";
 import type {
+  IdentityStorage,
+  VerifiedIdentityContext,
   EngineOptions,
   ManagedVisitorStorage,
   RetentionOptions,
@@ -15,12 +18,20 @@ export type AdapterOptions = RetentionOptions &
     maxBodyBytes?: number;
     endpointPath?: string;
     subjectLinking?: SubjectLinkingOptions;
+    identity?: SubjectLinkingOptions;
   };
 export function createVisitorHandler(
   storage: ManagedVisitorStorage,
   evaluator: VisitorEvaluator | undefined,
   options: AdapterOptions = {},
+  identityStorage?: IdentityStorage,
 ) {
+  if (options.identity && !identityStorage)
+    throw new Error("Identity storage is required");
+  const identities =
+    options.identity && identityStorage
+      ? createIdentityDirectory(identityStorage, options.identity)
+      : undefined;
   const linkSubject = options.subjectLinking
     ? createSubjectLinker(options.subjectLinking)
     : undefined;
@@ -58,7 +69,10 @@ export function createVisitorHandler(
   return {
     async handle(
       request: Request,
-      context: { authenticatedSubject?: string } = {},
+      context: {
+        authenticatedSubject?: string;
+        verified?: VerifiedIdentityContext;
+      } = {},
     ): Promise<Response> {
       if (
         new URL(request.url).pathname !==
@@ -89,6 +103,13 @@ export function createVisitorHandler(
         return json({ error: "Insecure cookies require localhost" }, 400);
       try {
         const payload = await readPayload(request, maxBodyBytes);
+        if (context.verified && !identities)
+          throw new RequestError(500, "Identity directory is not configured");
+        if (context.verified && context.authenticatedSubject)
+          throw new RequestError(400, "Use one identity context");
+        const attribution = identities
+          ? await identities.assess(context.verified)
+          : undefined;
         const subject = context.authenticatedSubject;
         if (
           subject !== undefined &&
@@ -114,16 +135,28 @@ export function createVisitorHandler(
           visitorId: id && isVisitorId(id) ? id : undefined,
         });
         const secure = options.cookie?.secure === false ? "" : "; Secure";
-        return json({ ...identity, ...(subjectId ? { subjectId } : {}) }, 200, {
-          "Set-Cookie": `${cookieName}=${identity.visitorId}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAge)}`,
-        });
+        return json(
+          {
+            ...identity,
+            ...(subjectId ? { subjectId } : {}),
+            ...(attribution ? { attribution } : {}),
+          },
+          200,
+          {
+            "Set-Cookie": `${cookieName}=${identity.visitorId}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAge)}`,
+          },
+        );
       } catch (error) {
         if (error instanceof RequestError)
           return json({ error: error.message }, error.status);
         return json({ error: "Visitor storage is unavailable" }, 503);
       }
     },
-    cleanup: () => storage.cleanup(),
+    identities,
+    async cleanup() {
+      await storage.cleanup();
+      await identities?.cleanup();
+    },
     // Server-side only. Applications must authorize erasure and avoid automatic re-identification afterward.
     deleteVisitor: (visitorId: string) => storage.deleteVisitor(visitorId),
   };

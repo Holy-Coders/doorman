@@ -137,3 +137,24 @@ Every package has an ESM export map, strict TypeScript build, version, license, 
 `createBehaviorTracker({ extended: true })` enables the same optional summaries as `createVisitorClient({ behavior: "extended" })`. Counts remain the default. All summaries are optional fields on `BrowserBehavior`; see [the full inventory](../PRIVACY.md).
 
 High-level adapters accept `subjectLinking: { secret, namespace }`. Supply at least 32 cryptographically random bytes of secret material (a 64-character hex string works) and a nonempty application namespace. `handle(request, { authenticatedSubject })` derives an opaque `sub_…` HMAC-SHA-256 label from that already verified account identity. `VisitorIdentity.subjectId?: string` appears only for authenticated requests; `visitorId`, `confidence` and `isReturning` retain their browser-continuity meanings. No database migration or account table is required. See [the integration guide](./EXTENSIONS.md).
+
+## Identity directory and delegation
+
+Adapters accept `identity: { secret, namespace }` and expose `identities` when configured. Apply `0002_identity.sql` in addition to the visitor migration. This directory is independent of the lightweight stateless `subjectLinking` option; use `identity` for account keys and delegation.
+
+```ts
+identities.updateSubject({ id, kind: "person" | "agent" });
+identities.addVerifiedKey(subjectId, { type: "email" | "external" | "public-key", issuer, value });
+identities.findSubject({ type, issuer, value });
+identities.removeKey(subjectId, { type, issuer, value });
+identities.deleteSubject(subjectId);
+identities.createDelegation({ principalId, actorId, audience, scopes, expiresAt });
+identities.revokeDelegation(delegationId);
+identities.assess({ subjectId, actorId?, delegationId?, audience?, requiredScopes? });
+```
+
+All methods are asynchronous and server-only. The application verifies credentials/key ownership and authorizes management operations. `updateSubject` returns `{ id, kind, updatedAt }`; `findSubject` returns that record or `undefined`. Adding/removing keys and deletion/revocation return no value. `createDelegation` returns `{ id, principalId, actorId, audience, scopes, expiresAt }`. `assess` returns `IdentityAttribution` exported by `@janitor/core`.
+
+`handle(request, { verified: { subjectId, actorId?, delegationId?, audience?, requiredScopes? } })` adds `attribution` to `VisitorIdentity` when the identity directory is configured. Context must come from server-verified authentication; body claims are rejected. Anonymous calls return unknown subject/actor attribution. Directory/database failures return controlled HTTP errors, never manufactured valid grants. `cleanup()` also removes expired grants.
+
+Attribution exposes subject status (`verified`/`unknown`), actor kind (`person`/`agent`/`unknown`) with credential basis, and delegation status (`none`/`valid`/`invalid`). Invalid reasons are `missing`, `revoked`, `expired`, `principal`, `actor`, `audience`, or `scope`. A valid grant reports its scopes and expiry; it is not an access decision. Read the full [identity and delegation guide](AGENTIC-IDENTITY.md) before integration.

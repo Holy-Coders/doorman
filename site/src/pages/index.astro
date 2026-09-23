@@ -11,17 +11,18 @@ import { REPO } from "../content";
       <div class="hero-copy">
         <a class="release-pill" href={REPO + "/releases"}>
           <span class="version-dot"></span>Meet Janitor{" "}
-          <span class="pill-version">v0.2.0</span>
+          <span class="pill-version">v0.3 preview</span>
           <span aria-hidden="true">↗</span>
         </a>
         <h1>
-          A little history.
-          <br />A familiar
-          <br class="desktop-break" /> browser.
+          Identity context.
+          <br />
+          For the
+          <br class="desktop-break" /> agentic era.
         </h1>
         <p class="hero-description">
-          Durable first-party identity for a browser that changes. Small
-          histories, transparent matching, and optional AI risk signals.
+          Know the browser. Connect the verified account. Let Jev score
+          continuity and risk—while your application decides what happens next.
         </p>
         <div class="hero-actions">
           <a class="button button-primary" href="/docs/getting-started/">
@@ -210,6 +211,112 @@ import { REPO } from "../content";
         Postgres
       </div>
     </div>
+    <section class="jev-section container" aria-labelledby="jev-title">
+      <div class="jev-copy">
+        <span class="section-kicker">Janitor × Jev · available today</span>
+        <h2 id="jev-title">
+          Small questions.
+          <br />
+          Useful intelligence.
+        </h2>
+        <p>
+          Jev, TypeSafe’s System One model, brings typed judgments to Janitor. A
+          compact browser history goes in. Three bounded scores come out.
+        </p>
+        <p>
+          Use it through Workers AI or the TypeSafe API. Deterministic evidence
+          constrains identity matching; your application owns every access
+          decision.
+        </p>
+        <a class="text-link" href="/docs/evaluators/">
+          See exactly how Janitor uses Jev ↗
+        </a>
+      </div>
+      <div class="jev-terminal">
+        <div class="terminal-caption">
+          <span class="version-dot"></span> jev.evaluate(history, current)
+        </div>
+        <dl>
+          <div>
+            <dt>
+              sameVisitor <span>0 → 1</span>
+            </dt>
+            <dd>Does this browser fit its history?</dd>
+          </div>
+          <div>
+            <dt>
+              automation <span>0 → 1</span>
+            </dt>
+            <dd>How consistent is this with automation?</dd>
+          </div>
+          <div>
+            <dt>
+              suspicious <span>0 → 1</span>
+            </dt>
+            <dd>Are the technical signals inconsistent?</dd>
+          </div>
+        </dl>
+        <p>
+          Output contract · experimental scores · no live inference on this site
+        </p>
+      </div>
+    </section>
+    <section class="actors-section container" aria-labelledby="actors-title">
+      <div class="actors-heading">
+        <span class="section-kicker">Accounts, actors & authority</span>
+        <h2 id="actors-title">
+          One account.
+          <br />
+          More than one actor.
+        </h2>
+        <p>
+          A person, their assistant, or a family member might act within the
+          same account. Useful identity context keeps those relationships
+          explicit.
+        </p>
+      </div>
+      <div class="actor-rows">
+        <div>
+          <span class="actor-number">01</span>
+          <div>
+            <h3>Recognize the environment</h3>
+            <p>Browser history, continuity confidence, and Jev risk scores.</p>
+          </div>
+          <span class="feature-state">Shipped</span>
+        </div>
+        <div>
+          <span class="actor-number">02</span>
+          <div>
+            <h3>Connect the verified account</h3>
+            <p>
+              Your authenticated account ID becomes a stable subject label
+              across devices.
+            </p>
+          </div>
+          <span class="feature-state">Shipped</span>
+        </div>
+        <div>
+          <span class="actor-number">03</span>
+          <div>
+            <h3>Know who acts for whom</h3>
+            <p>
+              Verified identity aliases, distinct actors, and scoped, revocable
+              delegation.
+            </p>
+          </div>
+          <span class="feature-state">Shipped</span>
+        </div>
+      </div>
+      <div class="actors-bottom">
+        <p>
+          Automation can be authorized. A familiar browser can still be
+          compromised.
+        </p>
+        <a class="text-link" href="/docs/agentic-identity/">
+          Read the identity model ↗
+        </a>
+      </div>
+    </section>
     <section class="intro-section container">
       <div>
         <span class="section-kicker">Built for ordinary change</span>
@@ -261,8 +368,9 @@ import { REPO } from "../content";
           <div>
             <span>ƒ</span>
             <p>
-              <strong>Optional intelligence</strong>Jev helps evaluate drift and
-              risk. Swap in your own classifier whenever you need.
+              <strong>Powered by Jev</strong>Optional typed judgments for drift
+              and risk. Use Workers AI or TypeSafe; bring your own classifier
+              later.
             </p>
           </div>
           <div>

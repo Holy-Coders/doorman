@@ -154,3 +154,5 @@ export function createD1Storage(
     },
   };
 }
+
+export * from "./identity.js";

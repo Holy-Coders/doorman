@@ -4,6 +4,13 @@ export const sections = [
     title: "Start here",
     pages: [
       {
+        slug: "agentic-identity",
+        title: "Humans, agents & authority",
+        description:
+          "Verified identity keys, distinct actors, and scoped, revocable delegation.",
+        source: "docs/AGENTIC-IDENTITY.md",
+      },
+      {
         slug: "getting-started",
         title: "Getting started",
         description: "Your first visitor identity, from checkout to response.",

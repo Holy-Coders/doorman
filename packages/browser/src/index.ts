@@ -1,3 +1,4 @@
+import { isIdentityAttribution } from "@janitor/core";
 import { createExtendedBehavior } from "./behavior.js";
 import type {
   BrowserBehavior,
@@ -139,6 +140,7 @@ function validIdentity(value: unknown): value is VisitorIdentity {
     (v.subjectId === undefined ||
       (typeof v.subjectId === "string" &&
         /^sub_[a-f0-9]{64}$/.test(v.subjectId))) &&
+    (v.attribution === undefined || isIdentityAttribution(v.attribution)) &&
     typeof v.isReturning === "boolean" &&
     probability(v.confidence) &&
     !!risk &&

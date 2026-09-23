@@ -58,3 +58,14 @@ await visitor.deleteVisitor(visitorId);
 Deletion cascades through that visitor's observations. Also clear the cookie, stop the browser client with `destroy()`, and respect the application's opt-out on later visits. Do not expose an unauthenticated endpoint accepting arbitrary visitor IDs for deletion.
 
 See [Privacy & signals](/docs/privacy/) for the complete erasure procedure and data inventory.
+
+## Optional identity directory
+
+Enable `identity: { secret, namespace }` to add verified subjects, identity-key associations and delegation. Apply the storage package's `0002_identity.sql` migration after `0001_visitors.sql`. Example migration commands apply both.
+
+The directory adds three tables: `identity_subjects`, `identity_keys`, and `identity_delegations`. Key digests are unique; references cascade on subject erasure. Grant expiry, principal and actor columns are indexed. Full records use JSONB in Postgres and JSON text in D1.
+
+- [D1 identity migration](../../packages/storage/d1/migrations/0002_identity.sql)
+- [Postgres identity migration](../../packages/storage/postgres/migrations/0002_identity.sql)
+
+`cleanup()` removes expired grants alongside browser-history maintenance. Subject/key records require explicit removal and should follow the application's account lifecycle. Deleting a subject removes its keys and grants but leaves browser histories independent. See [the identity directory guide](../../docs/AGENTIC-IDENTITY.md).

@@ -10,8 +10,8 @@ interface Props {
   docs?: boolean;
 }
 const {
-  title = "Janitor — A little history. A familiar browser.",
-  description = "Open-source, first-party browser identity with small observation histories, deterministic matching, and optional Jev risk scoring.",
+  title = "Janitor — Identity context for the agentic era.",
+  description = "First-party browser identity, verified account links, and Jev-powered risk scoring. A small TypeScript library for identity context in the agentic era.",
   docs = false,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -107,8 +107,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           janitor.
         </a>
         <p>
-          A small library for a<br />
-          browser that changes.
+          Identity context for
+          <br />
+          the agentic era.
         </p>
         <span>
           Built by <a href="https://github.com/Holy-Coders">Holy Coders</a>
@@ -118,6 +119,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         <span class="footer-heading">Build with Janitor</span>
         <a href="/docs/getting-started/">Get started</a>
         <a href="/docs/api/">API reference</a>
+        <a href="/docs/agentic-identity/">Humans, agents & authority</a>
         <a href="/playground/">Matching playground</a>
       </div>
       <div>

@@ -119,3 +119,5 @@ export function createPostgresStorage(
     },
   };
 }
+
+export * from "./identity.js";

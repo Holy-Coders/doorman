@@ -1,4 +1,4 @@
-import { createD1Storage } from "@janitor/storage-d1";
+import { createD1Storage, createD1IdentityStorage } from "@janitor/storage-d1";
 import type { D1Database } from "@janitor/storage-d1";
 import { createCloudflareJevEvaluator } from "@janitor/evaluator-cloudflare-jev";
 import type { WorkersAI } from "@janitor/evaluator-cloudflare-jev";
@@ -18,5 +18,6 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
     createD1Storage(options.db, options),
     evaluator,
     options,
+    options.identity ? createD1IdentityStorage(options.db) : undefined,
   );
 }

@@ -1,5 +1,8 @@
 import type { VisitorEvaluator } from "@janitor/core";
-import { createPostgresStorage } from "@janitor/storage-postgres";
+import {
+  createPostgresStorage,
+  createPostgresIdentityStorage,
+} from "@janitor/storage-postgres";
 import type { PostgresDatabase } from "@janitor/storage-postgres";
 import { createJevEvaluator } from "@janitor/evaluator-jev";
 import type { JevOptions } from "@janitor/evaluator-jev";
@@ -24,5 +27,6 @@ export function createNodeVisitor(options: NodeVisitorOptions) {
     createPostgresStorage(options.db, options),
     evaluator,
     options,
+    options.identity ? createPostgresIdentityStorage(options.db) : undefined,
   );
 }

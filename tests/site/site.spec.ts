@@ -93,6 +93,7 @@ for (const width of [390, 1440]) {
       "/docs/validation/",
       "/docs/extensions/",
       "/docs/benchmarks/",
+      "/docs/agentic-identity/",
     ]) {
       await page.goto(path);
       expect(await page.locator("main").count()).toBe(1);

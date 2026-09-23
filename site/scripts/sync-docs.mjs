@@ -6,6 +6,12 @@ const output = resolve(root, "site/src/generated");
 mkdirSync(output, { recursive: true });
 const entries = [
   [
+    "agentic-identity",
+    "Humans, agents & authority",
+    "Verified identity keys, distinct actors, and scoped, revocable delegation.",
+    "docs/AGENTIC-IDENTITY.md",
+  ],
+  [
     "extensions",
     "Behavior & cross-device",
     "Optional movement summaries and verified account links.",
@@ -117,7 +123,7 @@ writeFileSync(
 );
 writeFileSync(
   resolve(root, "site/public/llms.txt"),
-  "# Janitor\n\n> Open-source first-party browser identity and optional risk scoring. No automatic blocking. Experimental matching, not authentication.\n\n" +
+  "# Janitor\n\n> Identity context for the agentic era: first-party browser identity, verified account links, and optional Jev risk scoring. Verified actor and delegation context comes from server-side authentication. No automatic blocking. Experimental matching, not authentication.\n\n" +
     entries
       .map(
         ([slug, title, description]) =>

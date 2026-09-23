@@ -184,3 +184,38 @@ it("does not manufacture motion evidence from missing APIs or timing across visi
   expect(tracker.snapshot().interactionIntervalMeanMs).toBeUndefined();
   tracker.destroy();
 });
+
+it("validates actor attribution and rejects malformed delegation answers", async () => {
+  documentStub();
+  const attribution = {
+    subject: { id: "sub_" + "a".repeat(64), status: "verified" },
+    actor: {
+      id: "sub_" + "b".repeat(64),
+      kind: "agent",
+      basis: "verified-credential",
+    },
+    delegation: {
+      id: "dlg_" + "c".repeat(48),
+      status: "valid",
+      scopes: ["calendar:read"],
+      expiresAt: Date.now() + 60000,
+    },
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({ ...identity, attribution })),
+  );
+  const client = createVisitorClient();
+  expect((await client.identify()).attribution?.actor.kind).toBe("agent");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({
+        ...identity,
+        attribution: { ...attribution, delegation: { status: "valid" } },
+      }),
+    ),
+  );
+  await expect(client.identify()).rejects.toThrow("Invalid visitor response");
+  client.destroy();
+});
