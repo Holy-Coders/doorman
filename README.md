@@ -50,7 +50,7 @@ Applications can opt in to collecting short anonymous sessions that a later veri
 
 ```elixir
 # mix.exs — public Git preview, not yet on Hex
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.6.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.7.0", sparse: "packages/elixir"}
 ```
 
 ```elixir
@@ -60,7 +60,7 @@ Janitor.handle(conn, janitor)
 
 Native Ecto/Postgres, Plug/Phoenix, verified user updates, PostHog and Mixpanel. [Install and connect an existing app](packages/elixir/README.md) · [Boot the Phoenix example](examples/phoenix/README.md).
 
-The unreleased checkout adds coordinated browser login/logout hooks and private account/actor exports for PostHog and Mixpanel. Count distinct people or agents per account, or investigate multiple verified users associated with one browser. Follow the [code, UX and reporting guide](docs/ANALYTICS.md); a browser ID never replaces a person's analytics ID.
+The v0.7.0 GitHub release adds coordinated browser login/logout hooks and private account/actor exports for PostHog and Mixpanel. Count distinct people or agents per account, or investigate multiple verified users associated with one browser. Follow the [code, UX and reporting guide](docs/ANALYTICS.md); a browser ID never replaces a person's analytics ID.
 
 ## Cloudflare
 
@@ -75,7 +75,7 @@ export default {
 };
 ```
 
-Uses D1 and `typesafe/jev` through the Workers AI binding. No separate TypeSafe key. Apply the [D1 migrations](packages/storage/d1/migrations) in order first. This checkout includes `0005_protection.sql` and `0006_evidence.sql`; the public v0.6.0 artifacts stop at `0004_candidate_lookup.sql`.
+Uses D1 and `typesafe/jev` through the Workers AI binding. No separate TypeSafe key. Apply the [D1 migrations](packages/storage/d1/migrations) in order first. This checkout includes `0005_protection.sql` and `0006_evidence.sql`; the public v0.7.0 artifacts stop at `0004_candidate_lookup.sql`.
 
 ## Vercel / Next.js
 
@@ -95,9 +95,9 @@ export async function POST(request: Request) {
 }
 ```
 
-Any compatible Postgres pool works. Isolate each application in its own database or schema/search_path; sharing these tables shares the identity namespace. The adapter does not create or close database connections. Use your database's pooled connection URL and connection limits for serverless execution. Apply the [Postgres migrations](packages/storage/postgres/migrations) in order first (through `0006_evidence.sql` for this checkout, `0004_candidate_lookup.sql` for v0.6.0).
+Any compatible Postgres pool works. Isolate each application in its own database or schema/search_path; sharing these tables shares the identity namespace. The adapter does not create or close database connections. Use your database's pooled connection URL and connection limits for serverless execution. Apply the [Postgres migrations](packages/storage/postgres/migrations) in order first (through `0006_evidence.sql` for this checkout, `0004_candidate_lookup.sql` for v0.7.0).
 
-The unreleased checkout adds optional database-backed request limits, shared Jev call budgets and circuit breaking, plus private edge/authentication evidence, narrow application events and auditable, revocable device associations. TypeScript and native Elixir share the same storage contract. These features preserve the application's control over access decisions; they do not authenticate a person from a fingerprint. See [configuration, APIs and migration instructions](docs/HARDENING.md). They have not been published or integrated into an application yet.
+The v0.7.0 GitHub release adds optional database-backed request limits, shared Jev call budgets and circuit breaking, plus private edge/authentication evidence, narrow application events and auditable, revocable device associations. TypeScript and native Elixir share the same storage contract. These features preserve the application's control over access decisions; they do not authenticate a person from a fingerprint. See [configuration, APIs and migration instructions](docs/HARDENING.md). They are available in the GitHub release artifacts. Application integration remains application-owned.
 
 [Capacity benchmarks](docs/CAPACITY.md) include one million events and 200,000 live HTTP connections, with separate successful-throughput and overload results. The checkout adds per-handler admission, optional sharded global quotas and smaller activity-query results; these are local measurements, not a production SLA or paid Jev capacity claim.
 
@@ -120,7 +120,7 @@ Use with Fastify, Express, Hono, Astro SSR, Nest, plain Node HTTP, and hosts sup
 
 ## Install and develop
 
-Requires Node 22.12+ and pnpm 9.12.0. The workspace is implemented locally; these package names have **not** been published to npm.
+Requires Node 22.12+ and pnpm 9.12.0. The packages are available as GitHub release archives; these package names have **not** been published to npm.
 
 ```sh
 git clone https://github.com/Holy-Coders/janitor.git
@@ -133,12 +133,12 @@ pnpm test
 pnpm lint
 ```
 
-Download the prebuilt [v0.6.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.6.0) to try the packages outside the monorepo:
+Download the prebuilt [v0.7.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.7.0) to try the packages outside the monorepo:
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.6.0/janitor-0.6.0.tar.gz -o janitor-0.6.0.tar.gz
-tar -xzf janitor-0.6.0.tar.gz
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.7.0/janitor-0.7.0.tar.gz -o janitor-0.7.0.tar.gz
+tar -xzf janitor-0.7.0.tar.gz
 pnpm install # or npm install / bun install
 ```
 

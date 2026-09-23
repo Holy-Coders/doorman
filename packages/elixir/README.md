@@ -6,7 +6,7 @@ This is a developer preview. Install the public Git tag; it is **not published t
 
 ```elixir
 # mix.exs
-{:janitor, github: "Holy-Coders/janitor", tag: "v0.6.0", sparse: "packages/elixir"}
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.7.0", sparse: "packages/elixir"}
 ```
 
 Then `mix deps.get`. Requires Elixir 1.17+, Ecto SQL 3.14+, PostgreSQL and Plug. Tested with Elixir 1.20.2 / OTP 29 and Postgres 17. Existing apps should resolve their own compatible dependency lockfile. For this checkout, use `{:janitor, path: "../../packages/elixir"}` instead.
@@ -68,11 +68,11 @@ The browser receives only `visitorId` and `isReturning` by default. Full evidenc
 
 Fresh `Janitor.Migration.up()` includes selective lookup indexes. Existing installations need a new Ecto migration whose `up` calls `Janitor.Migration.upgrade_lookup()`. On a large live database build the three indexes concurrently outside a transaction first; see [migration instructions](../../docs/SCALING.md). `Janitor.cleanup(config, batch_size: 100, after_visitor_id: cursor)` now returns `%{next_visitor_id: ..., has_more_expired: ...}`; advance the cursor and process further expiry batches through existing maintenance.
 
-## Unreleased checkout additions
+## v0.7.0 additions
 
 This checkout adds optional `protection: [secret: ..., namespace: ...]` for shared measurement quotas and evaluator budgets/circuit breaking, plus `evidence: true` with `identity` configuration for server event counts and verified device associations. `Janitor.assess/3` returns a private evidence envelope; `Janitor.handle/3` adds `conn.assigns.janitor_evidence` without putting it in JSON. Use `Janitor.Evidence.record`, `velocity`, `link_device` and `revoke_device` after your application verifies the corresponding outcome. See [complete options, examples and limits](../../docs/HARDENING.md).
 
-Existing installations need `Janitor.Migration.upgrade_security()` in a new application-owned Ecto migration, with the same prefix. Fresh migrations include the new tables. These APIs are not in the v0.6.0 Git tag or a Hex release yet. Use the local path dependency to test this checkout.
+Existing installations need `Janitor.Migration.upgrade_security()` in a new application-owned Ecto migration, with the same prefix. Fresh migrations include the new tables. These APIs ship in the v0.7.0 Git tag. Hex registry publication is separate; use the Git dependency above.
 
 ## Browser and LiveView client
 
@@ -118,7 +118,7 @@ Repeated identification upserts the same subject. This works independently of le
 
 ## PostHog and Mixpanel
 
-The unreleased checkout includes `createIdentityAnalytics` in the bundled browser client plus account/actor dimensions in native server exports. Follow the [complete Phoenix lifecycle, shared-browser and reporting guide](../../docs/ANALYTICS.md) to connect anonymous journeys, login, profile updates, logout and multi-user accounts.
+v0.7.0 includes `createIdentityAnalytics` in the bundled browser client plus account/actor dimensions in native server exports. Follow the [complete Phoenix lifecycle, shared-browser and reporting guide](../../docs/ANALYTICS.md) to connect anonymous journeys, login, profile updates, logout and multi-user accounts.
 
 Use the same account ID your analytics already uses. Janitor does not replace either analytics product. No export happens unless your server calls these functions or explicitly supplies `analytics_consent: true` and `analytics_id` to the handler with configured providers.
 

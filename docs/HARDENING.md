@@ -1,6 +1,6 @@
 # Abuse controls and trusted application evidence
 
-**Unreleased workspace changes.** These APIs are implemented in this checkout; the public v0.6.0 archives do not contain them yet. Publishing and application integration are separate next steps. Nothing here enables automatic blocking, CAPTCHA display, account merging, or model training.
+**Available in the v0.7.0 GitHub release.** Use the [release archives or Git tag](LANGUAGES.md), and apply the migrations below when upgrading. Application integration is a separate step. Nothing here enables automatic blocking, CAPTCHA display, account merging, or model training.
 
 ## Configure shared protection
 

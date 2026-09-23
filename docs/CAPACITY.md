@@ -1,6 +1,6 @@
 # Connection capacity and workload benchmarks
 
-These are local engineering measurements from 2026-09-23, using the unreleased checkout. They establish bounded behavior and specific observed capacities, not a production SLA, identification accuracy or Jev provider capacity. All data is synthetic; no real users, analytics exports, paid inference or production infrastructure were involved.
+These are local engineering measurements from 2026-09-23, using the implementation shipped in v0.7.0. They establish bounded behavior and specific observed capacities, not a production SLA, identification accuracy or Jev provider capacity. All data is synthetic; no real users, analytics exports, paid inference or production infrastructure were involved.
 
 ## One million application events
 

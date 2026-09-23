@@ -1,13 +1,21 @@
 # Validation record
 
-## Unreleased analytics lifecycle and actor reports — 2026-09-23
+## v0.7.0 release verification — 2026-09-23
+
+- The functional changes and site redesign passed [GitHub CI](https://github.com/Holy-Coders/janitor/actions/runs/35842422160), including TypeScript, native Elixir/Postgres, Phoenix, browser integration, example builds and website tests.
+- Local release checks passed: 204 TypeScript tests, typecheck, lint, 11 website browser tests and Astro diagnostics with no errors or warnings. The site builds 29 HTML pages.
+- All seven v0.7.0 JavaScript archives installed in isolated npm, pnpm and Bun consumers. Ten public factory/helper exports and the analytics identify/reset lifecycle passed in each. The native v0.7.0 Hex-format archive builds successfully. SHA256 checksums accompany the GitHub assets.
+- npm publication was attempted and rejected with `EOTP` (authenticator verification required). Hex reports no authenticated account. GitHub archives and the versioned Elixir Git dependency are the installation paths until registry authentication is completed.
+- Publication does not imply a production identity endpoint, live analytics ingestion, Open Calls integration, paid inference validation or real-user accuracy calibration.
+
+## v0.7.0 analytics lifecycle and actor reports — 2026-09-23
 
 - Browser `createIdentityAnalytics` coordinates existing PostHog/Mixpanel identify, profile update, account-switch and logout/reset calls without accepting private scores. It preserves the initial anonymous transition and emits the event needed for Mixpanel Simplified ID Merge.
 - Server TypeScript and native Elixir exports now include optional account/workspace context and opaque verified subject/actor IDs. Groups are opt-in and attached per event. Server agents can export credential attribution without browser/risk fields. Unknown actors are never converted to humans from a low risk score.
 - **204 TypeScript tests across twelve files** and **51 native Elixir tests against local Postgres** pass. Typecheck and lint pass. The real `posthog-js` 1.434.10 and `mixpanel-browser` 2.83.0 SDKs run in Chromium with all analytics traffic intercepted locally: anonymous identity links, second-device login, two users sharing a browser, duplicate auth callbacks, logout and private-score exclusion are checked. Native HTTP export/group/profile payloads use mocked transport. These SDKs are test dependencies only.
-- The [integration guide](ANALYTICS.md) includes Phoenix code, browser lifecycle/UX, distinct-actor report definitions, PostHog SQL, Mixpanel report steps and prompts for analytics assistants. Live provider ingestion, profile merging and dashboard queries have not been validated, and Open Calls has not been integrated. Publishing/deployment remain deferred.
+- The [integration guide](ANALYTICS.md) includes Phoenix code, browser lifecycle/UX, distinct-actor report definitions, PostHog SQL, Mixpanel report steps and prompts for analytics assistants. Live provider ingestion, profile merging and dashboard queries have not been validated, and Open Calls has not been integrated. The v0.7.0 GitHub release packages these changes; registry publication and application integration are tracked separately.
 
-## Unreleased capacity work — 2026-09-23
+## v0.7.0 capacity work — 2026-09-23
 
 - Local real-SQL evidence/protection benchmarks completed with one million synthetic events; raw before/after results and index plans are in the [capacity report](CAPACITY.md).
 - An eight-process Node HTTP tier sustained 200,000 warmed keep-alive connections through active identity requests, a simultaneous burst and recovery without dropped connections. Overload responses are counted separately from successful identities. Higher-rate repeats expose overload and generator jitter; no production SLA is claimed.
@@ -15,9 +23,9 @@
 - The new benchmark sources are included in strict TypeScript checks. Publication, production deployment, paid inference and Open Calls integration remain separate.
 - The complete local launcher was also exercised with a reduced 10,000-event dataset and 1,000 initial connections, followed by its full 10,000-connection rate sweep; automatic cleanup removed its containers, network and database volume. Cloudflare's example dry-run build passed. The repeat's overload counts are recorded alongside the initial results.
 
-## Previous unreleased abuse controls and evidence — 2026-09-23
+## Earlier v0.7.0 abuse controls and evidence — 2026-09-23
 
-The current checkout adds the [shared protection and trusted evidence APIs](HARDENING.md). These changes have not been published or integrated into Open Calls. Validation is local and uses mocked external inference.
+The current checkout adds the [shared protection and trusted evidence APIs](HARDENING.md). These changes ship in v0.7.0 GitHub artifacts and have not been integrated into Open Calls. Validation is local and uses mocked external inference.
 
 - `pnpm typecheck`, `pnpm test` and `pnpm lint` pass: **191 TypeScript tests across ten files**, including 20 shared-protection and 19 trusted-evidence cases on real Postgres SQL (PGlite) and D1 (Miniflare).
 - Native Elixir: **45 tests pass against fresh Postgres 17**, including concurrent quotas, shared inference budgets, one recovery probe, timeout fallback, cookie-history protection, event idempotency, provenance/revocation and cross-language HMAC vectors. `mix format --check-formatted` passes.
@@ -26,11 +34,11 @@ The current checkout adds the [shared protection and trusted evidence APIs](HARD
 - Next.js production build and Cloudflare `deploy --dry-run` pass; no deployment occurs. Website checks pass with **seven Chromium tests**, 27 primary pages at mobile/desktop widths and 28 generated HTML pages including 404.
 - Regressions exercise provider timeout bookkeeping before the response, stale completions, duplicate event races, proof reuse across accounts, shared devices, forged browser/forwarded evidence, bounded retention, erasure and the public Node/Vercel/Cloudflare factory composition. New evidence remains private even with public score opt-in.
 
-These are implementation and trust-boundary checks, not a penetration test or fraud-accuracy benchmark. New event queries and database-shared controls have not been measured at production-scale throughput. Compatible fabricated fingerprints and credential theft still require independent authentication and application policy. Current package versions remain unchanged pending the separate release step.
+These are implementation and trust-boundary checks, not a penetration test or fraud-accuracy benchmark. New event queries and database-shared controls have not been measured at production-scale throughput. Compatible fabricated fingerprints and credential theft still require independent authentication and application policy. The release version for these changes is v0.7.0.
 
 ## v0.6 baseline validation
 
-The following records the earlier v0.6 validation on 2026-09-23; the checks rerun for the unreleased checkout are listed above. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. The repository targets Node 22.12+; CI is configured for Node 22.
+The following records the earlier v0.6 validation on 2026-09-23; the checks for v0.7.0 are listed above. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. The repository targets Node 22.12+; CI is configured for Node 22.
 
 | Check                         | Result                                                                                                                                                          |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -82,7 +90,7 @@ Example boot commands and environment variables are in each example's README and
 
 ## Public website checks
 
-`pnpm site:check` reports zero errors or warnings. `pnpm site:test` passes seven Chromium tests: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all 28 primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The current checkout produces 29 HTML pages including the 404 page, a sitemap, and an `llms.txt` index. The new hardening and capacity pages are local and not deployed yet. The site makes no third-party browser requests or fingerprint-collection calls.
+`pnpm site:check` reports zero errors or warnings. The v0.7.0 site passes eleven Chromium tests, including video playback, offscreen pausing, reduced-motion and data-saving no-download behavior, unavailable media and no-JavaScript fallbacks, plus the existing checks: actual synthetic matching, local documentation search, keyboard code tabs and copy controls, all 28 primary pages at mobile and desktop widths, navigation/static assets, live actor/delegation scenarios, and pause/reduced-motion behavior. The current checkout produces 29 HTML pages including the 404 page, a sitemap, and an `llms.txt` index. The v0.7.0 website update includes the hardening and capacity pages. The site makes no third-party browser requests or fingerprint-collection calls.
 
 ## Controlled browser dataset
 

@@ -150,7 +150,7 @@ writeFileSync(
       openapi: "3.1.0",
       info: {
         title: "Janitor first-party browser protocol",
-        version: "0.6.0",
+        version: "0.7.0",
         description:
           "Self-hosted by each implementer. Measurements never establish authenticated account claims.",
       },

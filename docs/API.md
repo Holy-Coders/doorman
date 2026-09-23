@@ -89,15 +89,15 @@ Common options: `observationRetentionDays` (90), `maxObservationsPerVisitor` (10
 
 `createVisitorHandler` from `@janitor/adapters/node` accepts custom managed storage (`VisitorStorage` plus `cleanup()` and `deleteVisitor()`) and any evaluator for advanced composition.
 
-The unreleased checkout adds `maxInFlightRequests` (default 64, 1–1,024) and `onOverload`. The limit applies per reusable TypeScript handler instance and rejects excess measurement calls with 503/Retry-After before database work. `protection.requests.shards` optionally distributes the global allowance across 1–128 rows. See [benchmarks and operational semantics](CAPACITY.md). No automatic request retries are performed.
+v0.7.0 adds `maxInFlightRequests` (default 64, 1–1,024) and `onOverload`. The limit applies per reusable TypeScript handler instance and rejects excess measurement calls with 503/Retry-After before database work. `protection.requests.shards` optionally distributes the global allowance across 1–128 rows. See [benchmarks and operational semantics](CAPACITY.md). No automatic request retries are performed.
 
-### Unreleased: abuse controls and trusted evidence
+### Abuse controls and trusted evidence (v0.7.0)
 
 `protection: { secret, namespace, requests?, evaluator?, onEvent? }` enables shared request quotas and evaluator budgets/concurrency/circuit breaking in the existing database. `VisitorRequestContext.admission` accepts server-owned `account` and `session` keys; the browser cannot supply these. Measurement quota exhaustion returns HTTP 429. Inference denial preserves deterministic identity and unavailable risk.
 
 `VisitorRequestContext.evidence` accepts allowlisted server authentication, application action and optional trusted edge assessments. `assess().evidence` stays private even when `exposeClientScores` is enabled. Cloudflare exports `cloudflareRequestEvidence(request)` for the original Worker request's available bot-management flags, without trusting forwarded headers.
 
-`evidence: true | { eventRetentionDays?, linkRetentionDays?, maxEventsPerQuery? }` requires `identity` configuration and enables `visitor.evidence`: `record`, `velocity`, `linkDevice`, `assessDevice`, `listDevices`, `revokeDevice`, `deleteSession`, `deleteSubjectEvents`, `cleanup`. Event categories, verification provenance, retention and input bounds are specified in the [complete guide](HARDENING.md). These are server management APIs, not public ingestion endpoints. Apply migrations 0005 and 0006 before enabling them. These APIs are not present in the published v0.6.0 GitHub artifacts.
+`evidence: true | { eventRetentionDays?, linkRetentionDays?, maxEventsPerQuery? }` requires `identity` configuration and enables `visitor.evidence`: `record`, `velocity`, `linkDevice`, `assessDevice`, `listDevices`, `revokeDevice`, `deleteSession`, `deleteSubjectEvents`, `cleanup`. Event categories, verification provenance, retention and input bounds are specified in the [complete guide](HARDENING.md). These are server management APIs, not public ingestion endpoints. Apply migrations 0005 and 0006 before enabling them. These APIs ship in the v0.7.0 GitHub artifacts; upgrade older installations first.
 
 ## Installation artifacts
 

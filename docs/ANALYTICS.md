@@ -2,7 +2,7 @@
 
 Janitor enriches your existing PostHog or Mixpanel setup. A visitor is a browser environment; a person or agent is an actor; an account/workspace is the context they are using. Keep these IDs separate. One browser can have several verified users, one user can have several browsers, and one account can have several people and agents.
 
-**The lifecycle helper and account/actor export fields below are unreleased checkout additions.** They are available through local/workspace dependencies, including the bundled Phoenix client after `pnpm protocol:sync`, not the v0.6.0 tag or published registries. No provider events or project changes are enabled automatically.
+**Available in the v0.7.0 GitHub release.** The lifecycle helper and account/actor export fields ship in the JavaScript archives and the bundled Phoenix client. Registry publication remains separate; use the [release installation instructions](LANGUAGES.md). No provider events or project changes are enabled automatically.
 
 ## What the user experiences
 
