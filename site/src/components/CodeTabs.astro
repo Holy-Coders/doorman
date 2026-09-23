@@ -21,6 +21,21 @@ const examples = [
     file: "server.ts",
     code: `import { createNodeVisitor }\n  from "@janitor/adapters/node";\n\nconst visitor = createNodeVisitor({\n  db, // Any compatible Postgres pool.\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\n// Standard Web Request / Response.\nconst response = await visitor.handle(request);\n\n// Maintenance runs on your schedule.\nawait visitor.cleanup();`,
   },
+  {
+    name: "Phoenix",
+    file: "visitor_controller.ex",
+    code: `# Native Elixir · your existing Ecto repo
+janitor = Janitor.new(
+  repo: MyApp.Repo,
+  evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]
+)
+
+# Your Phoenix controller
+Janitor.handle(conn, janitor)
+
+# Optional server-side profile updates
+# Janitor.Identity.identify_user(config, user.id)`,
+  },
 ];
 ---
 
@@ -53,7 +68,11 @@ const examples = [
           Copy code
         </button>
       </div>
-      <Code code={example.code} lang="ts" theme="github-dark" />
+      <Code
+        code={example.code}
+        lang={example.name === "Phoenix" ? "elixir" : "ts"}
+        theme="github-dark"
+      />
     </div>
   ))}
   <div class="code-demo-footer">

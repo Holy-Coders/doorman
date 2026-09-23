@@ -18,7 +18,10 @@
     "site:build": "pnpm --filter @janitor/core build && pnpm --filter @janitor/site build",
     "site:check": "pnpm --filter @janitor/site typecheck",
     "site:test": "pnpm site:build && playwright test --config site/playwright.config.ts",
-    "benchmark:browser": "pnpm build && tsx tests/benchmarks/generate.ts"
+    "benchmark:browser": "pnpm build && tsx tests/benchmarks/generate.ts",
+    "protocol:sync": "pnpm build && tsx scripts/sync-protocol.ts && pnpm --filter @janitor/example-node exec esbuild ../../packages/browser/src/index.ts --bundle --format=esm --minify --outfile=../../packages/elixir/priv/static/janitor.js",
+    "test:elixir": "cd packages/elixir && mix test",
+    "evaluate:learning": "pnpm build && tsx scripts/evaluate-learning.ts"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.0",
@@ -33,12 +36,14 @@
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
+    "jose": "^6",
     "miniflare": "^4.0.0",
     "prettier": "^3.6.0",
     "prettier-plugin-astro": "^1.0.1",
     "tsx": "^4.20.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "^4"
   }
 }

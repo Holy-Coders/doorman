@@ -1,0 +1,469 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Janitor first-party browser protocol",
+    "version": "0.5.0",
+    "description": "Self-hosted by each implementer. Measurements never establish authenticated account claims."
+  },
+  "paths": {
+    "/api/visitor": {
+      "post": {
+        "operationId": "identifyVisitor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisitorPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Identity and risk evidence",
+            "headers": {
+              "Set-Cookie": {
+                "description": "First-party HttpOnly identity cookie; optional separate learning cookie.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisitorIdentity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "VisitorPayload": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "signals": {
+            "type": "object",
+            "properties": {
+              "userAgent": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "platform": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "languages": {
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 64
+                }
+              },
+              "timezone": {
+                "type": "string",
+                "maxLength": 128
+              },
+              "screen": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32768
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32768
+                  },
+                  "colorDepth": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 64
+                  },
+                  "pixelRatio": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 16
+                  }
+                },
+                "additionalProperties": false
+              },
+              "viewport": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32768
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32768
+                  }
+                },
+                "additionalProperties": false
+              },
+              "hardware": {
+                "type": "object",
+                "properties": {
+                  "hardwareConcurrency": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1024
+                  },
+                  "deviceMemory": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1024
+                  },
+                  "maxTouchPoints": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 256
+                  }
+                },
+                "additionalProperties": false
+              },
+              "automation": {
+                "type": "object",
+                "properties": {
+                  "webdriver": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "graphics": {
+                "type": "object",
+                "properties": {
+                  "webglVendor": {
+                    "type": "string",
+                    "maxLength": 512
+                  },
+                  "webglRenderer": {
+                    "type": "string",
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "behavior": {
+            "type": "object",
+            "properties": {
+              "pageAgeMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 604800000
+              },
+              "mouseMoveCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "pointerDownCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "keyDownCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "scrollCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "visibilityChangeCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "mouseDistancePx": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "mouseActiveMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "mouseDirectionChanges": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "mousePauseCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "scrollDistancePx": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000000
+              },
+              "scrollDirectionChanges": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "interactionIntervalCount": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000000
+              },
+              "interactionIntervalMeanMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 60000
+              },
+              "interactionIntervalStdDevMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 60000
+              }
+            },
+            "required": [
+              "pageAgeMs",
+              "mouseMoveCount",
+              "pointerDownCount",
+              "keyDownCount",
+              "scrollCount",
+              "visibilityChangeCount"
+            ],
+            "additionalProperties": false
+          },
+          "debug": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "signals"
+        ],
+        "additionalProperties": false
+      },
+      "VisitorIdentity": {
+        "type": "object",
+        "required": [
+          "visitorId",
+          "confidence",
+          "isReturning",
+          "risk",
+          "riskStatus"
+        ],
+        "properties": {
+          "visitorId": {
+            "type": "string",
+            "pattern": "^vis_[a-f0-9]{48}$"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "isReturning": {
+            "type": "boolean"
+          },
+          "risk": {
+            "type": "object",
+            "required": [
+              "automation",
+              "suspicious"
+            ],
+            "properties": {
+              "automation": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "suspicious": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          },
+          "riskStatus": {
+            "enum": [
+              "evaluated",
+              "unavailable",
+              "disabled"
+            ]
+          },
+          "attribution": {
+            "type": "object",
+            "description": "Optional server-verified identity attribution; see docs/AGENTIC-IDENTITY.md."
+          },
+          "subjectId": {
+            "type": "string",
+            "pattern": "^sub_[a-f0-9]{64}$"
+          },
+          "debug": {
+            "type": "object",
+            "description": "Explicitly enabled non-production debug only."
+          }
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm protocol:sync && git diff --exit-code -- protocol packages/elixir/priv
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium
@@ -22,3 +23,29 @@ jobs:
       - run: pnpm --filter @janitor/example-cloudflare build
       - run: pnpm site:check
       - run: pnpm site:test
+
+  elixir:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: visitor
+          POSTGRES_PASSWORD: visitor
+          POSTGRES_DB: visitors
+        ports: ["55433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U visitor -d visitors"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://visitor:visitor@localhost:55433/visitors
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "29.0.3"
+          elixir-version: "1.20.2"
+      - run: mix deps.get && mix format --check-formatted && mix test --warnings-as-errors
+        working-directory: packages/elixir
+      - run: mix deps.get && mix format --check-formatted && mix ecto.migrate && mix test --warnings-as-errors
+        working-directory: examples/phoenix

@@ -6,6 +6,43 @@ const output = resolve(root, "site/src/generated");
 mkdirSync(output, { recursive: true });
 const entries = [
   [
+    "elixir",
+    "Elixir & Phoenix",
+    "Native Ecto identity, verified users, PostHog and Mixpanel.",
+    "packages/elixir/README.md",
+  ],
+  [
+    "phoenix-example",
+    "Run Phoenix locally",
+    "Boot the native browser-to-BEAM example.",
+    "examples/phoenix/README.md",
+  ],
+  [
+    "analytics",
+    "PostHog, Mixpanel & Segment",
+    "Explicit account profile updates and allowlisted risk events.",
+    "docs/ANALYTICS.md",
+  ],
+  [
+    "languages",
+    "Install & other languages",
+    "npm, Bun, pnpm, Mix and the language-neutral HTTP contract.",
+    "docs/LANGUAGES.md",
+  ],
+  [
+    "trust",
+    "Signed credentials & actions",
+    "Issuer credentials, operation receipts and explicit device pairing.",
+    "docs/TRUST.md",
+  ],
+  [
+    "evaluation",
+    "Evaluate learning feedback",
+    "Chronological replay, device holdouts and revocable exports.",
+    "docs/EVALUATION.md",
+  ],
+
+  [
     "learning",
     "Opt-in learning",
     "Verified login feedback and private shadow experiments.",

@@ -43,7 +43,21 @@ Janitor combines browser identity with a server-side identity directory: verifie
 
 ## Opt-in login feedback
 
-Applications can opt in to collecting short anonymous sessions that a later verified login labels. Data stays in the implementer's database. Optional shadow predictions stay server-side and never authenticate or merge accounts. Collection is disabled by default and requires server permission on every request. This does not automatically train Jev or establish anonymous cross-device accuracy. See [learning configuration and erasure](docs/LEARNING.md) and the [product review and comparison](docs/REVIEW.md).
+Applications can opt in to collecting short anonymous sessions that a later verified login labels. Data stays in the implementer's database. Optional shadow predictions stay server-side and never authenticate or merge accounts. Collection is disabled by default and uses the implementer’s application-wide or per-request collection policy. This does not automatically train Jev or establish anonymous cross-device accuracy. See [learning configuration and erasure](docs/LEARNING.md) and the [product review and comparison](docs/REVIEW.md).
+
+## Elixir / Phoenix
+
+```elixir
+# mix.exs — public Git preview, not yet on Hex
+{:janitor, github: "Holy-Coders/janitor", tag: "v0.5.0", sparse: "packages/elixir"}
+```
+
+```elixir
+janitor = Janitor.new(repo: MyApp.Repo, evaluator: [api_key: System.fetch_env!("JEV_API_KEY")])
+Janitor.handle(conn, janitor)
+```
+
+Native Ecto/Postgres, Plug/Phoenix, verified user updates, PostHog and Mixpanel. [Install and connect an existing app](packages/elixir/README.md) · [Boot the Phoenix example](examples/phoenix/README.md).
 
 ## Cloudflare
 
@@ -112,16 +126,16 @@ pnpm test
 pnpm lint
 ```
 
-Download the prebuilt [v0.4.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.4.0) to try the packages outside the monorepo:
+Download the prebuilt [v0.5.0 bundle](https://github.com/Holy-Coders/janitor/releases/tag/v0.5.0) to try the packages outside the monorepo:
 
 ```sh
 mkdir janitor-packages && cd janitor-packages
-curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.4.0/janitor-0.4.0.tar.gz -o janitor-0.4.0.tar.gz
-tar -xzf janitor-0.4.0.tar.gz
-pnpm install
+curl -fL https://github.com/Holy-Coders/janitor/releases/download/v0.5.0/janitor-0.5.0.tar.gz -o janitor-0.5.0.tar.gz
+tar -xzf janitor-0.5.0.tar.gz
+pnpm install # or npm install / bun install
 ```
 
-Packages expose compiled ESM and TypeScript declarations. Inside this workspace use `workspace:^` dependencies. Run `pnpm pack:all` to produce seven archives and a consumer `package.json` in `artifacts/`. Copy that folder outside the workspace and run `pnpm install` there for a standalone installation. For an existing pnpm application, merge the generated `dependencies` and `pnpm.overrides` fields into its manifest, adjusting `file:` paths to the archives. The overrides are necessary because these sibling packages are unpublished; they prevent pnpm from looking them up on npm. Alternatively, publish the packages to your own registry. Subpath exports isolate Cloudflare and Node entrypoints. SQL migrations and source/declaration maps ship with the packages.
+Packages expose compiled ESM and TypeScript declarations. Inside this workspace use `workspace:^` dependencies. Run `pnpm pack:all` to produce seven archives and a consumer `package.json` in `artifacts/`. Copy that folder outside the workspace and run `pnpm install` there for a standalone installation. For an existing application, merge `dependencies` and `pnpm.overrides` (pnpm) or `overrides` (npm/Bun) into its manifest, adjusting all `file:` paths to the archives. See [installation options and other languages](docs/LANGUAGES.md). The overrides are necessary because these sibling packages are unpublished; they prevent pnpm from looking them up on npm. Alternatively, publish the packages to your own registry. Subpath exports isolate Cloudflare and Node entrypoints. SQL migrations and source/declaration maps ship with the packages.
 
 Run the browser integration test:
 
@@ -140,7 +154,9 @@ browser collection → normalization → bounded candidate search
 ```
 
 - `@janitor/core`: shared types, normalization, similarity, matching engine. No hosting or evaluator provider imports.
-- `@janitor/browser`: guarded browser collection, aggregate event counters, `identify()` and `destroy()`.
+- `@janitor/browser`: guarded collection, aggregate counters, `identify()`, `setEnabled()`, `reset()` and `destroy()`.
+- Native `janitor` Mix package: Ecto/Postgres, Phoenix/Plug, user updates and PostHog/Mixpanel.
+- [Analytics bridges](docs/ANALYTICS.md), [signed evidence](docs/TRUST.md), and [feedback evaluation](docs/EVALUATION.md) remain separate opt-in helpers.
 - `@janitor/adapters/{cloudflare,vercel,node}`: storage/evaluator composition and a shared HTTP boundary.
 - `@janitor/storage-{d1,postgres}`: indexed candidate lookup, bounded history, erasure and cleanup.
 - `@janitor/evaluator-{jev,cloudflare-jev}`: the same narrow, typed evaluator contract via two transports.

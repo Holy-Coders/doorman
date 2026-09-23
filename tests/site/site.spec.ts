@@ -88,6 +88,13 @@ for (const width of [390, 1440]) {
       "/docs/cloudflare/",
       "/docs/nextjs/",
       "/docs/node/",
+      "/docs/elixir/",
+      "/docs/phoenix-example/",
+      "/docs/analytics/",
+      "/docs/languages/",
+      "/docs/trust/",
+      "/docs/evaluation/",
+
       "/docs/matching/",
       "/docs/evaluators/",
       "/docs/storage/",

@@ -154,11 +154,17 @@ export function createVisitorClient(
     endpoint?: string;
     debug?: boolean;
     behavior?: "counts" | "extended";
+    /** Start paused when the application controls collection permission. */
+    enabled?: boolean;
+    /** For framework CSRF tokens; evaluated again for each request. */
+    headers?: () => Record<string, string>;
   } = {},
 ) {
-  const tracker = createBehaviorTracker({
-    extended: options.behavior === "extended",
-  });
+  const newTracker = () =>
+    createBehaviorTracker({ extended: options.behavior === "extended" });
+  let enabled = options.enabled !== false;
+  let tracker = enabled ? newTracker() : undefined;
+  let generation = 0;
   let pending: Promise<VisitorIdentity> | undefined;
   let destroyed = false;
   let controller: AbortController | undefined;
@@ -166,7 +172,10 @@ export function createVisitorClient(
     identify(): Promise<VisitorIdentity> {
       if (destroyed)
         return Promise.reject(new Error("Visitor client has been destroyed"));
+      if (!enabled)
+        return Promise.reject(new Error("Visitor collection is paused"));
       if (pending) return pending;
+      const currentGeneration = generation;
       pending = (async () => {
         const endpoint = new URL(
           options.endpoint ?? "/api/visitor",
@@ -175,18 +184,22 @@ export function createVisitorClient(
         if (endpoint.origin !== window.location.origin)
           throw new Error("Visitor endpoint must be same-origin");
         controller = new AbortController();
-        const timer = setTimeout(() => controller?.abort(), 10_000);
+        const requestController = controller;
+        const timer = setTimeout(() => requestController.abort(), 10_000);
         try {
           const response = await fetch(endpoint, {
             method: "POST",
             credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              ...options.headers?.(),
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify({
               signals: collectBrowserSignals(),
-              behavior: tracker.snapshot(),
+              behavior: tracker?.snapshot(),
               ...(options.debug ? { debug: true } : {}),
             }),
-            signal: controller.signal,
+            signal: requestController.signal,
           });
           if (!response.ok)
             throw new Error(
@@ -195,18 +208,41 @@ export function createVisitorClient(
           const identity: unknown = await response.json();
           if (!validIdentity(identity))
             throw new Error("Invalid visitor response");
+          if (currentGeneration !== generation || destroyed || !enabled)
+            throw new Error("Visitor request was reset");
           return identity;
         } finally {
           clearTimeout(timer);
         }
       })().finally(() => {
-        pending = undefined;
+        if (currentGeneration === generation) pending = undefined;
       });
       return pending;
     },
+    /** Pausing removes listeners and discards in-flight results. No cookie is changed. */
+    setEnabled(value: boolean) {
+      if (destroyed) throw new Error("Visitor client has been destroyed");
+      if (enabled === value) return;
+      enabled = value;
+      generation++;
+      controller?.abort();
+      pending = undefined;
+      tracker?.destroy();
+      tracker = value ? newTracker() : undefined;
+    },
+    /** Call on logout/account change; clears aggregate behavior, not HttpOnly cookies. */
+    reset() {
+      if (destroyed) throw new Error("Visitor client has been destroyed");
+      generation++;
+      controller?.abort();
+      pending = undefined;
+      tracker?.destroy();
+      tracker = enabled ? newTracker() : undefined;
+    },
     destroy() {
       destroyed = true;
-      tracker.destroy();
+      generation++;
+      tracker?.destroy();
       controller?.abort();
     },
   };

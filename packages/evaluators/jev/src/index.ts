@@ -27,13 +27,30 @@ export function createJevEvaluator(options: JevOptions): VisitorEvaluator {
           ...createJevInput(input),
         }),
         signal: AbortSignal.timeout(timeoutMs),
+        redirect: "error",
       });
       if (!response.ok) {
         await response.body?.cancel();
         throw new Error(`Jev unavailable (${response.status})`);
       }
       // Timeout covers reading/parsing the body as well as receiving headers.
-      return parseJevResponse(await response.json());
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Empty Jev response");
+      const decoder = new TextDecoder();
+      let text = "",
+        size = 0;
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          size += value.byteLength;
+          if (size > 65536) throw new Error("Jev response exceeds 64 KiB");
+          text += decoder.decode(value, { stream: true });
+        }
+        return parseJevResponse(JSON.parse(text + decoder.decode()));
+      } finally {
+        await reader.cancel().catch(() => {});
+      }
     },
   };
 }

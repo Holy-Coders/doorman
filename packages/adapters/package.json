@@ -1,6 +1,6 @@
 {
   "name": "@janitor/adapters",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "license": "MIT",
   "files": [
@@ -21,6 +21,14 @@
     "./node": {
       "types": "./dist/node/index.d.ts",
       "import": "./dist/node/index.js"
+    },
+    "./analytics": {
+      "types": "./dist/analytics.d.ts",
+      "import": "./dist/analytics.js"
+    },
+    "./security": {
+      "types": "./dist/security.d.ts",
+      "import": "./dist/security.js"
     }
   },
   "scripts": {
@@ -28,10 +36,11 @@
   },
   "dependencies": {
     "@janitor/core": "workspace:^",
+    "@janitor/evaluator-cloudflare-jev": "workspace:^",
+    "@janitor/evaluator-jev": "workspace:^",
     "@janitor/storage-d1": "workspace:^",
     "@janitor/storage-postgres": "workspace:^",
-    "@janitor/evaluator-jev": "workspace:^",
-    "@janitor/evaluator-cloudflare-jev": "workspace:^",
+    "jose": "^6",
     "zod": "^4.0.0"
   },
   "repository": {

@@ -28,6 +28,48 @@ export const sections = [
     title: "Integrations",
     pages: [
       {
+        slug: "elixir",
+        title: "Elixir & Phoenix",
+        description:
+          "Native Ecto identity, verified users, PostHog and Mixpanel.",
+        source: "packages/elixir/README.md",
+      },
+      {
+        slug: "phoenix-example",
+        title: "Run Phoenix locally",
+        description: "Boot the native browser-to-BEAM example.",
+        source: "examples/phoenix/README.md",
+      },
+      {
+        slug: "analytics",
+        title: "PostHog, Mixpanel & Segment",
+        description:
+          "Explicit account profile updates and allowlisted risk events.",
+        source: "docs/ANALYTICS.md",
+      },
+      {
+        slug: "languages",
+        title: "Install & other languages",
+        description:
+          "npm, Bun, pnpm, Mix and the language-neutral HTTP contract.",
+        source: "docs/LANGUAGES.md",
+      },
+      {
+        slug: "trust",
+        title: "Signed credentials & actions",
+        description:
+          "Issuer credentials, operation receipts and explicit device pairing.",
+        source: "docs/TRUST.md",
+      },
+      {
+        slug: "evaluation",
+        title: "Evaluate learning feedback",
+        description:
+          "Chronological replay, device holdouts and revocable exports.",
+        source: "docs/EVALUATION.md",
+      },
+
+      {
         slug: "cloudflare",
         title: "Cloudflare Workers",
         description: "D1 storage and Jev through Workers AI.",

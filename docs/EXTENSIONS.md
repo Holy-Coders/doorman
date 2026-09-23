@@ -61,4 +61,4 @@ This stateless `subjectLinking` option stores no account graph and needs no new 
 
 ## Anonymous sessions and later logins
 
-The optional [learning collector](LEARNING.md) uses the identity directory and a separate short session cookie to label pre-login snapshots from a verified login. It is disabled by default, needs server permission per request, and stores data on the implementer's server. It includes no automatically trained cross-device classifier. Optional predictions run in shadow mode and never become verified account links.
+The optional [learning collector](LEARNING.md) uses the identity directory and a separate short session cookie to label pre-login snapshots from a verified login. It is disabled by default, supports application-wide or per-request collection permission, and stores data on the implementer's server. It includes no automatically trained cross-device classifier. Optional predictions run in shadow mode and never become verified account links.

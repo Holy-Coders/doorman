@@ -26,7 +26,13 @@ const visitor = createNodeVisitor({
 
 Cloudflare and Vercel accept the same options. Omitting `learning`, or setting it to `false`, disables the feature: no learning queries, collection cookie, or predictor calls. The browser observation and risk library remains independent.
 
-The application must also authorize collection for each request using its server-side consent/preferences state:
+Choose the policy in server configuration. `collectionPolicy: "application"` collects without a per-request consent flag; `learningConsent: false` still opts that request out. The default `"per-request"` requires `learningConsent: true`. This is an implementer policy switch, not a built-in consent UI. Identity, account updates and risk work regardless of learning being enabled.
+
+```ts
+learning: { enabled: true, collectionPolicy: "application" }
+```
+
+For per-request control, use your existing server-side preferences/policy:
 
 ```ts
 // These are application-owned functions, not Janitor APIs.
@@ -49,13 +55,13 @@ return visitor.handle(request, {
 });
 ```
 
-Call the endpoint during the anonymous visit and again after login, before the learning cookie expires. The library cannot discover a login that your application never reports. Do not copy consent, subject or actor claims from untrusted JSON or headers. Requests without `learningConsent: true` do not collect learning data. The HTTP body accepts browser measurements only.
+Call the endpoint during the anonymous visit and again after login, before the learning cookie expires. The library cannot discover a login that your application never reports. Do not copy consent, subject or actor claims from untrusted JSON or headers. In the default per-request policy, requests without `learningConsent: true` do not collect learning data. Application policy needs no such flag. The HTTP body accepts browser measurements only.
 
 Browser tracking has its own lifecycle. Instantiate the browser client only when your application permits collection, and call `destroy()` when permission is withdrawn. Enabling learning does not enable extended movement/timing summaries; those require the separate `behavior: "extended"` browser option.
 
 ## What a learning session means
 
-1. With both permissions, the server creates a cryptographically random `__visitor_learning` cookie. It is HttpOnly, Secure, SameSite=Lax, host-only and valid for a fixed 30 minutes by default.
+1. When the selected policy permits collection, the server creates a cryptographically random `__visitor_learning` cookie. It is HttpOnly, Secure, SameSite=Lax, host-only and valid for a fixed 30 minutes by default.
 2. Anonymous requests update one latest normalized snapshot, including the aggregate behavior the browser client supplied. Janitor stores no page sequence, URL history or raw input events.
 3. A verified self-person login labels that snapshot and clears the cookie. Post-login measurements cannot overwrite the labeled snapshot. Unknown actors, delegated family members and agent activity are excluded from labels.
 4. Repeated confirmation for the same account is harmless. Conflicting account confirmations mark the flow disputed and exclude it from feedback. This cannot eliminate shared-browser ambiguity; it prevents known conflicting evidence from being used.

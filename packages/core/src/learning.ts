@@ -49,6 +49,7 @@ export type LearningOptions = {
   enabled: true;
   /** Collection is the default. Shadow output never changes returned identity or permissions. */
   mode?: "collect" | "shadow";
+  collectionPolicy?: "per-request" | "application";
   retentionDays?: number;
   sessionMinutes?: number;
   evaluatorTimeoutMs?: number;

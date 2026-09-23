@@ -6,7 +6,7 @@ Validated locally on 2026-09-23. Node v23.7.0, pnpm 9.12.0, TypeScript 5.9.3. Th
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm build`                  | All seven packages compile to ESM and declarations                                                                                                              |
 | `pnpm typecheck`              | Packages, test sources and all three example applications pass                                                                                                  |
-| `pnpm test`                   | 126 tests pass across seven files                                                                                                                               |
+| `pnpm test`                   | 139 tests pass across eight files                                                                                                                               |
 | `pnpm lint`                   | Passes                                                                                                                                                          |
 | `pnpm test:e2e`               | Chromium browser integration passes                                                                                                                             |
 | Next.js production build      | Passes on Next.js 16.3.6; page and API route produced                                                                                                           |
@@ -46,7 +46,7 @@ Example boot commands and environment variables are in each example's README and
 
 ## Controlled browser dataset
 
-The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 126 unit/integration and eight browser UI/integration tests; no risk accuracy or Jev inference is claimed.
+The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). This is separate from the 139 TypeScript unit/integration and eight browser UI/integration tests; no risk accuracy or Jev inference is claimed.
 
 ## Identity directory and delegation
 
@@ -59,3 +59,11 @@ These are functional and trust-boundary tests. They do not establish that a cred
 The v0.4 preview adds 26 real-SQL learning cases across D1 and Postgres: explicit configuration and server permission, strict rejection of client consent claims, pre-login snapshots, frozen verified labels, separation from fuzzy browser restoration, unknown/family/agent exclusions, conflicting account confirmations, consent withdrawal, application scopes, shadow-only outputs, cold starts, malformed/unknown predictions, timeouts, bounded retention and cascading erasure. Risk availability and slow-body deadline coverage are included in the core/browser/HTTP cases above.
 
 These tests use synthetic sessions and verified-context fixtures. No anonymous cross-device accuracy, physical-user identity, real bot detection or automatic Jev training has been measured. The [learning guide](LEARNING.md) describes the evaluation still needed; the [review](REVIEW.md) records the remaining gaps and comparison sources.
+
+## v0.5 native Elixir and integration validation
+
+- Native Elixir: 28 ExUnit tests against Postgres 17, including shared normalization/similarity/HMAC/Jev vectors, restoration, retention, policy choices, verified keys/delegation, shadow-only learning and bounded provider failures.
+- Phoenix: endpoint test covers static client/page and CSRF rejection; a real Chromium browser round trip verifies CSRF-bearing POST, cookie continuity and JSON output. The example runs directly on Phoenix/Bandit with Ecto, without a Node identity service.
+- TypeScript additions: collection lifecycle, application policy on both SQL backends, provider body bounds, three analytics SDK bridges, JWT agent verification, action/operation receipt integrity and replay, chronological/device holdouts and export revocation.
+- Seven documentation UI tests cover the expanded 24-page site at mobile/desktop widths, search, copy, keyboard navigation, labs and reduced motion. The Fastify browser integration also passes.
+- Native PostHog/Mixpanel and Jev transport calls are mocked. No real analytics project, Open Calls deployment, paid inference, new native Python/Go/Ruby/PHP engine or real-user accuracy claim is implied by these results.

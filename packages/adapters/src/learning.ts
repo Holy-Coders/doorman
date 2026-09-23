@@ -18,6 +18,12 @@ export function createLearning(
   const timeoutMs = options.evaluatorTimeoutMs ?? 1200;
   const mode = options.mode ?? "collect";
   if (
+    !["per-request", "application"].includes(
+      options.collectionPolicy ?? "per-request",
+    )
+  )
+    throw new Error("Invalid learning collection policy");
+  if (
     !Number.isInteger(retention) ||
     retention < 1 ||
     retention > 90 ||

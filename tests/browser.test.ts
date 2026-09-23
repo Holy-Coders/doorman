@@ -228,3 +228,53 @@ it("validates actor attribution and rejects malformed delegation answers", async
   await expect(client.identify()).rejects.toThrow("Invalid visitor response");
   client.destroy();
 });
+
+it("pauses collection, resets aggregates on logout and attaches framework CSRF headers", async () => {
+  const document = documentStub();
+  const fetch = vi.fn<(url: URL, options: RequestInit) => Promise<Response>>(
+    async () => Response.json(identity),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const client = createVisitorClient({
+    enabled: false,
+    headers: () => ({ "x-csrf-token": "csrf" }),
+  });
+  document.dispatchEvent(new Event("mousemove"));
+  await expect(client.identify()).rejects.toThrow("paused");
+  expect(fetch).not.toHaveBeenCalled();
+  client.setEnabled(true);
+  document.dispatchEvent(new Event("mousemove"));
+  await client.identify();
+  expect(
+    JSON.parse(String(fetch.mock.calls[0]![1].body)).behavior.mouseMoveCount,
+  ).toBe(1);
+  expect(fetch.mock.calls[0]![1].headers).toMatchObject({
+    "x-csrf-token": "csrf",
+  });
+  client.reset();
+  await client.identify();
+  expect(
+    JSON.parse(String(fetch.mock.calls[1]![1].body)).behavior.mouseMoveCount,
+  ).toBe(0);
+  client.setEnabled(false);
+  await expect(client.identify()).rejects.toThrow("paused");
+  client.destroy();
+});
+
+it("discards stale responses after a reset even when transport ignores abort", async () => {
+  documentStub();
+  let resolve!: (r: Response) => void;
+  vi.stubGlobal(
+    "fetch",
+    () =>
+      new Promise<Response>((r) => {
+        resolve = r;
+      }),
+  );
+  const client = createVisitorClient();
+  const pending = client.identify();
+  client.reset();
+  resolve(Response.json(identity));
+  await expect(pending).rejects.toThrow("reset");
+  client.destroy();
+});

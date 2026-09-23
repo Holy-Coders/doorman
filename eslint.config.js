@@ -4,6 +4,9 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "**/deps/**",
+      "**/_build/**",
+      "packages/elixir/priv/static/**",
       "**/node_modules/**",
       "**/.next/**",
       "**/.wrangler/**",

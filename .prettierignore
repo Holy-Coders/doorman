@@ -7,3 +7,12 @@ pnpm-lock.yaml
 site/src/generated
 site/public/search-index.json
 artifacts
+**/_build
+**/deps
+**/*.ex
+**/*.exs
+**/mix.lock
+
+protocol/*.json
+packages/elixir/priv/*.json
+packages/elixir/priv/static/*

@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "signals": {
+      "type": "object",
+      "properties": {
+        "userAgent": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "platform": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "languages": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "timezone": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "screen": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32768
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32768
+            },
+            "colorDepth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "pixelRatio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 16
+            }
+          },
+          "additionalProperties": false
+        },
+        "viewport": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32768
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32768
+            }
+          },
+          "additionalProperties": false
+        },
+        "hardware": {
+          "type": "object",
+          "properties": {
+            "hardwareConcurrency": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            "deviceMemory": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            "maxTouchPoints": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 256
+            }
+          },
+          "additionalProperties": false
+        },
+        "automation": {
+          "type": "object",
+          "properties": {
+            "webdriver": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "graphics": {
+          "type": "object",
+          "properties": {
+            "webglVendor": {
+              "type": "string",
+              "maxLength": 512
+            },
+            "webglRenderer": {
+              "type": "string",
+              "maxLength": 512
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "behavior": {
+      "type": "object",
+      "properties": {
+        "pageAgeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800000
+        },
+        "mouseMoveCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "pointerDownCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "keyDownCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "scrollCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "visibilityChangeCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "mouseDistancePx": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "mouseActiveMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "mouseDirectionChanges": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "mousePauseCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "scrollDistancePx": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "scrollDirectionChanges": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "interactionIntervalCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "interactionIntervalMeanMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        },
+        "interactionIntervalStdDevMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        }
+      },
+      "required": [
+        "pageAgeMs",
+        "mouseMoveCount",
+        "pointerDownCount",
+        "keyDownCount",
+        "scrollCount",
+        "visibilityChangeCount"
+      ],
+      "additionalProperties": false
+    },
+    "debug": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "signals"
+  ],
+  "additionalProperties": false
+}

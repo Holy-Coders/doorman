@@ -106,6 +106,22 @@ for (const backend of ["postgres", "d1"] as const) {
         "HttpOnly; Secure; SameSite=Lax",
       );
     });
+    it("supports application collection without per-request consent and honors an explicit opt-out", async () => {
+      const visitor = create({
+        enabled: true,
+        collectionPolicy: "application",
+      });
+      const first = await visitor.handle(request());
+      expect(cookie(first)).toMatch(/=ses_[a-f0-9]{48}$/);
+      const stopped = await visitor.handle(request(cookie(first)), {
+        learningConsent: false,
+      });
+      expect(stopped.status).toBe(200);
+      expect(stopped.headers.getSetCookie()[1]).toContain("Max-Age=0");
+      expect(() =>
+        create({ enabled: true, collectionPolicy: "invalid" as "application" }),
+      ).toThrow();
+    });
     it("labels only the pre-login snapshot and freezes it after verification", async () => {
       const visitor = create();
       const owner = await visitor.identities!.updateSubject({

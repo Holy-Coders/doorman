@@ -35,6 +35,7 @@ writeFileSync(
       packageManager: "pnpm@9.12.0",
       dependencies,
       pnpm: { overrides: dependencies },
+      overrides: dependencies,
     },
     null,
     2,

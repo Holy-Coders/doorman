@@ -178,7 +178,11 @@ export function createVisitorHandler(
         const learningCookie = learner
           ? await learner.observe({
               sessionId: learningSessionId,
-              allowed: context.learningConsent === true,
+              allowed:
+                context.learningConsent === true ||
+                (context.learningConsent !== false &&
+                  options.learning !== false &&
+                  options.learning?.collectionPolicy === "application"),
               authenticated:
                 context.verified !== undefined ||
                 context.authenticatedSubject !== undefined,

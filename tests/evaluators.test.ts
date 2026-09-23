@@ -147,21 +147,33 @@ describe("documented Jev contracts", () => {
   it("keeps the direct timeout active while reading the response body", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (_url: string, options: RequestInit) => ({
-        ok: true,
-        json: () =>
-          new Promise((_, reject) => {
-            options.signal?.addEventListener(
-              "abort",
-              () => reject(new Error("aborted")),
-              { once: true },
-            );
-          }),
-      })),
+      vi.fn(
+        async (_url: string, options: RequestInit) =>
+          new Response(
+            new ReadableStream({
+              start(controller) {
+                options.signal?.addEventListener(
+                  "abort",
+                  () => controller.error(new Error("aborted")),
+                  { once: true },
+                );
+              },
+            }),
+          ),
+      ),
     );
     await expect(
       createJevEvaluator({ apiKey: "test", timeoutMs: 20 }).evaluate(input),
     ).rejects.toThrow("aborted");
+  });
+  it("bounds direct provider response size before JSON decoding", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("x".repeat(65537))),
+    );
+    await expect(
+      createJevEvaluator({ apiKey: "test" }).evaluate(input),
+    ).rejects.toThrow("64 KiB");
   });
   it("times out a stalled Workers AI binding", async () => {
     vi.useFakeTimers();

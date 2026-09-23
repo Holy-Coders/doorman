@@ -3,15 +3,17 @@
 ## Browser
 
 ```ts
-createVisitorClient(options?: { endpoint?: string; debug?: boolean; behavior?: "counts" | "extended" }): {
+createVisitorClient(options?: { endpoint?: string; debug?: boolean; behavior?: "counts" | "extended"; enabled?: boolean; headers?: () => Record<string, string> }): {
   identify(): Promise<VisitorIdentity>;
+  setEnabled(enabled: boolean): void;
+  reset(): void;
   destroy(): void;
 };
 ```
 
 `endpoint` defaults to `/api/visitor`; cross-origin URLs are rejected. Concurrent calls on one client share a promise. `identify()` sends signals and current aggregate behavior using same-origin cookies and a ten-second request timeout. Network, HTTP or invalid response errors reject; collection failures alone do not throw. After `destroy()`, the client cannot identify again. Create a new client on a new mount; do not reuse it after disposal. Collection should start only after the application's required opt-in.
 
-`collectBrowserSignals`, `createBehaviorTracker`, and `safe` are exported for advanced integrations/testing. The normal application API requires only `createVisitorClient`.
+`collectBrowserSignals`, `createBehaviorTracker`, and `safe` are exported for advanced integrations/testing. The normal application API requires only `createVisitorClient`. `enabled: false` creates no event listeners; `setEnabled(false)` pauses and clears collection. `reset()` discards pending results and restarts aggregate counts, useful after logout/account changes. Neither changes HttpOnly cookies. `headers()` supplies framework CSRF tokens at request time.
 
 ## Core
 
@@ -167,3 +169,23 @@ Attribution exposes subject status (`verified`/`unknown`), actor kind (`person`/
 ## Optional learning
 
 `learning?: false | LearningOptions` is disabled by default and requires `identity` plus migration `0003_learning.sql`. Explicit `learning: { enabled: true, mode: "collect" }` and trusted `handle(request, { learningConsent: true })` enable short-session feedback. `mode: "shadow"` additionally requires a `predict({ current, examples })` callback returning `{ subjectId?, score? }`. Reports and guesses stay server-only. See [all limits, lifecycle rules and examples](LEARNING.md). No built-in cross-device model is trained or automatically enabled.
+
+## Native Elixir and optional utilities
+
+- [Elixir / Phoenix](../packages/elixir/README.md): `Janitor.new`, `Janitor.handle`, `Janitor.identify`, `Janitor.Identity.identify_user`, Ecto migrations, cleanup and native PostHog/Mixpanel HTTP.
+- [Analytics](ANALYTICS.md): `@janitor/adapters/analytics` exports `analyticsProperties` and `createAnalyticsBridge` for existing PostHog, Mixpanel and Segment server SDKs.
+- [Trust](TRUST.md): `@janitor/adapters/security` exports `createResultReceipts` and `verifyAgentCredential`; these never alter the matching engine or application policy.
+- [Evaluation](EVALUATION.md): core exports `createFeedbackExport`, `revokeFeedback` and `evaluateLearning` for local, verified feedback experiments.
+- [HTTP protocol](../protocol/openapi.json): OpenAPI 3.1, with generated JSON payload schema and TypeScript/Elixir conformance fixtures.
+
+Additional repository paths:
+
+```text
+packages/elixir/              Native Mix package, Ecto migration, bundled browser client
+examples/phoenix/             Working Phoenix endpoint and browser page
+packages/adapters/src/analytics.ts
+packages/adapters/src/security.ts
+packages/core/src/evaluation.ts
+protocol/                    OpenAPI, JSON schema, Jev questions and conformance vectors
+scripts/evaluate-learning.ts  Offline aggregate evaluation report
+```
