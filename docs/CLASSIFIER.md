@@ -158,7 +158,7 @@ Every language can use `POST /v1/classify` with a participant bearer key and `{ 
 }
 ```
 
-The TypeScript client is available from the source workspace; the classifier addition is not yet an npm release. Other language SDKs can call the HTTP protocol today; no new native `classify` method is implied. See [the machine-readable contract](../protocol/classifier.schema.json).
+The TypeScript client is published in `@aarondovturkel/doorman-network` v0.12.0. Install it with npm, pnpm or Bun. Other language SDKs can call the HTTP protocol today; no new native `classify` method is implied. See [the machine-readable contract](../protocol/classifier.schema.json).
 
 Without a current model, `status` is `unavailable` and predictions are empty. Insufficient measurements produce `score:null` and `missing-evidence`. Failed, malformed, absent or version-mismatched Jev features produce `jev-unavailable`; expiry produces `expired` for a locally loaded model. Unknown is not a zero-risk judgment. This endpoint never blocks, challenges, merges identities or changes authorization.
 
