@@ -181,7 +181,7 @@ export function classifierGates(
       (m) => (m.calibrationError ?? 1) <= LIMIT.maximumCalibrationError,
     ),
     beatsConstantBaseline: [model.metrics.validation, holdout].every(
-      calibrated,
+      beatsBaseline,
     ),
     discrimination: [model.metrics.validation, holdout].every(discriminates),
     individualApplications: model.manifest.split.holdoutTenants.every((id) => {
