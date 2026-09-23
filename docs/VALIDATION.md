@@ -48,6 +48,7 @@ Example boot commands and environment variables are in each example's README and
 - Native Elixir passes 31 tests against Postgres; Phoenix passes its endpoint test. New expression indexes apply on fresh databases and through an idempotent upgrade migration. Cleanup tests exercise bounded pages and expiry.
 - A separate local benchmark completed with 2 million visitors / 2 million observations and again with 2 million visitors / 6 million observations. The latter candidate lookup p95 was 6.46 ms. Its deliberately older target was retrieved in 100/100 probes, but the engine abstained on the selected ambiguous example. This is query-scale evidence, **not identity accuracy or a production throughput SLA**. A 10-million-observation attempt exhausted the Docker disk allocation and is not counted as a pass. See [methodology, raw results and plans](SCALING.md).
 - No production database was migrated. Cloudflare can now compose the same Postgres storage with Workers AI, and the adapter is tested locally with mocked AI. Real inference, network reputation and account-takeover detection remain unmeasured.
+- The public v0.6 bundle installs in fresh consumers using pnpm, npm and Bun. Imports pass in all three; migration exports and an encrypted-receipt round trip pass in the pnpm consumer. The downloaded GitHub bundle matches the tested local SHA256. Registry publication is separate from these artifact installation checks.
 
 ## Public website checks
 
