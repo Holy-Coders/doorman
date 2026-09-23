@@ -103,6 +103,42 @@ for (const kind of ["postgres", "d1"] as const)
       });
       expect(after.assessment?.relatedActivity).toBeUndefined();
     });
+    it("isolates historical contributions and cached results when the admission threshold changes", async () => {
+      const scope = identity();
+      const make = (minConfidence: number) =>
+        createApiActivity(db.activity, scope, {
+          routes: [{ route }],
+          correlation: { minConfidence },
+        });
+      const broad = make(0.8),
+        strict = make(0.95);
+      const link = await broad.correlation({
+        basis: "browser-match",
+        confidence: 0.85,
+        parts: [{ kind: "browser", value: "matched-environment" }],
+      });
+      await broad.observe(
+        {
+          key: { kind: "session", id: "original" },
+          route,
+          correlations: [link],
+        },
+        { status: 403, durationMs: 0 },
+      );
+      const query = {
+        key: { kind: "session" as const, id: "new" },
+        route,
+        correlations: [{ ...link, confidence: 0.99 }],
+      };
+      const initial = await broad.assess(query);
+      expect(
+        initial.assessment?.relatedActivity?.[0]?.minimumLinkConfidence,
+      ).toBe(0.8);
+      const changed = await strict.assess(query);
+      expect(changed.assessment?.cached).toBe(false);
+      expect(changed.assessment?.relatedActivity).toBeUndefined();
+    });
+
     it("excludes weak links and rejects shape-only cohorts and client-supplied extras", async () => {
       const service = createApiActivity(db.activity, identity(), {
         routes: [{ route }],

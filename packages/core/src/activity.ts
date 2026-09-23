@@ -8,6 +8,8 @@ export type ApiActivityCorrelation = {
   confidence: number;
 };
 export type RelatedApiActivity = {
+  /** Admission floor for every contribution in this policy-scoped group. */
+  minimumLinkConfidence: number;
   basis: ApiActivityCorrelation["basis"];
   confidence: number;
   summary: ApiActivitySummary;

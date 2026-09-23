@@ -105,7 +105,14 @@ export function createApiActivity(
         )
       : [];
   const correlationOwner = (link: ApiActivityCorrelation) =>
-    label(JSON.stringify(["api-correlation-v1", link.basis, link.id]));
+    label(
+      JSON.stringify([
+        "api-correlation-v1",
+        config.correlation?.minConfidence,
+        link.basis,
+        link.id,
+      ]),
+    );
   const summaryFor = async (key: string, now: number, check: () => void) => {
     const window = Math.floor(now / config.windowMs) * config.windowMs;
     const rows = await storage.recent(
@@ -176,6 +183,7 @@ export function createApiActivity(
         context.actor?.delegated ?? null,
         config.windowMs,
         routes.get(context.route)!.sensitive,
+        config.correlation?.minConfidence ?? null,
         links(context)
           .map((c) => [c.id, c.basis, c.confidence])
           .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
@@ -203,6 +211,7 @@ export function createApiActivity(
         relatedActivity.push({
           basis: link.basis,
           confidence: link.confidence,
+          minimumLinkConfidence: config.correlation!.minConfidence,
           summary: group,
         });
     }
