@@ -163,7 +163,7 @@
       {
         "slug": "storage",
         "title": "Storage & retention",
-        "description": "Choose a database, apply migrations and delete old visitor history.",
+        "description": "Automatic table setup, history retention and deletion in your database.",
         "source": "site/content/storage.md"
       },
       {
