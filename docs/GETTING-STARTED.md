@@ -2,7 +2,7 @@
 
 Run a complete Doorman example on your machine. It includes a page, a browser client, an endpoint and a local database. You do not need a Cloudflare account, an AI key or Docker.
 
-This guide uses the **upcoming 0.13 release from source**, so it works before package publication finishes. Prefer Phoenix? [Run the native Elixir example](../examples/phoenix/README.md).
+This guide runs **Doorman 0.13 from source**. To add it to an existing app, [install the packages](LANGUAGES.md). Prefer Phoenix? [Run the native Elixir example](../examples/phoenix/README.md).
 
 ## 1. Get the example
 
@@ -17,7 +17,7 @@ pnpm build
 cd examples/cloudflare-worker
 ```
 
-The checkout includes all Doorman packages; no unpublished dependencies are fetched from npm. For other package managers and existing applications, see [installation and versions](LANGUAGES.md).
+The checkout links all Doorman packages locally. For other package managers and existing applications, see [installation and versions](LANGUAGES.md).
 
 ## 2. Set a local secret
 
@@ -86,11 +86,11 @@ You can add [Jev scoring](JEV.md), [PostHog or Mixpanel](ANALYTICS.md), and [ext
 
 ### If something fails
 
-| Symptom                                      | Check                                                                                                                           |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 503 with “Configure DOORMAN_IDENTITY_SECRET” | Create `.dev.vars` in `examples/cloudflare-worker`, then restart the server.                                                    |
-| Database error                               | Check the database binding and file permissions. Table setup is automatic; no migration command is needed.                      |
-| Import or missing export error               | Run `pnpm install` and `pnpm build` at the repository root. Use the checkout's workspace packages while publication is pending. |
-| Every visit has a new ID                     | Check that cookies are allowed and that the request uses the same origin as the page.                                           |
+| Symptom                                      | Check                                                                                                       |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 503 with “Configure DOORMAN_IDENTITY_SECRET” | Create `.dev.vars` in `examples/cloudflare-worker`, then restart the server.                                |
+| Database error                               | Check the database binding and file permissions. Table setup is automatic; no migration command is needed.  |
+| Import or missing export error               | Run `pnpm install` and `pnpm build` at the repository root. Use the checkout's workspace packages together. |
+| Every visit has a new ID                     | Check that cookies are allowed and that the request uses the same origin as the page.                       |
 
 Stop the development server with Ctrl-C. Its local database remains available for your next run.

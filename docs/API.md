@@ -1,6 +1,6 @@
 # API reference
 
-Start with [add Doorman to your app](IDENTITY-CONTEXT.md). This reference targets the upcoming 0.13 release.
+Start with [add Doorman to your app](IDENTITY-CONTEXT.md). This reference covers Doorman 0.13.
 
 ## Recommended server API
 

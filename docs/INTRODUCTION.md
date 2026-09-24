@@ -4,7 +4,7 @@ Doorman helps your app remember browsers and understand who is using an account.
 
 It runs inside your application, using your Postgres or Cloudflare D1 database. You keep your login system and analytics tools. There is no Doorman account or hosted service to sign up for.
 
-**Start with the [local quickstart](GETTING-STARTED.md).** It needs no AI key. These guides describe the upcoming 0.13 release, available [from source](LANGUAGES.md) while publication finishes.
+**Start with the [local quickstart](GETTING-STARTED.md).** It needs no AI key. These guides cover Doorman 0.13. You can also [install it in an existing app](LANGUAGES.md).
 
 ## What it helps you answer
 

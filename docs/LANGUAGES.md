@@ -1,6 +1,6 @@
 # Install Doorman
 
-These docs cover the upcoming **0.13 release**. Its npm and Hex publication is in progress. Until it is published, [run the source example](GETTING-STARTED.md). The commands below select 0.13 explicitly so you cannot accidentally install an older API.
+These docs cover **Doorman 0.13**, available on npm and Hex. Choose your package manager below, or [run the source example](GETTING-STARTED.md). The commands select the version used in these guides.
 
 ## TypeScript: npm, pnpm or Bun
 
@@ -26,15 +26,13 @@ Packages contain ESM JavaScript and TypeScript declarations. The examples use No
 
 ## Elixir / Phoenix
 
-Add this dependency to `mix.exs` after publication:
+Add this dependency to `mix.exs`:
 
 ```elixir
 {:doorman_identity, "~> 0.13.0"}
 ```
 
 Then run `mix deps.get` and follow the [Phoenix setup](../packages/elixir/README.md). Doorman uses your Ecto Postgres repo and includes the browser JavaScript. You do not need a Node service or a JavaScript build.
-
-While publication is pending, clone the repository beside your app and use `{:doorman_identity, path: "../doorman/packages/elixir"}` instead. Adjust the path to your checkout.
 
 The unscoped `doorman` packages on npm and Hex are unrelated. Use the package names above.
 

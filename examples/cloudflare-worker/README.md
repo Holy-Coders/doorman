@@ -1,6 +1,6 @@
 # Cloudflare Workers
 
-Run a page and `/api/visitor` endpoint in one Worker, with D1 storage. The local example needs no Cloudflare account or AI credentials. It uses the upcoming 0.13 API from the source workspace.
+Run a page and `/api/visitor` endpoint in one Worker, with D1 storage. The local example needs no Cloudflare account or AI credentials. It uses the 0.13 API from the source workspace.
 
 ## Run the example
 

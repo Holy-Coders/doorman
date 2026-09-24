@@ -2,7 +2,7 @@
 
 Connect three things: your browser client, your existing login, and your database. Start without AI. Add analytics and scoring after the first visit works.
 
-This guide targets the upcoming 0.13 release. [Install the packages](LANGUAGES.md), or [try the source example](GETTING-STARTED.md) while publication is pending. For Phoenix, use the [native setup](../packages/elixir/README.md).
+This guide covers Doorman 0.13. [Install the packages](LANGUAGES.md), or [try the source example](GETTING-STARTED.md). For Phoenix, use the [native setup](../packages/elixir/README.md).
 
 ## 1. Configure the server
 

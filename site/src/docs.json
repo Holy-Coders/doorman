@@ -23,7 +23,7 @@
       {
         "slug": "languages",
         "title": "Install Doorman",
-        "description": "Choose the source preview or the published packages before copying code.",
+        "description": "Install with npm, pnpm, Bun or Hex, or run a source example.",
         "source": "docs/LANGUAGES.md"
       },
       {

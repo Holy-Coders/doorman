@@ -4,7 +4,7 @@ This is a small Phoenix application with a page, a visitor endpoint and a Postgr
 
 ## Start the app
 
-You need Elixir 1.17+, compatible Erlang/OTP and Postgres. This example uses the upcoming 0.13 package from the source checkout. The example can use Docker for a disposable local Postgres instance. From the repository root:
+You need Elixir 1.17+, compatible Erlang/OTP and Postgres. This example uses the 0.13 package from the source checkout. The example can use Docker for a disposable local Postgres instance. From the repository root:
 
 ```sh
 # Skip this command if you already have a local Postgres database.

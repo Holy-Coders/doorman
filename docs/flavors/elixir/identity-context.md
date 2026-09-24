@@ -1,6 +1,6 @@
 # One identity integration in Phoenix
 
-**Upcoming 0.13 release.** Package publication is in progress. You can run the [source examples](https://github.com/Holy-Coders/doorman/tree/main/examples) now.
+**Doorman 0.13.** [Install the native Hex package](../../LANGUAGES.md), or run the [Phoenix example](https://github.com/Holy-Coders/doorman/tree/main/examples/phoenix).
 
 Use your existing Ecto repository and authentication pipeline. Doorman remembers browser relationships and returns private estimates; it does not replace login or grant permissions.
 

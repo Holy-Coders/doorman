@@ -2,11 +2,11 @@
 
 Add browser identity and account context to your Phoenix application using your existing Ecto Postgres repo. Doorman runs natively in Elixir and includes the browser client. No Node service or manual migrations are needed.
 
-This guide covers the upcoming 0.13 release. You can [run the source example](../../examples/phoenix/README.md) now, while package publication finishes.
+This guide covers Doorman 0.13. For a complete local app, [run the Phoenix example](https://github.com/Holy-Coders/doorman/tree/main/examples/phoenix).
 
 ## 1. Install
 
-After publication, add this to `deps` in `mix.exs`:
+Add this to `deps` in `mix.exs`:
 
 ```elixir
 {:doorman_identity, "~> 0.13.0"}
@@ -84,7 +84,7 @@ The first visit creates a browser ID; later calls reuse its cookie. Create the c
 
 Pass your already initialized SDKs as `analytics: { posthog, mixpanel }`. Call `doorman.identify({ userId: String(user.id) })` after login and when loading an already signed-in session. Call `doorman.reset()` after logout or session expiry. Doorman handles provider identification; you do not need to call both SDKs yourself.
 
-Browser identification does not authenticate the user to the endpoint: the controller's `auth` context does that. See [the analytics lifecycle](../../docs/ANALYTICS.md) for account switching, profile updates and error handling.
+Browser identification does not authenticate the user to the endpoint: the controller's `auth` context does that. See [the analytics lifecycle](https://doorman.holycoders.io/docs/elixir/analytics/) for account switching, profile updates and error handling.
 
 ## Read private results
 
@@ -100,7 +100,7 @@ Only `{ visitorId, sessionId, isReturning }` goes to the browser. Remembered con
 
 Add `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` to `Doorman.new` to enable Jev. Provider charges may apply. Without it, `riskStatus` is `"disabled"`; failed evaluation is `"unavailable"`. Zero risk in either case means “not assessed.”
 
-Add `cross_device: true` to learn tentative connections from later verified logins. Add `collection: "extended"` to the browser client for bounded additional signals. [The context guide](../../docs/flavors/elixir/identity-context.md) explains the results and limits.
+Add `cross_device: true` to learn tentative connections from later verified logins. Add `collection: "extended"` to the browser client for bounded additional signals. [The context guide](https://doorman.holycoders.io/docs/elixir/identity-context/) explains the results and limits.
 
 For a separately authenticated agent acting for a user, pass `actor: %{id: agent_id, kind: :agent}` in `auth`. Your app must verify the credential and permission. Browser patterns cannot prove how many people share a password.
 
@@ -118,4 +118,4 @@ Doorman.delete_visitor(config, visitor_id)
 
 These are separate operations: cleanup expires old history; the other two erase a user or browser after your app authorizes deletion. Also erase copies sent to analytics.
 
-The defaults are 90 days of observations, ten stored observations per browser and five loaded for matching. Set `observation_retention_days` or `max_observations_per_visitor` to change them. Use a separate schema/database per application. [Storage and retention](../../site/content/storage.md) covers restricted database users and startup checks.
+The defaults are 90 days of observations, ten stored observations per browser and five loaded for matching. Set `observation_retention_days` or `max_observations_per_visitor` to change them. Use a separate schema/database per application. [Storage and retention](https://doorman.holycoders.io/docs/storage/) covers restricted database users and startup checks.

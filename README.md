@@ -1,6 +1,6 @@
 # Doorman
 
-**Upcoming 0.13 release.** Package publication is in progress. You can run the [source examples](https://github.com/Holy-Coders/doorman/tree/main/examples) now.
+**Doorman 0.13.** Install from [npm and Hex](docs/LANGUAGES.md), or run the [source examples](https://github.com/Holy-Coders/doorman/tree/main/examples).
 
 <img src="https://doorman.holycoders.io/doorman-mark.png" alt="Doorman" width="96" />
 

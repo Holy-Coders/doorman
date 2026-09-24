@@ -1,6 +1,6 @@
 # Next.js and Vercel
 
-This example adds a browser client and a Node route to a Next.js App Router app. It uses Postgres through `pg`, so you can choose your database provider. It uses the upcoming 0.13 API from the source workspace.
+This example adds a browser client and a Node route to a Next.js App Router app. It uses Postgres through `pg`, so you can choose your database provider. It uses the 0.13 API from the source workspace.
 
 ## Run the example
 

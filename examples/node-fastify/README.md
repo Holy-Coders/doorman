@@ -17,7 +17,7 @@ pnpm dev
 
 Open **http://localhost:3001** and select **Identify** twice. The second response should use the cookie and return the same visitor ID. `pnpm dev` builds the browser client before starting Fastify.
 
-Doorman creates its tables automatically. This source example uses the upcoming 0.13 API.
+Doorman creates its tables automatically. This source example uses the 0.13 API.
 
 ## Environment variables
 
