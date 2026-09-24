@@ -54,13 +54,16 @@ const doorman = createDoormanClient({
 await doorman.identify();
 // After login:
 await doorman.identify({ userId: user.id, accountId: account.id });
-// Existing provider events also receive safe context.
+// Optional helper: sends to both configured providers.
+// Do not also capture/track this event directly in those SDKs.
 await doorman.track("Project created");
 // On logout:
 await doorman.reset();
 ```
 
 Minimal collection is the default. Extended collection enables bounded aggregate behavior, runtime, permission, target/focus and font probes. No keys, coordinates, forms or recordings are retained. Call `destroy()` on teardown. Provider replay/autocapture remains governed by your own provider settings.
+
+**Existing `posthog.capture()` and `mixpanel.track()` calls can stay.** They receive the safe browser/session/account properties Doorman registers. `doorman.track()` is an optional alternative that forwards to all configured providers. Choose one delivery path per event per destination; combining both sends duplicates. See [the two tracking options](analytics.md#choose-one-event-delivery-path).
 
 The browser SDK registers only safe browser/session/account properties. Private `doorman_properties` can be attached to server events using your existing analytics SDK. If using Doorman's explicit server analytics exporters with `analytics_consent: true` and a server-owned `analytics_id`, that context snapshot is included automatically.
 

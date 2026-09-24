@@ -51,6 +51,9 @@ await doorman.identify();
 // After your app verifies login:
 await doorman.identify({ userId: user.id, accountId: account.id });
 await doorman.update({ plan: "team" });
+// Optional: forwards to both configured SDKs.
+// Or keep posthog.capture() / mixpanel.track().
+// Use one path per event per destination to avoid duplicates.
 await doorman.track("Project created");
 // On logout:
 await doorman.reset();`,

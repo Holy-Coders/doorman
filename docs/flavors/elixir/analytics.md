@@ -2,6 +2,8 @@
 
 Keep your existing PostHog or Mixpanel project. Use Doorman's browser client for login, profile updates and logout; use private server properties when you want risk or agent context in reports.
 
+**`doorman.track()` is optional. Send each event once to each destination: through Doorman or through your existing analytics SDK. Do not do both for the same destination.**
+
 First complete the [Phoenix setup](../../../packages/elixir/README.md). Its controller passes your server's authenticated `current_user` to Doorman. No manual migrations are needed.
 
 ## Browser lifecycle
@@ -26,15 +28,35 @@ await doorman.identify({
   userId: String(user.id),
   accountId: String(account.id),
 });
-// Ordinary events:
-await doorman.track("Project created");
 // After logout:
 await doorman.reset();
 ```
 
 These calls belong in their respective lifecycle hooks; do not run the whole sequence on every page load. Omit `accountId` without workspaces. Keep one client in your app bootstrap, call `destroy()` on teardown, and catch measurement failures so they do not interrupt a completed login.
 
-Existing `posthog.capture` and `mixpanel.track` calls also receive safe browser/session/account context. Segment, Amplitude and RudderStack are supported through `doorman.track`; their direct SDK calls are not automatically enriched. Doorman does not enable replay or change the providers' collection settings.
+## Choose one event delivery path
+
+Keep your existing event calls after connecting the initialized SDKs and completing `doorman.identify()`. Subsequent events receive the safe browser/session/account context Doorman registers:
+
+```js
+// If you use PostHog:
+posthog.capture("Project created");
+// If you use Mixpanel:
+mixpanel.track("Project created");
+```
+
+If you use both providers, those two calls send one event to each. Alternatively, replace them with one optional call:
+
+```js
+// Already forwards to both configured SDKs. No extra provider calls needed.
+await doorman.track("Project created");
+```
+
+Calling the helper and a provider's capture/track method for the same event duplicates that provider's event. Doorman does not deduplicate separate tracking calls. Keep Doorman's identify/update/reset lifecycle hooks; you do not need to repeat provider identify/reset calls.
+
+Pass the initialized SDK itself. If you pass a custom wrapper, it must also expose `register` and `unregister` for automatic event context to work.
+
+Segment, Amplitude and RudderStack receive Doorman context through `doorman.track`; their direct SDK calls are not automatically enriched. Doorman does not enable replay or change the providers' collection settings.
 
 ## Private server events
 

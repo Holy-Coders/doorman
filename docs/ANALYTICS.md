@@ -2,6 +2,8 @@
 
 Keep PostHog, Mixpanel or your existing analytics provider. Let Doorman coordinate identification and attach browser/session context, so your app does not have to identify through both SDKs.
 
+**You do not need to call both `doorman.track()` and your analytics SDK for the same event.** `doorman.track()` is an optional forwarding helper. Existing PostHog and Mixpanel event calls can stay as they are.
+
 First [mount the Doorman endpoint](IDENTITY-CONTEXT.md). Your server must pass the authenticated user to that endpoint; a browser SDK call alone cannot establish a verified relationship.
 
 ## 1. Connect your initialized SDK
@@ -56,13 +58,34 @@ try {
 
 The provider identity update can already have happened before measurement fails. Do not undo authentication because analytics or measurement is unavailable.
 
-## 3. Keep tracking events
+## 3. Choose one event delivery path
+
+**Send each event once to each destination.** After connecting your initialized SDKs above, choose either of these approaches.
+
+Keep your existing PostHog or Mixpanel calls. After `doorman.identify()` completes, Doorman registers safe browser/session/account context on those SDKs, so subsequent events include it:
 
 ```ts
+// If you use PostHog:
+posthog.capture("Project created", { plan: "team" });
+
+// If you use Mixpanel:
+mixpanel.track("Project created", { plan: "team" });
+```
+
+If you use both providers, one direct call to each sends one event to each. You do not need an additional Doorman tracking call.
+
+Pass the initialized SDK itself. If you pass a custom wrapper, it must also expose `register` and `unregister` for automatic event context to work.
+
+Alternatively, replace those direct calls with one optional helper call:
+
+```ts
+// Sends to every SDK configured in analytics.
 await doorman.track("Project created", { plan: "team" });
 ```
 
-With **PostHog and Mixpanel**, existing calls such as `posthog.capture(...)` and `mixpanel.track(...)` also inherit the safe browser/session/account properties Doorman registers. You can adopt Doorman without rewriting every event.
+With `analytics: { posthog, mixpanel }`, the helper already sends the event to both. Calling `posthog.capture()` or `mixpanel.track()` for that same event as well would send a duplicate to that provider. Choose the path that fits your application; Doorman does not deduplicate separate tracking calls.
+
+Doorman's `identify()`, `update()` and `reset()` calls still belong in your login/profile/logout lifecycle. They coordinate provider identity; they do not replace your business events. You do not need to repeat the providers' identify/reset calls yourself.
 
 **Segment, Amplitude and RudderStack** receive Doorman context on events sent through `doorman.track(...)`. Configure them under `analytics: { segment, amplitude, rudderstack }` as needed. Direct calls to those SDKs are not automatically enriched.
 

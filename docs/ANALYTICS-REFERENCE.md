@@ -203,9 +203,12 @@ const doorman = createDoormanClient({
   analytics: { amplitude, rudderstack },
 });
 await doorman.identify(currentUser.id, { plan: "pro" });
+// Forwards to both configured SDKs. Do not also track this event directly.
 await doorman.track("project opened");
 await doorman.reset();
 ```
+
+**Send each event once to each destination.** `doorman.track()` is an optional forwarding helper, not an extra call to add alongside native SDK tracking. For Amplitude and RudderStack, the helper also attaches Doorman context; their direct SDK calls are not automatically enriched. For PostHog and Mixpanel, existing direct calls can keep receiving the context registered by Doorman. See [the tracking options](ANALYTICS.md).
 
 Import `createDoormanClient` from `@aarondovturkel/doorman-browser`. Configure consent, region, autocapture and destinations in your provider's initialization first; Doorman does not load or enable those SDKs. Amplitude uses `setUserId`, the documented `$identify` event with `$set` traits, and `reset` to rotate its device ID. RudderStack explicitly rotates its anonymous ID and clears custom context on account changes and logout. Destination SDKs loaded independently still need their own reset lifecycle. These behaviors follow [Amplitude's browser contract](https://amplitude.com/docs/sdks/analytics/browser/browser-sdk-2), [HTTP V2](https://amplitude.com/docs/apis/analytics/http-v2), and [RudderStack's reset contract](https://www.rudderstack.com/docs/sources/event-streams/sdks/rudderstack-javascript-sdk/supported-api/).
 

@@ -76,12 +76,16 @@ await doorman.identify({
   userId: String(user.id),
   accountId: String(account.id),
 });
+// Optional helper: sends to both configured providers.
+// Do not also capture/track this event directly in those SDKs.
 await doorman.track("Project created");
 // After logout, before recording another person's activity:
 await doorman.reset();
 ```
 
 Omit `accountId` if you do not have workspaces. Doorman calls the providers' identify/reset methods for you. Existing `posthog.capture` and `mixpanel.track` calls also receive safe browser/session/account properties.
+
+**You can keep your existing event calls instead of using `doorman.track()`.** The helper forwards to every configured provider; use one delivery path per event per destination to avoid duplicates. See [the two tracking options](ANALYTICS.md).
 
 Your app still needs to call Doorman on initial load, login, account switches and logout. It does not watch your authentication system automatically. A browser call also cannot authenticate a user to your server: step 2 supplies that evidence.
 
