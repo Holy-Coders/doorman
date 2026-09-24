@@ -5,14 +5,8 @@
       {
         "slug": "introduction",
         "title": "What is Doorman?",
-        "description": "First-party identity and private activity classification for people, assistants and scripts.",
+        "description": "Remember browsers, connect verified users and add context to your existing analytics.",
         "source": "docs/INTRODUCTION.md"
-      },
-      {
-        "slug": "identity-context",
-        "title": "One identity integration",
-        "description": "Connect your browser, authenticated users, private estimates and existing analytics with one API.",
-        "source": "docs/IDENTITY-CONTEXT.md"
       },
       {
         "slug": "getting-started",
@@ -21,9 +15,15 @@
         "source": "docs/GETTING-STARTED.md"
       },
       {
+        "slug": "identity-context",
+        "title": "Add Doorman to your app",
+        "description": "Connect your existing login and keep browser, user and account identities separate.",
+        "source": "docs/IDENTITY-CONTEXT.md"
+      },
+      {
         "slug": "languages",
         "title": "Install Doorman",
-        "description": "Use npm, pnpm, Bun or Mix, or call Doorman from another language.",
+        "description": "Choose the source preview or the published packages before copying code.",
         "source": "docs/LANGUAGES.md"
       },
       {
@@ -31,30 +31,12 @@
         "title": "Browsers, people & agents",
         "description": "The different identities in your app, explained with one example.",
         "source": "docs/CONCEPTS.md"
-      },
-      {
-        "slug": "playground",
-        "title": "Try the playground",
-        "description": "Explore local examples or opt in to real browser matching with bounded, cached Jev calls.",
-        "source": "docs/PLAYGROUND.md"
       }
     ]
   },
   {
-    "title": "Choose your framework",
+    "title": "Framework setup",
     "pages": [
-      {
-        "slug": "agent-classification",
-        "title": "Agent classification",
-        "description": "Distinguish activity labels, verified agents and trained classifiers, with measured limits.",
-        "source": "docs/AGENT-CLASSIFICATION.md"
-      },
-      {
-        "slug": "scoring",
-        "title": "Adjust scoring",
-        "description": "Tune identity weights and operator thresholds on your server.",
-        "source": "docs/SCORING.md"
-      },
       {
         "slug": "cloudflare",
         "title": "Cloudflare Workers",
@@ -88,13 +70,66 @@
     ]
   },
   {
-    "title": "Add features",
+    "title": "Analytics & identity",
     "pages": [
+      {
+        "slug": "analytics",
+        "title": "Connect your analytics",
+        "description": "Use PostHog, Mixpanel, Segment, Amplitude or RudderStack with Doorman.",
+        "source": "docs/ANALYTICS.md"
+      },
+      {
+        "slug": "warehouses",
+        "title": "Snowflake & warehouses",
+        "description": "Send verified identity context to Snowflake, BigQuery and your existing data pipelines.",
+        "source": "docs/WAREHOUSES.md"
+      },
+      {
+        "slug": "matching",
+        "title": "How browser matching works",
+        "description": "How Doorman remembers a browser and handles a missing cookie.",
+        "source": "docs/MATCHING.md"
+      },
+      {
+        "slug": "agentic-identity",
+        "title": "Connect people & agents",
+        "description": "Link authenticated users across devices and give an agent limited permission.",
+        "source": "docs/AGENTIC-IDENTITY.md"
+      },
+      {
+        "slug": "extensions",
+        "title": "Behavior & cross-device links",
+        "description": "Collect optional activity summaries and connect devices after login.",
+        "source": "docs/EXTENSIONS.md"
+      }
+    ]
+  },
+  {
+    "title": "Optional scoring",
+    "pages": [
+      {
+        "slug": "evaluators",
+        "title": "Jev & risk scoring",
+        "description": "What Jev is, what the scores mean and how to enable it.",
+        "source": "docs/JEV.md"
+      },
+      {
+        "slug": "agent-classification",
+        "title": "Agent classification",
+        "description": "Distinguish activity labels, verified agents and trained classifiers, with measured limits.",
+        "source": "docs/AGENT-CLASSIFICATION.md"
+      },
       {
         "slug": "detection",
         "title": "Optional detection signals",
         "description": "Local fonts, runtime observations, target and focus summaries, and trusted transport evidence.",
         "source": "docs/EXPERIMENTAL-DETECTION.md"
+      },
+      {
+        "slug": "scoring",
+        "title": "Adjust scoring",
+        "description": "Tune identity weights and operator thresholds on your server.",
+        "source": "docs/SCORING.md"
       },
       {
         "slug": "linked-activity",
@@ -113,42 +148,6 @@
         "title": "Who operates an account?",
         "description": "Score activity windows, compare inferred operators, and report separately from verified identities.",
         "source": "docs/OPERATOR-ATTRIBUTION.md"
-      },
-      {
-        "slug": "warehouses",
-        "title": "Snowflake & warehouses",
-        "description": "Send verified identity context to Snowflake, BigQuery and your existing data pipelines.",
-        "source": "docs/WAREHOUSES.md"
-      },
-      {
-        "slug": "matching",
-        "title": "How browser matching works",
-        "description": "How Doorman remembers a browser and handles a missing cookie.",
-        "source": "docs/MATCHING.md"
-      },
-      {
-        "slug": "evaluators",
-        "title": "Jev & risk scoring",
-        "description": "What Jev is, what the scores mean and how to enable it.",
-        "source": "docs/JEV.md"
-      },
-      {
-        "slug": "agentic-identity",
-        "title": "Connect people & agents",
-        "description": "Link authenticated users across devices and give an agent limited permission.",
-        "source": "docs/AGENTIC-IDENTITY.md"
-      },
-      {
-        "slug": "analytics",
-        "title": "Connect your analytics",
-        "description": "Use PostHog, Mixpanel, Segment, Amplitude or RudderStack with Doorman.",
-        "source": "docs/ANALYTICS.md"
-      },
-      {
-        "slug": "extensions",
-        "title": "Behavior & cross-device links",
-        "description": "Collect optional activity summaries and connect devices after login.",
-        "source": "docs/EXTENSIONS.md"
       }
     ]
   },
@@ -194,8 +193,20 @@
     ]
   },
   {
-    "title": "Explore & evaluate",
+    "title": "Experiments & research",
     "pages": [
+      {
+        "slug": "playground",
+        "title": "Try the playground",
+        "description": "Explore local examples or opt in to real browser matching with bounded, cached Jev calls.",
+        "source": "docs/PLAYGROUND.md"
+      },
+      {
+        "slug": "learning",
+        "title": "Learn from later logins",
+        "description": "Use Jev to evaluate cross-device suggestions from login-confirmed history.",
+        "source": "docs/LEARNING.md"
+      },
       {
         "slug": "network-learning",
         "title": "Learn assistant patterns",
@@ -207,12 +218,6 @@
         "title": "Connect the learning service",
         "description": "Opt into private evaluations, sampled contributions and independently confirmed feedback.",
         "source": "docs/NETWORK-CLIENT.md"
-      },
-      {
-        "slug": "learning",
-        "title": "Learn from later logins",
-        "description": "Use Jev to evaluate cross-device suggestions from login-confirmed history.",
-        "source": "docs/LEARNING.md"
       },
       {
         "slug": "evaluation",
@@ -290,6 +295,12 @@
         "title": "Credentials & result receipts",
         "description": "Verify an agent credential or carry an encrypted assessment between requests.",
         "source": "docs/TRUST.md"
+      },
+      {
+        "slug": "analytics-reference",
+        "title": "Analytics report recipes",
+        "description": "Optional server exporters and reports for PostHog, Mixpanel and other providers.",
+        "source": "docs/ANALYTICS-REFERENCE.md"
       }
     ]
   }

@@ -7,7 +7,7 @@ defmodule DoormanExample.MixProject do
       version: "0.7.0",
       elixir: "~> 1.17",
       deps: deps(),
-      aliases: [setup: ["deps.get", "ecto.create", "ecto.migrate"]]
+      aliases: [setup: ["deps.get", "ecto.create"]]
     ]
 
   def application, do: [mod: {DoormanExample.Application, []}, extra_applications: [:logger]]

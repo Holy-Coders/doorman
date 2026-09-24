@@ -1,51 +1,63 @@
 # Cloudflare Workers
 
-This example uses the unified identity context flow. Anonymous responses contain only browser/session IDs. Server-authenticated users are remembered; uncertain matches remain private suggestions. See [one identity integration](../../docs/IDENTITY-CONTEXT.md) for login and PostHog/Mixpanel wiring.
-
-Set `DOORMAN_IDENTITY_SECRET` to a stable random value of at least 32 characters (for example, generate one with `openssl rand -hex 32`). Next.js reads it from `.env.local`; Cloudflare reads local bindings from `.dev.vars` (copy `.dev.vars.example`) and production secrets from `wrangler secret put DOORMAN_IDENTITY_SECRET`. Node and Phoenix include a clearly marked local-only fallback; set a real secret before deployment. Never put this secret in the browser.
-
-
-This example runs Doorman in a Cloudflare Worker with D1, Cloudflare’s SQL database. It serves a small page and a `/api/visitor` endpoint. Local development uses a database on your machine and starts with AI disabled.
+Run a page and `/api/visitor` endpoint in one Worker, with D1 storage. The local example needs no Cloudflare account or AI credentials. It uses the upcoming 0.13 API from the source workspace.
 
 ## Run the example
 
-You need Node 22.12+, pnpm 9.12.0 and a checkout of the [Doorman repository](https://github.com/Holy-Coders/doorman). From its root:
+You need Node.js 22.12+, pnpm 9.12.0 and a checkout of [Doorman](https://github.com/Holy-Coders/doorman). From the repository root:
 
 ```sh
 pnpm install
 pnpm build
 cd examples/cloudflare-worker
-pnpm exec wrangler d1 migrations apply VISITORS --local
+openssl rand -hex 32 | sed 's/^/DOORMAN_IDENTITY_SECRET=/' > .dev.vars
 pnpm dev
 ```
 
-Open **http://localhost:8787** and select **Identify** twice. The first call creates a browser ID; the second should return the same ID using the cookie. The page’s JavaScript is bundled locally, with no CDN dependency.
+Generate the secret once on a fresh checkout; keep `.dev.vars` private and reuse it. Open **http://localhost:8787** and select **Identify** twice. The first visit creates a browser ID, the second reuses its cookie. Doorman creates its database tables automatically.
 
-## Add it to an existing Worker
+AI is disabled. No Jev requests are made. The browser response contains `{ visitorId, sessionId, isReturning }`; possible matches and scores remain on the server.
 
-Apply the [D1 migrations](../../packages/storage/d1/migrations) to your database, bind it as `VISITORS`, and mount the handler at your chosen route:
+## Add it to your Worker
 
-```ts
-import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
-
-const visitor = createCloudflareVisitor({ db: env.VISITORS });
-return visitor.handle(request);
-```
-
-Use that response for `/api/visitor`; continue serving your other routes normally. Keep a reusable adapter per binding configuration, as the [example Worker](src/index.ts) does, so per-instance limits can apply across requests. Add the [browser client](../../docs/GETTING-STARTED.md) to your app and keep the endpoint on the same origin.
-
-## Enable Jev when you need risk scores
-
-Jev is TypeSafe’s AI model for structured judgments. On Cloudflare, it runs through the Workers AI `AI` binding without a separate TypeSafe API key:
+[Install the packages](../../docs/LANGUAGES.md). Bind a D1 database as `VISITORS` and set a server secret named `DOORMAN_IDENTITY_SECRET`. The connection initializes its own tables; no migration command is needed.
 
 ```ts
-createCloudflareVisitor({ db: env.VISITORS, ai: env.AI });
+import { createDoorman } from "@aarondovturkel/doorman-adapters/cloudflare";
+
+let doorman: ReturnType<typeof createDoorman> | undefined;
+
+export default {
+  async fetch(request, env) {
+    if (new URL(request.url).pathname === "/api/visitor") {
+      doorman ??= createDoorman({
+        db: env.VISITORS,
+        secret: env.DOORMAN_IDENTITY_SECRET,
+        namespace: "my-app",
+      });
+      return doorman.handle(request);
+    }
+    return env.ASSETS.fetch(request); // Or your existing routing.
+  },
+};
 ```
 
-The example’s `JEV_ENABLED` variable defaults to `false`. To try real Workers AI during local development, run `pnpm dev:ai`. This uses the remote provider and can incur charges. Plain `pnpm dev` uses local bindings and makes no AI calls. Read [the scores and failure behavior](../../docs/JEV.md) before acting on a result.
+Reuse the handler within the Worker instance. Add [the browser client and login context](../../docs/IDENTITY-CONTEXT.md) next. Use `assess()` when you need private results; return its `response` to the browser.
 
-## Deploy and maintain
+## Optional Jev scoring
 
-Create your D1 database, replace the placeholder `database_id` in the Wrangler config, and apply the migrations remotely. Set `JEV_ENABLED=true` only if you want AI evaluation, then deploy through your normal Worker release process. `pnpm build` bundles and performs a dry run; it does not deploy.
+Add `ai: env.AI` to the configuration and bind Workers AI. No separate TypeSafe API key is required. Provider usage can incur charges; configure your account's Jev access before enabling it.
 
-Use HTTPS for cookies. Call `visitor.cleanup()` from existing maintenance to remove expired history. Use `visitor.assess(request)` if server code needs the private scores; `handle()` returns only the public visitor result. See [storage](../../site/content/storage.md) and [private assessments](../../docs/SECURITY.md).
+The example enables AI only when `JEV_ENABLED=true`. `pnpm dev:ai` uses the remote provider. Plain `pnpm dev` makes no AI calls. Read [Jev setup and scoring limits](../../docs/JEV.md).
+
+## Deploy
+
+Create a D1 database and put its ID in the example's Wrangler config. Save the production secret:
+
+```sh
+pnpm exec wrangler secret put DOORMAN_IDENTITY_SECRET
+pnpm build
+pnpm exec wrangler deploy
+```
+
+`pnpm build` bundles the browser and checks the Worker without deploying. The deployed handler sets up its tables on first use. Use a separate database for each application and HTTPS in production. Call `doorman.cleanup()` from an existing maintenance task. [Storage and retention](../../site/content/storage.md).

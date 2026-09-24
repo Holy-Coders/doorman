@@ -1,8 +1,8 @@
 # Doorman
 
-**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+**Upcoming 0.13 release.** Package publication is in progress. You can run the [source examples](https://github.com/Holy-Coders/doorman/tree/main/examples) now.
 
-<img src="https://doorman.holycoders.io/doorman-mark.svg" alt="Doorman" width="96" />
+<img src="https://doorman.holycoders.io/doorman-mark.png" alt="Doorman" width="96" />
 
 Durable first-party visitor identity from browser history, with optional AI-assisted matching and risk scoring.
 
@@ -18,7 +18,6 @@ import { createDoormanClient } from "@aarondovturkel/doorman-browser";
 const doorman = createDoormanClient({
   endpoint: "/api/visitor",
   analytics: { posthog, mixpanel }, // Your initialized SDKs; optional.
-  collection: "extended", // Optional aggregate detection signals.
 });
 
 await doorman.identify();
@@ -41,8 +40,7 @@ const doorman = createDoorman({
   db, // A Postgres pool.
   secret: process.env.DOORMAN_IDENTITY_SECRET!,
   namespace: "my-app",
-  evaluator: { apiKey: process.env.JEV_API_KEY! }, // Or false.
-  crossDevice: true, // Optional login-confirmed learning.
+  evaluator: false, // Add Jev later if you need scoring.
 });
 
 const result = await doorman.assess(request, {
@@ -71,7 +69,7 @@ const doorman = createDoorman({
 return doorman.handle(request);
 ```
 
-Workers AI runs `typesafe/jev`; no separate TypeSafe key is needed. Reuse the handler across requests. Apply the storage migrations, including `0010_browser_associations.sql`, before enabling the unified context API.
+Workers AI runs `typesafe/jev`; no separate TypeSafe key is needed. Reuse the handler across requests. Doorman creates its tables automatically on first use. No migration commands are required.
 
 For **Elixir/Phoenix**:
 
@@ -84,11 +82,11 @@ doorman = Doorman.new(
   cross_device: true
 )
 
-Doorman.handle(conn, doorman, %{auth: %{user_id: current_user.id}})
+Doorman.handle(conn, doorman, %{auth: %{user_id: to_string(current_user.id)}})
 # Private context and analytics properties are in conn.assigns.
 ```
 
-The native Elixir package is `{:doorman_identity, "~> 0.13.0"}`. Use `Doorman.Migration.up()` for a new installation or `upgrade_context()` for an existing one. [Full Phoenix setup](packages/elixir/README.md).
+The native Elixir package is `{:doorman_identity, "~> 0.13.0"}`. The package initializes its own tables in your Ecto Postgres repo. [Full Phoenix setup](packages/elixir/README.md).
 
 ## What the context means
 
@@ -124,7 +122,7 @@ Risk evidence never enters identity questions. Jev timeouts or malformed output 
 ## Install and run
 
 ```sh
-npm install @aarondovturkel/doorman-browser @aarondovturkel/doorman-adapters
+npm install @aarondovturkel/doorman-browser@^0.13.0 @aarondovturkel/doorman-adapters@^0.13.0
 # Or use pnpm add / bun add with the same package names.
 ```
 

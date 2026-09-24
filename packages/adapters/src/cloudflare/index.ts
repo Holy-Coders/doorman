@@ -1,6 +1,7 @@
 import { simpleOptions, type SimpleOptions } from "../simple.js";
 import type { EdgeEvidence } from "@aarondovturkel/doorman-core";
 import {
+  managedPostgresDatabase,
   createPostgresContextStorage,
   createPostgresStorage,
   createPostgresIdentityStorage,
@@ -12,6 +13,7 @@ import {
 } from "@aarondovturkel/doorman-storage-postgres";
 import type { PostgresDatabase } from "@aarondovturkel/doorman-storage-postgres";
 import {
+  managedD1Database,
   createD1ContextStorage,
   createD1Storage,
   createD1IdentityStorage,
@@ -36,8 +38,9 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
         timeoutMs: options.evaluatorTimeoutMs,
       })
     : undefined;
-  const postgres = "query" in options.db ? options.db : undefined;
-  const d1 = postgres ? undefined : (options.db as D1Database);
+  // Recent D1 bindings also expose query(); prepare() distinguishes the binding.
+  const d1 = "prepare" in options.db ? options.db : undefined;
+  const postgres = d1 ? undefined : (options.db as PostgresDatabase);
   return createVisitorHandler(
     postgres
       ? createPostgresStorage(postgres, options)
@@ -146,5 +149,23 @@ export function createDoorman(
     ai?: WorkersAI;
   },
 ) {
-  return createCloudflareVisitor({ ...options, ...simpleOptions(options) });
+  if (
+    options.autoMigrate !== undefined &&
+    typeof options.autoMigrate !== "boolean"
+  )
+    throw new Error("autoMigrate must be a boolean");
+  const managed =
+    options.autoMigrate === false
+      ? undefined
+      : "prepare" in options.db
+        ? managedD1Database(options.db)
+        : managedPostgresDatabase(options.db);
+  return {
+    ...createCloudflareVisitor({
+      ...options,
+      db: managed?.db ?? options.db,
+      ...simpleOptions(options),
+    }),
+    ready: managed?.ready ?? (() => Promise.resolve()),
+  };
 }

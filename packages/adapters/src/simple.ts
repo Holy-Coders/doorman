@@ -13,6 +13,8 @@ export type SimpleOptions = Omit<
   SubjectLinkingOptions & {
     /** Collect independent login feedback and make private, uncalibrated suggestions. */
     crossDevice?: boolean;
+    /** Create/update library tables automatically. Disable only for externally managed schemas. */
+    autoMigrate?: boolean;
   };
 export function simpleOptions(options: SimpleOptions): AdapterOptions {
   const identity = { secret: options.secret, namespace: options.namespace };

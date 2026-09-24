@@ -1,23 +1,12 @@
-# One integration for identity context
+# Add Doorman to your app
 
-**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+Connect three things: your browser client, your existing login, and your database. Start without AI. Add analytics and scoring after the first visit works.
 
-Doorman connects browser visits to the users and accounts your application already knows. It also returns private estimates about uncertain identity and activity. Your login system remains responsible for authentication, and PostHog or Mixpanel remains your analytics system.
+This guide targets the upcoming 0.13 release. [Install the packages](LANGUAGES.md), or [try the source example](GETTING-STARTED.md) while publication is pending. For Phoenix, use the [native setup](../packages/elixir/README.md).
 
-The recommended API is `createDoorman` on the server and `createDoormanClient` in the browser. In Phoenix, use `Doorman.new` with `secret` and `namespace`. This API is introduced in 0.13.0; earlier releases expose the lower-level visitor and identity-directory methods.
+## 1. Configure the server
 
-## Install and migrate
-
-```sh
-npm install @aarondovturkel/doorman-browser @aarondovturkel/doorman-adapters pg
-# Or: pnpm add … / bun add …
-```
-
-Use a stable random secret of at least 32 characters, stored on the server. `namespace` identifies one application or tenant. Changing either breaks associations with the old HMAC-labeled users. Use a separate database/schema per application; namespaces isolate subject associations, not the underlying browser-observation store.
-
-Apply all Postgres or D1 migrations for a new installation. An existing 0.12 installation needs `0010_browser_associations.sql` from its storage package. This additive table stores only relationships verified by your application. No queue or new service is required.
-
-## Set up the server once
+This example uses Node and Postgres. Create one handler for your application:
 
 ```ts
 import { Pool } from "pg";
@@ -27,68 +16,82 @@ const doorman = createDoorman({
   db: new Pool({ connectionString: process.env.DATABASE_URL }),
   secret: process.env.DOORMAN_IDENTITY_SECRET!,
   namespace: "my-app",
-  evaluator: { apiKey: process.env.JEV_API_KEY! }, // Or false.
-  crossDevice: true,
+  evaluator: false,
 });
 ```
 
-For Next.js, import from `@aarondovturkel/doorman-adapters/vercel`. For Cloudflare, import from `@aarondovturkel/doorman-adapters/cloudflare` and pass `{ db: env.VISITORS, ai: env.AI, secret, namespace, crossDevice: true }`. Workers AI needs no TypeSafe key. Reuse the handler across requests.
+Generate the secret once with `openssl rand -hex 32` and save it in your server environment. Keep it stable across restarts and instances. The `namespace` names this application. Use a dedicated database or schema per application.
 
-Your endpoint receives authenticated context from your existing server middleware:
+**Doorman creates its tables automatically.** Your database must exist and the connection must be allowed to create tables and indexes. There are no migration commands to run. See [storage and retention](../site/content/storage.md).
+
+Use the same setup for [Next.js](../examples/nextjs/README.md), with the `/vercel` import. On [Cloudflare](../examples/cloudflare-worker/README.md), use the `/cloudflare` import and `db: env.VISITORS`; omit `evaluator`.
+
+## 2. Mount the endpoint
+
+At `POST /api/visitor`, read the user from **your existing server authentication**, then pass that verified ID to Doorman:
 
 ```ts
 const result = await doorman.assess(request, {
-  auth: currentUser
-    ? { userId: currentUser.id, accountId: currentAccount.id }
-    : undefined,
+  auth: currentUser ? { userId: String(currentUser.id) } : undefined,
 });
 
-// Private server fields:
-// result.context, result.identity, result.properties, result.riskEvidence
+// Keep result.context, result.identity and result.properties on the server.
 return result.response;
 ```
 
-`currentUser` and `currentAccount` above are supplied by your application. Never copy `auth`, an IP address, or reputation claims from the visitor JSON body. The body accepts browser signals and behavior only.
+`request` is a Web Request. `currentUser` comes from your session middleware; it is not a Doorman global. The framework guides show where this code belongs. Return `result.response` directly so cookies and headers reach the browser.
 
-If authentication verified a separate actor, include it:
+If your app has workspaces, add the account your server authorized: `auth: { userId, accountId }`. For an authenticated agent acting for a user, add `actor: { id: agent.id, kind: "agent" }`. Your app must verify that agent's credential and permission first. Never take these fields from the measurement JSON body.
 
-```ts
-auth: {
-  userId: principal.id,
-  accountId: account.id,
-  actor: { id: authenticatedAgent.id, kind: "agent" },
-}
-```
+No login integration yet? `return doorman.handle(request)` handles anonymous browser visits by itself.
 
-The application must verify that actor and its authority to act for the principal. Use `kind: "person"` for a separately authenticated human. Different passwords, member credentials or explicit profiles can distinguish account members; browser telemetry cannot prove that a shared login belongs to a husband or wife.
+## 3. Add the browser client
 
-## Connect the browser and analytics
+Create one client when your application's collection policy allows it:
 
 ```ts
 import { createDoormanClient } from "@aarondovturkel/doorman-browser";
 
-const doorman = createDoormanClient({
-  endpoint: "/api/visitor",
-  collection: "extended", // Optional; minimal is the default.
-  analytics: { posthog, mixpanel }, // Your initialized SDKs.
-});
-
-await doorman.identify();
-// After login completes on the server:
-await doorman.identify({ userId: user.id, accountId: account.id });
-await doorman.update({ plan: "team" });
-await doorman.track("Project created", { plan: "team" });
-// On logout or before switching accounts:
-await doorman.reset();
-// On teardown:
-doorman.destroy();
+const doorman = createDoormanClient({ endpoint: "/api/visitor" });
+const identity = await doorman.identify();
+// { visitorId, sessionId, isReturning }
 ```
 
-The browser response contains `visitorId`, `sessionId` and `isReturning`. Scores, candidates and remembered account IDs are private. The session cookie expires after 30 minutes of inactivity between assessments; it is an analytics correlation ID, not an authenticated session.
+The first call sets a first-party, HttpOnly cookie. Later calls reuse the browser ID. `sessionId` groups recent visits and expires after 30 minutes between assessments; it is separate from your login session.
 
-You can continue calling existing `posthog.capture` or `mixpanel.track`: Doorman registers the safe browser/session/account properties through the SDKs' super-property APIs. Wrapper events receive the same context. Account changes and `reset()` clear old context. Call Doorman on initial load, after login, on account switches and on logout; you do not need to identify through both analytics SDKs yourself.
+Call `doorman.destroy()` when the client is no longer needed. In React, create it in an effect and destroy it on unmount. In Phoenix, preserve CSRF protection and use the [bundled browser module](../packages/elixir/README.md).
 
-Only the PostHog and Mixpanel adapters currently enrich direct SDK calls this way. Other supported providers receive context on events sent through `doorman.track`. Provider autocapture, replay and consent settings remain under your application's control.
+## 4. Connect analytics, if you use it
+
+Pass your already initialized PostHog or Mixpanel SDK to the client:
+
+```ts
+const doorman = createDoormanClient({
+  endpoint: "/api/visitor",
+  analytics: { posthog, mixpanel }, // Include only the tools you use.
+});
+
+// After login succeeds, or when loading an already signed-in session:
+await doorman.identify({
+  userId: String(user.id),
+  accountId: String(account.id),
+});
+await doorman.track("Project created");
+// After logout, before recording another person's activity:
+await doorman.reset();
+```
+
+Omit `accountId` if you do not have workspaces. Doorman calls the providers' identify/reset methods for you. Existing `posthog.capture` and `mixpanel.track` calls also receive safe browser/session/account properties.
+
+Your app still needs to call Doorman on initial load, login, account switches and logout. It does not watch your authentication system automatically. A browser call also cannot authenticate a user to your server: step 2 supplies that evidence.
+
+Keep measurement errors from interrupting login or navigation. See [the analytics lifecycle](ANALYTICS.md) for error handling, user switching and provider-specific behavior.
+
+## 5. Add optional scoring
+
+For Node or Next.js, replace `evaluator: false` with `evaluator: { apiKey: process.env.JEV_API_KEY! }`. On Cloudflare, pass `ai: env.AI`. Jev evaluates browser similarity and risk; provider charges may apply. Read [Jev and risk scoring](JEV.md) before choosing a policy.
+
+Use `collection: "extended"` on the browser client to add bounded behavior, font and runtime summaries. Use `crossDevice: true` on the server to collect later-login feedback for tentative cross-device matching. Both are optional. Neither turns an estimate into a login or an analytics profile merge.
 
 ## Read what is known and what is estimated
 
@@ -102,7 +105,7 @@ Only the PostHog and Mixpanel adapters currently enrich direct SDK calls this wa
 
 `context.basis` explains the source: authentication, cookie history, browser similarity, login history, or none. Candidates carry HMAC-labeled IDs; these are pseudonymous, not anonymous. At most ten associations are returned, with `truncated: true` when more exist.
 
-The recommended flow preserves IDs through cookie continuity. Without a cookie it issues a new browser ID and returns a strong previous-browser match privately. It never silently merges an uncertain browser or person into analytics. The older `createNodeVisitor`/`createCloudflareVisitor` APIs retain their configurable browser-ID recovery behavior.
+The recommended flow preserves IDs through cookie continuity. Without a cookie it issues a new browser ID and returns a strong previous-browser match privately. It never silently merges an uncertain browser or person into analytics.
 
 ## Cross-device suggestions
 
@@ -154,45 +157,10 @@ Useful reports:
 
 “Three verified agent credentials” is measurable. “Probably three separate agents” is a model estimate. Neither establishes three physical machines or proves that two humans share one password.
 
-## Phoenix
-
-```elixir
-# mix.exs
-{:doorman_identity, "~> 0.13.0"}
-```
-
-For a new Ecto installation, use `Doorman.Migration.up()` in your migration. Existing installations add:
-
-```elixir
-defmodule MyApp.Repo.Migrations.AddDoormanContext do
-  use Ecto.Migration
-  def up, do: Doorman.Migration.upgrade_context()
-  def down, do: raise("Erase retained associations before removing this table")
-end
-```
-
-```elixir
-doorman = Doorman.new(
-  repo: MyApp.Repo,
-  secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
-  namespace: "my-app",
-  evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
-  cross_device: true
-)
-
-# In the existing authenticated controller pipeline:
-auth = if user = conn.assigns[:current_user], do: %{user_id: to_string(user.id)}
-conn = Doorman.handle(conn, doorman, %{auth: auth})
-# Private: conn.assigns.doorman_context / doorman_properties / doorman_identity
-# The response sent by handle contains only browser/session IDs and isReturning.
-```
-
-Use `account_id` and `actor: %{id: "agent-123", kind: :agent}` when your server has verified them. Keep the existing CSRF protection. The package serves the same browser client at your configured static path. See the [Phoenix example](../examples/phoenix/README.md).
-
-Existing `analytics` configuration with `analytics_consent: true` and a server-owned `analytics_id` now includes the private context snapshot in its explicit server event. Alternatively, attach `conn.assigns.doorman_properties` to your own server analytics event. Private fields are not registered in the browser SDK.
-
 ## Retention and failure behavior
 
-Associations expire after `observationRetentionDays` (default 90), refreshed only by a verified login observation. Call `doorman.cleanup()` periodically from your existing scheduler. `doorman.forgetUser(rawUserId)` removes that user's associations, directory record and dependent learning history. `deleteVisitor` removes the browser and its associations. Phoenix equivalents are `Doorman.cleanup`, `forget_user` and `delete_visitor`. Erase copies already exported to analytics through that provider's API too.
+Doorman retains observations and remembered browser relationships for 90 days by default. Relationships refresh only after a verified login. Call `doorman.cleanup()` from your existing maintenance schedule; the library does not create a scheduler.
 
-Jev has a short deadline and a shared database evaluation budget (default 60 reserved provider calls/minute); a single assessment can include separate identity and risk provider requests. Match recovery falls back to deterministic evidence when unavailable. Risk/classification status explains whether an assessment ran; zero fallback risk does not mean proven safe. Storage failures return a controlled 503. Doorman never blocks an application action or displays a CAPTCHA.
+`doorman.forgetUser(rawUserId)` removes the user's associations and dependent learning history. `doorman.deleteVisitor(visitorId)` erases a browser. Delete exported copies through your analytics provider too. [Full retention guide](../site/content/storage.md).
+
+Jev has a short timeout and a shared database budget, defaulting to 60 reserved provider calls per minute. If evaluation is unavailable, identification continues using built-in comparison rules. Check the status: zero fallback risk means “not assessed.” Database or automatic table-setup failures produce a controlled 503, without exposing database details to the browser.

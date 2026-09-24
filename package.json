@@ -7,7 +7,7 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "build": "pnpm -r --filter \"./packages/**\" run build",
+    "build": "node scripts/schema-bundle.mjs && pnpm -r --filter \"./packages/**\" run build",
     "test": "vitest run",
     "typecheck": "pnpm build && tsc --noEmit -p tsconfig.tests.json && pnpm -r --filter \"./examples/**\" run typecheck",
     "lint": "eslint .",
@@ -37,7 +37,8 @@
     "benchmark:detection:full": "pnpm benchmark:detection && tsx tests/benchmarks/font-validation.ts && tsx tests/benchmarks/runtime-validation.ts",
     "benchmark:jev:full": "pnpm build && tsx scripts/benchmarks/external/jev-validation.ts",
     "benchmark:fonts": "\"${CLASSIFIER_PYTHON:-tools/classifier/.venv/bin/python}\" tools/benchmarks/fonts.py",
-    "benchmark:jev:isolation": "pnpm build && tsx scripts/benchmarks/external/jev-isolation.ts"
+    "benchmark:jev:isolation": "pnpm build && tsx scripts/benchmarks/external/jev-isolation.ts",
+    "schema:sync": "node scripts/schema-bundle.mjs"
   },
   "devDependencies": {
     "@amplitude/analytics-browser": "^2.46.0",

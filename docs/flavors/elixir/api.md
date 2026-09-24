@@ -5,12 +5,12 @@ Create one configuration with `Doorman.new/1`. It connects your Ecto repo, ident
 ```elixir
 doorman = Doorman.new(
   repo: MyApp.Repo,
-  evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
-  identity: [secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"), namespace: "my-app"]
+  secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
+  namespace: "my-app"
 )
 ```
 
-Use `Doorman.Plug` for the browser endpoint. Results in `conn.assigns.doorman_identity` are private server data; the response exposes the visitor ID and returning status. Your login system supplies authenticated person and agent identities. Browser matching never authenticates a user.
+Use `Doorman.Plug` for the browser endpoint. Results in `conn.assigns.doorman_identity` are private server data; the response exposes the `visitorId`, `sessionId` and `isReturning`. Your login system supplies authenticated person and agent identities. Browser matching never authenticates a user.
 
 ## API behavior
 
@@ -22,4 +22,4 @@ Use `Doorman.Plug` for the browser endpoint. Results in `conn.assigns.doorman_id
 
 ## Storage and deletion
 
-`Doorman.Migration.up/0` installs the schema. Existing installations apply the incremental upgrade functions before enabling features. `Doorman.cleanup/1` performs bounded maintenance. See the [complete native package reference](../../../packages/elixir/README.md) for identity, delegation, learning, evidence and lifecycle APIs.
+Doorman creates its tables automatically. `Doorman.ready/1` optionally prepares them during application startup. `Doorman.cleanup/1` performs bounded maintenance. See the [complete native package reference](../../../packages/elixir/README.md) for identity, delegation, learning, evidence and lifecycle APIs.

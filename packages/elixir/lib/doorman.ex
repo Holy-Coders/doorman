@@ -2,6 +2,7 @@ defmodule Doorman do
   @moduledoc "Native first-party identity for Plug/Phoenix. Browser scores never authorize access."
   defstruct repo: nil,
             prefix: "doorman",
+            auto_migrate: true,
             evaluator: nil,
             evaluator_timeout_ms: 1200,
             lookup_planning: true,
@@ -71,6 +72,9 @@ defmodule Doorman do
              not String.contains?(config.endpoint_path, ["?", "#", " "]),
            do: raise(ArgumentError, "invalid endpoint path")
 
+    unless is_boolean(config.auto_migrate),
+      do: raise(ArgumentError, "auto_migrate must be boolean")
+
     unless is_boolean(config.lookup_planning),
       do: raise(ArgumentError, "invalid lookup planning option")
 
@@ -107,6 +111,9 @@ defmodule Doorman do
         reputation: Doorman.Reputation.configure(config.reputation, config.identity)
     }
   end
+
+  @doc "Optionally prepare library tables before accepting traffic. Normal operations do this automatically."
+  def ready(config), do: Doorman.Schema.ensure!(config)
 
   @doc "Identify a validated JSON payload; context must originate in server-verified authentication."
   def identify(config, payload, context \\ %{}) do

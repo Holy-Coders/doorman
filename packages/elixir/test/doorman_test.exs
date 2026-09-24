@@ -271,7 +271,10 @@ defmodule DoormanTest do
     assert Doorman.handle(req(%{"userAgent" => String.duplicate("x", 17000)}), c).status == 413
     assert Doorman.handle(put_req_header(req(), "origin", "https://evil.test"), c).status == 403
     assert Doorman.handle(conn(:get, "/api/visitor"), c).status == 405
-    assert Doorman.handle(req(), %{c | prefix: "missing_schema"}).status == 503
+
+    assert Doorman.handle(req(), %{c | prefix: "unavailable_doorman_schema", auto_migrate: false}).status ==
+             503
+
     assert get_resp_header(Doorman.handle(req(), c), "cache-control") == ["private, no-store"]
   end
 

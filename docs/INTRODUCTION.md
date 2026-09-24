@@ -1,51 +1,45 @@
 # What is Doorman?
 
-**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+Doorman helps your app remember browsers and understand who is using an account. It connects visits to users after your server verifies their login, then adds that context to analytics such as PostHog or Mixpanel.
 
-Doorman adds identity context to the analytics you already use. It remembers browsers, connects the users and agents your server authenticates, and gives you private estimates when identity or activity is uncertain.
+It runs inside your application, using your Postgres or Cloudflare D1 database. You keep your login system and analytics tools. There is no Doorman account or hosted service to sign up for.
 
-Install one browser client and one server module beside your existing Postgres or D1 database. There is no Doorman account, hosted service or extra worker to run. Jev, an optional AI evaluator from TypeSafe, can assess browser history and activity.
+**Start with the [local quickstart](GETTING-STARTED.md).** It needs no AI key. These guides describe the upcoming 0.13 release, available [from source](LANGUAGES.md) while publication finishes.
 
-## One account can have several operators
+## What it helps you answer
 
-Imagine a household account. Two members sign in from four browsers, and an assistant uses its own credential to act for one member. Doorman keeps the account, verified members, assistant, browsers and sessions distinct. Your analytics can report each without treating four browsers as four people.
+| Question                                      | What Doorman can tell you                                                                                                                     |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Has this browser visited before?              | A first-party cookie connects it to its stored browser ID.                                                                                    |
+| Which account used this browser before login? | A private record of earlier verified logins, including multiple possible users on a shared browser.                                           |
+| Is this the same user on another device?      | A verified login connects the user. Optional matching can suggest a connection before login, with uncertainty.                                |
+| Is an assistant using the account?            | Your server can supply a verified agent identity. Optional AI scoring estimates whether activity looks human, assistant-operated or scripted. |
+| Can I use this in a funnel?                   | Doorman coordinates analytics identification at login and adds browser, session and account properties to events.                             |
 
-When a familiar browser returns before login, Doorman can remember which verified identities used it. A shared browser remains ambiguous. Remembered context never becomes a new login.
+## One account, several people and agents
 
-If the cookie is missing, browser similarity can suggest an earlier browser. Optional login feedback can also suggest a user on another device. Those estimates stay private, carry their evidence source, and never silently merge analytics identities. Unknown is a useful result.
+Alex and Sam share a workspace. Alex uses a phone and a laptop; an assistant uses its own credential. Your app verifies each identity. Doorman keeps those users, browsers and the assistant separate, so four browsers do not become four people in your reports.
 
-## A small browser API
+If someone returns on Alex's laptop before login, Doorman can remember the earlier relationship. It does not sign them in or identify them to analytics as Alex. If both Alex and Sam used that browser, it reports the uncertainty.
 
-```ts
-import { createDoormanClient } from "@aarondovturkel/doorman-browser";
+## Three pieces to install
 
-const doorman = createDoormanClient({
-  endpoint: "/api/visitor",
-  analytics: { posthog, mixpanel }, // Your initialized SDKs.
-});
+1. **Browser client:** sends a small set of browser signals to your own endpoint.
+2. **Server module:** reads cookies, accepts the user your login system verified, and produces a private assessment.
+3. **Your database:** holds browser history and verified relationships. Doorman sets up its tables automatically.
 
-await doorman.identify();
-// After your application's login succeeds:
-await doorman.identify({ userId: user.id, accountId: account.id });
-await doorman.track("Project created");
-// On logout:
-await doorman.reset();
-```
+The browser receives only a browser ID, a session ID and a returning-visit flag. Scores and possible user matches stay on your server. [See the complete setup](IDENTITY-CONTEXT.md).
 
-Existing PostHog and Mixpanel events can keep using their SDKs: Doorman adds safe browser/session/account context through their supported APIs. Scores and inferred identities stay on your server.
+## Add scoring when you need it
 
-[Set up the complete integration](IDENTITY-CONTEXT.md), including Phoenix, trusted server authentication, migrations and analytics reports. To explore basic browser matching first, [run a local example](GETTING-STARTED.md).
+Jev is an optional AI model from TypeSafe. It compares browser history and evaluates activity. Human, assistant and script labels are separate from suspicious behavior: an authorized assistant can be automated and legitimate.
 
-## Understand activity without treating every agent as an attacker
+These are experimental estimates, not proof of who's at the keyboard. Doorman cannot reliably count people sharing one password or name an agent's brand from its movements. [Our measured results](EXTERNAL-BENCHMARKS.md) include errors and coverage gaps.
 
-Jev can score human, assistant and scripted activity separately from suspicious behavior. Optional browser summaries, server-owned request patterns and network reputation provide evidence. An authorized agent can be automated and legitimate. Missing APIs, privacy settings and no mouse movement do not establish malicious activity.
+Doorman never automatically blocks a user or displays a CAPTCHA. Your application decides how to use a result. If AI is unavailable, browser identification continues and the result says the risk was not assessed.
 
-Collection remains bounded: no actual keystrokes, form values, coordinate trails or recordings. External IP-reputation checks are separately enabled and disclosed. [Read what is collected](../PRIVACY.md).
+## Start small
 
-## Know the limits
+Run the [quickstart](GETTING-STARTED.md), connect [your login](IDENTITY-CONTEXT.md), then add [analytics](ANALYTICS.md). Extra detection, request monitoring, cross-device learning and model training are optional.
 
-Browser continuity is not proof of a person. Shared passwords cannot establish how many humans are behind an account. Cross-device scores and activity labels are uncalibrated estimates; reliable headcounts and agent-brand identification have not been established. Our [public-data results](EXTERNAL-BENCHMARKS.md) include false matches and classification failures.
-
-Your application owns authentication, authorization and any CAPTCHA policy. Doorman never automatically blocks users. If an evaluator fails, it falls back to deterministic browser evidence and marks risk unavailable.
-
-Start with the [one-context integration](IDENTITY-CONTEXT.md). Request middleware, linked-activity analysis, warehouse exporters and classifier training are optional additions, not prerequisites.
+Collection does not capture form values, actual keys, mouse-coordinate trails or session recordings. Your own analytics may have separate recording settings. [Read the full signal and privacy guide](../PRIVACY.md).

@@ -1,40 +1,26 @@
 # Storage and retention
 
-Doorman stores a random visitor ID and a short history of browser observations in your database. Use Postgres for Node, Next.js or Elixir, or D1 for a Cloudflare Worker. Cloudflare can also use the shared Postgres adapter.
+Use Postgres for Node, Next.js or Phoenix, or D1 for a Cloudflare Worker. The database must already exist. Doorman creates its own tables and indexes automatically on first use.
 
-Each application should have its own database or schema. Sharing these tables makes visitor history available to every application using them.
+## Automatic setup
 
-## Apply the migrations
+The recommended `createDoorman` adapter and native `Doorman.new` need no migration commands. Setup records the schema version, preserves existing data and runs only when needed. Concurrent starts are safe: Postgres uses a transaction and a database lock; D1 applies the schema as an atomic batch.
 
-For local Cloudflare development, run this from the example directory:
+Your database connection needs permission to create the tables and indexes. Phoenix also creates its dedicated `doorman` schema. Give each application a separate database or schema; `namespace` separates user labels, not the browser-history tables.
 
-```sh
-pnpm exec wrangler d1 migrations apply VISITORS --local
+You can prepare the tables during your normal startup or readiness check, instead of waiting for the first visit:
+
+```ts
+await doorman.ready();
 ```
 
-The Node and Next.js examples include a migration command:
-
-```sh
-pnpm migrate
+```elixir
+Doorman.ready(config)
 ```
 
-For an existing application, use your migration runner to apply the SQL files in the [D1](../../packages/storage/d1/migrations) or [Postgres](../../packages/storage/postgres/migrations) package, in order. The v0.12.0 release includes all nine:
+This is optional. A failed setup is not marked complete. HTTP identification returns a controlled 503, and a later request can try again. TypeScript limits repeated setup attempts with a five-second cooldown. Review deployment logs and database privileges if setup fails.
 
-| Migration                   | Creates or changes                                              |
-| --------------------------- | --------------------------------------------------------------- |
-| `0001_visitors.sql`         | Visitor records and browser observations.                       |
-| `0002_identity.sql`         | People, agents, verified keys and delegations.                  |
-| `0003_learning.sql`         | Optional pre-login feedback sessions.                           |
-| `0004_candidate_lookup.sql` | Indexes for finding plausible previous visitors efficiently.    |
-| `0005_protection.sql`       | Shared request counters and evaluator budgets.                  |
-| `0006_evidence.sql`         | Verified application events and device associations.            |
-| `0007_learning_lookup.sql`  | Indexed retrieval of login-confirmed sessions for Jev learning. |
-| `0008_api_activity.sql`     | Optional aggregate API counters and private assessment cache.   |
-| `0009_operators.sql`        | Private operator windows, profiles and assessment reports.      |
-
-Creating an optional feature’s tables does not enable that feature. For an existing large Postgres installation, read the [index migration instructions](../../docs/SCALING.md) before applying lookup indexes to a busy table.
-
-Native Elixir applications use `Doorman.Migration.up()` for a fresh installation. Existing installations use the upgrade functions in the [Phoenix guide](../../packages/elixir/README.md).
+For an organization that requires a separate schema owner, run readiness with a privileged connection during deployment, then use `autoMigrate: false` (Elixir: `auto_migrate: false`) with the restricted runtime connection. This is an advanced option, not part of normal installation. The underlying [D1](../../packages/storage/d1/migrations) and [Postgres](../../packages/storage/postgres/migrations) SQL remains available for review. Large existing databases may need planned index changes; see [database scaling](../../docs/SCALING.md).
 
 ## What the browser tables contain
 
@@ -54,8 +40,10 @@ D1 stores JSON as text. Postgres uses JSONB. Both delete a visitor’s observati
 The defaults are 90 days and at most ten observations per visitor. Matching reads only the latest five retained observations. You can shorten retention:
 
 ```ts
-const visitor = createNodeVisitor({
+const visitor = createDoorman({
   db,
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
   observationRetentionDays: 30,
   maxObservationsPerVisitor: 10,
 });

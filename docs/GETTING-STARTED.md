@@ -1,14 +1,12 @@
 # Your first visitor ID
 
-For the recommended browser, account and analytics flow, start with [one identity integration](IDENTITY-CONTEXT.md). The detailed APIs below remain available for advanced use.
+Run a complete Doorman example on your machine. It includes a page, a browser client, an endpoint and a local database. You do not need a Cloudflare account, an AI key or Docker.
 
-In this guide, you’ll run Doorman locally, identify a browser, and see the same ID on a return visit. The example includes the browser client, server endpoint and database, so you can see the whole flow before adding it to your own app.
-
-We’ll use the Cloudflare example because its development tools provide a local database. You do not need a Cloudflare account, an AI key or Docker for this path. If you prefer Elixir, use the [Phoenix example](../examples/phoenix/README.md).
+This guide uses the **upcoming 0.13 release from source**, so it works before package publication finishes. Prefer Phoenix? [Run the native Elixir example](../examples/phoenix/README.md).
 
 ## 1. Get the example
 
-You’ll need Git, Node.js 22.12 or newer, and pnpm 9.12.0. The repository uses pnpm; the packaged library also supports [npm and Bun installation](LANGUAGES.md).
+You need Git, Node.js 22.12+ and pnpm 9.12.0. From a terminal:
 
 ```sh
 git clone https://github.com/Holy-Coders/doorman.git
@@ -16,95 +14,83 @@ cd doorman
 corepack enable
 pnpm install
 pnpm build
+cd examples/cloudflare-worker
 ```
 
-## 2. Create the local database and start the app
+The checkout includes all Doorman packages; no unpublished dependencies are fetched from npm. For other package managers and existing applications, see [installation and versions](LANGUAGES.md).
+
+## 2. Set a local secret
+
+Doorman uses a server secret to label account relationships without storing raw user IDs. Generate a local one:
 
 ```sh
-cd examples/cloudflare-worker
-pnpm exec wrangler d1 migrations apply VISITORS --local
+openssl rand -hex 32 | sed 's/^/DOORMAN_IDENTITY_SECRET=/' > .dev.vars
+```
+
+Do this once on a fresh checkout. Keep the file private and reuse the value on later runs. Overwriting it would change the IDs derived from earlier logins. Never include it in browser code.
+
+## 3. Start the app
+
+```sh
 pnpm dev
 ```
 
-The migration command creates Doorman’s tables in a local D1 database. The development server serves the example page and its `/api/visitor` endpoint at **http://localhost:8787**.
+Open **http://localhost:8787**. AI is disabled, so this example makes no Jev requests. The database lives on your machine. Doorman creates its tables automatically on the first request.
 
-This example starts with AI disabled. It makes no Jev requests and needs no provider credentials.
+## 4. Identify the browser twice
 
-## 3. Identify the browser twice
-
-Open the page and select **Identify**. You should receive a new ID:
+Select **Identify**. The first response looks like this:
 
 ```json
-{ "visitorId": "vis_…", "isReturning": false }
+{
+  "visitorId": "vis_…",
+  "sessionId": "ses_…",
+  "isReturning": false
+}
 ```
 
-Select **Identify** again. The browser sends back the cookie Doorman set on the first response, and the ID should stay the same:
+Select **Identify** again. `visitorId` stays the same and `isReturning` becomes `true`. The server recognizes the cookie it set on the first response. `sessionId` groups recent visits; it is not your application's login session.
 
-```json
-{ "visitorId": "vis_…", "isReturning": true }
-```
+Delete the `__visitor` cookie in developer tools and try again. **The recommended API creates a fresh browser ID.** It may find a likely previous browser, but that suggestion stays private on the server. This avoids merging analytics users because two browsers look alike.
 
-To try recovery without the cookie, delete `__visitor` for localhost in your browser’s developer tools, then identify again. With only this browser’s history in the database and enough available signals, Doorman can restore the same ID. If the evidence is too sparse or ambiguous, a new ID is the expected result.
+No one has logged in during this example. A returning browser does not prove who is using it.
 
-For repeatable examples that do not collect your browser’s signals, try the [public playground](https://doorman.holycoders.io/playground/).
+## 5. Find the code
 
-## 4. See the two pieces of code
+The example has two main pieces:
 
-The browser creates a client and calls your endpoint:
+- [Browser client](../examples/cloudflare-worker/src/client.ts): creates `createDoormanClient({ endpoint: "/api/visitor" })` and calls `identify()` when you select the button.
+- [Worker endpoint](../examples/cloudflare-worker/src/index.ts): creates `createDoorman({ db, secret, namespace })` once, then calls `handle(request)` for `/api/visitor`.
+
+`handle()` sends the public JSON and cookies. When your server needs the private result, use `assess()` instead:
 
 ```ts
-import { createVisitorClient } from "@aarondovturkel/doorman-browser";
+const result = await visitor.assess(request);
 
-const visitor = createVisitorClient({ endpoint: "/api/visitor" });
-const result = await visitor.identify();
-
-// When the component unmounts or collection should stop:
-visitor.destroy();
-```
-
-The server connects the request to storage:
-
-```ts
-import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
-
-export default {
-  async fetch(request, env) {
-    const visitor = createCloudflareVisitor({ db: env.VISITORS });
-    return visitor.handle(request);
-  },
-};
-```
-
-That server snippet is for a route dedicated to Doorman. The example app also serves HTML and browser JavaScript; it calls the handler only for `/api/visitor`.
-
-The cookie is `HttpOnly`, so browser JavaScript cannot read it. `isReturning` describes the browser’s stored history, not whether someone is logged in.
-
-## 5. Read a private assessment
-
-When you need scores in server code, call `assess()` instead of `handle()`:
-
-```ts
-const { response, identity } = await visitor.assess(request);
-
-if (identity) {
-  // Use these values in your server logic.
-  const { confidence, risk, riskStatus } = identity;
+if (result.identity) {
+  // Private to this server; do not include these in the browser response.
+  const { confidence, risk, riskStatus } = result.identity;
+  // Pass them to your own policy or server analytics here.
 }
 
-return response; // Sends the visitor ID and cookie, without private scores.
+return result.response;
 ```
 
-With AI disabled, `riskStatus` is `"disabled"` and both risk values are zero. This means no risk assessment took place. It does not prove that the visitor is human or safe.
+With AI disabled, `riskStatus` is `"disabled"`. The zero risk values mean “not assessed,” not “safe.” Doorman does not block anyone or show a CAPTCHA.
 
-To add AI, read [Jev and risk scoring](JEV.md). For policy code and failure handling, read [keep scores private](SECURITY.md).
+## Next: connect your application
 
-## Add Doorman to your application
+Follow [add Doorman to your app](IDENTITY-CONTEXT.md) to connect your existing login and analytics. Or choose a working example for [Next.js](../examples/nextjs/README.md), [Node/Fastify](../examples/node-fastify/README.md) or [Phoenix](../examples/phoenix/README.md).
 
-Choose the guide for your server:
+You can add [Jev scoring](JEV.md), [PostHog or Mixpanel](ANALYTICS.md), and [extra detection signals](EXPERIMENTAL-DETECTION.md) independently. None is required to remember a browser.
 
-- [Cloudflare Workers](../examples/cloudflare-worker/README.md): D1 or Postgres, with optional Workers AI.
-- [Next.js and Vercel](../examples/nextjs/README.md): an App Router endpoint and Postgres.
-- [Node and Fastify](../examples/node-fastify/README.md): a standard Request/Response handler in your Node app.
-- [Elixir and Phoenix](../packages/elixir/README.md): native Elixir with your Ecto Postgres repository.
+### If something fails
 
-Apply the migrations, mount a same-origin endpoint, and create the browser client when your app’s collection policy allows it. Keep your existing login system. You can add [analytics](ANALYTICS.md), [verified user links](AGENTIC-IDENTITY.md) and other features later.
+| Symptom                                      | Check                                                                                                                           |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 503 with “Configure DOORMAN_IDENTITY_SECRET” | Create `.dev.vars` in `examples/cloudflare-worker`, then restart the server.                                                    |
+| Database error                               | Check the database binding and file permissions. Table setup is automatic; no migration command is needed.                      |
+| Import or missing export error               | Run `pnpm install` and `pnpm build` at the repository root. Use the checkout's workspace packages while publication is pending. |
+| Every visit has a new ID                     | Check that cookies are allowed and that the request uses the same origin as the page.                                           |
+
+Stop the development server with Ctrl-C. Its local database remains available for your next run.

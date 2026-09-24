@@ -1,6 +1,7 @@
 import { simpleOptions, type SimpleOptions } from "../simple.js";
 import type { VisitorEvaluator } from "@aarondovturkel/doorman-core";
 import {
+  managedPostgresDatabase,
   createPostgresContextStorage,
   createPostgresStorage,
   createPostgresIdentityStorage,
@@ -76,5 +77,21 @@ export function createDoorman(
     evaluator?: NodeVisitorOptions["evaluator"];
   },
 ) {
-  return createNodeVisitor({ ...options, ...simpleOptions(options) });
+  if (
+    options.autoMigrate !== undefined &&
+    typeof options.autoMigrate !== "boolean"
+  )
+    throw new Error("autoMigrate must be a boolean");
+  const managed =
+    options.autoMigrate === false
+      ? undefined
+      : managedPostgresDatabase(options.db);
+  return {
+    ...createNodeVisitor({
+      ...options,
+      db: managed?.db ?? options.db,
+      ...simpleOptions(options),
+    }),
+    ready: managed?.ready ?? (() => Promise.resolve()),
+  };
 }

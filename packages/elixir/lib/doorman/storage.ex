@@ -3,6 +3,7 @@ defmodule Doorman.Storage do
   def table(config, name), do: ~s("#{config.prefix}"."#{name}")
 
   def query(config, sql, params \\ []) do
+    Doorman.Schema.ensure!(config)
     result = Ecto.Adapters.SQL.query!(config.repo, sql, params, log: false)
     Enum.map(result.rows || [], &Map.new(Enum.zip(result.columns, &1)))
   end

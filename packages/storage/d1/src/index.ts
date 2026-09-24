@@ -253,3 +253,5 @@ export { createD1ActivityStorage } from "./activity.js";
 export { createD1OperatorStorage } from "./operators.js";
 
 export { createD1ContextStorage } from "./context.js";
+
+export { ensureD1Schema, managedD1Database } from "./setup.js";

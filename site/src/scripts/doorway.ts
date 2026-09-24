@@ -86,9 +86,7 @@ function setup(
     previous = 0,
     raf = 0,
     visible = true;
-  let width = 1000,
-    pixelWidth = 1000,
-    pixelHeight = 500;
+  let width = 1000;
   const random = (n: number) => {
     const v = Math.sin(n * 127.1 + 71.7) * 43758.5453;
     return v - Math.floor(v);
@@ -110,16 +108,10 @@ function setup(
     stage.dataset.actor = actors[active];
   }
   function draw() {
-    const ratio = Math.min(devicePixelRatio || 1, 2);
-    ctx.setTransform(
-      (ratio * pixelWidth) / width,
-      0,
-      0,
-      (ratio * pixelHeight) / 500,
-      0,
-      0,
-    );
-    ctx.clearRect(0, 0, width, 500);
+    // Clear the actual backing bitmap, including after a display/DPR change.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(canvas.width / width, 0, 0, canvas.height / 500, 0, 0);
     const cycle = running() || elapsed ? Math.min(elapsed / 7200, 1) : 0.32;
     const assemble = eased(cycle / 0.21);
     const walk = eased((cycle - 0.45) / 0.36);
@@ -205,8 +197,6 @@ function setup(
   }
   function resize() {
     const bounds = canvas.getBoundingClientRect();
-    pixelWidth = bounds.width;
-    pixelHeight = bounds.height;
     width = Math.max(680, Math.min(bounds.width, 1120));
     const ratio = Math.min(devicePixelRatio || 1, 2);
     canvas.width = Math.round(bounds.width * ratio);

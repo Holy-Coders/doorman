@@ -1,23 +1,18 @@
 # One identity integration in Phoenix
 
-**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+**Upcoming 0.13 release.** Package publication is in progress. You can run the [source examples](https://github.com/Holy-Coders/doorman/tree/main/examples) now.
 
 Use your existing Ecto repository and authentication pipeline. Doorman remembers browser relationships and returns private estimates; it does not replace login or grant permissions.
 
-```elixir
-# mix.exs
-{:doorman_identity, "~> 0.13.0"}
-```
-
-In a new migration, call `Doorman.Migration.up()`. For an existing 0.12 installation, call `Doorman.Migration.upgrade_context()` instead. This adds one indexed association table. Run your normal Ecto migration command before deployment.
+First complete the [Phoenix setup](../../../packages/elixir/README.md). Tables are created automatically; no migration step is required.
 
 ```elixir
 doorman = Doorman.new(
   repo: MyApp.Repo,
   secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
   namespace: "my-app",
-  evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
-  cross_device: true
+  # Optional: evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
+  cross_device: false
 )
 
 # Your authentication plug owns current_user and current_account.

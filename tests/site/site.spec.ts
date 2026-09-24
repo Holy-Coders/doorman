@@ -71,7 +71,7 @@ test("search, documentation navigation, keyboard tabs and copy controls work", a
   ).toBeVisible();
   await page.getByRole("button", { name: "Copy code block" }).first().click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
-    "wrangler d1",
+    "doorman.ready",
   );
 });
 

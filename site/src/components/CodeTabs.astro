@@ -9,17 +9,17 @@ const examples = [
   {
     name: "Cloudflare",
     file: "worker.ts",
-    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/cloudflare";\n\nexport default {\n  async fetch(request, env) {\n    const visitor = createDoorman({\n      db: env.VISITORS,\n      secret: env.DOORMAN_IDENTITY_SECRET,\n      namespace: "my-app",\n      ai: env.AI,\n    });\n    return visitor.handle(request);\n  },\n};`,
+    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/cloudflare";\n\nlet visitor: ReturnType<typeof createDoorman> | undefined;\n\nexport default {\n  async fetch(request, env) {\n    visitor ??= createDoorman({\n      db: env.VISITORS,\n      secret: env.DOORMAN_IDENTITY_SECRET,\n      namespace: "my-app",\n    });\n    return visitor.handle(request);\n  },\n};`,
   },
   {
     name: "Next.js",
     file: "app/api/visitor/route.ts",
-    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/vercel";\n\nconst visitor = createDoorman({\n  db, // Your Postgres pool.\n  secret: process.env.DOORMAN_IDENTITY_SECRET!,\n  namespace: "my-app",\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\nexport async function POST(request: Request) {\n  return visitor.handle(request);\n}`,
+    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/vercel";\n\nconst visitor = createDoorman({\n  db, // Your Postgres pool.\n  secret: process.env.DOORMAN_IDENTITY_SECRET!,\n  namespace: "my-app",\n  evaluator: false, // Add Jev later.\n});\n\nexport async function POST(request: Request) {\n  return visitor.handle(request);\n}`,
   },
   {
     name: "Node",
     file: "server.ts",
-    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/node";\n\nconst visitor = createDoorman({\n  db, // Any compatible Postgres pool.\n  secret: process.env.DOORMAN_IDENTITY_SECRET!,\n  namespace: "my-app",\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\n// Standard Web Request / Response.\nconst response = await visitor.handle(request);\n\n// Maintenance runs on your schedule.\nawait visitor.cleanup();`,
+    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/node";\n\nconst visitor = createDoorman({\n  db, // Any compatible Postgres pool.\n  secret: process.env.DOORMAN_IDENTITY_SECRET!,\n  namespace: "my-app",\n  evaluator: false, // Add Jev later.\n});\n\n// Standard Web Request / Response.\nconst response = await visitor.handle(request);\n\n// Maintenance runs on your schedule.\nawait visitor.cleanup();`,
   },
   {
     name: "Phoenix",
@@ -28,13 +28,12 @@ const examples = [
 doorman = Doorman.new(
   repo: MyApp.Repo,
   secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
-  namespace: "my-app",
-  evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]
+  namespace: "my-app"
 )
 
 # Your Phoenix controller
 Doorman.handle(conn, doorman, %{
-  auth: %{user_id: current_user.id}
+  auth: %{user_id: to_string(current_user.id)}
 })
 # Private context is in conn.assigns.`,
   },
@@ -97,6 +96,7 @@ await doorman.reset();`,
     </div>
   ))}
   <div class="code-demo-footer">
-    <span class="version-dot"></span>One browser API. Your infrastructure.
+    <span class="version-dot"></span>0.13 API excerpts. See the setup guide for
+    the complete app.
   </div>
 </div>

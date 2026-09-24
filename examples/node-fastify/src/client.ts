@@ -1,7 +1,7 @@
-import { createVisitorClient } from "@aarondovturkel/doorman-browser";
-const visitor = createVisitorClient({
+import { createDoormanClient } from "@aarondovturkel/doorman-browser";
+const visitor = createDoormanClient({
   endpoint: "/api/visitor",
-  behavior: "extended",
+  collection: "extended",
 });
 const output = document.querySelector("pre")!;
 document.querySelector("button")!.addEventListener("click", async () => {

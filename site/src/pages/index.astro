@@ -9,15 +9,58 @@ import { REPO } from "../content";
 
 <Base
   title="Doorman — Know who’s behind the request."
-  description="First-party identity and private agent classification for your existing analytics. Connect verified actors, assess activity with Jev, and measure uncertainty in your own database."
+  description="Remember browsers, connect verified users and agents, and add context to PostHog or Mixpanel. Open source, with optional Jev scoring."
 >
   <main id="main">
     <Hero />
     <p class="container classification-evidence">
-      The new unified API is available from source in the 0.13 preview. npm and
-      Hex remain on 0.12 pending publisher verification.
-      <a href="/docs/identity-context/">Source setup and migration →</a>
+      Upcoming 0.13 release. Try it from source while package publication
+      finishes.
+      <a href="/docs/getting-started/">Run the local example →</a>
     </p>
+    <section
+      class="integration-section container"
+      aria-labelledby="integration-title"
+    >
+      <div class="integration-copy">
+        <h2 id="integration-title">
+          A browser client.
+          <br />
+          An endpoint.
+          <br />
+          Your database.
+        </h2>
+        <p>
+          Install the packages, connect your database and add one endpoint.
+          Doorman creates its tables automatically. No migration commands,
+          dashboard or separate service.
+        </p>
+        <ol class="integration-steps">
+          <li>
+            <strong>Choose your server</strong>
+            <span>Use Node, Next.js, Cloudflare Workers or native Elixir.</span>
+          </li>
+          <li>
+            <strong>Connect storage</strong>
+            <span>
+              Keep visitor history in your own Postgres or D1 database.
+            </span>
+          </li>
+          <li>
+            <strong>Call identify()</strong>
+            <span>
+              Get a browser ID. Read confidence and risk privately on the
+              server.
+            </span>
+          </li>
+        </ol>
+        <a class="text-link" href="/docs/identity-context/">
+          See the complete setup
+        </a>
+      </div>
+      <CodeTabs />
+    </section>
+
     <section
       class="classification-section container"
       aria-labelledby="classification-title"
@@ -33,14 +76,13 @@ import { REPO } from "../content";
         </div>
         <div>
           <p>
-            A login tells you which account is open. Doorman adds context about
-            the activity behind it: direct human use, an AI assistant, or a
-            conventional script.
+            A login tells you which account is open. Doorman keeps track of the
+            browsers, signed-in people and authenticated agents using it.
           </p>
           <p>
-            Use verified credentials where available. Use private, experimental
-            scores where you need an estimate. Keep unknown activity visible in
-            your reports.
+            When you need an estimate, Jev can score whether activity looks
+            human, assistant-operated or scripted. A guess stays separate from a
+            verified identity.
           </p>
           <a class="text-link" href="/docs/agent-classification/">
             Explore agent classification
@@ -49,39 +91,39 @@ import { REPO } from "../content";
       </div>
       <div class="classification-grid">
         <article>
-          <span class="section-kicker">01 / Observe</span>
-          <h3>Patterns, without recordings.</h3>
+          <span class="section-kicker">01 / Remember</span>
+          <h3>Recognize returning browsers.</h3>
           <p>
-            Optional movement and timing summaries meet server-owned API
-            patterns. Add optional local-font and runtime evidence. No key
-            values, form content or coordinate trails.
+            A first-party cookie remembers each browser. A short history helps
+            assess possible connections when signals change or the cookie
+            disappears.
           </p>
           <a href="/docs/privacy/">What is collected →</a>
         </article>
         <article>
-          <span class="section-kicker">02 / Assess</span>
-          <h3>Assistants aren’t attacks.</h3>
+          <span class="section-kicker">02 / Connect</span>
+          <h3>Connect users after login.</h3>
           <p>
-            Jev scores human, assistant and scripted activity separately from
-            abuse. Connect suspicious actions across likely related sessions,
-            even when IPs rotate. Tune thresholds on confirmed outcomes.
+            Pass the user your server has authenticated. Doorman remembers that
+            browser relationship without confusing a shared account with a
+            single person.
           </p>
-          <a href="/docs/linked-activity/">Follow related activity →</a>
+          <a href="/docs/identity-context/">Connect your login →</a>
         </article>
         <article>
           <span class="section-kicker">03 / Understand</span>
           <h3>Your analytics, with context.</h3>
           <p>
-            Connect browser visits, verified users and agents to PostHog,
-            Mixpanel and your warehouse. Keep remembered and inferred identities
-            separate from authenticated users.
+            Call identify once through Doorman. PostHog and Mixpanel keep their
+            existing funnels and gain browser, session and account properties on
+            events.
           </p>
-          <a href="/docs/identity-context/">Connect your identity context →</a>
+          <a href="/docs/analytics/">Connect your analytics →</a>
         </article>
       </div>
       <p class="classification-evidence">
-        Developer preview. Scores are uncalibrated; agent-brand recognition and
-        reliable headcounts are not established.{" "}
+        Activity labels are experimental. They do not reliably identify an
+        agent’s brand or count people sharing one login.{" "}
         <a href="/docs/external-benchmarks/">Read the public-data results →</a>
       </p>
     </section>
@@ -114,49 +156,6 @@ import { REPO } from "../content";
       <Playground />
     </section>
 
-    <section
-      class="integration-section container"
-      aria-labelledby="integration-title"
-    >
-      <div class="integration-copy">
-        <h2 id="integration-title">
-          A browser client.
-          <br />
-          An endpoint.
-          <br />
-          Your database.
-        </h2>
-        <p>
-          Add the client to your app and mount Doorman on your server. The
-          client sends a small observation; the server looks up history and
-          returns a visitor ID.
-        </p>
-        <ol class="integration-steps">
-          <li>
-            <strong>Choose your server</strong>
-            <span>Use Node, Next.js, Cloudflare Workers or native Elixir.</span>
-          </li>
-          <li>
-            <strong>Connect storage</strong>
-            <span>
-              Keep visitor history in your own Postgres or D1 database.
-            </span>
-          </li>
-          <li>
-            <strong>Call identify()</strong>
-            <span>
-              Get a browser ID. Read confidence and risk privately on the
-              server.
-            </span>
-          </li>
-        </ol>
-        <a class="text-link" href="/docs/identity-context/">
-          Set up one integration
-        </a>
-      </div>
-      <CodeTabs />
-    </section>
-
     <section class="jev-section container" aria-labelledby="jev-title">
       <div class="jev-copy">
         <span class="section-kicker">Optional AI, powered by Jev</span>
@@ -166,10 +165,10 @@ import { REPO } from "../content";
           Useful context.
         </h2>
         <p>
-          Jev is an AI model from TypeSafe. It helps Doorman choose useful
-          lookup signals, compare a shortlist of browser histories, and assess
-          automation and suspicious signals. The optional operator service asks
-          separate questions about human, assistant and scripted activity.
+          Jev is an AI model from TypeSafe. It compares browser history and
+          scores automation and suspicious signals. With enough activity, it
+          also estimates whether a human, assistant or script is operating the
+          browser.
         </p>
         <p>
           Use those estimates to inform your own checks, such as when to request
@@ -180,9 +179,9 @@ import { REPO } from "../content";
           Meet Jev and the scores
         </a>
         <p>
-          Enable learning to ask Jev about anonymous visits across devices using
-          earlier login-confirmed sessions. Suggestions stay private until a
-          login confirms the person.{" "}
+          Optional cross-device learning compares anonymous visits with earlier
+          sessions confirmed by login. A suggestion stays private; only a real
+          login connects that person to your analytics.{" "}
           <a href="/docs/learning/">Set up learning →</a>
         </p>
       </div>
@@ -257,17 +256,14 @@ import { REPO } from "../content";
           for the agentic era.
         </h2>
         <p>
-          Keep your analytics. Let Doorman handle identification. As agents
-          become more of your users, see who is behind an account and tailor the
-          experience to them. Doorman handles identification across anonymous
-          visits, login, profile updates and logout, so your reports get
-          consistent identity context.
+          Keep your analytics. Let Doorman handle identification. Connect it to
+          your existing login and logout flow, then keep using PostHog or
+          Mixpanel as usual. You do not need to identify through both SDKs.
         </p>
         <p>
-          Record verified people and agents separately from inferred activity
-          labels. Reports can show which actions have a verified agent
-          credential, which windows look assistant-operated, and where evidence
-          is still missing.
+          Build funnels for signed-in users, group activity by account, and
+          count verified agents separately from people. Send private activity
+          estimates from your server when you want to explore uncertain cases.
         </p>
         <a class="text-link" href="/docs/analytics/">
           Connect your analytics
@@ -340,10 +336,10 @@ import { REPO } from "../content";
           Clear boundaries.
         </h2>
         <p>
-          Browser data stays in your database. If you enable Jev, a compact set
-          of signals goes to your chosen AI provider. Doorman respects browser
-          privacy restrictions and never captures form values, actual keystrokes
-          or browsing history.
+          Doorman stores history in your database. If you enable Jev, a compact
+          set of signals goes to your chosen AI provider. Doorman respects
+          browser privacy restrictions and never captures form values, actual
+          keystrokes or browsing history.
         </p>
         <p>
           Risk scores stay on your server by default. Doorman does not replace
@@ -365,7 +361,7 @@ import { REPO } from "../content";
       </div>
       <div>
         <p>
-          Run a local example, inspect browser continuity, then add private
+          Run a local example, see a returning browser, then add private
           activity scores and analytics context as your application needs them.
         </p>
         <a href="/docs/getting-started/" class="button button-primary">

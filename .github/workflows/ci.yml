@@ -14,6 +14,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: git diff --exit-code -- packages/storage/d1/src/schema.generated.ts packages/storage/postgres/src/schema.generated.ts
       - run: pnpm protocol:sync && git diff --exit-code -- protocol packages/elixir/priv
       - run: pnpm lint
       - run: pnpm test

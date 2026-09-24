@@ -1,15 +1,10 @@
 # Next.js and Vercel
 
-This example uses the unified identity context flow. Anonymous responses contain only browser/session IDs. Server-authenticated users are remembered; uncertain matches remain private suggestions. See [one identity integration](../../docs/IDENTITY-CONTEXT.md) for login and PostHog/Mixpanel wiring.
-
-Set `DOORMAN_IDENTITY_SECRET` to a stable random value of at least 32 characters (for example, generate one with `openssl rand -hex 32`). Next.js reads it from `.env.local`; Cloudflare reads local bindings from `.dev.vars` (copy `.dev.vars.example`) and production secrets from `wrangler secret put DOORMAN_IDENTITY_SECRET`. Node and Phoenix include a clearly marked local-only fallback; set a real secret before deployment. Never put this secret in the browser.
-
-
-This example adds a Doorman endpoint to a Next.js App Router application. It uses Postgres through the standard `pg` client, so you can choose your database provider. The browser client identifies a visit; the route sets the cookie and stores history.
+This example adds a browser client and a Node route to a Next.js App Router app. It uses Postgres through `pg`, so you can choose your database provider. It uses the upcoming 0.13 API from the source workspace.
 
 ## Run the example
 
-You need Node 22.12+, pnpm 9.12.0 and Docker for the supplied local Postgres. From the Doorman repository root:
+You need Node.js 22.12+, pnpm 9.12.0 and Docker for the supplied Postgres database. From the repository root:
 
 ```sh
 pnpm install
@@ -17,41 +12,54 @@ pnpm build
 docker compose -f examples/compose.yaml up -d --wait
 cd examples/nextjs
 cp .env.example .env.local
-pnpm migrate
+openssl rand -hex 32
+```
+
+Copy the generated value into `DOORMAN_IDENTITY_SECRET` in `.env.local`. Keep it private and stable. Leave `JEV_API_KEY` blank to run without AI.
+
+```sh
 pnpm dev
 ```
 
-Open **http://localhost:3000** and identify twice. The second call should keep the visitor ID. The migration command can be run again safely.
+Open **http://localhost:3000** and select **Identify** twice. The second response should keep the browser ID. Tables are created automatically on first use; no migration step is required.
 
-## Configure the server
+## Add the route to your app
 
-`DATABASE_URL` points to your Postgres database. Leave `JEV_API_KEY` blank for built-in browser matching with no AI requests. Set a TypeSafe key to enable [Jev risk scoring](../../docs/JEV.md); those calls can incur charges. Never put the key in a `NEXT_PUBLIC_` variable.
-
-In an existing app, [install the packages](../../docs/LANGUAGES.md), apply their migrations, and create a route like this:
+[Install the packages](../../docs/LANGUAGES.md), then create `app/api/visitor/route.ts`:
 
 ```ts
 import { Pool } from "pg";
-import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
+import { createDoorman } from "@aarondovturkel/doorman-adapters/vercel";
 
-const db = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
-const visitor = createVercelVisitor({ db, evaluator: false });
+const doorman = createDoorman({
+  db: new Pool({ connectionString: process.env.DATABASE_URL, max: 5 }),
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
+  evaluator: false,
+});
 
 export const runtime = "nodejs";
 export async function POST(request: Request) {
-  return visitor.handle(request);
+  return doorman.handle(request);
 }
 ```
 
-Save it as `app/api/visitor/route.ts`. Keep the pool and adapter outside the request function so they can be reused. For serverless deployment, use your database provider’s pooled URL and appropriate connection limits.
+Reuse the pool and handler across requests. The database must exist and allow table/index creation. In serverless deployments, use your provider's pooled URL and connection limits.
 
-## Create and clean up the client
+## Add the client and login
 
-The [client component](app/identify.tsx) creates Doorman inside an effect and destroys it on unmount. Copy that lifecycle into your component rather than collecting during server rendering. The example enables optional extended behavior totals; the library’s default is event counts only.
+The [client component](app/identify.tsx) creates Doorman in an effect and destroys it on unmount. Copy that lifecycle; do not collect browser signals during server rendering. The example opts into extended summaries, while the library defaults to minimal collection.
 
-The response contains `visitorId` and `isReturning`. For private confidence or risk in server code, use `visitor.assess(request)` and return its `response`. See [private scores](../../docs/SECURITY.md).
+The browser receives `{ visitorId, sessionId, isReturning }`. To connect authenticated users and analytics, follow [add Doorman to your app](../../docs/IDENTITY-CONTEXT.md). Read your session on the server, pass its user to `assess()`, and return the assessment's `response`.
 
-## Production and maintenance
+## Environment and deployment
 
-`pnpm build && pnpm start` runs a production build locally. Deploy using your existing Next.js/Vercel pipeline and set server environment variables there. Return the adapter’s Response directly so its cookie and cache headers are preserved.
+| Variable                  | Purpose                                                              |
+| ------------------------- | -------------------------------------------------------------------- |
+| `DATABASE_URL`            | Postgres connection; the example file points to the local container. |
+| `DOORMAN_IDENTITY_SECRET` | Required stable secret of at least 32 characters.                    |
+| `JEV_API_KEY`             | Optional TypeSafe key for AI scoring. Blank means no provider calls. |
 
-Give each production application its own database or schema. Call `visitor.cleanup()` from existing maintenance. The local Node and Next.js examples share the supplied test database; stop it from the repository root with `docker compose -f examples/compose.yaml down` when finished. Omitting `-v` preserves local history.
+Keep all three server-only; none belongs in a `NEXT_PUBLIC_` variable. `pnpm build` then `pnpm start` runs production locally. Deploy through your normal Next.js/Vercel pipeline and configure the same environment there.
+
+Call `doorman.cleanup()` from existing maintenance. The local Node and Next.js examples share Postgres. Stop it from the repository root with `docker compose -f examples/compose.yaml down`; omitting `-v` preserves history.

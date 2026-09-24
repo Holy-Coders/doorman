@@ -1,39 +1,54 @@
-# Connect analytics
+# Connect analytics in Phoenix
 
-Doorman sends identity context to your existing analytics project. Your application supplies the authenticated person or agent ID. People and agents remain separate profiles, even when they use the same account.
+Keep your existing PostHog or Mixpanel project. Use Doorman's browser client for login, profile updates and logout; use private server properties when you want risk or agent context in reports.
 
-```elixir
-Doorman.Analytics.capture(:amplitude, identity, current_actor.id,
-  api_key: System.fetch_env!("AMPLITUDE_API_KEY"),
-  account_id: current_account.id
-)
-
-Doorman.Analytics.capture(:rudderstack, identity, current_actor.id,
-  host: System.fetch_env!("RUDDERSTACK_DATA_PLANE_URL"),
-  write_key: System.fetch_env!("RUDDERSTACK_WRITE_KEY"),
-  account_id: current_account.id
-)
-```
-
-PostHog uses `:posthog` and `api_key:`. Mixpanel uses `:mixpanel` and `token:`. Set `host:` for the appropriate regional ingestion endpoint. Amplitude's default minimum user ID length is five characters. Keep one stable ID namespace across your browser and server integrations.
-
-## Update a profile
-
-```elixir
-Doorman.Analytics.identify_user(:amplitude, current_user.id,
-  %{"name" => current_user.name, "plan" => "pro"},
-  api_key: System.fetch_env!("AMPLITUDE_API_KEY")
-)
-```
-
-Only `name`, `email` and `plan` are accepted as profile traits. Including email is optional. Risk and API activity summaries belong in the private server event, not a browser-readable profile. If the provider is unavailable the export returns `{:error, :unavailable}` without interrupting the application.
+First complete the [Phoenix setup](../../../packages/elixir/README.md). Its controller passes your server's authenticated `current_user` to Doorman. No manual migrations are needed.
 
 ## Browser lifecycle
 
-Your frontend still uses the shared JavaScript client to manage anonymous journeys, login and logout in initialized provider SDKs. It supports PostHog, Mixpanel, Segment, Amplitude and RudderStack. Server exports do not rotate browser SDK IDs: call `doorman.reset()` on logout. Do not send duplicate server events both directly and through a connected RudderStack destination.
+Pass your initialized SDK instances to the bundled module:
 
-## Account reports and warehouses
+```js
+import { createDoormanClient } from "/doorman/doorman.js";
 
-Group by `doorman_account_id`, count distinct verified `doorman_actor_id`, and break down by `doorman_actor_kind`. Never count events or browser IDs as people. API activity fields are prefixed `doorman_api_`; missing risk remains unavailable rather than being treated as evidence of safety.
+const doorman = createDoormanClient({
+  endpoint: "/api/visitor",
+  headers: () => ({
+    "x-csrf-token": document.querySelector('meta[name="csrf-token"]').content,
+  }),
+  analytics: { posthog, mixpanel },
+});
 
-RudderStack can route these same events to Snowflake or BigQuery. Or use `Doorman.Warehouse` to write versioned JSONL to a customer-owned sink. [Warehouse setup](../../../docs/WAREHOUSES.md).
+// On an anonymous page:
+await doorman.identify();
+// After login, or when loading a signed-in session:
+await doorman.identify({
+  userId: String(user.id),
+  accountId: String(account.id),
+});
+// Ordinary events:
+await doorman.track("Project created");
+// After logout:
+await doorman.reset();
+```
+
+These calls belong in their respective lifecycle hooks; do not run the whole sequence on every page load. Omit `accountId` without workspaces. Keep one client in your app bootstrap, call `destroy()` on teardown, and catch measurement failures so they do not interrupt a completed login.
+
+Existing `posthog.capture` and `mixpanel.track` calls also receive safe browser/session/account context. Segment, Amplitude and RudderStack are supported through `doorman.track`; their direct SDK calls are not automatically enriched. Doorman does not enable replay or change the providers' collection settings.
+
+## Private server events
+
+After `conn = Doorman.handle(conn, config, %{auth: auth})`, the measurement response has been sent. `conn.assigns.doorman_properties` contains the private context for a server analytics event. Use the actor ID verified by your authentication, never a guessed candidate ID.
+
+You can send those properties through your existing server integration. Alternatively, Doorman has optional [provider exporters](../../../docs/ANALYTICS-REFERENCE.md), including regional ingestion configuration. Choose one delivery path to avoid duplicate events.
+
+## Useful reports
+
+- Build ordinary signup/purchase funnels using real login joins.
+- Group by account and count distinct verified actors, separating people and agents.
+- Count browsers separately from users.
+- Analyze tentative cross-device matches and activity labels separately from verified identities.
+
+The [report recipes](../../../docs/ANALYTICS-REFERENCE.md) include Mixpanel setup, PostHog SQL and questions for an analytics assistant. [Warehouse delivery](../../../docs/WAREHOUSES.md) covers Snowflake and BigQuery.
+
+A browser shared by two credentials can be reported as two verified users. Two people sharing one password cannot be reliably counted from browser telemetry. Validate the event stream and profile merges in a development analytics project before trusting a report.

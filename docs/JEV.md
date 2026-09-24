@@ -10,17 +10,19 @@ Jev is an AI model from TypeSafe that answers structured questions. Doorman uses
 | Browser matching and risk      | Every plausible candidate's history, plus current automation and suspicious signals. | One call for up to ten candidates, with up to five observations each. |
 | Optional cross-device learning | Whether the current session fits a person’s separately login-confirmed sessions.     | One call for up to ten people, three examples each.                   |
 
-Cookie visits skip lookup planning and global candidate search. Set `lookupPlanning: false` (`lookup_planning: false` in Elixir) to skip the planning call while retaining batch matching. If a restricted lookup finds nothing, Doorman retries the standard indexed lookup. If the planner fails, it uses the standard lookup immediately.
+The recommended `createDoorman` API leaves lookup planning off. Cookie visits always skip planning and global candidate search. Set `lookupPlanning: false` (`lookup_planning: false` in Elixir) to skip the planning call while retaining batch matching. If a restricted lookup finds nothing, Doorman retries the standard indexed lookup. If the planner fails, it uses the standard lookup immediately.
 
 Turn on [learning](LEARNING.md) to use the built-in cross-device predictor. No custom callback is needed. It starts suggesting after confirmed history exists and abstains when evidence is missing, crowded or ambiguous. It never turns a prediction into a verified login or an analytics profile merge.
 
+When enough aggregate activity is available, the recommended API also asks for human, assistant and script scores. Sparse activity remains unknown. These labels do not establish an agent brand or a number of people; see [agent classification](AGENT-CLASSIFICATION.md).
+
 ## What the three scores mean
 
-| Score         | Question Doorman asks                                                    | How Doorman uses it                                                       |
-| ------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `sameVisitor` | Does this browser fit its recent history, allowing for ordinary changes? | Combines it with the built-in similarity score when recovering a lost ID. |
-| `automation`  | How consistent are the available signals with browser automation?        | Returns it privately to your server. It never changes identity matching.  |
-| `suspicious`  | Are the technical signals inconsistent or unusual?                       | Returns it privately to your server for your own policy.                  |
+| Score         | Question Doorman asks                                                    | How Doorman uses it                                                                      |
+| ------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `sameVisitor` | Does this browser fit its recent history, allowing for ordinary changes? | Combines it with the built-in similarity score when scoring a possible previous browser. |
+| `automation`  | How consistent are the available signals with browser automation?        | Returns it privately to your server. It never changes identity matching.                 |
+| `suspicious`  | Are the technical signals inconsistent or unusual?                       | Returns it privately to your server for your own policy.                                 |
 
 Each score is between 0 and 1. A high automation score is not a verdict that a visitor is malicious: an authorized assistant may be automated. Missing mouse movement, unavailable browser APIs and privacy settings are not, by themselves, evidence of abuse.
 
@@ -28,31 +30,35 @@ The scores are estimates that need testing on your traffic. There is no universa
 
 ## Turn Jev on
 
-For Node or Vercel, give the adapter your TypeSafe API key:
+After [setting up Doorman](IDENTITY-CONTEXT.md), import `createDoorman` from the Node or Vercel adapter and enable the evaluator:
 
 ```ts
-const visitor = createNodeVisitor({
+const visitor = createDoorman({
   db,
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
   evaluator: { apiKey: process.env.JEV_API_KEY! },
   evaluatorTimeoutMs: 1200,
 });
 ```
 
-For Cloudflare, supply your Workers AI binding:
+For Cloudflare, import `createDoorman` from the Cloudflare adapter and supply your Workers AI binding:
 
 ```ts
-const visitor = createCloudflareVisitor({
+const visitor = createDoorman({
   db: env.VISITORS,
+  secret: env.DOORMAN_IDENTITY_SECRET,
+  namespace: "my-app",
   ai: env.AI,
   evaluatorTimeoutMs: 1200,
 });
 ```
 
-The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Doorman.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request normally makes one planning call, one identity batch call and one separate risk call; learning can add one more. A known cookie uses an identity/risk pair, plus learning when enabled. Both calls are reserved against shared budget and concurrency limits before the pair starts; allow at least two concurrent provider calls to use these Jev methods. Configure a shared [inference budget](HARDENING.md) for all stages.
+The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Doorman.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request makes an identity batch call and a separate risk call; optional lookup planning adds a call when enabled, and learning can add one more. A known cookie uses an identity/risk pair, plus learning when enabled. Both calls are reserved against shared budget and concurrency limits before the pair starts; allow at least two concurrent provider calls to use these Jev methods. Configure a shared [inference budget](HARDENING.md) for all stages.
 
 ## Data sent to the model
 
-For browser matching, Doorman sends a compact current observation and up to five historical observations for each of at most ten candidates. This identity request excludes automation flags, behavior and runtime/environment probes, including the similarity feature `webdriverDetected`. A separate risk request receives only the current observation, with those signals included; it never receives identity history or similarity. Learning sends at most three confirmed examples for each of ten people. Requests exceeding 64 KiB are declined locally and fall back. Account IDs, email keys, permissions and trusted server evidence are not sent to Jev. The model sees browser-signal strings as untrusted input rather than instructions.
+For browser matching, Doorman sends a compact current observation and up to five historical observations for each of at most ten candidates. This identity request excludes automation flags, behavior and runtime/environment probes, including the similarity feature `webdriverDetected`. A separate risk request receives only the current observation, with those signals included; it never receives identity history or similarity. Learning sends at most three confirmed examples for each of ten people. Requests exceeding 64 KiB are declined locally and fall back. Account IDs, email keys, raw IPs and credentials are not sent to Jev. Allowlisted server risk counters, edge flags and reputation summaries can be included in the separate risk request; they never enter identity matching. The model sees browser-signal strings as untrusted input rather than instructions.
 
 Doorman keeps the final matching decision in code. Sparse or contradictory evidence can cap the result even when Jev returns a high score. See [matching rules](MATCHING.md).
 

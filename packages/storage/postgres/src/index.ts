@@ -209,3 +209,5 @@ export { createPostgresActivityStorage } from "./activity.js";
 export { createPostgresOperatorStorage } from "./operators.js";
 
 export { createPostgresContextStorage } from "./context.js";
+
+export { ensurePostgresSchema, managedPostgresDatabase } from "./setup.js";

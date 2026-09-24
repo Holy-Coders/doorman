@@ -1,10 +1,5 @@
 # Node and Fastify
 
-This example uses the unified identity context flow. Anonymous responses contain only browser/session IDs. Server-authenticated users are remembered; uncertain matches remain private suggestions. See [one identity integration](../../docs/IDENTITY-CONTEXT.md) for login and PostHog/Mixpanel wiring.
-
-Set `DOORMAN_IDENTITY_SECRET` to a stable random value of at least 32 characters (for example, generate one with `openssl rand -hex 32`). Next.js reads it from `.env.local`; Cloudflare reads local bindings from `.dev.vars` (copy `.dev.vars.example`) and production secrets from `wrangler secret put DOORMAN_IDENTITY_SECRET`. Node and Phoenix include a clearly marked local-only fallback; set a real secret before deployment. Never put this secret in the browser.
-
-
 Doorman’s Node adapter uses standard Web Request/Response objects. This example shows the small translation needed to mount it in Fastify. You can use the same adapter in another Node framework without adding that framework to Doorman itself.
 
 ## Run the example
@@ -17,31 +12,38 @@ pnpm build
 docker compose -f examples/compose.yaml up -d --wait
 cd examples/node-fastify
 cp .env.example .env
-pnpm migrate
 pnpm dev
 ```
 
 Open **http://localhost:3001** and select **Identify** twice. The second response should use the cookie and return the same visitor ID. `pnpm dev` builds the browser client before starting Fastify.
 
+Doorman creates its tables automatically. This source example uses the upcoming 0.13 API.
+
 ## Environment variables
 
-| Variable       | Purpose                                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL` | Required Postgres connection URL. The example file points to the supplied local database.                 |
-| `JEV_API_KEY`  | Optional TypeSafe key. Blank means no AI calls; a real key enables Jev and can incur provider charges.    |
-| `PORT`         | Server port, default `3001`.                                                                              |
-| `APP_ORIGIN`   | Your app’s public origin. Update it if you change the port; use the canonical HTTPS origin in production. |
+| Variable                  | Purpose                                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`            | Required Postgres connection URL. The example file points to the supplied local database.                            |
+| `DOORMAN_IDENTITY_SECRET` | Stable server secret of at least 32 characters. The example has a local-only fallback; replace it before deployment. |
+| `JEV_API_KEY`             | Optional TypeSafe key. Blank means no AI calls; a real key enables Jev and can incur provider charges.               |
+| `PORT`                    | Server port, default `3001`.                                                                                         |
+| `APP_ORIGIN`              | Your app’s public origin. Update it if you change the port; use the canonical HTTPS origin in production.            |
 
 ## Mount it in your application
 
-[Install the packages](../../docs/LANGUAGES.md) and apply the Postgres migrations, then create a reusable adapter:
+[Install the packages](../../docs/LANGUAGES.md) then create a reusable adapter:
 
 ```ts
 import { Pool } from "pg";
-import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+import { createDoorman } from "@aarondovturkel/doorman-adapters/node";
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
-const visitor = createNodeVisitor({ db, evaluator: false });
+const visitor = createDoorman({
+  db,
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
+  evaluator: false,
+});
 
 // In the route, after translating the framework request:
 const response = await visitor.handle(request);
@@ -53,7 +55,7 @@ Mount `/api/visitor` on your application’s origin and add the [browser client]
 
 ## Try API activity
 
-Set `DOORMAN_API_ACTIVITY=1` in `.env`, and set `DOORMAN_IDENTITY_SECRET` and `EXAMPLE_API_TOKEN` to separate random values of at least 32 characters (`openssl rand -hex 32`). Restart the server after applying all migrations. Keep `JEV_API_KEY` blank for a local run without provider calls.
+Set `DOORMAN_API_ACTIVITY=1` in `.env`, and set `DOORMAN_IDENTITY_SECRET` and `EXAMPLE_API_TOKEN` to separate random values of at least 32 characters (`openssl rand -hex 32`). Restart the server. Tables are set up automatically. Keep `JEV_API_KEY` blank for a local run without provider calls.
 
 ```sh
 curl -H 'Authorization: Bearer YOUR_EXAMPLE_API_TOKEN' \

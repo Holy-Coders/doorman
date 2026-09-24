@@ -166,7 +166,8 @@ defmodule Doorman.ActivityTest do
   test "Plug preserves normal responses when context callbacks or storage fail", %{c: c} do
     for {config, context} <- [
           {c, fn _ -> raise "secret error" end},
-          {%{c | prefix: "nonexistent_activity_schema"}, fn _ -> @context end}
+          {%{c | prefix: "unavailable_activity_schema", auto_migrate: false},
+           fn _ -> @context end}
         ] do
       opts = ActivityPlug.init(config: config, context: context)
       conn = conn(:get, "/") |> ActivityPlug.call(opts) |> send_resp(200, "ok")

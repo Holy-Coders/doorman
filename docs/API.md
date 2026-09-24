@@ -1,10 +1,42 @@
 # API reference
 
-For the recommended browser, account and analytics flow, start with [one identity integration](IDENTITY-CONTEXT.md). The detailed APIs below remain available for advanced use.
+Start with [add Doorman to your app](IDENTITY-CONTEXT.md). This reference targets the upcoming 0.13 release.
 
-Use this page to look up methods and options after [setting up an endpoint](GETTING-STARTED.md). Most applications need `createVisitorClient` in the browser and one server adapter. The core interfaces are for custom storage or evaluators.
+## Recommended server API
 
-The [concepts guide](CONCEPTS.md) explains the difference between a visitor, subject and actor. All management, account and risk APIs below run on your server unless marked as browser APIs.
+Import `createDoorman` from `@aarondovturkel/doorman-adapters/node`, `/vercel` or `/cloudflare`.
+
+```ts
+const doorman = createDoorman({
+  db,
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
+  evaluator: false, // Node/Vercel. Cloudflare accepts an optional ai binding.
+});
+```
+
+| Method or option                                       | Purpose                                                                                                               |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `handle(request, { auth? })`                           | Return public identity JSON and cookies.                                                                              |
+| `assess(request, { auth?, riskEvidence?, clientIp? })` | Also return private `identity`, `context`, `properties` and risk evidence. Return only its `response` to the browser. |
+| `ready()`                                              | Optional startup check. Table setup also runs automatically on first database use.                                    |
+| `cleanup()`                                            | Remove expired history using existing maintenance.                                                                    |
+| `forgetUser(rawUserId)`                                | Erase retained user relationships and dependent learning data.                                                        |
+| `deleteVisitor(visitorId)`                             | Erase the browser and its relationships.                                                                              |
+| `crossDevice`                                          | Default `false`; enable later-login feedback and private cross-device suggestions.                                    |
+| `autoMigrate`                                          | Default `true`; set `false` only when another deployment step owns table setup.                                       |
+
+`auth` is server-owned: `{ userId, accountId?, actor?: { id, kind: "person" | "agent" } }`. In this flow scores stay private, missing-cookie matches never restore an ID, and lookup planning is off. Jev is optional. [Context statuses and limits](IDENTITY-CONTEXT.md).
+
+## Recommended browser API
+
+`createDoormanClient({ endpoint?, analytics?, collection?, enabled?, headers? })` uses the current origin. `collection` defaults to `"minimal"`; `"extended"` adds bounded optional detection summaries.
+
+Call `identify()` for an anonymous visit or `identify({ userId, accountId? }, traits?)` after verified login. Other methods are `update`, `track`, `reset`, `setEnabled` and `destroy`. The public result is `{ visitorId, sessionId, isReturning }` when the server uses the recommended flow. See [analytics lifecycle](ANALYTICS.md).
+
+## Lower-level APIs
+
+The remaining reference is for custom integrations. These constructors expose separate visitor, directory and learning services. Their defaults can differ from `createDoorman`, and their callers manage storage setup explicitly. Most applications do not need them.
 
 ## Browser
 
