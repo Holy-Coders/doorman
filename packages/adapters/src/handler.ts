@@ -1,3 +1,16 @@
+import { createContext } from "./context.js";
+import { assessmentProperties } from "./analytics.js";
+import {
+  createReputation,
+  trustedRiskEvidence,
+  type ReputationOptions,
+} from "./reputation.js";
+import type {
+  AuthContext,
+  ContextStorage,
+  IdentityContext,
+  RiskEvidence,
+} from "@aarondovturkel/doorman-core";
 import { createEvidence, requestEvidence } from "./evidence.js";
 import { createOperatorService } from "./operators.js";
 import type { OperatorOptions } from "./operators.js";
@@ -39,6 +52,9 @@ export type AdapterOptions = RetentionOptions &
   Omit<EngineOptions, "storage" | "evaluator"> & {
     /** Opt-in public feedback. Prefer assess() for server-only scores. */
     exposeClientScores?: boolean;
+    /** Enable remembered browser/account context. Requires identity configuration. */
+    identityContext?: boolean;
+    reputation?: ReputationOptions;
     protection?: ProtectionOptions;
     evidence?: true | EvidenceOptions;
     activity?: ApiActivityOptions;
@@ -56,6 +72,11 @@ export type AdapterOptions = RetentionOptions &
     learning?: false | LearningOptions;
   };
 export type VisitorRequestContext = {
+  /** Application-owned authenticated context; never copy from browser payloads. */
+  auth?: AuthContext;
+  /** IP resolved by trusted server/proxy middleware, only used with explicit reputation configuration. */
+  clientIp?: string;
+  riskEvidence?: RiskEvidence;
   authenticatedSubject?: string;
   verified?: VerifiedIdentityContext;
   learningConsent?: boolean;
@@ -69,6 +90,10 @@ export type VisitorAssessment = {
   evidence?: RequestEvidence;
   /** Private, unverified suggestion. Never used as authenticated identity. */
   learning?: LearningPrediction;
+  context?: IdentityContext;
+  riskEvidence?: RiskEvidence;
+  /** Ready for an existing server analytics SDK. Event snapshot, never an identify/alias command. */
+  properties?: Record<string, unknown>;
 };
 export function createVisitorHandler(
   storage: ManagedVisitorStorage,
@@ -80,6 +105,7 @@ export function createVisitorHandler(
   evidenceStorage?: EvidenceStorage,
   activityStorage?: ApiActivityStorage,
   operatorStorage?: OperatorStorage,
+  contextStorage?: ContextStorage,
 ) {
   const maxInFlight = options.maxInFlightRequests ?? 64;
   if (!Number.isInteger(maxInFlight) || maxInFlight < 1 || maxInFlight > 1024)
@@ -112,6 +138,38 @@ export function createVisitorHandler(
   const identities =
     options.identity && identityStorage
       ? createIdentityDirectory(identityStorage, options.identity)
+      : undefined;
+  if (
+    options.identityContext &&
+    (!options.identity || !identities || !contextStorage)
+  )
+    throw new Error("Identity context requires identity and context storage");
+  const contexts =
+    options.identityContext && options.identity && identities && contextStorage
+      ? createContext(
+          contextStorage,
+          options.identity,
+          identities,
+          options.observationRetentionDays ?? 90,
+        )
+      : undefined;
+  if (options.reputation && !options.identity)
+    throw new Error("Reputation requires identity configuration");
+  if (options.reputation && !protectionStorage)
+    throw new Error("Reputation requires shared quota storage");
+  const reputationKey = options.identity
+    ? createSubjectLinker(options.identity)("doorman-reputation-budget-v1")
+    : undefined;
+  const reputation =
+    options.reputation && options.identity
+      ? createReputation(options.reputation, options.identity, async () =>
+          protectionStorage!.consumeQuota(
+            await reputationKey!,
+            options.reputation!.maxRequestsPerHour ?? 100,
+            3_600_000,
+            Date.now(),
+          ),
+        )
       : undefined;
   if (
     options.learning &&
@@ -238,6 +296,8 @@ export function createVisitorHandler(
       identity: VisitorIdentity,
       evidence: RequestEvidence,
       learning?: LearningPrediction,
+      context?: IdentityContext,
+      riskEvidence?: RiskEvidence,
     ) => void,
   ): Promise<Response> {
     if (
@@ -268,6 +328,7 @@ export function createVisitorHandler(
       return json({ error: "Insecure cookies require localhost" }, 400);
     try {
       const trustedEvidence = requestEvidence(context.evidence);
+      let riskEvidence = trustedRiskEvidence(context.riskEvidence);
       const admission = await protection?.admit(context.admission);
       if (admission && !admission.allowed)
         return json({ error: "Visitor measurement rate limited" }, 429, {
@@ -282,8 +343,21 @@ export function createVisitorHandler(
         throw new RequestError(500, "Identity directory is not configured");
       if (context.verified && context.authenticatedSubject)
         throw new RequestError(400, "Use one identity context");
+      if (
+        context.auth &&
+        (!contexts || context.verified || context.authenticatedSubject)
+      )
+        throw new RequestError(
+          400,
+          "Use auth with the unified identity context",
+        );
+      const auth = await contexts?.authenticate(context.auth);
       const attribution = identities
-        ? await identities.assess(context.verified)
+        ? await identities.assess(
+            auth
+              ? { subjectId: auth.subjectId, actorId: auth.actorId }
+              : context.verified,
+          )
         : undefined;
       const subject = context.authenticatedSubject;
       if (
@@ -303,8 +377,14 @@ export function createVisitorHandler(
         cookies.length === 1
           ? cookies[0]?.slice(cookieName.length + 1)
           : undefined;
+      if (reputation)
+        riskEvidence = {
+          ...riskEvidence,
+          reputation: await reputation.check(context.clientIp),
+        };
       const identity = await engine.identify({
         ...payload,
+        riskEvidence,
         visitorId: id && isVisitorId(id) ? id : undefined,
       });
       const learningCookies = (request.headers.get("cookie") ?? "")
@@ -324,6 +404,7 @@ export function createVisitorHandler(
                 options.learning !== false &&
                 options.learning?.collectionPolicy === "application"),
             authenticated:
+              auth !== undefined ||
               context.verified !== undefined ||
               context.authenticatedSubject !== undefined,
             attribution,
@@ -335,25 +416,61 @@ export function createVisitorHandler(
         : learningCookies.length
           ? { maxAge: 0, id: undefined, prediction: undefined }
           : undefined;
+      const resolvedContext = await contexts?.resolve(
+        identity,
+        id,
+        auth,
+        learningCookie?.prediction,
+      );
+      const sessionCookieName = `${cookieName}_session`;
+      const sessionCookies = (request.headers.get("cookie") ?? "")
+        .split(";")
+        .map((c) => c.trim())
+        .filter((c) => c.startsWith(`${sessionCookieName}=`));
+      const suppliedSession =
+        sessionCookies.length === 1
+          ? sessionCookies[0]?.slice(sessionCookieName.length + 1)
+          : undefined;
+      const sessionId = contexts
+        ? suppliedSession && /^ses_[a-f0-9]{48}$/.test(suppliedSession)
+          ? suppliedSession
+          : "ses_" +
+            Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) =>
+              b.toString(16).padStart(2, "0"),
+            ).join("")
+        : undefined;
       const secure = options.cookie?.secure === false ? "" : "; Secure";
       const fullIdentity: VisitorIdentity = {
         ...identity,
+        ...(sessionId ? { sessionId } : {}),
         ...(subjectId ? { subjectId } : {}),
         ...(attribution ? { attribution } : {}),
       };
-      capture?.(fullIdentity, trustedEvidence, learningCookie?.prediction);
+      capture?.(
+        fullIdentity,
+        trustedEvidence,
+        learningCookie?.prediction,
+        resolvedContext,
+        riskEvidence,
+      );
       const response = json(
         options.exposeClientScores === true
           ? fullIdentity
           : {
               visitorId: identity.visitorId,
               isReturning: identity.isReturning,
+              ...(sessionId ? { sessionId } : {}),
             },
         200,
         {
           "Set-Cookie": `${cookieName}=${identity.visitorId}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAge)}`,
         },
       );
+      if (sessionId)
+        response.headers.append(
+          "Set-Cookie",
+          `${sessionCookieName}=${sessionId}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=1800`,
+        );
       if (learningCookie && (learningCookie.id || learningCookies.length))
         response.headers.append(
           "Set-Cookie",
@@ -373,6 +490,8 @@ export function createVisitorHandler(
       identity: VisitorIdentity,
       evidence: RequestEvidence,
       learning?: LearningPrediction,
+      context?: IdentityContext,
+      riskEvidence?: RiskEvidence,
     ) => void,
   ): Promise<Response> {
     if (inFlight >= maxInFlight) {
@@ -403,23 +522,40 @@ export function createVisitorHandler(
       let identity: VisitorIdentity | undefined;
       let evidence: RequestEvidence | undefined;
       let learning: LearningPrediction | undefined;
+      let resolvedContext: IdentityContext | undefined;
+      let riskEvidence: RiskEvidence | undefined;
       const response = await handle(
         request,
         context,
-        (result, trusted, prediction) => {
+        (result, trusted, prediction, context, risk) => {
+          resolvedContext = context;
+          riskEvidence = risk;
           learning = prediction;
           identity = result;
           evidence = trusted;
         },
       );
-      return {
+      const result: VisitorAssessment = {
         response,
         ...(response.ok && identity
-          ? { identity, evidence, ...(learning ? { learning } : {}) }
+          ? {
+              identity,
+              evidence,
+              ...(learning ? { learning } : {}),
+              ...(resolvedContext ? { context: resolvedContext } : {}),
+              ...(riskEvidence ? { riskEvidence } : {}),
+            }
+          : {}),
+      };
+      return {
+        ...result,
+        ...(result.identity
+          ? { properties: assessmentProperties(result) }
           : {}),
       };
     },
     identities,
+    forgetUser: contexts?.forgetUser,
     activity,
     operators,
     evidence,
@@ -428,6 +564,7 @@ export function createVisitorHandler(
       : undefined,
     async cleanup(options?: CleanupOptions) {
       const progress = await storage.cleanup(options);
+      await contexts?.cleanup();
       await identities?.cleanup();
       await learner?.cleanup();
       await protection?.cleanup();

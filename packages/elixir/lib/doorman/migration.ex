@@ -1,13 +1,13 @@
 defmodule Doorman.Migration do
   @moduledoc "Call up/1 and down/1 inside an application-owned Ecto migration. Default schema: doorman."
-  @tables ~w(visitors observations identity_subjects identity_keys identity_delegations learning_sessions protection_quotas evaluation_controls application_events device_links api_activity_buckets api_activity_assessments)
+  @tables ~w(visitors observations identity_subjects identity_keys identity_delegations learning_sessions protection_quotas evaluation_controls application_events device_links api_activity_buckets api_activity_assessments browser_associations)
   def up(opts \\ []) do
     prefix = prefix!(opts)
     Ecto.Migration.execute(~s(CREATE SCHEMA IF NOT EXISTS "#{prefix}"))
 
     apply_sql(
       prefix,
-      ~w(0001_visitors 0002_identity 0003_learning 0004_candidate_lookup 0005_protection 0006_evidence 0007_learning_lookup 0008_api_activity)
+      ~w(0001_visitors 0002_identity 0003_learning 0004_candidate_lookup 0005_protection 0006_evidence 0007_learning_lookup 0008_api_activity 0010_browser_associations)
     )
   end
 
@@ -26,6 +26,8 @@ defmodule Doorman.Migration do
 
   @doc "Add bounded API activity and evaluation cache tables."
   def upgrade_activity(opts \\ []), do: apply_sql(prefix!(opts), ~w(0008_api_activity))
+
+  def upgrade_context(opts \\ []), do: apply_sql(prefix!(opts), ~w(0010_browser_associations))
 
   defp apply_sql(prefix, names) do
     for name <- names do

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Doorman first-party browser protocol",
-    "version": "0.9.0",
+    "version": "0.13.0",
     "description": "Self-hosted by each implementer. Measurements never establish authenticated account claims."
   },
   "paths": {
@@ -561,6 +561,18 @@
             "type": "string",
             "pattern": "^vis_[a-f0-9]{48}$"
           },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^ses_[a-f0-9]{48}$"
+          },
+          "browserMatch": {
+            "type": "object",
+            "description": "Private previous-browser suggestion; never authenticated context."
+          },
+          "operator": {
+            "type": "object",
+            "description": "Private experimental human, assistant and automation scores with availability status."
+          },
           "confidence": {
             "type": "number",
             "minimum": 0,
@@ -623,6 +635,10 @@
           },
           "isReturning": {
             "type": "boolean"
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^ses_[a-f0-9]{48}$"
           }
         }
       }

@@ -1,7 +1,10 @@
 import * as amplitude from "@amplitude/analytics-browser";
 import { posthog } from "posthog-js";
 import mixpanel from "mixpanel-browser";
-import { createIdentityAnalytics, createDoormanClient } from "@aarondovturkel/doorman-browser";
+import {
+  createIdentityAnalytics,
+  createDoormanClient,
+} from "@aarondovturkel/doorman-browser";
 
 posthog.init("phc_local_test", {
   api_host: location.origin + "/vendor/posthog",
@@ -56,6 +59,10 @@ const demo = {
     },
   },
   doorman,
+  directTrack(event: string) {
+    posthog.capture(event);
+    mixpanel.track(event);
+  },
   login(id: string) {
     return analytics.identifyUser(id, { plan: "test" });
   },

@@ -1,5 +1,7 @@
+import { simpleOptions, type SimpleOptions } from "../simple.js";
 import type { EdgeEvidence } from "@aarondovturkel/doorman-core";
 import {
+  createPostgresContextStorage,
   createPostgresStorage,
   createPostgresIdentityStorage,
   createPostgresLearningStorage,
@@ -10,6 +12,7 @@ import {
 } from "@aarondovturkel/doorman-storage-postgres";
 import type { PostgresDatabase } from "@aarondovturkel/doorman-storage-postgres";
 import {
+  createD1ContextStorage,
   createD1Storage,
   createD1IdentityStorage,
   createD1LearningStorage,
@@ -51,7 +54,10 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
         ? createPostgresLearningStorage(postgres)
         : createD1LearningStorage(d1!)
       : undefined,
-    options.protection || options.activity || options.operators
+    options.protection ||
+      options.activity ||
+      options.operators ||
+      options.reputation
       ? postgres
         ? createPostgresProtectionStorage(postgres)
         : createD1ProtectionStorage(d1!)
@@ -70,6 +76,11 @@ export function createCloudflareVisitor(options: CloudflareVisitorOptions) {
       ? postgres
         ? createPostgresOperatorStorage(postgres)
         : createD1OperatorStorage(d1!)
+      : undefined,
+    options.identityContext
+      ? postgres
+        ? createPostgresContextStorage(postgres)
+        : createD1ContextStorage(d1!)
       : undefined,
   );
 }
@@ -126,4 +137,14 @@ export function cloudflareRequestEvidence(
     ...(verifiedBot !== undefined ? { verifiedBot } : {}),
     ...(signedAgent !== undefined ? { signedAgent } : {}),
   };
+}
+
+/** Recommended identity/context flow; advanced services remain optional. */
+export function createDoorman(
+  options: SimpleOptions & {
+    db: D1Database | PostgresDatabase;
+    ai?: WorkersAI;
+  },
+) {
+  return createCloudflareVisitor({ ...options, ...simpleOptions(options) });
 }

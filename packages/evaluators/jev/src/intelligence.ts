@@ -1,7 +1,13 @@
-import { INTELLIGENCE_LIMITS, isProbability } from "@aarondovturkel/doorman-core";
+import {
+  INTELLIGENCE_LIMITS,
+  isProbability,
+} from "@aarondovturkel/doorman-core";
 import { createOperatorInput, parseOperatorResponse } from "./operators.js";
 import { createActivityInput } from "./activity.js";
-import type { VisitorEvaluator, CrossDeviceInput } from "@aarondovturkel/doorman-core";
+import type {
+  VisitorEvaluator,
+  CrossDeviceInput,
+} from "@aarondovturkel/doorman-core";
 import {
   compactIdentity,
   createRiskInput,
@@ -77,7 +83,11 @@ export function createJevMethods(
     return transport(input);
   };
   // Wait for both transports to settle before releasing an admission reservation.
-  const paired = async (identity: JevRequest, risk: JevRequest) => {
+  const paired = async (
+    identity: JevRequest,
+    risk: JevRequest,
+    classifyOperator = false,
+  ) => {
     const results = await Promise.allSettled([
       Promise.resolve().then(() => request(identity)),
       Promise.resolve().then(() => request(risk)),
@@ -87,6 +97,15 @@ export function createJevMethods(
       return result.value;
     });
     return {
+      ...(classifyOperator
+        ? {
+            operator: {
+              human: readNoul(values[1], "human"),
+              assistant: readNoul(values[1], "assistant"),
+              automation: readNoul(values[1], "script"),
+            },
+          }
+        : {}),
       identity: values[0],
       automation: readNoul(values[1], "automation"),
       suspicious: readNoul(values[1], "suspicious"),
@@ -110,9 +129,15 @@ export function createJevMethods(
     async evaluate(input) {
       const result = await paired(
         createJevInput(input),
-        createRiskInput(input.current),
+        createRiskInput(
+          input.current,
+          input.riskEvidence,
+          input.classifyOperator,
+        ),
+        input.classifyOperator,
       );
       return {
+        ...(result.operator ? { operator: result.operator } : {}),
         sameVisitor: readNoul(result.identity, "sameVisitor"),
         automation: result.automation,
         suspicious: result.suspicious,
@@ -155,9 +180,15 @@ export function createJevMethods(
           },
           questions,
         },
-        createRiskInput(input.current),
+        createRiskInput(
+          input.current,
+          input.riskEvidence,
+          input.classifyOperator,
+        ),
+        input.classifyOperator,
       );
       return input.candidates.map((_, index) => ({
+        ...(result.operator ? { operator: result.operator } : {}),
         sameVisitor: readNoul(result.identity, `candidate${index}`),
         automation: result.automation,
         suspicious: result.suspicious,

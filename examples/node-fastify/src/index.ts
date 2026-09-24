@@ -9,6 +9,7 @@ const db = new Pool({
 });
 const app = createApp(db, {
   apiKey: process.env.JEV_API_KEY,
+  secret: process.env.DOORMAN_IDENTITY_SECRET || undefined,
   origin: process.env.APP_ORIGIN,
   activity:
     process.env.DOORMAN_API_ACTIVITY === "1"

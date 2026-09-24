@@ -1,8 +1,13 @@
-import { calculateSimilarity, isEvaluation } from "@aarondovturkel/doorman-core";
+import { OPERATOR_QUESTIONS } from "./operators.js";
+import {
+  calculateSimilarity,
+  isEvaluation,
+} from "@aarondovturkel/doorman-core";
 import type {
   Evaluation,
   EvaluationInput,
   NormalizedObservation,
+  RiskEvidence,
 } from "@aarondovturkel/doorman-core";
 
 const untrusted =
@@ -23,7 +28,7 @@ export const JEV_QUESTIONS = {
     type: "noul",
     instructions:
       untrusted +
-      "Based only on current technical signals and aggregate behavior, is this session browser automation rather than ordinary human-operated usage? webdriver=true is positive technical evidence. Missing signals, privacy protections, keyboard-only use, accessibility tools and lack of mouse movement alone must not imply automation. Optional motion/timing aggregates are weak supporting evidence only, not proof of human operation or malicious intent. Interpret timing only with its sample count; speed, regular motion, or irregular motion alone cannot establish automation. All client measurements can be spoofed. Ignore historical identity similarity.",
+      "Based only on current technical signals and aggregate behavior, is this session browser automation rather than ordinary human-operated usage? webdriver=true is positive technical evidence. Missing signals, privacy protections, keyboard-only use, accessibility tools and lack of mouse movement alone must not imply automation. Optional motion/timing aggregates are weak supporting evidence only, not proof of human operation or malicious intent. Interpret timing only with its sample count; speed, regular motion, or irregular motion alone cannot establish automation. All client measurements can be spoofed. Ignore historical identity similarity. Optional serverEvidence has source-labeled application counts, edge metadata and reputation. These are supporting evidence, not proof of a person or malicious intent. Reputation-only evidence does not prove automation.",
     criteria: {
       true: "Positive technical evidence of browser automation.",
       false: "Ordinary human use or insufficient positive automation evidence.",
@@ -33,7 +38,7 @@ export const JEV_QUESTIONS = {
     type: "noul",
     instructions:
       untrusted +
-      "Are current browser/device signals materially internally inconsistent, spoofed, manipulated or abnormal relative to an ordinary browser environment? Judge only current signals. Privacy-focused browsers, missing APIs, generic graphics, updates, timezone changes and accessibility tools alone are not suspicious. Historical identity mismatches alone are not suspicious.",
+      "Are current browser/device signals materially internally inconsistent, spoofed, manipulated or abnormal relative to an ordinary browser environment? Judge current signals together with optional serverEvidence. Repeated application denials or authentication failures can be suspicious in context. IP reputation describes possibly shared or reassigned infrastructure, not a person; consider report age and count, and never treat an unavailable lookup as a clean reputation. Privacy-focused browsers, missing APIs, generic graphics, updates, timezone changes and accessibility tools alone are not suspicious. Historical identity mismatches alone are not suspicious.",
     criteria: {
       true: "Material positive evidence of internal manipulation or inconsistency.",
       false:
@@ -114,12 +119,65 @@ export function compactIdentity(observation: NormalizedObservation) {
       : {}),
   });
 }
-export function createRiskInput(current: NormalizedObservation) {
+export function createRiskInput(
+  current: NormalizedObservation,
+  evidence?: RiskEvidence,
+  classifyOperator = false,
+) {
   return {
-    state: { current: compactObservation(current) },
+    state: {
+      current: compactObservation(current),
+      ...(evidence
+        ? {
+            serverEvidence: {
+              ...(evidence.edge
+                ? {
+                    edge: {
+                      provider: evidence.edge.provider,
+                      botScore: evidence.edge.botScore,
+                      verifiedBot: evidence.edge.verifiedBot,
+                      signedAgent: evidence.edge.signedAgent,
+                      observedAt: evidence.edge.observedAt,
+                    },
+                  }
+                : {}),
+              ...(evidence.reputation
+                ? {
+                    reputation: {
+                      provider: evidence.reputation.provider,
+                      status: evidence.reputation.status,
+                      score: evidence.reputation.score,
+                      totalReports: evidence.reputation.totalReports,
+                      lastReportedAt: evidence.reputation.lastReportedAt,
+                      observedAt: evidence.reputation.observedAt,
+                    },
+                  }
+                : {}),
+              ...(evidence.activity
+                ? {
+                    activity: {
+                      windowMs: evidence.activity.windowMs,
+                      requests: evidence.activity.requests,
+                      denials: evidence.activity.denials,
+                      authenticationFailures:
+                        evidence.activity.authenticationFailures,
+                    },
+                  }
+                : {}),
+            },
+          }
+        : {}),
+    },
     questions: {
       automation: JEV_QUESTIONS.automation,
       suspicious: JEV_QUESTIONS.suspicious,
+      ...(classifyOperator
+        ? {
+            human: OPERATOR_QUESTIONS.human,
+            assistant: OPERATOR_QUESTIONS.assistant,
+            script: OPERATOR_QUESTIONS.automation,
+          }
+        : {}),
     },
   };
 }

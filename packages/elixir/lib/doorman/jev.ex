@@ -1,7 +1,13 @@
 defmodule Doorman.Jev do
   @moduledoc "TypeSafe Jev typed questions. Bounded, replaceable and failure-tolerant in the engine."
   @external_resource Path.expand("../../priv/jev-questions.json", __DIR__)
-  @questions @external_resource |> File.read!() |> Jason.decode!()
+  @questions Path.expand("../../priv/jev-questions.json", __DIR__)
+             |> File.read!()
+             |> Jason.decode!()
+  @external_resource Path.expand("../../priv/jev-operators.json", __DIR__)
+  @operators Path.expand("../../priv/jev-operators.json", __DIR__)
+             |> File.read!()
+             |> Jason.decode!()
   @external_resource Path.expand("../../priv/jev-intelligence.json", __DIR__)
   @intelligence Path.expand("../../priv/jev-intelligence.json", __DIR__)
                 |> File.read!()
@@ -104,10 +110,28 @@ defmodule Doorman.Jev do
       |> Map.take(~w(platform browser timezone languages screen viewport hardware graphics fonts))
       |> compact()
 
-  def risk_input(current),
+  def risk_input(current, evidence \\ nil, classify_operator \\ false),
     do: %{
-      "state" => %{"current" => compact(current)},
-      "questions" => Map.take(@questions, ~w(automation suspicious))
+      "state" =>
+        Map.merge(
+          %{"current" => compact(current)},
+          if(evidence,
+            do: %{"serverEvidence" => Doorman.RiskEvidence.project(evidence)},
+            else: %{}
+          )
+        ),
+      "questions" =>
+        Map.merge(
+          Map.take(@questions, ~w(automation suspicious)),
+          if(classify_operator,
+            do: %{
+              "human" => @operators["human"],
+              "assistant" => @operators["assistant"],
+              "script" => @operators["automation"]
+            },
+            else: %{}
+          )
+        )
     }
 
   # Parallel, separately scoped provider calls. Wait for both before releasing admission.
@@ -137,13 +161,19 @@ defmodule Doorman.Jev do
   end
 
   def evaluate(input, opts) do
-    {identity, risk} = paired(input(input), risk_input(input["current"]), opts)
+    {identity, risk} =
+      paired(
+        input(input),
+        risk_input(input["current"], input["riskEvidence"], input["classifyOperator"]),
+        opts
+      )
 
     %{
       "sameVisitor" => noul(identity, "sameVisitor"),
       "automation" => noul(risk, "automation"),
       "suspicious" => noul(risk, "suspicious")
     }
+    |> Map.merge(operator_scores(risk, input["classifyOperator"]))
   end
 
   def plan_lookup(current, opts) do
@@ -162,7 +192,7 @@ defmodule Doorman.Jev do
     }
   end
 
-  def evaluate_candidates(current, candidates, opts) do
+  def evaluate_candidates(current, candidates, opts, evidence \\ nil, classify_operator \\ false) do
     unless length(candidates) in 1..10, do: raise("Invalid Jev candidate count")
 
     questions =
@@ -192,7 +222,11 @@ defmodule Doorman.Jev do
     }
 
     {response, risk} =
-      paired(%{"state" => state, "questions" => questions}, risk_input(current), opts)
+      paired(
+        %{"state" => state, "questions" => questions},
+        risk_input(current, evidence, classify_operator),
+        opts
+      )
 
     automation = noul(risk, "automation")
     suspicious = noul(risk, "suspicious")
@@ -205,8 +239,20 @@ defmodule Doorman.Jev do
         "automation" => automation,
         "suspicious" => suspicious
       }
+      |> Map.merge(operator_scores(risk, classify_operator))
     end)
   end
+
+  defp operator_scores(_, value) when value in [false, nil], do: %{}
+
+  defp operator_scores(risk, true),
+    do: %{
+      "operator" => %{
+        "human" => noul(risk, "human"),
+        "assistant" => noul(risk, "assistant"),
+        "automation" => noul(risk, "script")
+      }
+    }
 
   def predict_identity(%{current: current, examples: examples}, opts) do
     candidates =

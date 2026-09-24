@@ -1,5 +1,7 @@
 # Your first visitor ID
 
+For the recommended browser, account and analytics flow, start with [one identity integration](IDENTITY-CONTEXT.md). The detailed APIs below remain available for advanced use.
+
 In this guide, you’ll run Doorman locally, identify a browser, and see the same ID on a return visit. The example includes the browser client, server endpoint and database, so you can see the whole flow before adding it to your own app.
 
 We’ll use the Cloudflare example because its development tools provide a local database. You do not need a Cloudflare account, an AI key or Docker for this path. If you prefer Elixir, use the [Phoenix example](../examples/phoenix/README.md).

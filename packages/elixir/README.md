@@ -1,5 +1,8 @@
 # Doorman for Elixir and Phoenix
 
+For the recommended browser, account and analytics flow, start with [one identity integration](../../docs/IDENTITY-CONTEXT.md). The detailed APIs below remain available for advanced use.
+
+
 Add browser recognition to a Phoenix app using your existing Ecto Postgres repository. Doorman runs natively in Elixir, and the Mix package includes the JavaScript client your page needs. You do not need a separate Node service.
 
 This guide assumes you already have a Phoenix app with Postgres. To try a complete small app first, use the [Phoenix example](https://github.com/Holy-Coders/doorman/tree/main/examples/phoenix).
@@ -9,7 +12,7 @@ This guide assumes you already have a Phoenix app with Postgres. To try a comple
 Add Doorman to `deps` in `mix.exs`:
 
 ```elixir
-{:doorman_identity, "~> 0.12.0"}
+{:doorman_identity, "~> 0.13.0"}
 ```
 
 Then run `mix deps.get`. This is a developer preview. It requires Elixir 1.17+, Ecto SQL 3.14+, Plug and PostgreSQL. Tests currently run on Elixir 1.20.2 / OTP 29 and Postgres 17; your app should resolve and keep its own dependency lockfile.

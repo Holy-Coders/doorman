@@ -45,12 +45,15 @@ defmodule Doorman.Analytics do
            provider,
            identity,
            distinct_id,
-           Keyword.put(opts, :account_id, context[:account_id])
+           opts
+           |> Keyword.put(:account_id, context[:account_id])
+           |> Keyword.put(:properties, context[:properties] || %{})
          )}
       end)
 
   def capture(provider, identity, distinct_id, opts) do
-    props = properties(identity, %{account_id: opts[:account_id]})
+    props =
+      Map.merge(properties(identity, %{account_id: opts[:account_id]}), opts[:properties] || %{})
 
     send_event(
       provider,

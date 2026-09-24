@@ -9,6 +9,12 @@
         "source": "docs/INTRODUCTION.md"
       },
       {
+        "slug": "identity-context",
+        "title": "One identity integration",
+        "description": "Connect your browser, authenticated users, private estimates and existing analytics with one API.",
+        "source": "docs/IDENTITY-CONTEXT.md"
+      },
+      {
         "slug": "getting-started",
         "title": "Your first visitor ID",
         "description": "Run a local example and see what changes between visits.",

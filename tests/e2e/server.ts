@@ -1,19 +1,21 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createApp } from "../../examples/node-fastify/src/app.js";
 const db = new PGlite();
-await db.exec(
-  await readFile(
-    new URL(
-      "../../packages/storage/postgres/migrations/0001_visitors.sql",
-      import.meta.url,
-    ),
-    "utf8",
-  ),
+const migrations = new URL(
+  "../../packages/storage/postgres/migrations/",
+  import.meta.url,
 );
+for (const name of (await readdir(migrations))
+  .filter((name) => name.endsWith(".sql"))
+  .sort()) {
+  await db.exec(await readFile(new URL(name, migrations), "utf8"));
+}
 const app = createApp(db, { origin: "http://127.0.0.1:4318" });
 app.post("/test/reset", async () => {
-  await db.exec("TRUNCATE visitors CASCADE");
+  await db.exec(
+    "TRUNCATE visitors,identity_subjects,learning_sessions,protection_quotas,evaluation_controls CASCADE",
+  );
   return { ok: true };
 });
 app.get("/analytics-test", async (_request, reply) =>

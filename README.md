@@ -4,196 +4,147 @@
 
 Durable first-party visitor identity from browser history, with optional AI-assisted matching and risk scoring.
 
-Doorman is an open-source identity and activity-classification library. Recognize returning browsers, connect verified people and agents, and add private activity scores to PostHog, Mixpanel or your warehouse. It runs on your server, keeps history in your database, and can use **Jev**, an AI model from TypeSafe, to assess evidence.
+Know the context behind a request: the browser, session, account, authenticated user or agent, and what is still uncertain. Keep PostHog or Mixpanel for analytics. Run Doorman on your own server with your existing Postgres or D1 database.
 
-[Introduction](https://doorman.holycoders.io/docs/introduction/) · [Quickstart](docs/GETTING-STARTED.md) · [Playground](https://doorman.holycoders.io/playground/) · [GitHub release](https://github.com/Holy-Coders/doorman/releases/tag/v0.12.0)
+[Docs](https://doorman.holycoders.io/docs/introduction/) · [Complete integration](docs/IDENTITY-CONTEXT.md) · [Playground](https://doorman.holycoders.io/playground/) · [Measured limitations](docs/DETECTION-VALIDATION.md)
 
-**Classification is experimental.** Our [live Jev and detection results](docs/DETECTION-VALIDATION.md) include 120 real provider calls. Linked-activity fixtures showed useful risk responses, but the operator prompt did not reliably separate humans from agents in the public-data pilot. Verified identities and inferred labels stay separate.
-
-## In the browser
-
-```ts
-import { createVisitorClient } from "@aarondovturkel/doorman-browser";
-
-const visitor = createVisitorClient({ endpoint: "/api/visitor" });
-const identity = await visitor.identify();
-// { visitorId: "vis_…", isReturning: true }
-
-// When the component unmounts or collection should stop:
-visitor.destroy();
-```
-
-The client needs a Doorman endpoint in your application. That endpoint sets an HttpOnly cookie and saves browser observations. If a returning browser loses its cookie, Doorman can recover its ID from a sufficiently strong match with retained history.
-
-Confidence and risk stay on your server by default. Doorman never automatically blocks a user or displays a CAPTCHA. Your application decides what to do with the information.
-
-## One identity layer for your analytics
+## One browser client
 
 ```ts
 import { createDoormanClient } from "@aarondovturkel/doorman-browser";
+
 const doorman = createDoormanClient({
   endpoint: "/api/visitor",
-  analytics: { posthog, mixpanel, segment: analytics }, // Your initialized SDKs.
+  analytics: { posthog, mixpanel }, // Your initialized SDKs; optional.
+  collection: "extended", // Optional aggregate detection signals.
 });
+
 await doorman.identify();
-// After your application verifies login:
-await doorman.identify(user.id, { email: user.email });
+// After your application's login succeeds:
+await doorman.identify({ userId: user.id, accountId: account.id });
 await doorman.update({ plan: "team" });
-await doorman.track("Project created", { plan: "team" });
+await doorman.track("Project created");
 // On logout:
 await doorman.reset();
 ```
 
-Doorman manages provider identification, profile updates and account switching. Providers retain their anonymous IDs for correct login joins; events sent through Doorman carry its browser ID. See [the analytics guide](docs/ANALYTICS.md).
+Existing `posthog.capture` and `mixpanel.track` calls also receive safe browser/session/account context. You do not need to identify through both SDKs. Scores and guessed user IDs stay private. Call `doorman.destroy()` on teardown.
 
-With Jev and the identity directory configured, `learning: { enabled: true, collectionPolicy: "application" }` also enables built-in cross-device suggestions from login-confirmed history. No custom predictor is required. Suggestions stay private and never become a login or analytics merge. [Set up learning](docs/LEARNING.md).
-
-The separate opt-in [learning service](docs/LEARNING-NETWORK.md) can discover recurring assistant and abuse patterns from sampled summaries and independently confirmed outcomes. It includes authenticated ingestion, Postgres/D1 storage, readable pattern discovery, future-session/application holdouts, shadow/canary rollout and erasure. Remote evaluation, contribution and training are separate choices; ordinary installations send it no data. This pilot is available from source and has not established real-world detection accuracy.
-
-The [classifier pipeline](docs/CLASSIFIER.md) now compares numeric logistic and boosted-tree models, with optional versioned Jev features. It trains offline and serves private assistant/abuse assessments in TypeScript. Start with `pnpm classifier demo`: 3,000 generated sessions, no paid calls, and models that cannot qualify for production promotion. [Research and limits](docs/CLASSIFIER-RESEARCH.md).
-
-## Classify activity behind an account
-
-The opt-in [operator service](docs/OPERATOR-ATTRIBUTION.md) scores human, assistant, scripted automation and abuse independently. It can compare closed activity windows and suggest agent families from independently labeled reference runs. Unknown activity stays unknown; inferred profiles never become login identities or analytics merges.
-
-[Agent classification](docs/AGENT-CLASSIFICATION.md) explains the new aggregate movement/timing features, server evidence, and trained classifiers. [Scoring configuration](docs/SCORING.md) lets you adjust browser-feature weights, the deterministic/Jev blend and operator thresholds. These additions are included in the 0.12.0 TypeScript packages.
-
-The [public-data benchmarks](docs/EXTERNAL-BENCHMARKS.md) report errors and coverage as well as detections. Reliable headcounts, agent-brand recognition and calibrated scores remain experimental.
-
-## Choose your server
-
-### Cloudflare Workers
+## One server entry point
 
 ```ts
-import { createCloudflareVisitor } from "@aarondovturkel/doorman-adapters/cloudflare";
+import { createDoorman } from "@aarondovturkel/doorman-adapters/node";
 
-const visitor = createCloudflareVisitor({
-  db: env.VISITORS, // Your D1 binding.
-  ai: env.AI, // Optional Workers AI binding for Jev.
+const doorman = createDoorman({
+  db, // A Postgres pool.
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
+  evaluator: { apiKey: process.env.JEV_API_KEY! }, // Or false.
+  crossDevice: true, // Optional login-confirmed learning.
 });
-return visitor.handle(request);
+
+const result = await doorman.assess(request, {
+  auth: currentUser
+    ? { userId: currentUser.id, accountId: currentAccount.id }
+    : undefined,
+});
+
+// Private: result.context, result.identity, result.properties
+return result.response;
 ```
 
-No separate TypeSafe API key is needed for Workers AI. [Cloudflare setup](examples/cloudflare-worker/README.md).
+`currentUser` and `currentAccount` come from your existing server authentication. Never trust browser JSON for them. The response contains only `{ visitorId, sessionId, isReturning }`.
 
-### Next.js / Vercel
+For **Next.js/Vercel**, use the same API from `@aarondovturkel/doorman-adapters/vercel`. For **Cloudflare**:
 
 ```ts
-import { Pool } from "pg";
-import { createVercelVisitor } from "@aarondovturkel/doorman-adapters/vercel";
+import { createDoorman } from "@aarondovturkel/doorman-adapters/cloudflare";
+const doorman = createDoorman({
+  db: env.VISITORS,
+  ai: env.AI,
+  secret: env.DOORMAN_IDENTITY_SECRET,
+  namespace: "my-app",
+  crossDevice: true,
+});
+return doorman.handle(request);
+```
 
-const db = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
-const visitor = createVercelVisitor({ db, evaluator: false });
+Workers AI runs `typesafe/jev`; no separate TypeSafe key is needed. Reuse the handler across requests. Apply the storage migrations, including `0010_browser_associations.sql`, before enabling the unified context API.
 
-export const runtime = "nodejs";
-export async function POST(request: Request) {
-  return visitor.handle(request);
+For **Elixir/Phoenix**:
+
+```elixir
+doorman = Doorman.new(
+  repo: MyApp.Repo,
+  secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
+  namespace: "my-app",
+  evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
+  cross_device: true
+)
+
+Doorman.handle(conn, doorman, %{auth: %{user_id: current_user.id}})
+# Private context and analytics properties are in conn.assigns.
+```
+
+The native Elixir package is `{:doorman_identity, "~> 0.13.0"}`. Use `Doorman.Migration.up()` for a new installation or `upgrade_context()` for an existing one. [Full Phoenix setup](packages/elixir/README.md).
+
+## What the context means
+
+| Status          | Evidence                                                        |
+| --------------- | --------------------------------------------------------------- |
+| `authenticated` | Your server verified the current user and actor.                |
+| `remembered`    | This browser cookie previously accompanied a verified identity. |
+| `inferred`      | Browser or login history suggests a possible relationship.      |
+| `ambiguous`     | Multiple retained identities used this browser.                 |
+| `unknown`       | There is not enough evidence.                                   |
+
+An account can contain several users or agent credentials, and one user can have several browsers. Cookie continuity proves neither a particular human nor permission. Missing-cookie and cross-device suggestions never silently merge analytics identities in the recommended flow. The lower-level visitor APIs retain configurable browser-ID recovery for applications that explicitly want it.
+
+## Risk, separately from identity
+
+Optional Jev evaluation returns automation and suspicious-activity scores. With enough aggregate evidence, the unified flow also asks for human, assistant and script scores. An assistant can be legitimate; an unknown session remains unknown.
+
+```ts
+if (
+  result.identity?.riskStatus === "evaluated" &&
+  result.identity.risk.automation > 0.85
+) {
+  // Your application may request extra verification.
 }
 ```
 
-Use any compatible Postgres service. Replace `evaluator: false` with `evaluator: { apiKey: process.env.JEV_API_KEY! }` to enable Jev. [Next.js setup](examples/nextjs/README.md).
+The threshold is illustrative. Doorman never blocks an application action or shows a CAPTCHA. Optional server middleware adds request-pattern evidence. Optional AbuseIPDB enrichment adds cached, budgeted network reputation without storing raw IPs or sending them to Jev. [Configuration and data flow](docs/IDENTITY-CONTEXT.md).
 
-### Node
+Risk evidence never enters identity questions. Jev timeouts or malformed output fall back cleanly, with unavailable status and zero fallback risk. This means “not assessed,” not “proven safe.” Database errors return a controlled response.
 
-```ts
-import { Pool } from "pg";
-import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+**Classification and cross-device scores are experimental and uncalibrated.** The public-data pilot did not reliably separate all humans and agents. Browser similarity cannot establish family relationships, exact human headcounts or agent brands. [Tests and live results](docs/DETECTION-VALIDATION.md).
 
-const db = new Pool({ connectionString: process.env.DATABASE_URL });
-const visitor = createNodeVisitor({ db, evaluator: false });
-const response = await visitor.handle(request);
-```
-
-The handler uses standard Web Request/Response APIs. The [Fastify example](examples/node-fastify/README.md) shows how to connect a framework route.
-
-### Elixir / Phoenix
-
-```elixir
-# mix.exs
-{:doorman_identity, "~> 0.12.0"}
-```
-
-```elixir
-doorman = Doorman.new(repo: MyApp.Repo)
-Doorman.handle(conn, doorman)
-```
-
-This implementation runs natively in Elixir with Ecto/Postgres. The package includes the browser client. [Phoenix installation](packages/elixir/README.md).
-
-Apply the database migrations before using any adapter. The v0.12.0 JavaScript release includes migrations `0001` through `0009`; the Elixir package provides Ecto migration functions. Each app should use its own database or schema.
-
-## Read risk privately
-
-Use `assess()` when server code needs the full result:
-
-```ts
-const { response, identity } = await visitor.assess(request);
-if (!identity) return response; // A validation or storage error.
-
-const needsExtraVerification =
-  identity.riskStatus === "evaluated" && identity.risk.automation > 0.85;
-
-// Save the decision in your existing server session if a later action needs it.
-// Your app chooses whether to show a CAPTCHA or another verification step.
-return response;
-```
-
-The threshold is an example, not a calibrated recommendation. A browser ID is not a login credential, and an automated session can be legitimate. If Jev is disabled or unavailable, browser matching uses built-in rules; risk values default to zero with a status explaining that no assessment is available. [Scores and failure handling](docs/SECURITY.md).
-
-## Add users, agents and analytics
-
-Your existing authentication system verifies people and agents. Doorman can record those identities, link their signed-in devices, and check limited permissions for an agent acting for a user. These are explicit verified relationships; browser matching alone does not establish them.
-
-- [Understand browsers, people and agents](docs/CONCEPTS.md).
-- [Register users, verified keys and agent permissions](docs/AGENTIC-IDENTITY.md).
-- [Connect PostHog, Mixpanel or Segment](docs/ANALYTICS.md).
-- [Understand API activity with Phoenix or Web middleware](docs/API-ACTIVITY.md).
-- [Experiment with optional login feedback](docs/LEARNING.md).
-
-## Install or run an example
-
-Doorman v0.12.0 is a developer preview, available as `@aarondovturkel/doorman-*` on npm and `doorman_identity` on Hex. [Installation instructions](docs/LANGUAGES.md) cover npm, pnpm, Bun, Mix and existing applications.
-
-To work from source:
+## Install and run
 
 ```sh
-git clone https://github.com/Holy-Coders/doorman.git
-cd doorman
-corepack enable
+npm install @aarondovturkel/doorman-browser @aarondovturkel/doorman-adapters
+# Or use pnpm add / bun add with the same package names.
+```
+
+[Node/Fastify](examples/node-fastify/README.md) · [Next.js](examples/nextjs/README.md) · [Cloudflare](examples/cloudflare-worker/README.md) · [Phoenix](examples/phoenix/README.md) · [Other languages](docs/LANGUAGES.md)
+
+From source, with Node 22.12+ and pnpm 9.12:
+
+```sh
 pnpm install
-pnpm build
 pnpm typecheck
 pnpm test
 pnpm lint
 ```
 
-Requires Node 22.12+ and pnpm 9.12.0. Follow [your first visitor ID](docs/GETTING-STARTED.md) for a local example that needs no AI key or external database service.
+`pnpm test:e2e` checks real browser/analytics SDK behavior against local endpoints. `pnpm test:elixir` requires a local Postgres database. Provider calls in the regression suite are mocked. Published benchmark results distinguish fixtures, public datasets, live Jev calls and load tests.
 
-## How it works
+## Keep the deployment small
 
-```text
-Browser observation → normalize signals → look up plausible history
-                    → compare → optional Jev evaluation → save visitor ID
-```
+One browser client → your endpoint → indexed history → deterministic comparison → optional Jev → your database and analytics.
 
-Most visits use the cookie directly. Without it, indexed queries produce at most ten candidate visitors. Doorman compares up to five observations per candidate and asks Jev about the full shortlist in one identity-only request. A separate current-only request evaluates risk, so behavior and automation claims cannot leak into identity matching. Jev can also select indexed lookup families before the search. A match must be strong enough and clearly ahead of alternatives; otherwise Doorman creates a new ID.
+A cookie handles the normal return visit. Missing-cookie lookup retrieves a bounded shortlist, compares recent history, and asks typed questions through Jev. Confirmed login feedback can support private cross-device suggestions. Associations expire and can be erased through the same server API.
 
-The core knows nothing about hosting providers, databases or Jev. Storage and evaluator interfaces let you replace those pieces. See the [matching rules](docs/MATCHING.md), [API reference](docs/API.md), [database scaling](docs/SCALING.md) and [capacity results](docs/CAPACITY.md).
+The network-learning service, custom classifier training, operator-profile research, delegation tools and warehouse exporters remain optional advanced modules. You do not need them to start.
 
-## Data and limits
-
-Doorman collects a modest set of browser-native signals and aggregate event counts. It does not collect raw IP addresses, geolocation, actual keys, form values, browsing history or raw mouse positions. It respects hidden browser values. Optional AI evaluation sends compact signals to your chosen provider. See the complete [privacy and deletion guide](PRIVACY.md).
-
-Similar browser configurations can be indistinguishable, and client signals can be forged. The tests verify behavior and failure handling; they do not establish real-user matching accuracy or fraud-detection quality. Read the [validation record](docs/VALIDATION.md) before relying on the scores.
-
-The [public dataset benchmarks](docs/EXTERNAL-BENCHMARKS.md) expose a concrete recovery problem: an all-cookies-missing replay of 15,000 historical observations produced 1,258 correct restores and 2,303 wrong restores. A separate real-Jev pilot reduced false restores while also missing more returning browsers; its raw behavior-only automation scores detected none of forty agents at the preset threshold. These results do not justify using recovered visitor IDs as authentication or assuming AI makes detection accurate.
-
-The public website is an Astro app in `site/`. Run `pnpm site:dev`, `pnpm site:check` or `pnpm site:test` from the root. Its local playground examples use made-up data. An explicitly activated live demo uses Doorman itself, with isolated browser history, private scores, cached Jev calls and a shared lifetime allowance. [How the playground works](docs/PLAYGROUND.md).
-
-Optional [API activity middleware](docs/API-ACTIVITY.md) adds private Jev judgments from bounded server request aggregates. [Analytics bridges](docs/ANALYTICS.md) support PostHog, Mixpanel, Segment, Amplitude and RudderStack; [warehouse exports](docs/WAREHOUSES.md) feed Snowflake, BigQuery or an existing JSONL pipeline. [Python](packages/python/README.md) and [Go](packages/go/README.md) clients can mount first-party routes backed by your Doorman engine. Choose your language and theme in the [documentation](https://doorman.holycoders.io/docs/introduction/).
-
-### Experimental operator attribution
-
-Estimate whether short activity windows were operated by a human, an AI assistant or a conventional script, then compare windows within an account. Optional labeled references support agent-family suggestions. Private PostHog/Mixpanel events and warehouse rows keep these inferences separate from verified identities. Scores and counts are experimental; missing comparison evidence withholds totals. See [the setup and limitations](docs/OPERATOR-ATTRIBUTION.md).
-
-See [optional detection signals](docs/EXPERIMENTAL-DETECTION.md) for local fonts, runtime/permission probes, target/focus summaries and trusted JA4 evidence. [Linked suspicious activity](docs/LINKED-ACTIVITY.md) correlates server-observed denials across likely related sessions without using IP addresses or merging people. These are opt-in source features with documented experimental limits.
+Read [the design](docs/SIMPLE-DESIGN.md), [privacy](PRIVACY.md), [analytics](docs/ANALYTICS.md), [request activity](docs/API-ACTIVITY.md), [scoring](docs/SCORING.md) and [retention](site/content/storage.md). MIT licensed.

@@ -2,7 +2,7 @@
 
 Choose the package for the code that runs on your server. TypeScript applications use `@aarondovturkel/doorman-*`; Phoenix applications use the native `doorman` Mix dependency. Both can serve the same browser client.
 
-Doorman 0.12.0 is a developer preview. Install the JavaScript packages from npm or the native Elixir package from Hex. You do not need a Doorman API key. Optional Jev evaluation uses credentials for your chosen AI provider.
+Doorman 0.13.0 is a developer preview. Install the JavaScript packages from npm or the native Elixir package from Hex. You do not need a Doorman API key. Optional Jev evaluation uses credentials for your chosen AI provider.
 
 The npm packages use the `@aarondovturkel/doorman-*` scope. The Hex package is `doorman_identity`, with `Doorman` modules. The unscoped name `doorman` belongs to unrelated packages on both registries.
 
@@ -26,7 +26,7 @@ Advanced composition is available through `@aarondovturkel/doorman-core`, `doorm
 ## Elixir / Mix / Phoenix
 
 ```elixir
-{:doorman_identity, "~> 0.12.0"}
+{:doorman_identity, "~> 0.13.0"}
 ```
 
 ```sh

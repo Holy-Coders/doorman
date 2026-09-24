@@ -251,3 +251,5 @@ export { createD1EvidenceStorage } from "./evidence.js";
 export { createD1ActivityStorage } from "./activity.js";
 
 export { createD1OperatorStorage } from "./operators.js";
+
+export { createD1ContextStorage } from "./context.js";

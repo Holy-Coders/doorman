@@ -1,5 +1,7 @@
 # API reference
 
+For the recommended browser, account and analytics flow, start with [one identity integration](IDENTITY-CONTEXT.md). The detailed APIs below remain available for advanced use.
+
 Use this page to look up methods and options after [setting up an endpoint](GETTING-STARTED.md). Most applications need `createVisitorClient` in the browser and one server adapter. The core interfaces are for custom storage or evaluators.
 
 The [concepts guide](CONCEPTS.md) explains the difference between a visitor, subject and actor. All management, account and risk APIs below run on your server unless marked as browser APIs.

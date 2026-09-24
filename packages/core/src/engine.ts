@@ -1,3 +1,4 @@
+import { OPERATOR_THRESHOLDS } from "./operators.js";
 import {
   attemptEvaluation,
   isLookupScope,
@@ -117,6 +118,9 @@ export type EngineOptions = {
   scoring?: ScoringOptions;
   /** Jev may choose fixed indexed probe families before a missing-cookie lookup. */
   lookupPlanning?: boolean;
+  /** Suggest a recovered browser without merging IDs. Recommended for analytics. */
+  restoreBrowser?: boolean;
+  classifyOperator?: boolean;
   debug?: boolean;
   onMetrics?: (metrics: IdentifyMetrics) => void;
 };
@@ -128,6 +132,15 @@ export class VisitorStorageError extends Error {
 }
 export function isEvaluation(value: unknown): value is Evaluation {
   if (!value || typeof value !== "object") return false;
+  const op = (value as Evaluation).operator;
+  if (
+    op !== undefined &&
+    (!op ||
+      ![op.human, op.assistant, op.automation].every(
+        (n) => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 1,
+      ))
+  )
+    return false;
   return ["sameVisitor", "automation", "suspicious"].every((key) => {
     const n = (value as Record<string, unknown>)[key];
     return typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 1;
@@ -166,8 +179,27 @@ export function createVisitorEngine(options: EngineOptions) {
       behavior?: BrowserBehavior;
       visitorId?: string;
       debug?: boolean;
+      riskEvidence?: import("./context.js").RiskEvidence;
     }): Promise<VisitorIdentity> {
+      let browserMatch: VisitorIdentity["browserMatch"];
       const current = normalizeObservation(input.signals, input.behavior);
+      const enoughOperatorEvidence =
+        (input.behavior?.mouseMoveCount ?? 0) >= 20 ||
+        (input.behavior?.interactionIntervalCount ?? 0) >= 10 ||
+        (input.riskEvidence?.activity?.requests ?? 0) >= 10;
+      const classifyOperator =
+        options.classifyOperator === true && enoughOperatorEvidence;
+      let operator: VisitorIdentity["operator"] = options.classifyOperator
+        ? {
+            status: !evaluator
+              ? "disabled"
+              : !enoughOperatorEvidence
+                ? "insufficient-evidence"
+                : "unavailable",
+            label: "unknown",
+            calibrated: false,
+          }
+        : undefined;
       let candidateCount = 0;
       let lookupPlanned = false;
       let candidatesEvaluated = 0;
@@ -184,10 +216,30 @@ export function createVisitorEngine(options: EngineOptions) {
         if (!result) return;
         risk = { automation: result.automation, suspicious: result.suspicious };
         riskStatus = "evaluated";
+        if (classifyOperator && result.operator) {
+          const ranked = (["human", "assistant", "automation"] as const)
+            .map((label) => ({ label, score: result.operator![label] }))
+            .sort((a, b) => b.score - a.score);
+          operator = {
+            status: "evaluated",
+            scores: result.operator,
+            calibrated: false,
+            label:
+              ranked[0]!.score >= OPERATOR_THRESHOLDS.labelThreshold &&
+              ranked[0]!.score - ranked[1]!.score >=
+                OPERATOR_THRESHOLDS.labelMargin
+                ? ranked[0]!.label
+                : "unknown",
+          };
+        }
       };
       const run = async (data: EvaluationInput) => {
         const started = Date.now();
-        const result = await evaluate(data);
+        const result = await evaluate({
+          ...data,
+          riskEvidence: input.riskEvidence,
+          classifyOperator,
+        });
         evaluatorLatency = Math.max(evaluatorLatency, Date.now() - started);
         evaluatorUsed ||= !!result;
         return result;
@@ -316,6 +368,8 @@ export function createVisitorEngine(options: EngineOptions) {
                   () =>
                     evaluator.evaluateCandidates!({
                       current,
+                      riskEvidence: input.riskEvidence,
+                      classifyOperator,
                       candidates: selected.map((c) => ({
                         history: c.history,
                         deterministicSimilarity: c.score,
@@ -378,9 +432,15 @@ export function createVisitorEngine(options: EngineOptions) {
               best.confidence >= threshold &&
               best.confidence - runnerUp >= scoring.ambiguityMargin
             ) {
-              visitorId = best.visitorId;
-              confidence = best.confidence;
-              isReturning = true;
+              browserMatch = {
+                visitorId: best.visitorId,
+                score: best.confidence,
+              };
+              if (options.restoreBrowser !== false) {
+                visitorId = best.visitorId;
+                confidence = best.confidence;
+                isReturning = true;
+              }
             }
           } else {
             // First visits still get risk evaluation, with no identity history to invent.
@@ -397,10 +457,14 @@ export function createVisitorEngine(options: EngineOptions) {
         await storage.touchVisitor(visitorId);
         const identity: VisitorIdentity = {
           visitorId,
+          ...(options.restoreBrowser === false && browserMatch
+            ? { browserMatch }
+            : {}),
           confidence,
           isReturning,
           risk,
           riskStatus,
+          ...(operator ? { operator } : {}),
         };
         if (options.debug && input.debug)
           identity.debug = {

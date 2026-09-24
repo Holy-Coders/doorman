@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import type { FastifyRequest } from "fastify";
 import { timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+import { createDoorman } from "@aarondovturkel/doorman-adapters/node";
 import { createNodeRequestListener } from "@aarondovturkel/doorman-adapters/node/http";
 import type { ApiActivityContext } from "@aarondovturkel/doorman-adapters/node";
 import type { PostgresDatabase } from "@aarondovturkel/doorman-storage-postgres";
@@ -10,6 +10,7 @@ export function createApp(
   db: PostgresDatabase,
   options: {
     apiKey?: string;
+    secret?: string;
     origin?: string;
     activity?: { secret: string; apiToken: string };
   } = {},
@@ -17,15 +18,21 @@ export function createApp(
   if (options.activity && options.activity.apiToken.length < 32)
     throw new Error("Example API token must have at least 32 characters");
   const origin = new URL(options.origin ?? "http://localhost:3001").origin;
-  const visitor = createNodeVisitor({
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(
+    new URL(origin).hostname,
+  );
+  const secret =
+    options.secret ??
+    options.activity?.secret ??
+    (local ? "local-example-only-secret-change-before-deploying" : "");
+  const visitor = createDoorman({
     db,
+    secret,
+    namespace: "fastify-example",
+    crossDevice: true,
     evaluator: options.apiKey ? { apiKey: options.apiKey } : false,
     ...(options.activity
       ? {
-          identity: {
-            secret: options.activity.secret,
-            namespace: "fastify-example",
-          },
           activity: { routes: [{ route: "GET /api/orders/:id" }] },
         }
       : {}),

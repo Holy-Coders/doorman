@@ -18,6 +18,11 @@ defmodule Doorman do
             debug: false,
             expose_client_scores: false,
             identity: nil,
+            identity_context: false,
+            restore_browser: true,
+            classify_operator: false,
+            risk_evidence: nil,
+            reputation: nil,
             learning: false,
             protection: nil,
             evidence: nil,
@@ -26,7 +31,7 @@ defmodule Doorman do
             on_metrics: nil
 
   def new(opts) do
-    config = struct!(__MODULE__, opts)
+    config = struct!(__MODULE__, Doorman.Context.configure(opts))
 
     unless is_atom(config.repo) and not is_nil(config.repo),
       do: raise(ArgumentError, "repo is required")
@@ -84,6 +89,13 @@ defmodule Doorman do
              end),
            do: raise(ArgumentError, "invalid analytics configuration")
 
+    if config.identity_context && is_nil(config.identity),
+      do: raise(ArgumentError, "identity context requires identity configuration")
+
+    unless is_boolean(config.restore_browser) && is_boolean(config.identity_context) &&
+             is_boolean(config.classify_operator),
+           do: raise(ArgumentError, "invalid context options")
+
     if config.identity, do: Doorman.Identity.validate_options!(config.identity)
     Doorman.Learning.validate_options!(config)
 
@@ -91,17 +103,45 @@ defmodule Doorman do
       config
       | protection: Doorman.Protection.configure(config.protection),
         evidence: Doorman.Evidence.configure(config.evidence, config.identity),
-        activity: Doorman.Activity.configure(config.activity, config.identity)
+        activity: Doorman.Activity.configure(config.activity, config.identity),
+        reputation: Doorman.Reputation.configure(config.reputation, config.identity)
     }
   end
 
   @doc "Identify a validated JSON payload; context must originate in server-verified authentication."
   def identify(config, payload, context \\ %{}) do
+    with {:ok, result} <- assess(config, payload, context), do: {:ok, result.identity}
+  end
+
+  def handle(conn, config, context \\ %{}), do: Doorman.Plug.handle(conn, config, context)
+
+  @doc "Return private identity and source-labeled request evidence to server code."
+  def assess(config, payload, context \\ %{}) do
     with :ok <- Doorman.Validation.validate(payload) do
       try do
-        case Doorman.Protection.admit(config, context[:admission]) do
-          :ok -> {:ok, Doorman.Engine.identify(config, payload, context)}
-          error -> error
+        evidence = Doorman.Evidence.request_evidence(context[:evidence])
+        risk = Doorman.RiskEvidence.validate!(context[:risk_evidence])
+
+        with :ok <- Doorman.Protection.admit(config, context[:admission]) do
+          if context[:auth] && context[:verified], do: raise("use one identity context")
+          auth = Doorman.Context.authenticate(config, context[:auth])
+
+          context =
+            if auth,
+              do:
+                Map.put(context, :verified, %{
+                  subject_id: auth["subjectId"],
+                  actor_id: auth["actorId"]
+                }),
+              else: context
+
+          if context[:verified] && is_nil(config.identity),
+            do: raise("identity directory not configured")
+
+          reputation = Doorman.Reputation.check(config, context[:client_ip])
+          risk = if reputation, do: Map.put(risk, "reputation", reputation), else: risk
+          identity = Doorman.Engine.identify(%{config | risk_evidence: risk}, payload, context)
+          {:ok, %{identity: identity, evidence: evidence, auth: auth, risk_evidence: risk}}
         end
       rescue
         _ -> {:error, :storage_unavailable}
@@ -111,20 +151,9 @@ defmodule Doorman do
     end
   end
 
-  def handle(conn, config, context \\ %{}), do: Doorman.Plug.handle(conn, config, context)
-
-  @doc "Return private identity and source-labeled request evidence to server code."
-  def assess(config, payload, context \\ %{}) do
-    evidence = Doorman.Evidence.request_evidence(context[:evidence])
-
-    with {:ok, identity} <- identify(config, payload, context),
-         do: {:ok, %{identity: identity, evidence: evidence}}
-  rescue
-    _ -> {:error, :invalid_context}
-  end
-
   def cleanup(config, opts \\ []) do
     progress = Doorman.Storage.cleanup(config, opts)
+    if config.identity_context, do: Doorman.Context.cleanup(config)
     if config.identity, do: Doorman.Identity.cleanup(config)
     if config.learning, do: Doorman.Learning.cleanup(config)
     if config.protection, do: Doorman.Protection.cleanup(config)
@@ -138,6 +167,7 @@ defmodule Doorman do
     progress
   end
 
+  def forget_user(config, id), do: Doorman.Context.forget_user(config, id)
   def delete_visitor(config, id), do: Doorman.Storage.delete_visitor(config, id)
   def random_id(prefix), do: prefix <> Base.encode16(:crypto.strong_rand_bytes(24), case: :lower)
   def now, do: System.system_time(:millisecond)

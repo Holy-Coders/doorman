@@ -16,11 +16,15 @@ export type AnalyticsResult = Partial<Record<Provider, Status>>;
 export type IdentityAnalyticsOptions = {
   visitor?: { reset(): void };
   posthog?: {
+    register?(properties: AnalyticsProperties): unknown;
+    unregister?(key: string): unknown;
     identify(id: string, properties?: Record<string, string>): unknown;
     reset(): unknown;
     capture?(event: string, properties?: AnalyticsProperties): unknown;
   };
   mixpanel?: {
+    register?(properties: AnalyticsProperties): unknown;
+    unregister?(key: string): unknown;
     identify(id: string): unknown;
     track(event: string, properties?: AnalyticsProperties): unknown;
     reset(): unknown;
@@ -108,7 +112,37 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
       needsReset.add(provider);
     });
   };
+  let contextSignature = "{}";
+  const setContext = (properties: AnalyticsProperties = {}) => {
+    const keys = [
+      "doorman_visitor_id",
+      "doorman_session_id",
+      "doorman_account_id",
+    ];
+    const signature = JSON.stringify(keys.map((k) => properties[k] ?? null));
+    if (signature !== contextSignature) {
+      generation++;
+      contextSignature = signature;
+    }
+    for (const client of [options.posthog, options.mixpanel]) {
+      if (!client?.register || !client.unregister) continue;
+      try {
+        for (const key of keys)
+          if (properties[key] === undefined) client.unregister(key);
+        client.register(
+          Object.fromEntries(
+            keys
+              .filter((k) => properties[k] !== undefined)
+              .map((k) => [k, properties[k]!]),
+          ),
+        );
+      } catch {
+        /* Analytics availability cannot break application identity. */
+      }
+    }
+  };
   return {
+    setContext,
     identifyUser(id: string, traits: Profile = {}): AnalyticsResult {
       if (
         typeof id !== "string" ||
@@ -239,6 +273,7 @@ export function createIdentityAnalytics(options: IdentityAnalyticsOptions) {
       return result;
     },
     reset(): AnalyticsResult {
+      setContext();
       generation++;
       resetVisitor();
       userId = undefined;

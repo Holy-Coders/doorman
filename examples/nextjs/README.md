@@ -1,5 +1,10 @@
 # Next.js and Vercel
 
+This example uses the unified identity context flow. Anonymous responses contain only browser/session IDs. Server-authenticated users are remembered; uncertain matches remain private suggestions. See [one identity integration](../../docs/IDENTITY-CONTEXT.md) for login and PostHog/Mixpanel wiring.
+
+Set `DOORMAN_IDENTITY_SECRET` to a stable random value of at least 32 characters (for example, generate one with `openssl rand -hex 32`). Next.js reads it from `.env.local`; Cloudflare reads local bindings from `.dev.vars` (copy `.dev.vars.example`) and production secrets from `wrangler secret put DOORMAN_IDENTITY_SECRET`. Node and Phoenix include a clearly marked local-only fallback; set a real secret before deployment. Never put this secret in the browser.
+
+
 This example adds a Doorman endpoint to a Next.js App Router application. It uses Postgres through the standard `pg` client, so you can choose your database provider. The browser client identifies a visit; the route sets the cookie and stores history.
 
 ## Run the example

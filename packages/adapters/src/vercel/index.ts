@@ -4,3 +4,5 @@ export type VercelVisitorOptions = NodeVisitorOptions;
 export function createVercelVisitor(options: VercelVisitorOptions) {
   return createNodeVisitor(options);
 }
+
+export { createDoorman } from "../node/index.js";

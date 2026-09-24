@@ -47,12 +47,10 @@ defmodule DoormanExample.Controller do
       environment: :development,
       secure_cookie: false,
       evaluator: if(key = System.get_env("JEV_API_KEY"), do: [api_key: key]),
-      identity: [
-        secret:
-          System.get_env("DOORMAN_IDENTITY_SECRET", String.duplicate("local-example-only", 4)),
-        namespace: "phoenix-example"
-      ],
-      learning: [enabled: true, collection_policy: :application],
+      secret:
+        System.get_env("DOORMAN_IDENTITY_SECRET", String.duplicate("local-example-only", 4)),
+      namespace: "phoenix-example",
+      cross_device: true,
       activity:
         if(System.get_env("DOORMAN_API_ACTIVITY") == "1",
           do: [routes: [%{route: "GET /api/example/orders/:id"}]]
@@ -69,8 +67,8 @@ defmodule DoormanExample.Controller do
 
   def identify(conn, _params) do
     # Add context from your authentication plug, never the incoming JSON:
-    # person = Doorman.Identity.identify_user(config(), conn.assigns.current_user.id)
-    # context = %{verified: %{subject_id: person["id"], actor_id: person["id"]}}
+    # context = %{auth: %{user_id: conn.assigns.current_user.id, account_id: account.id}}
+    # Doorman.handle(conn, config(), context)
     Doorman.handle(conn, config())
   end
 
@@ -84,8 +82,8 @@ defmodule DoormanExample.Controller do
     <h1>Doorman × Phoenix</h1><p>Native Elixir. Your Ecto repo. Optional Jev. Same browser contract.</p>
     <button id="identify">Identify this browser</button><pre id="result" aria-live="polite">Ready.</pre>
     <script type="module">
-    import { createVisitorClient } from '/doorman/doorman.js';
-    const visitor = createVisitorClient({ headers: () => ({'x-csrf-token': document.querySelector('meta[name=csrf-token]').content}) });
+    import { createDoormanClient } from '/doorman/doorman.js';
+    const visitor = createDoormanClient({ collection: "extended", headers: () => ({'x-csrf-token': document.querySelector('meta[name=csrf-token]').content}) });
     document.querySelector('#identify').onclick = async () => {
       try { document.querySelector('#result').textContent = JSON.stringify(await visitor.identify(), null, 2); }
       catch (error) { document.querySelector('#result').textContent = error.message; }

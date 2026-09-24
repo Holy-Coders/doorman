@@ -21,6 +21,7 @@ import {
 import { assessmentSchema } from "../packages/network/src/client.js";
 import {
   JEV_QUESTIONS,
+  OPERATOR_QUESTIONS,
   INTELLIGENCE_QUESTIONS,
   API_ACTIVITY_QUESTIONS,
   createActivityInput,
@@ -178,6 +179,10 @@ const shared = {
 };
 for (const dir of ["protocol", "packages/elixir/priv"]) {
   writeFileSync(
+    `${dir}/jev-operators.json`,
+    JSON.stringify(OPERATOR_QUESTIONS, null, 2) + "\n",
+  );
+  writeFileSync(
     `${dir}/jev-activity.json`,
     JSON.stringify(API_ACTIVITY_QUESTIONS, null, 2) + "\n",
   );
@@ -208,6 +213,7 @@ for (const migration of [
   "0006_evidence",
   "0007_learning_lookup",
   "0008_api_activity",
+  "0010_browser_associations",
 ])
   copyFileSync(
     `packages/storage/postgres/migrations/${migration}.sql`,
@@ -218,6 +224,17 @@ const identitySchema = {
   required: ["visitorId", "confidence", "isReturning", "risk", "riskStatus"],
   properties: {
     visitorId: { type: "string", pattern: "^vis_[a-f0-9]{48}$" },
+    sessionId: { type: "string", pattern: "^ses_[a-f0-9]{48}$" },
+    browserMatch: {
+      type: "object",
+      description:
+        "Private previous-browser suggestion; never authenticated context.",
+    },
+    operator: {
+      type: "object",
+      description:
+        "Private experimental human, assistant and automation scores with availability status.",
+    },
     confidence: { type: "number", minimum: 0, maximum: 1 },
     isReturning: { type: "boolean" },
     risk: {
@@ -248,7 +265,7 @@ writeFileSync(
       openapi: "3.1.0",
       info: {
         title: "Doorman first-party browser protocol",
-        version: "0.9.0",
+        version: "0.13.0",
         description:
           "Self-hosted by each implementer. Measurements never establish authenticated account claims.",
       },
@@ -319,6 +336,7 @@ writeFileSync(
             properties: {
               visitorId: identitySchema.properties.visitorId,
               isReturning: { type: "boolean" },
+              sessionId: { type: "string", pattern: "^ses_[a-f0-9]{48}$" },
             },
           },
         },

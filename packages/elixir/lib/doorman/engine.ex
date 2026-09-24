@@ -6,9 +6,19 @@ defmodule Doorman.Engine do
   @deterministic_weight 0.35
   @evaluator_weight 0.65
   @ambiguity_margin 0.03
+  @operator_label_threshold 0.75
+  @operator_label_margin 0.15
   @zero %{"automation" => 0, "suspicious" => 0}
   def identify(c, payload, context) do
     current = Observation.normalize(payload["signals"], payload["behavior"])
+    requested_operator = c.classify_operator
+
+    enough_operator =
+      (get_in(payload, ["behavior", "mouseMoveCount"]) || 0) >= 20 ||
+        (get_in(payload, ["behavior", "interactionIntervalCount"]) || 0) >= 10 ||
+        (get_in(c.risk_evidence || %{}, ["activity", "requests"]) || 0) >= 10
+
+    c = %{c | classify_operator: requested_operator && enough_operator}
     history = if context[:visitor_id], do: Storage.history(c, context[:visitor_id]), else: []
 
     {id, confidence, returning, score, count, evaluation, used, latency} =
@@ -76,7 +86,15 @@ defmodule Doorman.Engine do
           if selected != [] and is_list(c.evaluator) do
             case Doorman.Protection.evaluate(
                    c,
-                   fn -> Doorman.Jev.evaluate_candidates(current, selected, c.evaluator) end,
+                   fn ->
+                     Doorman.Jev.evaluate_candidates(
+                       current,
+                       selected,
+                       c.evaluator,
+                       c.risk_evidence,
+                       c.classify_operator
+                     )
+                   end,
                    &is_list/1,
                    2
                  ) do
@@ -136,6 +154,13 @@ defmodule Doorman.Engine do
         end
       end
 
+    browser_match =
+      if !c.restore_browser && history == [] && id,
+        do: %{"visitorId" => id, "score" => confidence}
+
+    {id, confidence, returning} =
+      if browser_match, do: {nil, 0, false}, else: {id, confidence, returning}
+
     id = id || Storage.create(c)
 
     save =
@@ -163,6 +188,39 @@ defmodule Doorman.Engine do
       "risk" => risk,
       "riskStatus" => status
     }
+
+    identity =
+      if browser_match, do: Map.put(identity, "browserMatch", browser_match), else: identity
+
+    identity =
+      if requested_operator do
+        scores = if evaluation && enough_operator, do: evaluation["operator"]
+        ranked = if scores, do: Enum.sort_by(scores, fn {_, v} -> -v end), else: []
+
+        label =
+          case ranked do
+            [{label, a}, {_, b} | _]
+            when a >= @operator_label_threshold and a - b >= @operator_label_margin ->
+              label
+
+            _ ->
+              "unknown"
+          end
+
+        status =
+          cond do
+            !c.evaluator -> "disabled"
+            !enough_operator -> "insufficient-evidence"
+            scores -> "evaluated"
+            true -> "unavailable"
+          end
+
+        op = %{"status" => status, "label" => label, "calibrated" => false}
+        op = if scores, do: Map.put(op, "scores", scores), else: op
+        Map.put(identity, "operator", op)
+      else
+        identity
+      end
 
     identity =
       if c.identity,
@@ -203,15 +261,32 @@ defmodule Doorman.Engine do
 
   def valid_evaluation?(result) when is_map(result),
     do:
-      Enum.all?(~w(sameVisitor automation suspicious), fn k ->
-        is_number(result[k]) and result[k] >= 0 and result[k] <= 1
-      end)
+      valid_operator?(result["operator"]) &&
+        Enum.all?(~w(sameVisitor automation suspicious), fn k ->
+          is_number(result[k]) and result[k] >= 0 and result[k] <= 1
+        end)
 
   def valid_evaluation?(_), do: false
+  defp valid_operator?(nil), do: true
+
+  defp valid_operator?(scores) when is_map(scores),
+    do:
+      Enum.all?(~w(human assistant automation), fn k ->
+        is_number(scores[k]) && scores[k] >= 0 && scores[k] <= 1
+      end)
+
+  defp valid_operator?(_), do: false
   defp evaluate(%{evaluator: nil}, _, _, _), do: {nil, 0}
 
   defp evaluate(c, history, current, score) do
-    input = %{"history" => history, "current" => current, "deterministicSimilarity" => score}
+    input = %{
+      "history" => history,
+      "current" => current,
+      "deterministicSimilarity" => score,
+      "riskEvidence" => c.risk_evidence,
+      "classifyOperator" => c.classify_operator
+    }
+
     started = System.monotonic_time(:millisecond)
 
     result =

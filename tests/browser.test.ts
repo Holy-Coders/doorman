@@ -398,3 +398,74 @@ describe("Doorman identity lifecycle", () => {
     doorman.destroy();
   });
 });
+
+it("adds safe context to existing SDK calls and clears it across account changes, pause and logout", async () => {
+  documentStub();
+  const sessionId = "ses_" + "a".repeat(48);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({
+        visitorId: identity.visitorId,
+        sessionId,
+        isReturning: true,
+        candidateSubjectId: "must-never-reach-analytics",
+      }),
+    ),
+  );
+  const props: Record<string, unknown> = {};
+  const posthog = {
+    identify: vi.fn(),
+    reset: vi.fn(),
+    capture: vi.fn(),
+    register: vi.fn((p: Record<string, unknown>) => Object.assign(props, p)),
+    unregister: vi.fn((k: string) => {
+      delete props[k];
+    }),
+  };
+  const client = createDoormanClient({
+    collection: "extended",
+    analytics: { posthog },
+  });
+  await client.identify({ userId: "alice", accountId: "home" });
+  expect(props).toEqual({
+    doorman_visitor_id: identity.visitorId,
+    doorman_session_id: sessionId,
+    doorman_account_id: "home",
+  });
+  await client.track("opened settings");
+  expect(posthog.capture).toHaveBeenCalledWith("opened settings", props);
+  await client.identify({ userId: "alice", accountId: "work" });
+  expect(props.doorman_account_id).toBe("work");
+  client.setEnabled(false);
+  expect(props).toEqual({});
+  client.setEnabled(true);
+  await client.identify();
+  await client.reset();
+  expect(props).toEqual({});
+  client.destroy();
+});
+
+it("discards a queued analytics event if account context changes before dispatch", async () => {
+  documentStub();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({ visitorId: identity.visitorId, isReturning: true }),
+    ),
+  );
+  const posthog = {
+    identify: vi.fn(),
+    reset: vi.fn(),
+    capture: vi.fn(),
+    register: vi.fn(),
+    unregister: vi.fn(),
+  };
+  const client = createDoormanClient({ analytics: { posthog } });
+  await client.identify({ userId: "alice", accountId: "home" });
+  const event = client.track("old account event");
+  await client.identify({ userId: "alice", accountId: "work" });
+  expect((await event).posthog).toBe("skipped");
+  expect(posthog.capture).not.toHaveBeenCalled();
+  client.destroy();
+});

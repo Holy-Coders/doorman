@@ -4,10 +4,10 @@ defmodule Doorman.MixProject do
   def project do
     [
       app: :doorman_identity,
-      version: "0.12.0",
+      version: "0.13.0",
       elixir: "~> 1.17",
       source_url: "https://github.com/Holy-Coders/doorman",
-      source_ref: "v0.12.0",
+      source_ref: "v0.13.0",
       docs: [main: "readme", extras: ["README.md"]],
       start_permanent: Mix.env() == :prod,
       description:

@@ -4,6 +4,8 @@ import type { LearningExample } from "./learning.js";
 /** A planner may choose these indexed probe families, never SQL or arbitrary filters. */
 export type LookupScope = { graphics: boolean; locale: boolean };
 export type CandidateEvaluationInput = {
+  classifyOperator?: boolean;
+  riskEvidence?: import("./context.js").RiskEvidence;
   current: NormalizedObservation;
   candidates: {
     history: NormalizedObservation[];
@@ -45,7 +47,15 @@ export function isCandidateEvaluations(value: unknown): value is Evaluation[] {
     value.every((v: unknown) => {
       if (!v || typeof v !== "object") return false;
       const r = v as Evaluation;
-      return [r.sameVisitor, r.automation, r.suspicious].every(isProbability);
+      return (
+        [r.sameVisitor, r.automation, r.suspicious].every(isProbability) &&
+        (r.operator === undefined ||
+          [
+            r.operator?.human,
+            r.operator?.assistant,
+            r.operator?.automation,
+          ].every(isProbability))
+      );
     })
   );
 }

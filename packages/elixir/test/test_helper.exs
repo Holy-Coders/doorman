@@ -48,3 +48,10 @@ defmodule Doorman.TestActivityMigration do
 end
 
 Ecto.Migrator.up(Doorman.TestRepo, 2_026_092_305, Doorman.TestActivityMigration, log: false)
+
+defmodule Doorman.TestContextMigration do
+  use Ecto.Migration
+  def up, do: Doorman.Migration.upgrade_context(prefix: "doorman_test")
+end
+
+Ecto.Migrator.up(Doorman.TestRepo, 2_026_092_306, Doorman.TestContextMigration, log: false)

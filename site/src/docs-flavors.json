@@ -5,7 +5,8 @@
     "api": "docs/flavors/elixir/api.md",
     "analytics": "docs/flavors/elixir/analytics.md",
     "api-activity": "docs/flavors/elixir/api-activity.md",
-    "network-client": "docs/flavors/elixir/network-client.md"
+    "network-client": "docs/flavors/elixir/network-client.md",
+    "identity-context": "docs/flavors/elixir/identity-context.md"
   },
   "python": {
     "getting-started": "examples/python-flask/README.md",

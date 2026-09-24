@@ -1,5 +1,7 @@
 # PostHog, Mixpanel and Segment
 
+For the recommended browser, account and analytics flow, start with [one identity integration](IDENTITY-CONTEXT.md). The detailed APIs below remain available for advanced use.
+
 For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
 
 Use Doorman alongside your existing analytics to connect anonymous visits to login, keep user profiles correct on shared browsers, and report on the people and agents using an account.

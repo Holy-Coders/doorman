@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { createVisitorClient } from "@aarondovturkel/doorman-browser";
+import { createDoormanClient } from "@aarondovturkel/doorman-browser";
 export function Identify() {
-  const client = useRef<ReturnType<typeof createVisitorClient> | null>(null);
+  const client = useRef<ReturnType<typeof createDoormanClient> | null>(null);
   const [result, setResult] = useState("No observation sent yet.");
   useEffect(() => {
-    const visitor = createVisitorClient({
+    const visitor = createDoormanClient({
       endpoint: "/api/visitor",
-      behavior: "extended",
+      collection: "extended",
     });
     client.current = visitor;
     return () => {

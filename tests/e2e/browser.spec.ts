@@ -31,7 +31,11 @@ test("browser → Fastify → Postgres: first visit, cookie continuity, cookie l
   expect(sent.behavior).not.toHaveProperty("clientX");
   expect(sent.behavior).not.toHaveProperty("events");
   expect(first.isReturning).toBe(false);
-  expect(Object.keys(first).sort()).toEqual(["isReturning", "visitorId"]);
+  expect(Object.keys(first).sort()).toEqual([
+    "isReturning",
+    "sessionId",
+    "visitorId",
+  ]);
   const cookie = (await context.cookies()).find(
     (cookie) => cookie.name === "__visitor",
   );
@@ -45,10 +49,9 @@ test("browser → Fastify → Postgres: first visit, cookie continuity, cookie l
   await context.clearCookies();
   await page.setViewportSize({ width: 600, height: 800 });
   const restored = await identify();
-  expect(restored).toMatchObject({
-    visitorId: first.visitorId,
-    isReturning: true,
-  });
+  expect(restored.visitorId).not.toBe(first.visitorId);
+  expect(restored.isReturning).toBe(false);
+  expect(restored.sessionId).not.toBe(first.sessionId);
   expect(restored.confidence).toBeUndefined();
   expect(restored.risk).toBeUndefined();
   expect(errors).toEqual([]);

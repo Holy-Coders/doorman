@@ -4,22 +4,22 @@ const examples = [
   {
     name: "Browser",
     file: "client.ts",
-    code: `import { createVisitorClient } from "@aarondovturkel/doorman-browser";\n\nconst visitor = createVisitorClient({\n  endpoint: "/api/visitor",\n});\n\nconst identity = await visitor.identify();\n\n// { visitorId, isReturning }\n// Scores stay on your server.\n// Destroy the client when collection should stop.\nvisitor.destroy();`,
+    code: `import { createDoormanClient } from "@aarondovturkel/doorman-browser";\n\nconst visitor = createDoormanClient({\n  endpoint: "/api/visitor",\n});\n\nconst identity = await visitor.identify();\n\n// { visitorId, sessionId, isReturning }\n// Scores stay on your server.\n// Destroy the client when collection should stop.\nvisitor.destroy();`,
   },
   {
     name: "Cloudflare",
     file: "worker.ts",
-    code: `import { createCloudflareVisitor }\n  from "@aarondovturkel/doorman-adapters/cloudflare";\n\nexport default {\n  async fetch(request, env) {\n    const visitor = createCloudflareVisitor({\n      db: env.VISITORS,\n      ai: env.AI,\n    });\n    return visitor.handle(request);\n  },\n};`,
+    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/cloudflare";\n\nexport default {\n  async fetch(request, env) {\n    const visitor = createDoorman({\n      db: env.VISITORS,\n      secret: env.DOORMAN_IDENTITY_SECRET,\n      namespace: "my-app",\n      ai: env.AI,\n    });\n    return visitor.handle(request);\n  },\n};`,
   },
   {
     name: "Next.js",
     file: "app/api/visitor/route.ts",
-    code: `import { createVercelVisitor }\n  from "@aarondovturkel/doorman-adapters/vercel";\n\nconst visitor = createVercelVisitor({\n  db, // Your Postgres pool.\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\nexport async function POST(request: Request) {\n  return visitor.handle(request);\n}`,
+    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/vercel";\n\nconst visitor = createDoorman({\n  db, // Your Postgres pool.\n  secret: process.env.DOORMAN_IDENTITY_SECRET!,\n  namespace: "my-app",\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\nexport async function POST(request: Request) {\n  return visitor.handle(request);\n}`,
   },
   {
     name: "Node",
     file: "server.ts",
-    code: `import { createNodeVisitor }\n  from "@aarondovturkel/doorman-adapters/node";\n\nconst visitor = createNodeVisitor({\n  db, // Any compatible Postgres pool.\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\n// Standard Web Request / Response.\nconst response = await visitor.handle(request);\n\n// Maintenance runs on your schedule.\nawait visitor.cleanup();`,
+    code: `import { createDoorman }\n  from "@aarondovturkel/doorman-adapters/node";\n\nconst visitor = createDoorman({\n  db, // Any compatible Postgres pool.\n  secret: process.env.DOORMAN_IDENTITY_SECRET!,\n  namespace: "my-app",\n  evaluator: { apiKey: process.env.JEV_API_KEY! },\n});\n\n// Standard Web Request / Response.\nconst response = await visitor.handle(request);\n\n// Maintenance runs on your schedule.\nawait visitor.cleanup();`,
   },
   {
     name: "Phoenix",
@@ -27,14 +27,16 @@ const examples = [
     code: `# Native Elixir · your existing Ecto repo
 doorman = Doorman.new(
   repo: MyApp.Repo,
+  secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
+  namespace: "my-app",
   evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]
 )
 
 # Your Phoenix controller
-Doorman.handle(conn, doorman)
-
-# Optional server-side profile updates
-# Doorman.Identity.identify_user(config, user.id)`,
+Doorman.handle(conn, doorman, %{
+  auth: %{user_id: current_user.id}
+})
+# Private context is in conn.assigns.`,
   },
   {
     name: "Analytics",
@@ -48,7 +50,7 @@ const doorman = createDoormanClient({
 
 await doorman.identify();
 // After your app verifies login:
-await doorman.identify(user.id, { email: user.email });
+await doorman.identify({ userId: user.id, accountId: account.id });
 await doorman.update({ plan: "team" });
 await doorman.track("Project created");
 // On logout:

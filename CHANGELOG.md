@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.13.0 — One identity context
+
+- Added `createDoorman` for Node, Vercel and Cloudflare, plus the equivalent native Phoenix configuration. One server-owned authentication object records browser/user/account/actor associations.
+- Added authenticated, remembered, inferred, ambiguous and unknown private context. The recommended flow keeps missing-cookie matches as suggestions and creates a fresh browser ID. Cross-device learning remains explicitly enabled and never merges analytics identities.
+- Extended the browser client with an optional collection profile, session/account context and supported PostHog/Mixpanel super-properties. Existing SDK events inherit safe context; logout and account switches clear it.
+- Added optional bounded AbuseIPDB checks with shared database quotas, caching and no raw IP persistence or model disclosure. Server-owned risk evidence is excluded from identity questions.
+- Added optional human/assistant/script questions to the existing Jev risk call, with sparse-evidence abstention. These are uncalibrated estimates, not validated person counts or agent-brand detection.
+- Added migration `0010_browser_associations.sql`, retention/erasure, updated examples and a unified integration guide. Existing lower-level APIs remain available.
+
+Upgrade: apply the new migration before using the unified context constructor. Phoenix applications use `Doorman.Migration.upgrade_context()` in an Ecto migration. No live accuracy or capacity improvement is claimed by this release.
+
 ## 0.12.0 — 2026-09-24
 
 - Rename the product to Doorman. JavaScript packages use `@aarondovturkel/doorman-*`; the Hex package is `doorman_identity` and its modules are `Doorman.*`.

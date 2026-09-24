@@ -26,6 +26,44 @@ import type {
   IdentityAttribution,
   VisitorIdentity,
 } from "@aarondovturkel/doorman-core";
+import type { VisitorAssessment } from "./handler.js";
+
+/** Private event snapshot. Never pass these properties through the browser response. */
+export function assessmentProperties(result: VisitorAssessment) {
+  if (!result.identity) return {};
+  const context = result.context;
+  const candidate =
+    context?.candidates.length === 1 && !context.truncated
+      ? context.candidates[0]
+      : undefined;
+  const reputation = result.riskEvidence?.reputation;
+  return Object.fromEntries(
+    Object.entries({
+      ...analyticsProperties(result.identity),
+      doorman_session_id: result.identity.sessionId,
+      doorman_operator_status: result.identity.operator?.status,
+      doorman_operator_label: result.identity.operator?.label,
+      doorman_operator_calibrated: result.identity.operator?.calibrated,
+      doorman_human_score: result.identity.operator?.scores?.human,
+      doorman_assistant_score: result.identity.operator?.scores?.assistant,
+      doorman_script_score: result.identity.operator?.scores?.automation,
+      doorman_identity_status: context?.status,
+      doorman_identity_basis: context?.basis,
+      doorman_identity_calibrated: context?.calibrated,
+      doorman_candidate_count: context?.candidates.length,
+      doorman_candidates_truncated: context?.truncated,
+      doorman_candidate_subject_id:
+        context?.status !== "authenticated" ? candidate?.subjectId : undefined,
+      doorman_candidate_score: candidate?.score,
+      doorman_context_account_id: candidate?.accountId,
+      doorman_reputation_status: reputation?.status,
+      doorman_reputation_provider: reputation?.provider,
+      doorman_reputation_score:
+        reputation?.status === "available" ? reputation.score : undefined,
+      doorman_reputation_observed_at: reputation?.observedAt,
+    }).filter(([, v]) => v !== undefined),
+  );
+}
 
 /** An authenticated server agent can have attribution without a browser observation. */
 export type AnalyticsAssessment = (

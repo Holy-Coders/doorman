@@ -133,7 +133,10 @@ test("real analytics SDKs link login to their anonymous device, then separate an
   expect(after.mixpanel).not.toBe("user-b");
   expect(after.device).not.toBe(second.device);
   const measured = await page.evaluate(() =>
-    window.analyticsDemo.doorman.identify("user-c", { plan: "pro" }),
+    window.analyticsDemo.doorman.identify(
+      { userId: "user-c", accountId: "team-c" },
+      { plan: "pro" },
+    ),
   );
   expect(measured.visitorId).toMatch(/^vis_/);
   await page.evaluate(() =>
@@ -159,7 +162,32 @@ test("real analytics SDKs link login to their anonymous device, then separate an
       ),
     )
     .toBe(true);
+  await page.evaluate(() =>
+    window.analyticsDemo.directTrack("direct sdk event"),
+  );
+  for (const events of [mixpanelEvents, posthogEvents]) {
+    await expect
+      .poll(() =>
+        events.some(
+          (e) =>
+            e.event === "direct sdk event" &&
+            e.properties.doorman_visitor_id === measured.visitorId &&
+            e.properties.doorman_account_id === "team-c",
+        ),
+      )
+      .toBe(true);
+  }
   await page.evaluate(() => window.analyticsDemo.doorman.reset());
+  await page.evaluate(() => window.analyticsDemo.directTrack("after logout"));
+  for (const events of [mixpanelEvents, posthogEvents]) {
+    await expect
+      .poll(() => events.some((e) => e.event === "after logout"))
+      .toBe(true);
+    expect(
+      events.find((e) => e.event === "after logout")?.properties,
+    ).not.toHaveProperty("doorman_account_id");
+  }
+
   expect(
     (await page.evaluate(() => window.analyticsDemo.snapshot())).posthog,
   ).not.toBe("user-c");

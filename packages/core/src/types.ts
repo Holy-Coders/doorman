@@ -79,6 +79,9 @@ export type NormalizedObservation = BrowserObservation & {
 
 export type VisitorIdentity = {
   visitorId: string;
+  sessionId?: string;
+  /** Private candidate; never substitute it for the browser cookie in suggestion mode. */
+  browserMatch?: { visitorId: string; score: number };
   /** Present only when the server supplies a verified account identity. */
   subjectId?: string;
   attribution?: IdentityAttribution;
@@ -86,6 +89,12 @@ export type VisitorIdentity = {
   isReturning: boolean;
   risk: { automation: number; suspicious: number };
   riskStatus: "evaluated" | "unavailable" | "disabled";
+  operator?: {
+    status: "evaluated" | "unavailable" | "insufficient-evidence" | "disabled";
+    label: "human" | "assistant" | "automation" | "unknown";
+    scores?: { human: number; assistant: number; automation: number };
+    calibrated: false;
+  };
   debug?: {
     deterministicScore: number;
     evaluatorUsed: boolean;
@@ -136,8 +145,11 @@ export type EvaluationInput = {
   history: NormalizedObservation[];
   current: NormalizedObservation;
   deterministicSimilarity: number;
+  riskEvidence?: import("./context.js").RiskEvidence;
+  classifyOperator?: boolean;
 };
 export type Evaluation = {
+  operator?: { human: number; assistant: number; automation: number };
   sameVisitor: number;
   automation: number;
   suspicious: number;

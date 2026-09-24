@@ -207,3 +207,5 @@ export { createPostgresEvidenceStorage } from "./evidence.js";
 export { createPostgresActivityStorage } from "./activity.js";
 
 export { createPostgresOperatorStorage } from "./operators.js";
+
+export { createPostgresContextStorage } from "./context.js";

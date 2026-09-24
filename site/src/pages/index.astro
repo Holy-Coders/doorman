@@ -67,11 +67,11 @@ import { REPO } from "../content";
           <span class="section-kicker">03 / Understand</span>
           <h3>Your analytics, with context.</h3>
           <p>
-            Send assessed windows and inferred account profiles to PostHog,
-            Mixpanel and your warehouse. Verified identities stay distinct from
-            estimates.
+            Connect browser visits, verified users and agents to PostHog,
+            Mixpanel and your warehouse. Keep remembered and inferred identities
+            separate from authenticated users.
           </p>
-          <a href="/docs/operator-attribution/">Build an account report →</a>
+          <a href="/docs/identity-context/">Connect your identity context →</a>
         </article>
       </div>
       <p class="classification-evidence">
@@ -98,8 +98,8 @@ import { REPO } from "../content";
           </p>
           <p>
             A first-party cookie remembers that ID. If it disappears, Doorman
-            compares the next visit with past observations and restores the ID
-            when there’s enough evidence.
+            compares the next visit with past observations. The recommended flow
+            keeps a possible match private and gives the browser a fresh ID.
           </p>
           <a class="text-link" href="/docs/matching/">
             Understand browser matching
@@ -145,8 +145,8 @@ import { REPO } from "../content";
             </span>
           </li>
         </ol>
-        <a class="text-link" href="/docs/getting-started/">
-          Run your first example
+        <a class="text-link" href="/docs/identity-context/">
+          Set up one integration
         </a>
       </div>
       <CodeTabs />

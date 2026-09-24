@@ -1,5 +1,7 @@
+import { simpleOptions, type SimpleOptions } from "../simple.js";
 import type { VisitorEvaluator } from "@aarondovturkel/doorman-core";
 import {
+  createPostgresContextStorage,
   createPostgresStorage,
   createPostgresIdentityStorage,
   createPostgresLearningStorage,
@@ -38,12 +40,18 @@ export function createNodeVisitor(options: NodeVisitorOptions) {
     options,
     options.identity ? createPostgresIdentityStorage(options.db) : undefined,
     options.learning ? createPostgresLearningStorage(options.db) : undefined,
-    options.protection || options.activity || options.operators
+    options.protection ||
+      options.activity ||
+      options.operators ||
+      options.reputation
       ? createPostgresProtectionStorage(options.db)
       : undefined,
     options.evidence ? createPostgresEvidenceStorage(options.db) : undefined,
     options.activity ? createPostgresActivityStorage(options.db) : undefined,
     options.operators ? createPostgresOperatorStorage(options.db) : undefined,
+    options.identityContext
+      ? createPostgresContextStorage(options.db)
+      : undefined,
   );
 }
 export type { ProtectionOptions, AdmissionContext } from "../protection.js";
@@ -60,3 +68,13 @@ export type {
   ApplicationEventInput,
   DeviceLinkInput,
 } from "../evidence.js";
+
+/** Recommended identity/context flow; advanced services remain optional. */
+export function createDoorman(
+  options: SimpleOptions & {
+    db: PostgresDatabase;
+    evaluator?: NodeVisitorOptions["evaluator"];
+  },
+) {
+  return createNodeVisitor({ ...options, ...simpleOptions(options) });
+}

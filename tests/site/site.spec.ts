@@ -51,7 +51,7 @@ test("search, documentation navigation, keyboard tabs and copy controls work", a
   ).toHaveAttribute("aria-selected", "true");
   await page.getByRole("button", { name: "Copy Next.js example" }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
-    "createVercelVisitor",
+    "createDoorman",
   );
   await page
     .getByRole("button", { name: "Search documentation", exact: true })

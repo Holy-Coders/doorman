@@ -164,6 +164,9 @@ function validIdentity(value: unknown): value is VisitorClientIdentity {
   return (
     typeof v.visitorId === "string" &&
     /^vis_[a-f0-9]{48}$/.test(v.visitorId) &&
+    (v.sessionId === undefined ||
+      (typeof v.sessionId === "string" &&
+        /^ses_[a-f0-9]{48}$/.test(v.sessionId))) &&
     (v.subjectId === undefined ||
       (typeof v.subjectId === "string" &&
         /^sub_[a-f0-9]{64}$/.test(v.subjectId))) &&
@@ -184,6 +187,8 @@ function validIdentity(value: unknown): value is VisitorClientIdentity {
 export function createVisitorClient(
   options: {
     endpoint?: string;
+    /** One bounded collection profile; individual detection options may override it. */
+    collection?: "minimal" | "extended";
     debug?: boolean;
     behavior?: "counts" | "extended";
     detection?: DetectionOptions;
@@ -193,10 +198,25 @@ export function createVisitorClient(
     headers?: () => Record<string, string>;
   } = {},
 ) {
-  const detection = options.detection ? { ...options.detection } : undefined;
+  const detection =
+    options.collection === "extended"
+      ? {
+          fonts: true,
+          pageFonts: true,
+          runtime: true,
+          permissions: true,
+          targets: true,
+          focus: true,
+          ...options.detection,
+        }
+      : options.detection
+        ? { ...options.detection }
+        : undefined;
   const newTracker = () =>
     createBehaviorTracker({
-      extended: options.behavior === "extended",
+      extended:
+        options.behavior === "extended" ||
+        (options.behavior === undefined && options.collection === "extended"),
       detection,
     });
   let enabled = options.enabled !== false;
@@ -306,6 +326,14 @@ export function createDoormanClient(
   let collecting = options.enabled !== false;
   let userId: string | undefined;
   let visitorId: string | undefined;
+  let sessionId: string | undefined;
+  let accountId: string | undefined;
+  const contextProperties = () => ({
+    ...(visitorId ? { doorman_visitor_id: visitorId } : {}),
+    ...(sessionId ? { doorman_session_id: sessionId } : {}),
+    ...(accountId ? { doorman_account_id: accountId } : {}),
+  });
+  if (collecting) analytics.setContext();
   let generation = 0;
   let destroyed = false;
   const active = () => {
@@ -313,22 +341,40 @@ export function createDoormanClient(
   };
   return {
     /** With a user ID: call after your application has authenticated that user. */
-    async identify(id?: string, traits: Profile = {}) {
+    async identify(
+      input?: string | { userId: string; accountId?: string },
+      traits: Profile = {},
+    ) {
       active();
       if (!collecting) throw new Error("Doorman collection is paused");
+      const id = typeof input === "object" ? input.userId : input;
+      const nextAccount =
+        typeof input === "object" ? input.accountId : undefined;
+      if (
+        nextAccount !== undefined &&
+        (typeof nextAccount !== "string" ||
+          !nextAccount.trim() ||
+          nextAccount.length > 512)
+      )
+        throw new Error("Invalid account ID");
       if (id !== undefined) {
         analytics.identifyUser(id, traits);
-        if (userId !== id) {
+        if (userId !== id || accountId !== nextAccount) {
           generation++;
           visitorId = undefined;
+          sessionId = undefined;
         }
         userId = id;
+        accountId = nextAccount;
+        analytics.setContext(contextProperties());
       }
       const current = generation;
       const identity = await visitor.identify();
       if (current !== generation || destroyed)
         throw new Error("Doorman identity changed during request");
       visitorId = identity.visitorId;
+      sessionId = identity.sessionId;
+      analytics.setContext(contextProperties());
       return identity;
     },
     async update(traits: Profile) {
@@ -386,14 +432,16 @@ export function createDoormanClient(
       }
       return analytics.track(event, {
         ...clean,
-        ...(visitorId ? { doorman_visitor_id: visitorId } : {}),
+        ...contextProperties(),
       });
     },
     async reset() {
       active();
       generation++;
       userId = undefined;
+      accountId = undefined;
       visitorId = undefined;
+      sessionId = undefined;
       const result = analytics.reset();
       await analytics.flush();
       return result;
@@ -402,12 +450,15 @@ export function createDoormanClient(
       active();
       generation++;
       visitorId = undefined;
+      sessionId = undefined;
+      analytics.setContext();
       collecting = enabled;
       visitor.setEnabled(enabled);
     },
     destroy() {
       generation++;
       destroyed = true;
+      analytics.setContext();
       visitorId = undefined;
       visitor.destroy();
     },

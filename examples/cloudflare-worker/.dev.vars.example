@@ -1,0 +1,2 @@
+# Generate a stable random secret of at least 32 characters.
+DOORMAN_IDENTITY_SECRET=

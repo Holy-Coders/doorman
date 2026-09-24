@@ -35,14 +35,33 @@ defmodule Doorman.Plug do
   defp identify(conn, c, context) do
     with {:ok, payload, conn} <- payload(conn, c), :ok <- Doorman.Validation.validate(payload) do
       try do
-        if context[:verified] && is_nil(c.identity),
-          do: raise("identity directory not configured")
-
         id = cookie(conn, c.cookie_name)
         id = if is_binary(id) and Regex.match?(~r/^vis_[a-f0-9]{48}$/, id), do: id
 
         case Doorman.assess(c, payload, Map.put(context, :visitor_id, id)) do
-          {:ok, %{identity: identity, evidence: evidence}} ->
+          {:ok,
+           %{identity: identity, evidence: evidence, auth: auth, risk_evidence: risk_evidence}} ->
+            context =
+              if auth,
+                do:
+                  Map.put(context, :verified, %{
+                    subject_id: auth["subjectId"],
+                    actor_id: auth["actorId"]
+                  }),
+                else: context
+
+            session_id =
+              if c.identity_context do
+                previous = cookie(conn, c.cookie_name <> "_session")
+
+                if is_binary(previous) && Regex.match?(~r/^ses_[a-f0-9]{48}$/, previous),
+                  do: previous,
+                  else: Doorman.random_id("ses_")
+              end
+
+            identity =
+              if session_id, do: Map.put(identity, "sessionId", session_id), else: identity
+
             learning_id = cookie(conn, c.cookie_name <> "_learning")
 
             learning_cookie =
@@ -59,6 +78,19 @@ defmodule Doorman.Plug do
               )
 
             {next_id, max_age, prediction} = learning_cookie
+            resolved = Doorman.Context.resolve(c, identity, id, auth, prediction)
+            properties = Doorman.Context.properties(identity, resolved, risk_evidence)
+
+            conn =
+              if session_id,
+                do:
+                  put_resp_cookie(
+                    conn,
+                    c.cookie_name <> "_session",
+                    session_id,
+                    cookie_opts(c, 1800)
+                  ),
+                else: conn
 
             conn =
               if next_id || learning_id,
@@ -77,16 +109,19 @@ defmodule Doorman.Plug do
                   c.analytics,
                   identity,
                   context.analytics_id,
-                  context[:analytics_context] || %{}
+                  Map.put(context[:analytics_context] || %{}, :properties, properties)
                 )
 
             public =
               if c.expose_client_scores,
                 do: identity,
-                else: Map.take(identity, ["visitorId", "isReturning"])
+                else: Map.take(identity, ["visitorId", "isReturning", "sessionId"])
 
             conn
             |> assign(:doorman_identity, identity)
+            |> assign(:doorman_context, resolved)
+            |> assign(:doorman_properties, properties)
+            |> assign(:doorman_risk_evidence, risk_evidence)
             |> assign(:doorman_learning, prediction)
             |> assign(:doorman_evidence, evidence)
             |> reply(200, public)
