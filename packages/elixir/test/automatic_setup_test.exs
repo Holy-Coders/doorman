@@ -86,6 +86,8 @@ defmodule Doorman.AutomaticSetupTest do
              Ecto.Adapters.SQL.query!(
                TestRepo,
                ~s|SELECT max(version) FROM "#{prefix}"."_doorman_schema"|,
-               [], log: false)
+               [],
+               log: false
+             )
   end
 end
