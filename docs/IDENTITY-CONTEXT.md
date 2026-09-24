@@ -1,5 +1,7 @@
 # One integration for identity context
 
+**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+
 Doorman connects browser visits to the users and accounts your application already knows. It also returns private estimates about uncertain identity and activity. Your login system remains responsible for authentication, and PostHog or Mixpanel remains your analytics system.
 
 The recommended API is `createDoorman` on the server and `createDoormanClient` in the browser. In Phoenix, use `Doorman.new` with `secret` and `namespace`. This API is introduced in 0.13.0; earlier releases expose the lower-level visitor and identity-directory methods.

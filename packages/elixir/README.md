@@ -1,5 +1,10 @@
 # Doorman for Elixir and Phoenix
 
+**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+
+For 0.13 before the registry release, clone the repository and use `{:doorman_identity, path: "../doorman/packages/elixir"}` in your application. The source Phoenix example already uses the local package.
+
+
 For the recommended browser, account and analytics flow, start with [one identity integration](../../docs/IDENTITY-CONTEXT.md). The detailed APIs below remain available for advanced use.
 
 
@@ -12,7 +17,7 @@ This guide assumes you already have a Phoenix app with Postgres. To try a comple
 Add Doorman to `deps` in `mix.exs`:
 
 ```elixir
-{:doorman_identity, "~> 0.13.0"}
+{:doorman_identity, "~> 0.12.0"}
 ```
 
 Then run `mix deps.get`. This is a developer preview. It requires Elixir 1.17+, Ecto SQL 3.14+, Plug and PostgreSQL. Tests currently run on Elixir 1.20.2 / OTP 29 and Postgres 17; your app should resolve and keep its own dependency lockfile.

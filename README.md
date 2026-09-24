@@ -1,5 +1,7 @@
 # Doorman
 
+**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+
 <img src="https://doorman.holycoders.io/doorman-mark.svg" alt="Doorman" width="96" />
 
 Durable first-party visitor identity from browser history, with optional AI-assisted matching and risk scoring.

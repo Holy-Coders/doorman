@@ -1,5 +1,7 @@
 # One identity integration in Phoenix
 
+**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+
 Use your existing Ecto repository and authentication pipeline. Doorman remembers browser relationships and returns private estimates; it does not replace login or grant permissions.
 
 ```elixir

@@ -1,5 +1,7 @@
 # What is Doorman?
 
+**0.13 is currently available from source.** The latest npm and Hex release is 0.12.0. The unified API below requires the source checkout, not the current registry release. [Run from source](https://github.com/Holy-Coders/doorman).
+
 Doorman adds identity context to the analytics you already use. It remembers browsers, connects the users and agents your server authenticates, and gives you private estimates when identity or activity is uncertain.
 
 Install one browser client and one server module beside your existing Postgres or D1 database. There is no Doorman account, hosted service or extra worker to run. Jev, an optional AI evaluator from TypeSafe, can assess browser history and activity.
