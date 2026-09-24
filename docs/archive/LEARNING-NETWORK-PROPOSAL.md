@@ -1,5 +1,7 @@
 # A shared learning service: original proposal
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 The opt-in pilot described here is now implemented in `packages/network`, with Postgres and Cloudflare D1 service examples. Read the [current guide](LEARNING-NETWORK.md) and [application setup](NETWORK-CLIENT.md) for the shipped behavior. It discovers readable patterns from labeled summaries; it does not fine-tune Jev's weights. Ordinary Doorman installs and the public website do not contribute data automatically.
 
 ## Keep three choices separate

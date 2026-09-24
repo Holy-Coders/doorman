@@ -34,12 +34,12 @@ The browser receives only a browser ID, a session ID and a returning-visit flag.
 
 Jev is an optional AI model from TypeSafe. It compares browser history and evaluates activity. Human, assistant and script labels are separate from suspicious behavior: an authorized assistant can be automated and legitimate.
 
-These are experimental estimates, not proof of who's at the keyboard. Doorman cannot reliably count people sharing one password or name an agent's brand from its movements. [Our measured results](EXTERNAL-BENCHMARKS.md) include errors and coverage gaps.
+These are experimental estimates, not proof of who's at the keyboard. Doorman cannot reliably count people sharing one password or name an agent's brand from its movements. [Our measured results](VALIDATION.md) include errors and coverage gaps.
 
 Doorman never automatically blocks a user or displays a CAPTCHA. Your application decides how to use a result. If AI is unavailable, browser identification continues and the result says the risk was not assessed.
 
 ## Start small
 
-Run the [quickstart](GETTING-STARTED.md), connect [your login](IDENTITY-CONTEXT.md), then add [analytics](ANALYTICS.md). Extra detection, request monitoring, cross-device learning and model training are optional.
+Run the [quickstart](GETTING-STARTED.md), connect [your login](IDENTITY-CONTEXT.md), then add [analytics](ANALYTICS.md). Optional detection, request monitoring and cross-device suggestions can be added later. Model training and a separate learning service are not part of setup.
 
 Collection does not capture form values, actual keys, mouse-coordinate trails or session recordings. Your own analytics may have separate recording settings. [Read the full signal and privacy guide](../PRIVACY.md).

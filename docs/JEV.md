@@ -4,13 +4,13 @@ Jev is an AI model from TypeSafe that answers structured questions. Doorman uses
 
 ## Where Jev participates
 
-| Stage                          | What Jev evaluates                                                                   | Bound                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| Before a missing-cookie lookup | Whether graphics and locale signals are useful for specific indexed query families.  | One call; fixed query choices, no generated SQL.                      |
-| Browser matching and risk      | Every plausible candidate's history, plus current automation and suspicious signals. | One call for up to ten candidates, with up to five observations each. |
-| Optional cross-device learning | Whether the current session fits a person’s separately login-confirmed sessions.     | One call for up to ten people, three examples each.                   |
+| Stage                             | What Jev evaluates                                                         | Provider work                                                              |
+| --------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Browser similarity                | Compact current signals against recent candidate history.                  | One identity call, batched for up to ten candidates.                       |
+| Current risk and activity labels  | Technical risk and, with enough evidence, human/assistant/script activity. | A separate current-only risk call.                                         |
+| Optional cross-device suggestions | The current visit against independently login-confirmed sessions.          | One additional eligible call, at most ten people with three examples each. |
 
-The recommended `createDoorman` API leaves lookup planning off. Cookie visits always skip planning and global candidate search. Set `lookupPlanning: false` (`lookup_planning: false` in Elixir) to skip the planning call while retaining batch matching. If a restricted lookup finds nothing, Doorman retries the standard indexed lookup. If the planner fails, it uses the standard lookup immediately.
+The recommended API uses deterministic indexed lookup. It does not ask Jev to generate SQL or choose search scope. Cookie visits skip global candidate search. Identity and risk are evaluated separately so suspicion cannot become evidence that two people are the same.
 
 Turn on [learning](LEARNING.md) to use the built-in cross-device predictor. No custom callback is needed. It starts suggesting after confirmed history exists and abstains when evidence is missing, crowded or ambiguous. It never turns a prediction into a verified login or an analytics profile merge.
 
@@ -54,7 +54,7 @@ const visitor = createDoorman({
 });
 ```
 
-The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Doorman.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request makes an identity batch call and a separate risk call; optional lookup planning adds a call when enabled, and learning can add one more. A known cookie uses an identity/risk pair, plus learning when enabled. Both calls are reserved against shared budget and concurrency limits before the pair starts; allow at least two concurrent provider calls to use these Jev methods. Configure a shared [inference budget](HARDENING.md) for all stages.
+The Cloudflare binding needs no separate TypeSafe key, but third-party Jev inference needs funded [AI Gateway credits](https://developers.cloudflare.com/ai-gateway/features/unified-billing/) or configured provider credentials. For native Elixir, use `evaluator: [api_key: System.fetch_env!("JEV_API_KEY")]` in `Doorman.new`. Keep credentials on the server. Provider calls may incur charges: a missing-cookie request makes an identity batch call and a separate risk call; optional cross-device suggestions can add one more. A known cookie uses an identity/risk pair, plus learning when enabled. Both calls are reserved against shared budget and concurrency limits before the pair starts; allow at least two concurrent provider calls to use these Jev methods. Configure a shared [inference budget](HARDENING.md) for all stages.
 
 ## Data sent to the model
 
@@ -78,7 +78,7 @@ The optional [API activity middleware](API-ACTIVITY.md) adds `evaluateActivity(i
 
 The following details are for people replacing or inspecting the evaluator. Normal integrations only need the adapter configuration above.
 
-Both implementations use TypeSafe's **Noul** question type: a yes/no judgment expressed as a number from 0 to 1. Doorman batches related questions in one request and reads each answer's `noul` field. The single-history identity request asks only `sameVisitor`; batch identity matching asks `candidate0` through `candidate9` as needed. The separate current-only risk request asks `automation` and `suspicious`. Both transports run the pair concurrently and validate every required answer. If either fails, the engine uses its existing deterministic fallback and marks risk unavailable. Lookup uses `graphics` and `locale`; learning uses `person0` through `person9`. The exact questions are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts) and [intelligence.ts](../packages/evaluators/jev/src/intelligence.ts).
+Both implementations use TypeSafe's **Noul** question type: a yes/no judgment expressed as a number from 0 to 1. Doorman batches related questions in one request and reads each answer's `noul` field. The single-history identity request asks only `sameVisitor`; batch identity matching asks `candidate0` through `candidate9` as needed. The separate current-only risk request asks `automation` and `suspicious`. Both transports run the pair concurrently and validate every required answer. If either fails, the engine uses its existing deterministic fallback and marks risk unavailable. Cross-device evaluation uses `person0` through `person9`. The exact questions are in [protocol.ts](../packages/evaluators/jev/src/protocol.ts) and [intelligence.ts](../packages/evaluators/jev/src/intelligence.ts).
 
 Verified against the official [TypeSafe API](https://docs.typesafe.ai/api), [Noul documentation](https://docs.typesafe.ai/primitives/noul) and [Cloudflare Jev model](https://developers.cloudflare.com/ai/models/typesafe/jev/) on September 23, 2026.
 
@@ -157,10 +157,10 @@ The live Cloudflare transport also returns this envelope, observed on September 
 { state: "Completed", result: { model: "jev-1.13.0", answers, usage }, gatewayMetadata: { keySource: "Unified" } }
 ```
 
-The separate risk response contains `automation` and `suspicious`; the adapter combines the validated answers into the unchanged `VisitorEvaluator` result. The [live isolation check](DETECTION-VALIDATION.md#identity-and-risk-isolation) covers both single-history and batch paths.
+The separate risk response contains `automation` and `suspicious`; the adapter combines the validated answers into the unchanged `VisitorEvaluator` result. The [live isolation check](VALIDATION.md) covers both single-history and batch paths.
 
 The Cloudflare evaluator unwraps a completed result before validating it and also accepts the plain format shown in the model documentation. Pending, failed or malformed envelopes are rejected. This response wrapper is separate from the request format, which remains `{ state, questions }`.
 
-The parser requires all three Noul types and finite numbers within `[0,1]`; it does not coerce strings, clamp invalid outputs, or parse prose. Unknown envelopes are treated as unavailable evaluation and fail open in core. Model metadata/usage is not used as identity confidence. Automated tests mock inference; the [playground validation record](VALIDATION-HISTORY.md) separately records live provider checks.
+The parser requires all three Noul types and finite numbers within `[0,1]`; it does not coerce strings, clamp invalid outputs, or parse prose. Unknown envelopes are treated as unavailable evaluation and fail open in core. Model metadata/usage is not used as identity confidence. Automated tests mock inference; the [playground validation record](archive/VALIDATION-HISTORY.md) separately records live provider checks.
 
 Question instructions explicitly treat signal strings as untrusted data. They allow ordinary drift and privacy restrictions, forbid inferring automation from missing mouse movement/APIs alone, and restrict risk to current observations. All identity decisions, thresholds, contradiction guards and persistence remain deterministic code.

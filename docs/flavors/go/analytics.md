@@ -28,4 +28,4 @@ If you connect PostHog or Mixpanel instead, you can keep your existing `posthog.
 
 ## Warehouse reports
 
-Route the upstream engine's private server events through RudderStack to Snowflake or BigQuery, or export its versioned JSONL. Keep people, agents and accounts in separate columns and count only verified actors. The transport client does not infer these relationships. [Warehouse integration](../../../docs/WAREHOUSES.md).
+Route the upstream engine's private server events through RudderStack to Snowflake or BigQuery, or export its versioned JSONL. Keep people, agents and accounts in separate columns and count only verified actors. The transport client does not infer these relationships. [Warehouse integration](../../WAREHOUSES.md).

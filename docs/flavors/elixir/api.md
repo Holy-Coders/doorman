@@ -14,12 +14,12 @@ Use `Doorman.Plug` for the browser endpoint. Results in `conn.assigns.doorman_id
 
 ## API behavior
 
-`Doorman.ActivityPlug` records allowlisted route aggregates. `Doorman.Activity.assess/2` evaluates previously completed activity before a sensitive operation; `observe/3` records an outcome. [Configure activity](../../../docs/API-ACTIVITY.md).
+`Doorman.ActivityPlug` records allowlisted route aggregates. `Doorman.Activity.assess/2` evaluates previously completed activity before a sensitive operation; `observe/3` records an outcome. [Configure activity](../../API-ACTIVITY.md).
 
 ## Analytics
 
-`Doorman.Analytics.capture/4` sends private summary properties to PostHog, Mixpanel, Amplitude or RudderStack. `identify_user/4` updates allowlisted profile traits. `Doorman.Warehouse.event/3` and `encode/1` prepare a JSONL row for your own pipeline. [Connect analytics](../../../docs/ANALYTICS.md).
+`Doorman.Analytics.capture/4` sends private summary properties to PostHog, Mixpanel, Amplitude or RudderStack. `identify_user/4` updates allowlisted profile traits. `Doorman.Warehouse.event/3` and `encode/1` prepare a JSONL row for your own pipeline. [Connect analytics](../../ANALYTICS.md).
 
 ## Storage and deletion
 
-Doorman creates its tables automatically. `Doorman.ready/1` optionally prepares them during application startup. `Doorman.cleanup/1` performs bounded maintenance. See the [complete native package reference](../../../packages/elixir/README.md) for identity, delegation, learning, evidence and lifecycle APIs.
+Doorman creates its tables automatically. `Doorman.ready/1` optionally prepares them during application startup. `Doorman.cleanup/1` performs bounded maintenance. See the [complete native package reference](../../../packages/elixir/README.md) for endpoint setup, authenticated context, scoring and deletion.

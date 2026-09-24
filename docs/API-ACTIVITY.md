@@ -8,17 +8,15 @@ This feature does not intercept browser `fetch`, proxy traffic through Doorman, 
 
 ## Enable it on Node, Next.js or Cloudflare
 
-Apply your storage package's migrations through `0008_api_activity.sql`. Existing installations only need the new migration if earlier ones are already applied. Fresh installations apply all migrations in order.
+Add `activity` to your existing `createDoorman` handler. Table setup is automatic; there are no migrations to run.
 
 ```ts
-import { createNodeVisitor } from "@aarondovturkel/doorman-adapters/node";
+import { createDoorman } from "@aarondovturkel/doorman-adapters/node";
 
-const doorman = createNodeVisitor({
+const doorman = createDoorman({
   db, // Your existing Postgres pool.
-  identity: {
-    secret: process.env.DOORMAN_IDENTITY_SECRET!,
-    namespace: "my-app-production",
-  },
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app-production",
   evaluator: { apiKey: process.env.JEV_API_KEY! }, // Optional.
   activity: {
     routes: [
@@ -69,26 +67,14 @@ If you need recent activity **before** a sensitive operation, call `await doorma
 
 ## Add a Phoenix Plug
 
-For an existing installation, create an Ecto migration:
-
-```elixir
-defmodule MyApp.Repo.Migrations.AddDoormanApiActivity do
-  use Ecto.Migration
-  def up, do: Doorman.Migration.upgrade_activity()
-  def down, do: raise("Coordinate activity erasure before removing these tables")
-end
-```
-
-Fresh installations use `Doorman.Migration.up()` as usual. Add `activity` to your server configuration:
+Add `activity` to your existing native configuration. Doorman prepares the tables automatically:
 
 ```elixir
 def doorman do
   Doorman.new(
     repo: MyApp.Repo,
-    identity: [
-      secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
-      namespace: "my-app-production"
-    ],
+    secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
+    namespace: "my-app-production",
     evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
     activity: [
       routes: [

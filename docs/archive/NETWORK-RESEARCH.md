@@ -1,5 +1,7 @@
 # Reviewed evidence for the learning pilot
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 This catalog records why a design choice exists and the executable regression covering it. Research updates enter normal code review. The service does not execute instructions from papers, websites, model answers or contributed labels, and never rewrites the repository automatically.
 
 Reviewed 2026-09-23:

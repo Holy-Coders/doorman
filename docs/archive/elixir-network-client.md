@@ -1,5 +1,7 @@
 # Connect a Phoenix application to the learning service
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 The learning service accepts authenticated JSON from your server. You can use `Req`, already included by Doorman, without running a JavaScript client in Phoenix. Your existing `Doorman` instance keeps handling identity and authentication locally.
 
 An operator supplies the service URL and a private participant key. All preferences begin disabled. To opt into evaluation only, send `POST /v1/preferences` once with `{"evaluation":true,"contribution":false,"training":false}`. The service operator must separately enable a provider and a spending budget.
@@ -58,8 +60,8 @@ The secret must be random, unique to your application and at least 32 characters
 
 After your server verifies an assistant credential and its current delegation, `POST /v1/feedback` with the sample ID, `target: "assistant"`, `positive: true`, `source: "verified-delegation"`, and an HMAC `evidenceReference` for the internal verification record. The verified attribution is in `conn.assigns.doorman_identity["attribution"]` when produced by `Doorman.Plug`; do not use a client-provided actor claim. The shared service trusts your attestation rather than independently checking your issuer. A verified assistant is not automatically benign.
 
-`reviewed-session` and `confirmed-incident` support independently investigated outcomes. Jev predictions, successful logins and CAPTCHA results alone cannot label a human or attacker. See the [versioned schemas](../../../protocol/network.schema.json) for exact keys and permitted fields.
+`reviewed-session` and `confirmed-incident` support independently investigated outcomes. Jev predictions, successful logins and CAPTCHA results alone cannot label a human or attacker. See the [versioned schemas](../../protocol/network.schema.json) for exact keys and permitted fields.
 
 `DELETE /v1/contributions/:sampleId` erases one snapshot and its labels; omit the ID to erase all of your participant's contributions. Disable contribution through `/v1/preferences` to stop collection at the service and erase existing samples. Stop sending from your application too.
 
-See [discovery, holdouts and rollout](../../LEARNING-NETWORK.md). The shared learner discovers readable rules; it does not connect identities across customers or fine-tune Jev weights.
+See [discovery, holdouts and rollout](LEARNING-NETWORK.md). The shared learner discovers readable rules; it does not connect identities across customers or fine-tune Jev weights.

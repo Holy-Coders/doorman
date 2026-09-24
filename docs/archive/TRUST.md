@@ -1,11 +1,13 @@
 # Credentials and result receipts
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 This guide covers two optional server utilities. You do not need either one for basic browser identification.
 
 - **Agent credential verification** checks an existing signed token from an issuer you trust, such as your authentication provider.
 - **Result receipts** let a browser carry an encrypted, short-lived Doorman assessment to a later request without reading or changing the scores.
 
-Both complement your existing authentication. They do not turn a browser match into proof of account ownership. For the terms used below, see [browsers, people and agents](CONCEPTS.md).
+Both complement your existing authentication. They do not turn a browser match into proof of account ownership. For the terms used below, see [browsers, people and agents](../CONCEPTS.md).
 
 ## Verify an agent's existing credential
 

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import catalog from "../../site/src/docs.json" with { type: "json" };
 
 test("synthetic playground executes real matching without sending observations", async ({
   page,
@@ -56,9 +57,9 @@ test("search, documentation navigation, keyboard tabs and copy controls work", a
   await page
     .getByRole("button", { name: "Search documentation", exact: true })
     .click();
-  await page.getByRole("searchbox").fill("learning");
+  await page.getByRole("searchbox").fill("cross-device");
   await expect(page.locator("#search-results a").first()).toContainText(
-    "Learn from later logins",
+    "Cross-device suggestions",
   );
   await page.getByRole("searchbox").fill("retention");
   await page
@@ -85,38 +86,9 @@ for (const width of [390, 1440]) {
     for (const path of [
       "/",
       "/playground/",
-      "/docs/introduction/",
-      "/docs/concepts/",
-      "/docs/getting-started/",
-      "/docs/api/",
-      "/docs/learning/",
-      "/docs/review/",
-      "/docs/cloudflare/",
-      "/docs/nextjs/",
-      "/docs/node/",
-      "/docs/elixir/",
-      "/docs/phoenix-example/",
-      "/docs/analytics/",
-      "/docs/languages/",
-      "/docs/trust/",
-      "/docs/evaluation/",
-      "/docs/security/",
-      "/docs/hardening/",
-      "/docs/capacity/",
-      "/docs/scaling/",
-      "/docs/research/",
-      "/docs/matching/",
-      "/docs/evaluators/",
-      "/docs/storage/",
-      "/docs/privacy/",
-      "/docs/validation/",
-      "/docs/extensions/",
-      "/docs/benchmarks/",
-      "/docs/agent-classification/",
-      "/docs/scoring/",
-      "/docs/operator-attribution/",
-      "/docs/external-benchmarks/",
-      "/docs/agentic-identity/",
+      ...catalog.flatMap((section) =>
+        section.pages.map((entry) => `/docs/${entry.slug}/`),
+      ),
     ]) {
       await page.goto(path);
       expect(await page.locator("main").count()).toBe(1);
@@ -456,3 +428,37 @@ for (const theme of ["light", "dark"]) {
     );
   });
 }
+
+test("public docs exclude archived training workflows and use the current API", async ({
+  request,
+}) => {
+  const retired = new Set([
+    "classifier",
+    "classifier-research",
+    "network-learning",
+    "network-client",
+    "operator-attribution",
+    "trust",
+  ]);
+  for (const language of ["", "elixir", "python", "go"]) {
+    const suffix = language ? `-${language}` : "";
+    const response = await request.get(`/search-index${suffix}.json`);
+    expect(response.ok()).toBe(true);
+    const entries = (await response.json()) as { url: string; text: string }[];
+    for (const entry of entries) {
+      expect(retired.has(entry.url.split("/").filter(Boolean).at(-1)!)).toBe(
+        false,
+      );
+      expect(entry.text).not.toMatch(
+        /createNodeVisitor|createCloudflareVisitor|createVercelVisitor|Doorman\.Migration\./,
+      );
+    }
+    const prefix = language ? `${language}/` : "";
+    expect((await request.get(`/docs/${prefix}classifier/`)).status()).toBe(
+      404,
+    );
+  }
+  const api = await (await request.get("/docs/api/")).text();
+  expect(api).toContain("createDoorman");
+  expect(api).not.toContain("createNodeVisitor");
+});

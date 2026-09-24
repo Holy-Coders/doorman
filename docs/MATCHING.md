@@ -40,7 +40,7 @@ Doorman gives each comparable feature a weight, then averages the results. If ei
 | WebGL vendor               |   0.07 |
 | WebGL renderer             |   0.13 |
 
-Dimensions use the mean ratio of corresponding short and long sides. Other features compare exact normalized values. Color depth and pixel ratio go to the evaluator but are not separate deterministic weights. Automation is exposed in the feature explanation and evaluator state but never weighted for identity. Behavioral counts and optional motion/timing summaries are not identity features.
+Dimensions use the mean ratio of corresponding short and long sides. Other features compare exact normalized values. Color depth and pixel ratio go to the evaluator but are not separate deterministic weights. Automation flags and behavioral summaries belong to the separate risk request; they are excluded from identity evaluation and deterministic matching weights.
 
 All weights live in `SIMILARITY_WEIGHTS`; confidence constants live in `MATCHING_DEFAULTS`. These values are heuristics requiring calibration.
 
@@ -48,7 +48,7 @@ All weights live in `SIMILARITY_WEIGHTS`; confidence constants live in `MATCHING
 
 1. A cookie is accepted only if its opaque ID has retained observations. Unknown/expired cookies fall through to lookup.
 2. Cookie hits load at most five recent observations and preserve ID regardless of drift. No global search runs. Risk is freshly evaluated and the observation is saved.
-3. With optional lookup planning enabled, Jev can first decide whether graphics and locale lookup families are useful. The core platform/browser probes remain. Up to six indexed branches each return at most 101 retained rows: three selective combinations of platform/browser with screen/hardware, screen/timezone or graphics/timezone, plus the three coarse fallbacks. The 101st row detects saturation. Rank this bounded pool by deterministic score, deduplicate visitor IDs, then keep ten. No usable keys means no search. A failed planner uses all standard probes. An empty restricted search gets one standard fallback pass.
+3. Up to six deterministic indexed lookups each return at most 101 retained rows: three selective combinations of platform/browser with screen/hardware, screen/timezone or graphics/timezone, plus three coarse fallbacks. The extra row detects a crowded bucket. Rank the bounded pool by similarity, deduplicate visitor IDs, then keep ten. No usable keys means no search. The recommended API does not use AI lookup planning.
 4. Load at most five observations per candidate, in one Postgres query / one D1 batch when supported. Compare the current observation to each; retain the strongest non-contradictory snapshot score. Historical variability is then judged across the entire compact history by Jev.
 5. Remove candidates below `0.65` or with no non-contradictory history. Select up to ten by score, then recency and ID for deterministic ties. Jev evaluates them in one batched request with a bounded timeout. A custom evaluator without the batch method retains three individual evaluations.
 6. Blend `0.35 * deterministic + 0.65 * sameVisitor`. On evaluator failure, use deterministic similarity alone. Apply evidence caps to either result.
@@ -57,7 +57,7 @@ All weights live in `SIMILARITY_WEIGHTS`; confidence constants live in `MATCHING
 
 A different normalized platform is treated as a contradiction. A screen similarity below `0.55` together with different touch capabilities or graphics vendor is also contradictory. Such pairs cannot reach restore confidence (`0.5` maximum) and are filtered before identity evaluation. A driver/vendor change alone is not sufficient for rejection. Cookie continuity remains authoritative even when these signals differ.
 
-`confidence: 1` for cookie continuity, a match score for inferred restoration, and `0` for a newly assigned ID have deliberately distinct meanings. Do not read a new ID's zero as high risk. No-match confidence does not claim certainty that the browser has never visited.
+`confidence: 1` for cookie continuity and `0` for a newly assigned ID have deliberately distinct meanings. Possible historical matches carry a separate private `browserMatch.score`. Do not read a new ID's zero as high risk. No-match confidence does not claim certainty that the browser has never visited.
 
 ## Practical limits
 
@@ -65,11 +65,11 @@ Generic WebGL strings, shared screen sizes and identical browser configurations 
 
 The lookup window deliberately trades recall for bounded database work. A matching older device outside every indexed bucket's 101-row window may still be missed. Selective probes improve recall, but this is bounded retrieval rather than an exhaustive nearest-neighbor search. Saturation abstention favors false-merge avoidance. See [scale evidence](SCALING.md). Five snapshots cannot represent every change. Expired history is intentionally unusable. Simultaneous requests across tabs may race to create different IDs; no distributed lock is included.
 
-A missing-cookie Jev request uses an identity batch and a separate current-only risk call. Lookup planning adds a call only when explicitly enabled; it is off in the recommended API. A cookie request uses the identity/risk pair. Automation, behavior and runtime probes never enter the identity request. Optional learning can add one cross-device call. A Workers AI timeout stops waiting but the binding does not expose cancellation; upstream inference may finish and incur usage. Direct fetch uses an abort signal, including during response-body consumption. Failed batches do not trigger individual retries. All stages use the configured shared inference budget.
+A missing-cookie Jev request uses an identity batch and a separate current-only risk call. A cookie request uses the identity/risk pair. Automation, behavior and runtime probes never enter the identity request. Optional learning can add one cross-device call. A Workers AI timeout stops waiting but the binding does not expose cancellation; upstream inference may finish and incur usage. Direct fetch uses an abort signal, including during response-body consumption. Failed batches do not trigger individual retries. All stages use the configured shared inference budget.
 
 ## Test matching on your traffic
 
-Use consented, independently labeled returning-browser visits with deliberate cookie deletion, browser/OS updates, resizing, timezone drift and privacy settings. Include distinct browsers with the same common configuration. Compare deterministic-only against AI-assisted operation on the same held-out visits. Measure false merges, missed restorations, ambiguity frequency, latency, evaluator failure rates and calls per visit. For risk, label actual automation and ordinary humans, including mobile/touch, keyboard-only and privacy-focused usage. Measure false positives before choosing any CAPTCHA threshold.
+Use consented, independently labeled returning-browser visits with deliberate cookie deletion, browser/OS updates, resizing, timezone drift and privacy settings. Include distinct browsers with the same common configuration. Compare deterministic-only against AI-assisted operation on the same held-out visits. Measure false candidate links, missed matches, ambiguity frequency, latency, evaluator failure rates and calls per visit. For risk, label actual automation and ordinary humans, including mobile/touch, keyboard-only and privacy-focused usage. Measure false positives before choosing any CAPTCHA threshold.
 
 Do not use this library's inferred IDs as its own ground-truth labels. Tune weights/thresholds using held-out data and favor avoiding false merges. The repository's synthetic/mocked tests cannot validate Jev's actual probability calibration or risk accuracy.
 

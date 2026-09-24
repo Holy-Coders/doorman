@@ -7,10 +7,10 @@ Use Go to expose a first-party visitor route backed by a Doorman endpoint you ow
 Go 1.23 or newer is required:
 
 ```sh
-go get github.com/Holy-Coders/doorman/packages/go@v0.12.0
+go get github.com/Holy-Coders/doorman/packages/go@bb3c6032c23d618a02c5023345608384b01317e3
 ```
 
-The Go submodule uses the `packages/go/v0.12.0` Git tag. For a local checkout, see the example's `replace` directive.
+This pins the transport client source from the Doorman 0.13.0 release commit; Go resolves it to a module pseudo-version. For a local checkout, see the example's `replace` directive.
 
 ## Mount a route
 

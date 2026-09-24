@@ -1,84 +1,54 @@
-# Classify people, assistants and scripts
+# Human, assistant and script scores
 
-An email address tells you which account is signed in. It does not tell you who is operating it right now. A person might browse manually, hand a task to an AI assistant, or run a scheduled script.
+Doorman separates **who your app authenticated** from **what the current activity resembles**. A verified agent credential is an identity fact. A model's assistant score is an estimate. Neither is a verdict that the activity is abusive.
 
-Doorman adds private evidence about that activity to the identity context you already send to analytics. It supports three separate things:
+## Verified people and agents
 
-| Capability                            | What supports it                                                           | What you receive                                                                                      |
-| ------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Verified agent identity               | Credentials and delegation checked by your server                          | The known actor and the account it may act for                                                        |
-| Experimental activity classification  | Browser aggregates, server API patterns and optional Jev evaluation        | Independent human, assistant, conventional automation and abuse scores; unknown when evidence is weak |
-| Trainable assistant/abuse classifiers | Independently confirmed examples, offline training and held-out evaluation | A versioned local model, coverage checks and private scores                                           |
-
-Classification cannot establish permission. An assistant can be legitimate; a human can be abusive. Inferred labels never replace your authenticated user ID or merge analytics profiles.
-
-Our [latest live Jev panel](DETECTION-VALIDATION.md) scored AUC 0.504 on 40 human and 40 agent sessions, with all 80 operator labels remaining unknown. This API exposes experimental assessments; reliable assistant or brand attribution has not been established.
-
-## The new movement and timing evidence
-
-With `behavior: "extended"`, the browser computes a few additional summaries in constant memory. The default remains event counts.
+Pass the actor your server authenticated through the normal endpoint:
 
 ```ts
-const visitor = createVisitorClient({
+const result = await doorman.assess(request, {
+  auth: {
+    userId: owner.id,
+    accountId: workspace.id,
+    actor: { id: authenticatedAgent.id, kind: "agent" },
+  },
+});
+return result.response;
+```
+
+Your application must verify that credential and its permission to act for the owner. For a person acting as themselves, omit `actor`; the authenticated user is the actor. Count these verified IDs in [account reports](ANALYTICS.md), keeping browsers separate from people.
+
+## Optional activity estimates
+
+Enable [Jev](JEV.md) on your server and, if your collection policy permits, add extended browser summaries:
+
+```ts
+const doorman = createDoormanClient({
   endpoint: "/api/visitor",
-  behavior: "extended",
+  collection: "extended",
 });
 ```
 
-| Measurement                 | What it means                                                                      |
-| --------------------------- | ---------------------------------------------------------------------------------- |
-| Mean movement step          | Total displacement divided by valid movement samples                               |
-| Large-step fraction         | Fraction of valid movement samples with a displacement of at least 100 pixels      |
-| Movement interval variation | Variation in active movement gaps below one second, after enough samples           |
-| Short interaction gaps      | Fraction of consecutive pointer/key press intervals below 100 milliseconds         |
-| Repeated interaction gaps   | Fraction of comparable neighboring intervals within 10 milliseconds of one another |
+The recommended server API requests human, assistant and scripted-automation scores when enough aggregate evidence is present. No separate operator service, training dataset or classifier deployment is needed.
 
-Only totals, counts and distribution summaries leave the page. Doorman does not retain coordinate arrays, key values, event targets or an individual keystroke trail. Held-key repeats are excluded from timing; visibility changes and blur break the timing sequence. Invalid or missing movement values are skipped. Measurements are rounded before use in the optional learning service. [The full data contract](../PRIVACY.md) lists collection and retention.
+Read `result.identity?.operator` privately on the server:
 
-These patterns can help a classifier, but none proves automation. Browser event batching, high-DPI devices, remote desktops, accessibility tools and ordinary repeated tasks can produce similar patterns. Doorman does not call a large movement a physically impossible jump. [W3C Pointer Events](https://www.w3.org/TR/pointerevents/) documents implementation-dependent event delivery and coalescing.
+| Field        | Meaning                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| `status`     | `evaluated`, `insufficient-evidence`, `unavailable` or `disabled`.                         |
+| `label`      | `human`, `assistant`, `automation` or `unknown`.                                           |
+| `scores`     | Available human, assistant and automation estimates from 0 to 1. They need not sum to one. |
+| `calibrated` | `false`: these are not measured real-world probabilities.                                  |
 
-The existing `navigator.webdriver` signal can also be included in operator evidence as `webdriver: 0 | 1`. A true value is technical evidence of reported browser automation; false or missing values do not prove human operation or identify an AI product. Doorman does not attempt to defeat browser privacy protections, inspect DevTools internals or infer screenshot capture from focus changes.
+The label can remain unknown even after evaluation. Sparse input, weak scores and close alternatives should not force a label. Set `classifyOperator: false` on the TypeScript server to disable this optional classification.
 
-## Bring browser and server evidence together
+The separate `risk.automation` and `risk.suspicious` scores describe technical automation and suspicious activity. A legitimate assistant can score highly on automation without being suspicious. [Server request aggregates](API-ACTIVITY.md) can add evidence of denied operations without claiming a person is an attacker.
 
-The server receives browser behavior through the existing validated identification payload. For operator assessment, explicitly project an authorized, closed activity window:
+## What you can report
 
-```ts
-import { extractFeatures } from "@aarondovturkel/doorman-network";
+Use `result.properties` with your existing server analytics events. Report evaluated activity by label, and show unknown/unavailable results separately. Keep that distinct from the number of authenticated agent credentials or users.
 
-const features = extractFeatures({
-  behavior: validatedBehavior,
-  observation: validatedSignals,
-  activity: serverActivity,
-  routes: routeCategories,
-  sequence: serverSequence,
-});
+Doorman cannot reliably tell you that one shared password belongs to a husband and wife, count physical people, or identify ChatGPT versus Claude from mouse movement. Our recorded 80-session Jev study did not establish reliable human/agent separation. [Results and limitations](VALIDATION.md).
 
-const result = await doorman.operators!.observe({
-  accountId: authorizedAccount.id,
-  sessionId: serverSession.id,
-  windowId: closedWindow.id,
-  browserId: visitorId,
-  startedAt: closedWindow.startedAt,
-  endedAt: closedWindow.endedAt,
-  evidence: { source: "mixed", features },
-});
-```
-
-Use one bounded window and the same session/account for all inputs. Lifetime browser totals are not automatically divided into closed windows: reset your application's collector between windows. Browser measurements remain untrusted even when combined with server observations. Do not pass raw request bodies directly to this API. [Operator setup](OPERATOR-ATTRIBUTION.md) covers authentication, budgets, storage and analytics exports.
-
-Jev evaluates human, assistant, script and abuse evidence separately. The operator prompt version is `operators-v2`; current transport remains TypeSafe's typed `noul` questions or Cloudflare's `typesafe/jev`. Family suggestions require independently labeled reference runs. Generic behavior cannot reliably identify ChatGPT, Claude, an underlying model, or a unique physical person. Unknown is an expected result.
-
-## Put the results in your existing analytics
-
-Send assessed windows and account summaries through the server analytics bridge. PostHog, Mixpanel, Segment, Amplitude and RudderStack receive inference-specific properties, while Snowflake and BigQuery can use warehouse rows. Scores remain private unless your server explicitly chooses to export them.
-
-You can ask how many evaluated windows looked assistant-operated, which accounts had unresolved activity, and how many inferred profiles a fully compared report supports. “Three agents and two humans” is an estimate only when enough evidence exists; it is not a verified headcount. [Account reports](OPERATOR-ATTRIBUTION.md) explain missing counts and report revisions.
-
-## Evaluate before relying on it
-
-The [public benchmark](EXTERNAL-BENCHMARKS.md) compares the old five-feature model with the new measurements using FP-Agent and Balabit, and replays historical browser identity with FP-Stalker. These are research datasets, not proof of your production accuracy. Existing dataset labels do not validate unique-person counts, agent intent or permission.
-
-Use [scoring configuration](SCORING.md) to tune application thresholds. Use the [classifier pipeline](CLASSIFIER.md) to fit numeric models or combine them with versioned Jev features. Neither action fine-tunes Jev itself. New collectors are available; whether they improve detection is a measured outcome, not a product promise.
-
-See [optional detection signals](EXPERIMENTAL-DETECTION.md) for local fonts, runtime/permission probes, target/focus summaries and trusted JA4 evidence. [Linked suspicious activity](LINKED-ACTIVITY.md) correlates server-observed denials across likely related sessions without using IP addresses or merging people. These are opt-in source features with documented experimental limits.
+Missing mouse movement, privacy settings, software rendering, aligned clicks or a focus change are not proof of automation. Doorman respects hidden browser values and stores aggregate summaries rather than keys, forms or coordinate trails. See [optional signals](EXPERIMENTAL-DETECTION.md).

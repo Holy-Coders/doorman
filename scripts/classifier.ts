@@ -173,7 +173,7 @@ try {
     );
   } else
     throw new Error(
-      "Usage: pnpm classifier demo|export|enrich|train|stage|promote|rollback (see docs/CLASSIFIER.md)",
+      "Usage: pnpm classifier demo|export|enrich|train|stage|promote|rollback (see docs/archive/CLASSIFIER.md)",
     );
 } catch (error) {
   // Native trainer errors can contain local data paths; print only the actionable message.

@@ -1,5 +1,7 @@
 # Tests with public research datasets
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 We ran Doorman against three public research datasets. The results show useful behavioral evidence, and a serious limitation in recovering identity from browser signals alone.
 
 **Cookie-loss recovery is not reliable enough to treat as verified identity.** In the historical fingerprint replay, wrong restores outnumbered correct restores. The behavioral experiments also missed many agents and sometimes flagged humans. These findings are published so you can judge the limits before using Doorman in your application.
@@ -38,7 +40,7 @@ The full **FP-Stalker** replay reproduced the earlier result: **1,258 correct an
 
 The **120-case Jev pilot replay** reused the original provider responses and made **zero new requests**. It reproduced the earlier identity and automation results below. Its frozen five-feature inputs and old questions do not evaluate the new movement/timing fields or the `operators-v2` prompt. A fresh, budgeted provider experiment on separate labeled cases is still needed before claiming those additions improve Jev.
 
-[Download the aggregate comparison, provenance and source hashes](benchmarks/detection-v2-2026-09-23.json). Raw sessions, identifiers, recordings and fitted research weights are not published.
+[Download the aggregate comparison, provenance and source hashes](../benchmarks/detection-v2-2026-09-23.json). Raw sessions, identifiers, recordings and fitted research weights are not published.
 
 To reproduce after the local datasets and Python environment are prepared:
 
@@ -50,7 +52,7 @@ pnpm benchmark:jev # cache only; fails on a missing cached response
 pnpm benchmark:compare
 ```
 
-The expanded run writes separate `*-extended-*` artifacts, preserving baseline reports. `benchmark:compare` checks cohort sizes and fold partitions before producing the public aggregate. Scores remain experimental and private by default. See [agent classification](AGENT-CLASSIFICATION.md) and [adjustable scoring](SCORING.md).
+The expanded run writes separate `*-extended-*` artifacts, preserving baseline reports. `benchmark:compare` checks cohort sizes and fold partitions before producing the public aggregate. Scores remain experimental and private by default. See [agent classification](../AGENT-CLASSIFICATION.md) and [adjustable scoring](../SCORING.md).
 
 ## Browser identity: what failed
 
@@ -76,7 +78,7 @@ The projection uses the published HTTP user-agent string as a proxy for the brow
 
 This is an intentionally difficult all-cookies-missing scenario on selected, old data. It is not the FP-Stalker paper's original filtered experiment and is not a modern population estimate. It still exposes false matches that a similarity threshold cannot resolve. A high matching score is not a calibrated probability of identity. Use authenticated account links for account identity; never use a recovered visitor ID to authorize access.
 
-[Download the aggregate identity report](benchmarks/external-fpstalker-2026-09-23.json).
+[Download the aggregate identity report](../benchmarks/external-fpstalker-2026-09-23.json).
 
 ## What real Jev calls added
 
@@ -129,7 +131,7 @@ pnpm benchmark:jev --live --max-calls 120
 
 The allowance is cumulative in the local ledger, capped at 120 attempts, and failures consume an attempt. Exclusive ledger ownership prevents competing processes; request bodies are capped at 32 KiB. Keep the ledger when restarting. The ordinary test suite mocks this transport and cannot spend credits. The research pilot has its own allowance and does not change the playground or learning-service budgets.
 
-[Download the aggregate Jev report](benchmarks/external-jev-2026-09-23.json).
+[Download the aggregate Jev report](../benchmarks/external-jev-2026-09-23.json).
 
 ## Agents: useful timing, incomplete coverage
 
@@ -167,7 +169,7 @@ Across these folds, agent detection ranges from **29.4% to 90.2%**, with **0–5
 
 This is configuration separation, not verified physical-device separation. The release provides browser identifiers rather than independently verified human participant IDs. The importer finds 60 linked human browser groups; that is not a count of people. We cannot claim participant-disjoint or physical-host-disjoint evaluation from these labels. Agent-family and environment holdouts are separate experiments, not a simultaneous guarantee.
 
-[Download the aggregate agent report](benchmarks/external-fpagent-2026-09-23.json).
+[Download the aggregate agent report](../benchmarks/external-fpagent-2026-09-23.json).
 
 ## Mouse behavior: supporting evidence
 
@@ -179,7 +181,7 @@ The 816 labeled test recordings contain 405 simulated impostors and 411 owner se
 
 This supports testing behavior as one input alongside authenticated history and server evidence. It does not justify silently merging people, identifying a family member, or declaring an account hacked.
 
-[Download the aggregate behavior report](benchmarks/external-balabit-2026-09-23.json).
+[Download the aggregate behavior report](../benchmarks/external-balabit-2026-09-23.json).
 
 ## Reproduce the evaluations
 
@@ -213,7 +215,7 @@ The source repositories' availability is not a blanket commercial training licen
 
 ## Experimental probe follow-up
 
-The September 23 font/runtime/linked-activity update reran the same public-data pipelines and cache-only Jev pilot (zero new calls). These datasets do not measure local-font probes, notification states, target alignment, trusted JA4 or correlated denied-operation groups, so the replay does not establish their accuracy. [Separate real-browser experiments](EXPERIMENTAL-DETECTION.md) report functional controls, including a separately launched no-CDP Chromium comparison. No detector or classifier was promoted from these results.
+The September 23 font/runtime/linked-activity update reran the same public-data pipelines and cache-only Jev pilot (zero new calls). These datasets do not measure local-font probes, notification states, target alignment, trusted JA4 or correlated denied-operation groups, so the replay does not establish their accuracy. [Separate real-browser experiments](../EXPERIMENTAL-DETECTION.md) report functional controls, including a separately launched no-CDP Chromium comparison. No detector or classifier was promoted from these results.
 
 ## Expanded live Jev and font validation
 

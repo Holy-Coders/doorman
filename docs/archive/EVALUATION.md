@@ -1,6 +1,8 @@
 # Test a learning model
 
-If you enable [login feedback](LEARNING.md), you can test a predictor against visits whose users later signed in. The goal is to find out how often it guesses correctly, how often it links the wrong user, and how often it declines to guess.
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
+If you enable [login feedback](../LEARNING.md), you can test a predictor against visits whose users later signed in. The goal is to find out how often it guesses correctly, how often it links the wrong user, and how often it declines to guess.
 
 The evaluation runs locally on an export from your database. It only calls an external AI service if your predictor does. Start with Doorman’s built-in similarity baseline so you have something to compare another model against.
 

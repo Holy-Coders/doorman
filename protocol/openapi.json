@@ -609,7 +609,7 @@
           },
           "attribution": {
             "type": "object",
-            "description": "Optional server-verified identity attribution; see docs/AGENTIC-IDENTITY.md."
+            "description": "Optional server-verified identity attribution; see docs/IDENTITY-CONTEXT.md."
           },
           "subjectId": {
             "type": "string",

@@ -1,5 +1,7 @@
 # Browser benchmarks
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 This benchmark asks whether Doorman can preserve a browser ID through controlled changes such as a reload, window resize or timezone change. It also tests where recovery fails.
 
 The signals come from real browser engines driven by automation. They do not represent a population of real people. Use the results to reproduce behavior, then evaluate accuracy separately on independently labeled visits from your application.
@@ -20,7 +22,7 @@ The identity replay runs the production core engine and Postgres adapter against
 
 ## Recorded result: September 23, 2026
 
-Chromium 153.0.8010.12, Firefox 155.0 and WebKit 26.6 on one macOS host. Six logical browser profiles, 30 observations, 78 identity trials. [Machine-readable aggregate results](./benchmarks/browser-2026-09-23.json).
+Chromium 153.0.8010.12, Firefox 155.0 and WebKit 26.6 on one macOS host. Six logical browser profiles, 30 observations, 78 identity trials. [Machine-readable aggregate results](../benchmarks/browser-2026-09-23.json).
 
 | Trial cohort                                                        | Trials | Correct restorations | Wrong restorations | New IDs |
 | ------------------------------------------------------------------- | -----: | -------------------: | -----------------: | ------: |
@@ -33,13 +35,13 @@ The last row is a known false-match case under a **browser-profile** definition 
 
 When multiple equal candidates are already stored, the ambiguity margin avoids choosing between them. When only one is stored, Doorman cannot tell whether an identical observation belongs to a new profile. Do not use this result to advertise 100% recognition. The benchmark deliberately includes this failure instead of averaging it away into one score.
 
-Risk accuracy is **not measured**. All sessions are automated and no human ground truth is present. Risk outputs remain zero because the evaluator is disabled. Extra motion summaries do not by themselves solve identity collisions or establish intent. Cross-device person/account continuity needs [verified account linking](./EXTENSIONS.md).
+Risk accuracy is **not measured**. All sessions are automated and no human ground truth is present. Risk outputs remain zero because the evaluator is disabled. Extra motion summaries do not by themselves solve identity collisions or establish intent. Cross-device person/account continuity needs [verified account linking](EXTENSIONS.md).
 
 ## Detection-update rerun
 
 The new aggregate collectors were exercised again in all three engines on September 23, 2026. The 78 identity trials reproduced the table above: 24 isolated returns, 24 cookie continuities, 24 ambiguous cases left unmerged, and six incorrect restores of indistinguishable profiles. The benchmark now bundles the actual client and its dependencies before serving it locally.
 
-[Aggregate rerun report](benchmarks/browser-detection-v2-2026-09-23.json). Risk accuracy is still unmeasured in this automated-only fixture. The [expanded public-data comparison](EXTERNAL-BENCHMARKS.md#new-detection-features-measured-comparison) separately measures changes in timing-based detection and mouse-behavior anomaly scoring.
+[Aggregate rerun report](../benchmarks/browser-detection-v2-2026-09-23.json). Risk accuracy is still unmeasured in this automated-only fixture. The [expanded public-data comparison](EXTERNAL-BENCHMARKS.md#new-detection-features-measured-comparison) separately measures changes in timing-based detection and mouse-behavior anomaly scoring.
 
 ## Public research datasets
 

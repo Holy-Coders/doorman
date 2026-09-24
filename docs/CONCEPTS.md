@@ -44,15 +44,9 @@ For a particular request, the **subject** is the identity being represented and 
 
 An actor is not inferred from a low automation score. If your server has not established who is acting, Doorman reports the actor as unknown.
 
-Some references use **principal** for a registered identity, especially the identity granting permission. It is an identity record, not another kind of browser ID.
+## Agent permission
 
-## Delegation
-
-A **delegation** is permission for one actor to act for another identity. It names the allowed service, actions and expiry time.
-
-For example, Alex can let the assistant perform `events:read` for `calendar-api` for one hour. Doorman checks that the stored permission matches the request and has not expired or been revoked. Your application uses that result to allow or reject the action.
-
-A delegation ID is a reference to a permission record. The assistant still needs its own authenticated credential.
+Your application verifies whether an agent may act for a user, which actions it may perform and when that permission expires. Pass its verified identity through `auth.actor` after those checks. Doorman records identity context; activity scores cannot grant permission.
 
 ## Confidence and risk
 
@@ -69,4 +63,4 @@ These are separate scores. An authorized AI assistant can be automated. A famili
 
 Use your authenticated **user ID** to identify a person in PostHog or Mixpanel. Use your **workspace ID** to group shared-account activity. Keep Doorman’s **visitor ID** as browser context rather than replacing a person’s analytics identity with it.
 
-The [analytics guide](ANALYTICS.md) shows login, user switching, logout and reports. The [people and agents guide](AGENTIC-IDENTITY.md) shows how to register identities and permissions.
+The [analytics guide](ANALYTICS.md) shows login, user switching, logout and reports. The [integration guide](IDENTITY-CONTEXT.md) shows how to pass verified users and agents.

@@ -23,7 +23,7 @@ pnpm dev
 
 Call `POST /operator/tenants` with `{"trainingApproved":true,"retentionDays":30}`. The response contains `tenantId` and a newly generated `apiKey`. Deliver that key privately to the application operator. No preference is enabled automatically, including when training is approved. Leave `trainingApproved` false for participants that have not been reviewed for the training pilot.
 
-The application separately calls `POST /v1/preferences` with its chosen `evaluation`, `contribution` and `training` booleans. See [the client guide](../../docs/NETWORK-CLIENT.md). Registration approves that implementer to attest to its own reviews and credential verification; it does not verify those outcomes centrally.
+The application separately calls `POST /v1/preferences` with its chosen `evaluation`, `contribution` and `training` booleans. See [the client guide](../../docs/LEARNING.md). Registration approves that implementer to attest to its own reviews and credential verification; it does not verify those outcomes centrally.
 
 To revoke a participant credential, `POST /operator/revoke` with `{"tenantId":"tenant_..."}`. This deletes its contributed samples/labels, invalidates affected model evidence and prevents new authenticated requests. Stop/coordinate in-flight requests too. Issue a new participant credential if it needs to re-enroll. Never share an operator token with a participant.
 
@@ -67,4 +67,4 @@ This deployment is a bounded pilot, not a benchmark demonstrating hundreds of th
 
 ## Optional supervised classifier
 
-Apply both `0001_network.sql` and `0002_classifiers.sql` through the migration command before upgrading. The service now accepts private `POST /v1/classify` requests and separate operator `/operator/classifier/export`, `/stage`, `/promote` and `/rollback` actions. Training remains offline; the scheduled Worker never starts it. Jev feature calls share the existing inference quotas and require the exact reported model pin. [Follow the classifier guide](../../docs/CLASSIFIER.md) to run the free generated-data demo or prepare a reviewed real-data pilot.
+Apply both `0001_network.sql` and `0002_classifiers.sql` through the migration command before upgrading. The service now accepts private `POST /v1/classify` requests and separate operator `/operator/classifier/export`, `/stage`, `/promote` and `/rollback` actions. Training remains offline; the scheduled Worker never starts it. Jev feature calls share the existing inference quotas and require the exact reported model pin. [Follow the classifier guide](../../docs/VALIDATION.md) to run the free generated-data demo or prepare a reviewed real-data pilot.

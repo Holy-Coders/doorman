@@ -1,5 +1,7 @@
 # Why the classifier pipeline works this way
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 Reviewed September 23, 2026, before implementation. These are design choices for Doorman's current pilot, not a claim that one model is best for every application.
 
 ## Findings and decisions

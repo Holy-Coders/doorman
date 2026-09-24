@@ -1,5 +1,7 @@
 # Train a Doorman classifier
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
 
 Doorman can learn which combinations of session measurements tend to accompany confirmed assistants or confirmed abuse. This is an optional training pipeline for operators of the learning service. Your existing visitor identity and analytics integrations keep working independently.
@@ -158,7 +160,7 @@ Every language can use `POST /v1/classify` with a participant bearer key and `{ 
 }
 ```
 
-The TypeScript client is published in `@aarondovturkel/doorman-network` v0.12.0. Install it with npm, pnpm or Bun. Other language SDKs can call the HTTP protocol today; no new native `classify` method is implied. See [the machine-readable contract](../protocol/classifier.schema.json).
+The TypeScript client is published in `@aarondovturkel/doorman-network` v0.12.0. Install it with npm, pnpm or Bun. Other language SDKs can call the HTTP protocol today; no new native `classify` method is implied. See [the machine-readable contract](../../protocol/classifier.schema.json).
 
 Without a current model, `status` is `unavailable` and predictions are empty. Insufficient measurements produce `score:null` and `missing-evidence`. Failed, malformed, absent or version-mismatched Jev features produce `jev-unavailable`; expiry produces `expired` for a locally loaded model. Unknown is not a zero-risk judgment. This endpoint never blocks, challenges, merges identities or changes authorization.
 
@@ -172,4 +174,4 @@ After reviewing fresh outcomes, create a new versioned dataset and repeat the co
 
 ## Configurable scoring and activity features
 
-See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.
+See [scoring configuration](../SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](../AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.

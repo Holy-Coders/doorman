@@ -1,5 +1,7 @@
 # Connect Python to the learning service
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 The optional learning service uses a server-to-server HTTPS protocol. Your Python application can call it directly while the existing Doorman endpoint continues to handle visitor identity. No browser API key is involved.
 
 The operator supplies `DOORMAN_NETWORK_URL` and `DOORMAN_NETWORK_KEY`. Participant preferences start disabled. Explicitly enable evaluation with `POST /v1/preferences` and `{"evaluation":true,"contribution":false,"training":false}`. The operator separately configures a provider and its budget.
@@ -50,4 +52,4 @@ Later, send `/v1/feedback` with that sample ID, target (`assistant` or `abuse`),
 
 `DELETE /v1/contributions/:sampleId` erases the snapshot and labels; omitting the ID erases all of your participant's samples. Revoking contribution through preferences also deletes them. Coordinate your own in-flight senders and downstream exports.
 
-Use the [versioned protocol schemas](../../../protocol/network.schema.json) for request/response integration and read [how discovery is evaluated](../../LEARNING-NETWORK.md) before using any pattern as application policy.
+Use the [versioned protocol schemas](../../protocol/network.schema.json) for request/response integration and read [how discovery is evaluated](LEARNING-NETWORK.md) before using any pattern as application policy.

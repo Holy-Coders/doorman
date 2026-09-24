@@ -7,7 +7,7 @@ Use Python to relay browser measurements to a Doorman endpoint that you own. Mat
 Python 3.10 or newer is required. The developer preview is installed from GitHub, not PyPI:
 
 ```sh
-python -m pip install 'doorman-identity-client @ git+https://github.com/Holy-Coders/doorman.git@v0.12.0#subdirectory=packages/python'
+python -m pip install 'doorman-identity-client @ git+https://github.com/Holy-Coders/doorman.git@v0.13.0#subdirectory=packages/python'
 ```
 
 For a local checkout: `python -m pip install ./packages/python`.

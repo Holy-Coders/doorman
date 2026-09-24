@@ -1,5 +1,7 @@
 # Connect Go to the learning service
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 Call the learning service from your Go backend using a fixed HTTPS URL and a private participant key. Your existing Doorman identity endpoint remains independent. The service's participant preferences default to disabled.
 
 Enable evaluation explicitly with `POST /v1/preferences` and `{"evaluation":true,"contribution":false,"training":false}`. The operator must also configure an evaluator and budget. A remote assessment never contributes its inputs to training automatically.
@@ -47,4 +49,4 @@ When an outcome is independently confirmed, send `/v1/feedback` with the sample 
 
 `DELETE /v1/contributions/:sampleId` removes one snapshot and its labels. Omit the ID to erase all of the participant's contributions. Revoking contribution through `/v1/preferences` also erases stored samples. Stop your senders before revocation and include retained sample IDs in account/session deletion.
 
-The [protocol schemas](../../../protocol/network.schema.json) define exact request keys. Read [how discovery, holdouts and rollout work](../../LEARNING-NETWORK.md) before connecting pattern evidence to application policy.
+The [protocol schemas](../../protocol/network.schema.json) define exact request keys. Read [how discovery, holdouts and rollout work](LEARNING-NETWORK.md) before connecting pattern evidence to application policy.

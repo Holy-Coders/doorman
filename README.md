@@ -8,7 +8,7 @@ Durable first-party visitor identity from browser history, with optional AI-assi
 
 Know the context behind a request: the browser, session, account, authenticated user or agent, and what is still uncertain. Keep PostHog or Mixpanel for analytics. Run Doorman on your own server with your existing Postgres or D1 database.
 
-[Docs](https://doorman.holycoders.io/docs/introduction/) · [Complete integration](docs/IDENTITY-CONTEXT.md) · [Playground](https://doorman.holycoders.io/playground/) · [Measured limitations](docs/DETECTION-VALIDATION.md)
+[Docs](https://doorman.holycoders.io/docs/introduction/) · [Complete integration](docs/IDENTITY-CONTEXT.md) · [Playground](https://doorman.holycoders.io/playground/) · [Measured limitations](docs/VALIDATION.md)
 
 ## One browser client
 
@@ -24,6 +24,7 @@ await doorman.identify();
 // After your application's login succeeds:
 await doorman.identify({ userId: user.id, accountId: account.id });
 await doorman.update({ plan: "team" });
+// Optional: forwards to the configured SDKs. Do not also track this event directly.
 await doorman.track("Project created");
 // On logout:
 await doorman.reset();
@@ -117,7 +118,7 @@ The threshold is illustrative. Doorman never blocks an application action or sho
 
 Risk evidence never enters identity questions. Jev timeouts or malformed output fall back cleanly, with unavailable status and zero fallback risk. This means “not assessed,” not “proven safe.” Database errors return a controlled response.
 
-**Classification and cross-device scores are experimental and uncalibrated.** The public-data pilot did not reliably separate all humans and agents. Browser similarity cannot establish family relationships, exact human headcounts or agent brands. [Tests and live results](docs/DETECTION-VALIDATION.md).
+**Classification and cross-device scores are experimental and uncalibrated.** The public-data pilot did not reliably separate all humans and agents. Browser similarity cannot establish family relationships, exact human headcounts or agent brands. [Tests and live results](docs/VALIDATION.md).
 
 ## Install and run
 
@@ -145,6 +146,6 @@ One browser client → your endpoint → indexed history → deterministic compa
 
 A cookie handles the normal return visit. Missing-cookie lookup retrieves a bounded shortlist, compares recent history, and asks typed questions through Jev. Confirmed login feedback can support private cross-device suggestions. Associations expire and can be erased through the same server API.
 
-The network-learning service, custom classifier training, operator-profile research, delegation tools and warehouse exporters remain optional advanced modules. You do not need them to start.
+Normal setup needs no model training, shared learning service or separate identity directory. Optional cross-device suggestions use confirmed login history with your existing Jev evaluator. Earlier experimental modules and dated results are documented only in the [research archive](docs/archive/README.md).
 
 Read [the design](docs/SIMPLE-DESIGN.md), [privacy](PRIVACY.md), [analytics](docs/ANALYTICS.md), [request activity](docs/API-ACTIVITY.md), [scoring](docs/SCORING.md) and [retention](site/content/storage.md). MIT licensed.

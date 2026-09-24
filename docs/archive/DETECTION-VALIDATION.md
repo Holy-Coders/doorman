@@ -1,10 +1,12 @@
 # What the expanded tests found
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 We tested the optional detection signals against controlled browsers, public research data and **live Jev** on September 23, 2026. Some results support collecting bounded evidence. They do **not** support claiming that Doorman can reliably identify a particular assistant, count distinct people from behavior, or detect screenshots.
 
 The most important result: **the current Jev operator prompt did not reliably separate humans from agents on our small public-data sample.** Keep inferred operator labels experimental and keep verified account and agent identities separate.
 
-The [full verification summary](benchmarks/full-validation-2026-09-23.json) also covers database and application checks. The [six-million-observation lookup repeat](SCALING.md) completed, and the original 200,000-request bursts failed. The [subsequent capacity fix and reruns](CAPACITY.md) preserve those failures and document the corrected limits. Passing application tests does not establish model accuracy or production capacity.
+The [full verification summary](../benchmarks/full-validation-2026-09-23.json) also covers database and application checks. The [six-million-observation lookup repeat](../SCALING.md) completed, and the original 200,000-request bursts failed. The [subsequent capacity fix and reruns](CAPACITY.md) preserve those failures and document the corrected limits. Passing application tests does not establish model accuracy or production capacity.
 
 ## Live Jev: working integration, limited classification
 
@@ -59,7 +61,7 @@ Setting `webdriver` alone raised automation to 0.86, as expected, but also raise
 
 A subsequent regression experiment made **12 new real Jev requests**, under a separate 16-call cap, using captured Chromium, Firefox and WebKit test environments. For each, we changed only automation, runtime and behavior claims. The single-history identity payload and the batched identity payload stayed byte-for-byte identical; only the separate risk payload changed. Identical inputs reused cached provider answers. All 12 calls completed; provider p50 was 522 ms and p95 was 1,143 ms.
 
-This verifies the input boundary, not real-world identification accuracy. These are scripted browsers with synthetic ablations, not human labels. The public evaluator result remains unchanged, but each identity/risk evaluation now reserves two provider calls. TypeScript and native Elixir implement the same separation. See the [exact provider protocol](JEV.md) and [raw isolation report](benchmarks/jev-isolation-2026-09-23.json).
+This verifies the input boundary, not real-world identification accuracy. These are scripted browsers with synthetic ablations, not human labels. The public evaluator result remains unchanged, but each identity/risk evaluation now reserves two provider calls. TypeScript and native Elixir implement the same separation. See the [exact provider protocol](../JEV.md) and [raw isolation report](../benchmarks/jev-isolation-2026-09-23.json).
 
 Reproduce the protocol regression with `pnpm benchmark:jev:isolation`. It replays the local cache by default. New inference requires `--live --max-calls 16` and server-side Cloudflare credentials; the independent ledger reserves attempts before calls and never resets automatically. The original full panel used the shared-state protocol at commit `5d2b625`; its frozen results are historical and are not a cache for the new request format.
 
@@ -109,4 +111,4 @@ pnpm benchmark:capacity      # isolated local Docker resources
 
 To authorize paid expanded-panel calls, set `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` locally, then run `pnpm benchmark:jev:full --live --max-calls 120`. The private persistent ledger reserves requests before sending, caps them cumulatively at 120, and prevents concurrent writers. A missing cached answer fails closed for the benchmark. Do not delete its ledger to bypass the allowance. The production playground has its own unchanged budget.
 
-The public [expanded Jev report](benchmarks/jev-expanded-2026-09-23.json), [runtime controls](benchmarks/runtime-validation-2026-09-23.json), [font controls](benchmarks/font-validation-2026-09-23.json) and [public-data font audit](benchmarks/font-audit-2026-09-23.json) contain aggregates and limitations. Raw research data, browser captures, credentials and response caches stay untracked. No model was fine-tuned or promoted by this validation.
+The public [expanded Jev report](../benchmarks/jev-expanded-2026-09-23.json), [runtime controls](../benchmarks/runtime-validation-2026-09-23.json), [font controls](../benchmarks/font-validation-2026-09-23.json) and [public-data font audit](../benchmarks/font-audit-2026-09-23.json) contain aggregates and limitations. Raw research data, browser captures, credentials and response caches stay untracked. No model was fine-tuned or promoted by this validation.

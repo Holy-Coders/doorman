@@ -16,6 +16,6 @@ See the [usage guide](https://github.com/Holy-Coders/doorman/blob/main/docs/GETT
 
 ## Developer preview
 
-Cookie-based browser continuity and verified login IDs support analytics integration. Cookieless matching, anonymous cross-device suggestions and inferred human/agent scores are experimental; they must not authenticate users or automatically merge accounts. See the [measured limitations](https://github.com/Holy-Coders/doorman/blob/main/docs/DETECTION-VALIDATION.md). Doorman never automatically blocks a user or displays a CAPTCHA.
+Cookie-based browser continuity and verified login IDs support analytics integration. Cookieless matching, anonymous cross-device suggestions and inferred human/agent scores are experimental; they must not authenticate users or automatically merge accounts. See the [measured limitations](https://doorman.holycoders.io/docs/validation/). Doorman never automatically blocks a user or displays a CAPTCHA.
 
 MIT licensed.

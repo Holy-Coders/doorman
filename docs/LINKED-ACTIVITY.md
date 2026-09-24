@@ -2,17 +2,17 @@
 
 An attacker can rotate IP addresses and sessions. The useful evidence is often the sequence of attempted actions: repeated denied access, attempts against sensitive operations, and reuse of a distinctive request pattern or application identifier.
 
-Doorman can now assess that activity across **probabilistically linked groups** without merging user identities. This is optional, server-side correlation in the TypeScript activity service. It uses the existing D1/Postgres activity tables and does not collect IP addresses or inspect request bodies automatically.
+Doorman can assess that activity across **probabilistically linked groups** without merging user identities. This is optional, server-side correlation in the TypeScript activity service. It uses the existing D1/Postgres activity tables and does not collect IP addresses or inspect request bodies automatically.
 
 ## Configure and supply evidence
 
+Use `createDoorman` from your TypeScript server adapter. This adds to the [optional API activity middleware](API-ACTIVITY.md), using automatically prepared tables. Native Phoenix does not expose this correlation helper.
+
 ```ts
-const doorman = createNodeVisitor({
+const doorman = createDoorman({
   db,
-  identity: {
-    secret: process.env.DOORMAN_IDENTITY_SECRET!,
-    namespace: "my-app",
-  },
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
   evaluator: { apiKey: process.env.JEV_API_KEY! },
   activity: {
     routes: [{ route: "POST /api/orders", sensitive: true }],
@@ -70,4 +70,4 @@ Correlation erasure uses the same admission-threshold configuration that recorde
 
 ## Live model check
 
-In the [expanded live Jev fixtures](DETECTION-VALIDATION.md), a new session with one successful action scored 0.06 suspicious. Adding confidently linked repeated denials raised that to 0.75; an authorized agent with successful activity scored only 0.08 suspicious. These are synthetic scenarios. Two denials among five related requests also scored 0.47, so legitimate retries and shared-client controls still need calibration.
+In the [expanded live Jev fixtures](VALIDATION.md), a new session with one successful action scored 0.06 suspicious. Adding confidently linked repeated denials raised that to 0.75; an authorized agent with successful activity scored only 0.08 suspicious. These are synthetic scenarios. Two denials among five related requests also scored 0.47, so legitimate retries and shared-client controls still need calibration.

@@ -62,7 +62,7 @@ Segment, Amplitude and RudderStack receive Doorman context through `doorman.trac
 
 After `conn = Doorman.handle(conn, config, %{auth: auth})`, the measurement response has been sent. `conn.assigns.doorman_properties` contains the private context for a server analytics event. Use the actor ID verified by your authentication, never a guessed candidate ID.
 
-You can send those properties through your existing server integration. Alternatively, Doorman has optional [provider exporters](../../../docs/ANALYTICS-REFERENCE.md), including regional ingestion configuration. Choose one delivery path to avoid duplicate events.
+You can send those properties through your existing server integration. Alternatively, Doorman has optional [provider exporters](../../ANALYTICS-REFERENCE.md), including regional ingestion configuration. Choose one delivery path to avoid duplicate events.
 
 ## Useful reports
 
@@ -71,6 +71,6 @@ You can send those properties through your existing server integration. Alternat
 - Count browsers separately from users.
 - Analyze tentative cross-device matches and activity labels separately from verified identities.
 
-The [report recipes](../../../docs/ANALYTICS-REFERENCE.md) include Mixpanel setup, PostHog SQL and questions for an analytics assistant. [Warehouse delivery](../../../docs/WAREHOUSES.md) covers Snowflake and BigQuery.
+The [report recipes](../../ANALYTICS-REFERENCE.md) include Mixpanel setup, PostHog SQL and questions for an analytics assistant. [Warehouse delivery](../../WAREHOUSES.md) covers Snowflake and BigQuery.
 
 A browser shared by two credentials can be reported as two verified users. Two people sharing one password cannot be reliably counted from browser telemetry. Validate the event stream and profile merges in a development analytics project before trusting a report.

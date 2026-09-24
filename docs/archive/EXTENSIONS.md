@@ -1,5 +1,7 @@
 # Behavior and cross-device links
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 Doorman’s default browser client counts events such as mouse moves and key presses. You can optionally collect more detailed totals to give the risk evaluator additional context. This page also shows the simplest way to label several signed-in browsers with the same account ID.
 
 If you need verified email keys or agent permissions as well, use the [identity directory](AGENTIC-IDENTITY.md). The lightweight account labels below are a separate option that requires no account tables.
@@ -16,7 +18,7 @@ const visitor = createVisitorClient({
 const identity = await visitor.identify();
 ```
 
-The default is `behavior: "counts"`. Extended mode adds mouse travel, active movement time, direction changes, pauses, vertical wheel travel/reversals, and aggregate press-interval statistics. It keeps constant memory and sends rounded totals only. No absolute pointer coordinates, event sequences, actual keys, text, form contents or passwords are read or retained. See [the complete inventory](../PRIVACY.md).
+The default is `behavior: "counts"`. Extended mode adds mouse travel, active movement time, direction changes, pauses, vertical wheel travel/reversals, and aggregate press-interval statistics. It keeps constant memory and sends rounded totals only. No absolute pointer coordinates, event sequences, actual keys, text, form contents or passwords are read or retained. See [the complete inventory](../../PRIVACY.md).
 
 Use compatible client and server versions: the server rejects measurement fields it does not recognize. With Jev disabled or unavailable, risk remains zero even if webdriver is true or motion looks automated. With Jev enabled, these measurements become additional uncalibrated evidence, not a reliable bot verdict. Humans using assistive technology and bots driving native browsers can produce similar events. Input data can be spoofed.
 
@@ -63,8 +65,8 @@ This stateless `subjectLinking` option stores no account graph and needs no new 
 
 ## Anonymous sessions and later logins
 
-The optional [learning collector](LEARNING.md) uses the identity directory and a separate short session cookie to label pre-login snapshots from a verified login. It is disabled by default, supports application-wide or per-request collection permission, and stores data on the implementer's server. It includes no automatically trained cross-device classifier. Optional predictions run in shadow mode and never become verified account links.
+The optional [learning collector](../LEARNING.md) uses the identity directory and a separate short session cookie to label pre-login snapshots from a verified login. It is disabled by default, supports application-wide or per-request collection permission, and stores data on the implementer's server. It includes no automatically trained cross-device classifier. Optional predictions run in shadow mode and never become verified account links.
 
 ## Configurable scoring and activity features
 
-See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.
+See [scoring configuration](../SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](../AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.

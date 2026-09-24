@@ -77,10 +77,10 @@ await visitor.deleteVisitor(visitorId);
 
 Also stop browser collection and clear the visitor cookie. Keep the application’s opt-out active on later visits so a new observation is not immediately collected. See [the complete deletion procedure](../../PRIVACY.md).
 
-## Optional data has its own lifecycle
+## Account relationships and optional data
 
-- **Identity directory:** subjects and verified keys remain until you remove them. Deleting a subject removes its keys and delegations. Browser history is separate.
-- **Learning:** pre-login feedback defaults to 30 days, with up to 20 verified sessions per subject. Collection must be enabled and allowed by the chosen [collection policy](../../docs/LEARNING.md).
-- **Application events:** default retention is seven days. Verified device links have their own expiry and revocation records. See [trusted events and device associations](../../docs/HARDENING.md).
+Remembered browser/account relationships refresh after verified login and expire with the configured observation retention. `forgetUser(rawUserId)` removes a user's associations and dependent login feedback; use `deleteVisitor(visitorId)` for browser history. These are separate erasure operations, not authentication decisions.
 
-`cleanup()` handles the enabled modules’ expired rows as documented in those guides. Account deletion should also remove your application’s own associations and any copies exported to analytics.
+Optional cross-device feedback defaults to 30 days and up to 20 confirmed sessions per person. [Cross-device suggestions](../../docs/LEARNING.md) explains collection. Optional API aggregates default to one day and have separate session/actor keys; include [activity deletion](../../docs/API-ACTIVITY.md) in your account-erasure flow.
+
+`cleanup()` handles enabled modules' expired rows. Also remove exported copies from analytics and apply your backup-retention policy. No separate learning service or model storage is needed for the recommended integration.

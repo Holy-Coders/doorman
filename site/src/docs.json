@@ -91,16 +91,10 @@
         "source": "docs/MATCHING.md"
       },
       {
-        "slug": "agentic-identity",
-        "title": "Connect people & agents",
-        "description": "Link authenticated users across devices and give an agent limited permission.",
-        "source": "docs/AGENTIC-IDENTITY.md"
-      },
-      {
-        "slug": "extensions",
-        "title": "Behavior & cross-device links",
-        "description": "Collect optional activity summaries and connect devices after login.",
-        "source": "docs/EXTENSIONS.md"
+        "slug": "learning",
+        "title": "Cross-device suggestions",
+        "description": "Enable optional suggestions from later verified logins, without training a model.",
+        "source": "docs/LEARNING.md"
       }
     ]
   },
@@ -116,7 +110,7 @@
       {
         "slug": "agent-classification",
         "title": "Agent classification",
-        "description": "Distinguish activity labels, verified agents and trained classifiers, with measured limits.",
+        "description": "Read experimental human, assistant and script scores without confusing them with verified identities.",
         "source": "docs/AGENT-CLASSIFICATION.md"
       },
       {
@@ -128,7 +122,7 @@
       {
         "slug": "scoring",
         "title": "Adjust scoring",
-        "description": "Tune identity weights and operator thresholds on your server.",
+        "description": "Adjust browser similarity weights and choose your own risk policy.",
         "source": "docs/SCORING.md"
       },
       {
@@ -142,12 +136,6 @@
         "title": "Understand API activity",
         "description": "Add optional Phoenix or Web middleware, assess API behavior with Jev and enrich your existing analytics.",
         "source": "docs/API-ACTIVITY.md"
-      },
-      {
-        "slug": "operator-attribution",
-        "title": "Who operates an account?",
-        "description": "Score activity windows, compare inferred operators, and report separately from verified identities.",
-        "source": "docs/OPERATOR-ATTRIBUTION.md"
       }
     ]
   },
@@ -168,21 +156,15 @@
       },
       {
         "slug": "hardening",
-        "title": "Request limits & trusted events",
-        "description": "Limit measurement costs and record events your server has verified.",
+        "title": "Request limits & AI budgets",
+        "description": "Bound measurement requests and provider calls using your existing database.",
         "source": "docs/HARDENING.md"
       },
       {
         "slug": "scaling",
-        "title": "Scale your database",
-        "description": "How candidate lookup works across a large visitor database.",
+        "title": "Deployment & scale",
+        "description": "Plan database capacity, reuse handlers and measure real request throughput.",
         "source": "docs/SCALING.md"
-      },
-      {
-        "slug": "capacity",
-        "title": "Connection capacity & load",
-        "description": "Read the load-test results and plan a benchmark for your own deployment.",
-        "source": "docs/CAPACITY.md"
       },
       {
         "slug": "privacy",
@@ -193,7 +175,7 @@
     ]
   },
   {
-    "title": "Experiments & research",
+    "title": "Testing & limits",
     "pages": [
       {
         "slug": "playground",
@@ -202,99 +184,21 @@
         "source": "docs/PLAYGROUND.md"
       },
       {
-        "slug": "learning",
-        "title": "Learn from later logins",
-        "description": "Use Jev to evaluate cross-device suggestions from login-confirmed history.",
-        "source": "docs/LEARNING.md"
-      },
-      {
-        "slug": "network-learning",
-        "title": "Learn assistant patterns",
-        "description": "Discover recurring patterns from confirmed sessions and test them on unseen applications.",
-        "source": "docs/LEARNING-NETWORK.md"
-      },
-      {
-        "slug": "network-client",
-        "title": "Connect the learning service",
-        "description": "Opt into private evaluations, sampled contributions and independently confirmed feedback.",
-        "source": "docs/NETWORK-CLIENT.md"
-      },
-      {
-        "slug": "evaluation",
-        "title": "Test a learning model",
-        "description": "Check predictions against later logins before using them in your app.",
-        "source": "docs/EVALUATION.md"
-      },
-      {
-        "slug": "benchmarks",
-        "title": "Browser benchmarks",
-        "description": "Results from controlled browser visits, including known false matches.",
-        "source": "docs/BENCHMARKS.md"
-      },
-      {
-        "slug": "external-benchmarks",
-        "title": "Public dataset results",
-        "description": "Real research data exposes recovery errors, agent coverage gaps and the limits of mouse behavior.",
-        "source": "docs/EXTERNAL-BENCHMARKS.md"
-      },
-      {
         "slug": "validation",
         "title": "Testing & limitations",
         "description": "What the test suite verifies and what still needs real-world evaluation.",
         "source": "docs/VALIDATION.md"
-      },
-      {
-        "slug": "detection-validation",
-        "title": "Live detection results",
-        "description": "What real Jev calls, public data and controlled browser probes actually showed.",
-        "source": "docs/DETECTION-VALIDATION.md"
-      },
-      {
-        "slug": "review",
-        "title": "Compare with other tools",
-        "description": "Where Doorman fits alongside analytics, authentication and fingerprinting products.",
-        "source": "docs/REVIEW.md"
-      },
-      {
-        "slug": "research",
-        "title": "Identity research",
-        "description": "What browser-identity studies and other security products can teach us.",
-        "source": "docs/RESEARCH.md"
-      },
-      {
-        "slug": "classifier",
-        "title": "Train a classifier",
-        "description": "Learn from confirmed outcomes, compare Jev features, and roll out a private model.",
-        "source": "docs/CLASSIFIER.md"
-      },
-      {
-        "slug": "classifier-research",
-        "title": "Training design and research",
-        "description": "The primary sources behind the training, validation and rollout choices.",
-        "source": "docs/CLASSIFIER-RESEARCH.md"
-      },
-      {
-        "slug": "detection-research",
-        "title": "Detection research status",
-        "description": "What we implemented, what we tested, and what has not earned a scoring rule.",
-        "source": "docs/DETECTION-RESEARCH-BACKLOG.md"
       }
     ]
   },
   {
-    "title": "Reference",
+    "title": "API & reports",
     "pages": [
       {
         "slug": "api",
         "title": "API reference",
         "description": "Configuration options, response types and server methods.",
         "source": "docs/API.md"
-      },
-      {
-        "slug": "trust",
-        "title": "Credentials & result receipts",
-        "description": "Verify an agent credential or carry an encrypted assessment between requests.",
-        "source": "docs/TRUST.md"
       },
       {
         "slug": "analytics-reference",

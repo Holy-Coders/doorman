@@ -1,12 +1,14 @@
 # Connect people and agents
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 For experimental activity labels, agent-family suggestions and account-scoped operator estimates, see [operator attribution](OPERATOR-ATTRIBUTION.md). These inferences are separate from verified identities and require their own validation.
 
 Use Doorman’s identity directory when your app needs to connect signed-in visits across devices or track an agent acting for a user. The directory is a set of records in your database: people, agents, verified lookup keys and permissions.
 
 For example, Alex can sign in on a laptop and phone. Those browsers keep different visitor IDs, but your server registers the same person for both. If Alex authorizes an assistant, the assistant gets its own identity and a limited permission record.
 
-Your existing login or credential system verifies these identities. Doorman does not provide a login screen or discover a person from an anonymous fingerprint. If the terms are new, read [browsers, people and agents](CONCEPTS.md) first.
+Your existing login or credential system verifies these identities. Doorman does not provide a login screen or discover a person from an anonymous fingerprint. If the terms are new, read [browsers, people and agents](../CONCEPTS.md) first.
 
 ## Understand the result
 

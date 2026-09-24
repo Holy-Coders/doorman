@@ -1,5 +1,7 @@
 # Learn recurring assistant patterns
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 An assistant may call the same operations in the same order, pause for similar amounts of time, or produce unusually regular interactions. Doorman can look for these recurring combinations in sessions that your application has independently identified as assistant-operated.
 
 The optional learning service turns those observations into small, readable rules and tests them on later sessions from different applications. It is a pilot for discovering useful evidence. It does not identify the human behind an account, authenticate an agent, or train Jev's weights.
@@ -97,9 +99,9 @@ The deployment examples start with model spending disabled. An operator must con
 
 ## Run and inspect the pilot
 
-- [Postgres service](../examples/learning-service/README.md)
-- [Cloudflare D1 service and daily discovery](../examples/learning-worker/README.md)
-- [Versioned HTTP schemas](../protocol/network.schema.json)
+- [Postgres service](../../examples/learning-service/README.md)
+- [Cloudflare D1 service and daily discovery](../../examples/learning-worker/README.md)
+- [Versioned HTTP schemas](../../protocol/network.schema.json)
 - [Reviewed research catalog](NETWORK-RESEARCH.md)
 
 Run `pnpm benchmark:network` for a synthetic discovery experiment. It compares a timing-only rule with a discovered pair and deliberately introduces human sessions that mimic the assistant pattern. The expected result is that the mimicked pattern fails promotion. These are generated fixtures, not evidence of real-world bot-detection accuracy.

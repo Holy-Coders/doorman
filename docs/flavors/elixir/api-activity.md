@@ -8,26 +8,14 @@ This feature does not intercept browser `fetch`, proxy traffic through Doorman, 
 
 ## Add a Phoenix Plug
 
-For an existing installation, create an Ecto migration:
-
-```elixir
-defmodule MyApp.Repo.Migrations.AddDoormanApiActivity do
-  use Ecto.Migration
-  def up, do: Doorman.Migration.upgrade_activity()
-  def down, do: raise("Coordinate activity erasure before removing these tables")
-end
-```
-
-Fresh installations use `Doorman.Migration.up()` as usual. Add `activity` to your server configuration:
+Add `activity` to your existing native configuration. Doorman prepares the tables automatically; no Ecto migration is required:
 
 ```elixir
 def doorman do
   Doorman.new(
     repo: MyApp.Repo,
-    identity: [
-      secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
-      namespace: "my-app-production"
-    ],
+    secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"),
+    namespace: "my-app-production",
     evaluator: [api_key: System.fetch_env!("JEV_API_KEY")],
     activity: [
       routes: [
@@ -112,7 +100,7 @@ if (activity.assessment && !activity.assessment.cached) {
 }
 ```
 
-`analytics` is your configured [PostHog, Mixpanel or Segment bridge](../../../docs/ANALYTICS.md). Phoenix accepts the same addition as `"apiActivity" => assessment` in `Doorman.Analytics.capture`. Exports contain only API risk status, evaluated scores, evaluation/expiry times, cache/truncation flags, window size and request totals, alongside the existing verified identity fields. Route history stays private. Unavailable scores are omitted from analytics rather than reported as an evaluated zero. Export remains explicit; the middleware sends no analytics automatically.
+`analytics` is your configured [PostHog, Mixpanel or Segment bridge](../../ANALYTICS.md). Phoenix accepts the same addition as `"apiActivity" => assessment` in `Doorman.Analytics.capture`. Exports contain only API risk status, evaluated scores, evaluation/expiry times, cache/truncation flags, window size and request totals, alongside the existing verified identity fields. Route history stays private. Unavailable scores are omitted from analytics rather than reported as an evaluated zero. Export remains explicit; the middleware sends no analytics automatically.
 
 ## Retention and erasure
 

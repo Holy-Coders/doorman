@@ -1,5 +1,7 @@
 # Connect your application to the learning service
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 Use the learning service from your server. Keep its API key out of browser bundles and analytics events. Ordinary visitor identification continues to work without this service.
 
 Install the client with `npm install @aarondovturkel/doorman-network` (or use `pnpm add` or `bun add`). The network package is included in Doorman v0.12.0.

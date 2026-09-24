@@ -1,31 +1,24 @@
 # Optional detection signals
 
-Doorman can collect more evidence about a browser environment and how it is operated. Enable the probes you need; every option below is **off by default**. They add measurements to your existing identity and risk pipeline, not automatic blocking rules.
+Doorman can collect more evidence about a browser environment and how it is operated. Enable the probes you need; additional probes are **off in minimal collection**. They add measurements to your existing identity and risk pipeline, not automatic blocking rules.
 
-These are current source features. The browser collector works with every backend that accepts the updated HTTP schema. Native Phoenix preserves the new fields and sends them to Jev; configurable deterministic font weighting and linked API activity currently run in the TypeScript server packages. Python and Go can call that server. Older published packages do not contain these additions.
+The `collection: "extended"` profile works with the current browser client and the TypeScript or native Phoenix endpoint. Python and Go relay those browser measurements to their configured engine. Start with minimal collection and enable more only when useful to your application.
 
-## Enable a collection profile
+## Enable extended collection
 
 ```ts
-import { createVisitorClient } from "@aarondovturkel/doorman-browser";
+import { createDoormanClient } from "@aarondovturkel/doorman-browser";
 
-const visitor = createVisitorClient({
+const doorman = createDoormanClient({
   endpoint: "/api/visitor",
-  behavior: "extended",
-  detection: {
-    fonts: true,
-    pageFonts: true,
-    runtime: true,
-    permissions: true,
-    targets: true,
-    focus: true,
-    // decoy: true, // Separate, inert application experiment; usually leave off.
-  },
+  collection: "extended",
 });
-const identity = await visitor.identify();
-// On unmount or collection withdrawal:
-visitor.destroy();
+await doorman.identify();
+// On teardown or collection withdrawal:
+doorman.destroy();
 ```
+
+This enables bounded behavior, local-font, page-font, runtime, permission, target and focus summaries. It does not enable a decoy. Minimal collection remains the default. The names below describe the individual probes included in the profile.
 
 Use `enabled: false` and `setEnabled(true)` when your application's collection policy requires an explicit start. Pausing, resetting and destroying the client remove listeners and the optional decoy. A pending probe cannot send a request after collection is paused. Font and permission probes have a 250 ms deadline and return unknown on timeout. The probes make no network requests and never ask the browser to grant a permission.
 
@@ -38,8 +31,10 @@ Each test loads an unattached `FontFace` with a **local-only** source. It does n
 Two nonempty sets are compared using their intersection divided by their union. Set `scoring.similarity.fontSimilarity` on the TypeScript server to give this evidence a small weight:
 
 ```ts
-const doorman = createNodeVisitor({
+const doorman = createDoorman({
   db,
+  secret: process.env.DOORMAN_IDENTITY_SECRET!,
+  namespace: "my-app",
   scoring: { similarity: { fontSimilarity: 0.05 } },
 });
 ```
@@ -62,8 +57,6 @@ Many unrelated people share the same font set. The same person can have differen
 
 `focus: true` counts captured focus/blur events and input while `document.hasFocus()` is false. It records no screenshot information. Our local Chromium, Firefox and WebKit experiment took twenty screenshots per engine and observed **zero focus or visibility changes caused by those captures**. That finding does not cover every OS capture tool, but it rejects the assumption that ordinary browser screenshots necessarily blink focus.
 
-`decoy: true` adds a hidden, inert diagnostic button with no action, link or form submission. It is excluded from normal tab order and the accessibility tree. A programmatic `.click()` increments a counter. Keyboard activation of the real test button did not activate the decoy. That is a functional control, not a full assistive-technology study. Testing tools can activate the decoy; an activation does not prove an attack. You can also manage it separately with `createInteractionDecoy(container)` and its `snapshot()` / `destroy()` methods.
-
 ## Trusted transport evidence
 
 ```ts
@@ -75,13 +68,11 @@ return assessment.response;
 
 This explicitly includes an available, validated JA4 string from the original Worker's `request.cf.botManagement.ja4`. It ignores client headers and browser JSON. Missing metadata remains absent. Availability depends on Cloudflare's Bot Management plan and request path. JA4 describes a transport client configuration shared by many devices; it is not a unique device or person and is not immune to imitation. Doorman keeps it in the private evidence envelope, without automatic persistence, identity matching or transmission to Jev.
 
-## From measurements to a useful model
+## Read scores, not conclusions
 
-`extractFeatures({ observation, behavior })` now projects runtime marker count, own-webdriver flag, permission-state mismatch, supported target ratios, focus aggregates and decoy count into the strict numeric operator/learning schema. Fonts and full fingerprints stay out of that shared feature vector. The `operators-v3` Jev prompt explains the new features and their confounders. Sparse evidence still produces an unknown operator; a runtime marker alone cannot label a human, assistant or script.
+The configured Jev evaluator can use these bounded measurements for [activity scores](AGENT-CLASSIFICATION.md). No training job or numeric feature-export pipeline is needed. More measurements do not automatically improve accuracy: privacy browsers, accessibility tools, remote desktops and ordinary developer tools need to be included in your controls.
 
-Keep labels from controlled runs, verified delegation and reviewed incidents. Fit on training groups, choose thresholds on validation groups and report performance on untouched users, environments and agent versions. Inspect accessibility, privacy-browser, touch, remote-desktop and ordinary developer-tool controls. Do not turn the model's predictions into training truth. [The classifier workflow](CLASSIFIER.md) already supports versioned exports, holdouts, shadow evaluation and rollback.
-
-Run `pnpm benchmark:detection` for the local browser experiments. The [aggregate report](benchmarks/experimental-probes-2026-09-23.json) includes the measured results and the separately launched no-CDP Chromium control. That control requires mock-keychain flags on this Mac; launch defaults still differ, so it does not isolate every timing confounder. Timing probes exist only in this benchmark; no CDP timing score or screenshot detector ships in the collector. Public datasets do not contain these new probes, so replaying them cannot establish the probes' accuracy. [Public dataset results](EXTERNAL-BENCHMARKS.md) measure the older overlapping feature set.
+The recorded public-data evaluation did not establish reliable human/agent separation. No CDP timing detector, screenshot detector or automatic agent-brand recognition ships in this profile. See [testing and limitations](VALIDATION.md).
 
 ## Primary sources
 
@@ -96,4 +87,4 @@ Run `pnpm benchmark:detection` for the local browser experiments. The [aggregate
 
 ## Latest validation
 
-The [expanded experiments](DETECTION-VALIDATION.md) include real Jev calls, same-process CDP controls, app-font downloads and a public font-data audit. The new operator prompt did not reliably distinguish humans from agents in its public-data sample. The default font weight remains zero and optional probes remain disabled unless configured.
+The [expanded experiments](VALIDATION.md) include real Jev calls, same-process CDP controls, app-font downloads and a public font-data audit. The new operator prompt did not reliably distinguish humans from agents in its public-data sample. The default font weight remains zero and optional probes remain disabled unless configured.

@@ -249,7 +249,7 @@ const identitySchema = {
     attribution: {
       type: "object",
       description:
-        "Optional server-verified identity attribution; see docs/AGENTIC-IDENTITY.md.",
+        "Optional server-verified identity attribution; see docs/IDENTITY-CONTEXT.md.",
     },
     subjectId: { type: "string", pattern: "^sub_[a-f0-9]{64}$" },
     debug: {

@@ -1,5 +1,7 @@
 # Connection capacity and load
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 This page helps you distinguish open connections from successful identity requests. Doorman is a request handler; it does not create a long-lived connection for each browser. Your hosting stack handles connections, while your database and optional AI provider determine how much identity work can run at once.
 
 ## How to read the results
@@ -8,7 +10,7 @@ Two completed reruns now keep **200,000 HTTP connections open through a simultan
 
 ## The burst fix and repeated results
 
-The Node HTTP bridge now checks capacity before creating Web Requests, stream wrappers or body buffers. The production helper is `createNodeRequestListener` from `@aarondovturkel/doorman-adapters/node/http`; both the load harness and Fastify example use it. Admitted work has body and deadline limits, and a timed-out handler retains its slot until its actual work settles. [Integration example](HARDENING.md#limit-work-inside-each-server-instance).
+The Node HTTP bridge now checks capacity before creating Web Requests, stream wrappers or body buffers. The production helper is `createNodeRequestListener` from `@aarondovturkel/doorman-adapters/node/http`; both the load harness and Fastify example use it. Admitted work has body and deadline limits, and a timed-out handler retains its slot until its actual work settles. [Integration example](../HARDENING.md#limit-work-inside-each-server-instance).
 
 Request admission alone did not solve socket memory pressure. A diagnostic run with the original **2 GiB server cap** recorded three kernel OOM kills during connection setup. With the server raised to 4 GiB, its workers survived, but the original 2 GiB load generator was then OOM-killed while sending the burst. The final two successful runs use **4 GiB for the server and 4 GiB for the 200,000-connection client**. The server peaked at about **2.27 GiB including cgroup accounting**, already above the old cap. Neither successful run recorded OOM events. This is a configuration change, not a claim that the old 2 GiB limit now works.
 
@@ -27,7 +29,7 @@ Eight Node 22 processes, four server CPUs, eight database connections and 64 adm
 
 The repeat's independent 10,000-connection sweep completed 1,500/1,500 identities at 100 offered/sec, 7,500/7,500 at 500/sec, 14,946/15,000 at 1,000/sec and 29,722/30,000 at 2,000/sec. The remaining requests received 503. Successful-request p95 at 2,000 offered/sec was 3.26 ms, but the generator missed 8,616 schedule deadlines; this is not proof of sustained production throughput. That sweep also recovered 100/100 with no transport errors.
 
-[First result](benchmarks/connections-fixed-first-2026-09-23.json) · [Repeat](benchmarks/connections-fixed-repeat-2026-09-23.json) · [Memory diagnostics](benchmarks/capacity-fixed-repeat-diagnostics-2026-09-23.json) · [Throughput repeat](benchmarks/throughput-fixed-repeat-2026-09-23.json) · [Failure diagnostics](benchmarks/capacity-failure-diagnostics-2026-09-23.json)
+[First result](../benchmarks/connections-fixed-first-2026-09-23.json) · [Repeat](../benchmarks/connections-fixed-repeat-2026-09-23.json) · [Memory diagnostics](../benchmarks/capacity-fixed-repeat-diagnostics-2026-09-23.json) · [Throughput repeat](../benchmarks/throughput-fixed-repeat-2026-09-23.json) · [Failure diagnostics](../benchmarks/capacity-failure-diagnostics-2026-09-23.json)
 
 `pnpm benchmark:capacity` runs these isolated local experiments. `DOORMAN_BENCHMARK_SERVER_MEMORY` and `DOORMAN_BENCHMARK_CLIENT_MEMORY` override the large-run limits; both default to `4g`. The harness checkpoints progress before the burst, records whether the report is complete, preserves cgroup/exit diagnostics before restart, and fails on transport errors or unexpected response statuses. Incomplete reports are not passes. No production traffic is generated.
 
@@ -46,9 +48,9 @@ The harness now retains partial burst/recovery outcomes when a stats endpoint fa
 
 Do not size production from the historical success alone. Bound connections and bursts at ingress, provision and measure memory under active request load, then validate recovery and sustained useful throughput on the actual deployment. These tests use deterministic identity evaluation; they do not measure live Jev at this concurrency.
 
-[First failed run](benchmarks/connections-validation-first-2026-09-23.json) · [Diagnostic repeat](benchmarks/connections-validation-repeat-2026-09-23.json) · [Detection and live Jev validation](DETECTION-VALIDATION.md)
+[First failed run](../benchmarks/connections-validation-first-2026-09-23.json) · [Diagnostic repeat](../benchmarks/connections-validation-repeat-2026-09-23.json) · [Detection and live Jev validation](DETECTION-VALIDATION.md)
 
-The independent **10,000-connection** sweep completed all 1,500 requests at 100/sec, all 7,500 at 500/sec, and all 15,000 at 1,000/sec. At 2,000/sec it completed 29,758 identities and returned 242 controlled 503s. Its 10,000-request burst returned 68 identities and 9,932 controlled 503s, with 100/100 successful recovery and no unexpected socket closes. This smaller run passed; it does not cancel the larger run's failures. [Latest throughput report](benchmarks/throughput-validation-2026-09-23.json) · [Latest security/storage workload](benchmarks/security-validation-2026-09-23.json)
+The independent **10,000-connection** sweep completed all 1,500 requests at 100/sec, all 7,500 at 500/sec, and all 15,000 at 1,000/sec. At 2,000/sec it completed 29,758 identities and returned 242 controlled 503s. Its 10,000-request burst returned 68 identities and 9,932 controlled 503s, with 100/100 successful recovery and no unexpected socket closes. This smaller run passed; it does not cancel the larger run's failures. [Latest throughput report](../benchmarks/throughput-validation-2026-09-23.json) · [Latest security/storage workload](../benchmarks/security-validation-2026-09-23.json)
 
 Three measurements matter separately:
 
@@ -77,7 +79,7 @@ Changes: the hot activity query now retrieves only event types instead of full J
 
 The baseline used production code from `04236ce`; the optimized run used the v0.7.0 implementation. Runs were sequential, warm-cache, on a shared developer machine; the second began while the idle HTTP harness initialized its small visitor fixture. Normal benchmark writes grew the event population to 1,004,001 before the second run. This is a diagnostic comparison, not a controlled statistical performance study. The event insert rate did not improve. The first seed's explicit vacuum hit its short lock timeout while maintenance was active; the completed baseline reused the successfully seeded data. The harness now grants maintenance its own bounded, longer deadline.
 
-[Raw baseline and plans](benchmarks/security-baseline.json) · [Raw optimized result and plans](benchmarks/security-optimized.json)
+[Raw baseline and plans](../benchmarks/security-baseline.json) · [Raw optimized result and plans](../benchmarks/security-optimized.json)
 
 ## Historical 200,000-connection measurement
 
@@ -98,7 +100,7 @@ Each socket completed an HTTP/1.1 warmup exchange, stayed open using keep-alive,
 
 The burst's 503s comprise 199,895 early overload rejections and 89 admitted requests that failed under the database/driver deadline. They are unavailable measurements, not successful identifications or proof of low risk. Local admission protects the database, but socket parsing, application callbacks and response writes still consume CPU. Returning most requests as 503 is **not** a claim to serve 200,000 simultaneous successful identities. An upstream connection/admission boundary is still needed for production bursts and network abuse.
 
-[Raw connection result](benchmarks/connections-200000.json) · [Initial 1,000-connection smoke test](benchmarks/connections-1000.json)
+[Raw connection result](../benchmarks/connections-200000.json) · [Initial 1,000-connection smoke test](../benchmarks/connections-1000.json)
 
 ## Sustained identity throughput
 
@@ -113,9 +115,9 @@ A separate run retained 10,000 HTTP connections and offered requests on a clock 
 
 A schedule miss means the generator was more than one inter-arrival interval late; all scheduled requests were still attempted. At 2,000/sec the generator had significant jitter and produced bursts, so that row does not establish a precise server saturation point. A later 10,000-request burst produced 154 identities and 9,846 overload responses, followed by 100/100 successful recovery requests. No socket was lost.
 
-[Raw rate sweep](benchmarks/throughput-10000.json)
+[Raw rate sweep](../benchmarks/throughput-10000.json)
 
-The final launcher smoke run repeated this sweep after reseeding with only 10,000 application events (the HTTP visitor fixture stayed at 10,000). It returned 14,992/15,000 successful identities at 1,000/sec and 29,669/30,000 at 2,000/sec, with 8 and 331 overload responses respectively. All sockets stayed open and recovery was 100/100. This variation reinforces that the first zero-error point is an observation, not a guaranteed rate. [Raw launcher repeat](benchmarks/throughput-10000-repeat.json)
+The final launcher smoke run repeated this sweep after reseeding with only 10,000 application events (the HTTP visitor fixture stayed at 10,000). It returned 14,992/15,000 successful identities at 1,000/sec and 29,669/30,000 at 2,000/sec, with 8 and 331 overload responses respectively. All sockets stayed open and recovery was 100/100. This variation reinforces that the first zero-error point is an observation, not a guaranteed rate. [Raw launcher repeat](../benchmarks/throughput-10000-repeat.json)
 
 The higher-rate repeat with **200,000 connections still open** produced the following results under the same small worker limits:
 
@@ -124,7 +126,7 @@ The higher-rate repeat with **200,000 connections still open** produced the foll
 | 1,000       |        14,825 / 15,000 | 175 (1.17%) |        3.14 ms |         987.7 |
 | 2,000       |        29,156 / 30,000 | 844 (2.81%) |       20.86 ms |       1,940.6 |
 
-All connections remained open and all 100 recovery requests succeeded. This repeat's simultaneous burst returned 43 identities and 199,957 controlled 503s in 7.56 seconds. The generator again reported scheduling jitter (163 and 7,835 misses). Higher connection residency consumed most of the server container's memory allowance; the results show that the successful 10,000-connection throughput cannot simply be assumed at 200,000 connections. A longer soak and resource/worker tuning against an explicit rejection/latency target remain necessary. [Raw active 200,000-connection run](benchmarks/connections-200000-active.json)
+All connections remained open and all 100 recovery requests succeeded. This repeat's simultaneous burst returned 43 identities and 199,957 controlled 503s in 7.56 seconds. The generator again reported scheduling jitter (163 and 7,835 misses). Higher connection residency consumed most of the server container's memory allowance; the results show that the successful 10,000-connection throughput cannot simply be assumed at 200,000 connections. A longer soak and resource/worker tuning against an explicit rejection/latency target remain necessary. [Raw active 200,000-connection run](../benchmarks/connections-200000-active.json)
 
 ## Configure request and database limits
 

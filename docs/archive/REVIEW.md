@@ -1,27 +1,29 @@
 # Compare Doorman with other tools
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 Doorman is a small library you run in your application. It adds browser continuity, optional AI risk estimates and records connecting verified people and agents. It does not replace an analytics platform, login system or managed fraud service.
 
 This guide explains where those tools overlap and where you would use them together. The comparison is based on documented capabilities reviewed on September 23, 2026, not a head-to-head accuracy or cost benchmark.
 
 ## Analytics and customer data
 
-| Tool | What it is useful for | How Doorman fits alongside it |
-| --- | --- | --- |
-| Segment | Collecting events from sources, sending them to destinations and linking customer identifiers. | Send verified identity and private assessment events through your existing Segment server client. |
-| RudderStack | Event pipelines and identity resolution in SDKs or a data warehouse. | Keep that pipeline and add Doorman context to the events you choose to export. |
-| PostHog | Product analytics, connecting anonymous visits to known users, experiments and other product tools. | Use Doorman’s login/reset helper and optional server events while PostHog continues to own analytics. |
-| Mixpanel | Analyzing user journeys, retention and account activity. | Keep the person’s analytics ID and add separate browser, actor and account properties. |
+| Tool        | What it is useful for                                                                               | How Doorman fits alongside it                                                                         |
+| ----------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Segment     | Collecting events from sources, sending them to destinations and linking customer identifiers.      | Send verified identity and private assessment events through your existing Segment server client.     |
+| RudderStack | Event pipelines and identity resolution in SDKs or a data warehouse.                                | Keep that pipeline and add Doorman context to the events you choose to export.                        |
+| PostHog     | Product analytics, connecting anonymous visits to known users, experiments and other product tools. | Use Doorman’s login/reset helper and optional server events while PostHog continues to own analytics. |
+| Mixpanel    | Analyzing user journeys, retention and account activity.                                            | Keep the person’s analytics ID and add separate browser, actor and account properties.                |
 
 You do not need Doorman merely to call an analytics SDK’s `identify()` method. Those products already support known-user identification. Doorman is useful when you also want browser history, private technical assessments or explicit agent/account relationships in your own runtime.
 
-Follow the [analytics integration guide](ANALYTICS.md) for the working PostHog, Mixpanel and Segment APIs. It includes shared-browser behavior and reports that count distinct verified people or agents per account.
+Follow the [analytics integration guide](../ANALYTICS.md) for the working PostHog, Mixpanel and Segment APIs. It includes shared-browser behavior and reports that count distinct verified people or agents per account.
 
 ## Browser and risk intelligence
 
 Fingerprint offers visitor identification and separate device-risk signals. This is closer to Doorman’s browser/risk role than a product analytics platform. Fingerprint also documents signed-agent detection; recognizing agents is not unique to Doorman.
 
-Doorman’s tradeoff is control and inspectability: you operate its database, can read the matching rules, and can replace the evaluator. It does not come with a large network’s reputation data, a proven fraud-detection model or established accuracy parity with a managed product. Read [the matching limitations](MATCHING.md) and [recorded benchmarks](VALIDATION.md) before choosing it for a risk-sensitive workload.
+Doorman’s tradeoff is control and inspectability: you operate its database, can read the matching rules, and can replace the evaluator. It does not come with a large network’s reputation data, a proven fraud-detection model or established accuracy parity with a managed product. Read [the matching limitations](../MATCHING.md) and [recorded benchmarks](../VALIDATION.md) before choosing it for a risk-sensitive workload.
 
 ## Authentication and permissions
 
@@ -43,7 +45,7 @@ Choose an established service when you need managed operations, supported detect
 - Verify login, user switching and logout in your analytics project.
 - Measure database latency, AI costs and overload behavior under your workload.
 
-The [evaluation guide](EVALUATION.md), [capacity report](CAPACITY.md) and [security guide](SECURITY.md) explain the tools and limits available for these checks.
+The [evaluation guide](EVALUATION.md), [capacity report](CAPACITY.md) and [security guide](../SECURITY.md) explain the tools and limits available for these checks.
 
 ## Sources
 

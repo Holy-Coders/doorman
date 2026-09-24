@@ -1,8 +1,10 @@
 # Identity research
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 Browser history can help reconnect visits, but it cannot prove who is using an account. This page summarizes research and product approaches that inform Doorman’s design: keep a small history, expect signals to change or be spoofed, and use verified credentials for people and permissions.
 
-This is background reading. For a working integration, start with [your first visitor ID](GETTING-STARTED.md). For Doorman’s own measured results, use [testing and limitations](VALIDATION.md). Research results from another population or product are not accuracy claims for Doorman.
+This is background reading. For a working integration, start with [your first visitor ID](../GETTING-STARTED.md). For Doorman’s own measured results, use [testing and limitations](../VALIDATION.md). Research results from another population or product are not accuracy claims for Doorman.
 
 ## What the studies establish
 
@@ -52,7 +54,7 @@ Think of an account/device/session relationship model, not a requirement for a g
 
 ## Database and runtime decision
 
-Keep Postgres as the recommended large-deployment backend. It already supports native Phoenix and Node/Vercel, transactional uniqueness, indexed history and application-owned connections. D1 remains a lightweight option with documented size/concurrency limits. See [measured scale and migrations](SCALING.md).
+Keep Postgres as the recommended large-deployment backend. It already supports native Phoenix and Node/Vercel, transactional uniqueness, indexed history and application-owned connections. D1 remains a lightweight option with documented size/concurrency limits. See [measured scale and migrations](../SCALING.md).
 
 Do not introduce a graph database, vector search, Redis or queues to fix coarse candidate lookup. First use selective B-tree probes and a fixed retrieval budget, then rank before invoking Jev. A later warehouse can receive explicit exports through the implementer's analytics infrastructure; it need not sit in the request path.
 
@@ -64,4 +66,4 @@ Do not introduce a graph database, vector search, Redis or queues to fix coarse 
 4. **Evaluation before automatic inference:** chronological and device holdouts, adversarially copied signals, common profiles, NAT/VPN changes, privacy browsers, accessibility/touch-only behavior, human-operated attacks and delegated agents. Measure false merges, false positives, abstention and provider cost separately.
 5. **Jev ablation:** compare deterministic-only, deterministic + Jev and a custom classifier on the same independently labeled data. Version prompts/models and keep risk and identity objectives separate. A model-generated `0.96` is not automatically a calibrated probability.
 
-Items 1–3 are implemented and tested in v0.7.0; see [configuration and boundaries](HARDENING.md). GitHub release artifacts include them; application integration remains separate. Items 4–5 still require independently labeled evaluation data. No release claims account-takeover detection or automatic cross-device model training. Browser lookup uses selective indexes and batched history reads; cleanup is paged; scores stay private; result receipts are encrypted. The [security review](SECURITY.md) covers feedback-oracle and replay limitations.
+Items 1–3 are implemented and tested in v0.7.0; see [configuration and boundaries](../HARDENING.md). GitHub release artifacts include them; application integration remains separate. Items 4–5 still require independently labeled evaluation data. No release claims account-takeover detection or automatic cross-device model training. Browser lookup uses selective indexes and batched history reads; cleanup is paged; scores stay private; result receipts are encrypted. The [security review](../SECURITY.md) covers feedback-oracle and replay limitations.

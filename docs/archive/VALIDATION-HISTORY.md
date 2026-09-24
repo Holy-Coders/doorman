@@ -1,5 +1,7 @@
 # Historical validation records
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 ## v0.9.0 API activity, integrations and language support — 2026-09-23
 
 - Optional API activity middleware for Web/Node and Phoenix; atomic bounded aggregates, private Jev evaluation, cached results, shared budgets and explicit erasure. Migration 0008 adds two small tables.
@@ -43,7 +45,7 @@
 - Browser `createIdentityAnalytics` coordinates existing PostHog/Mixpanel identify, profile update, account-switch and logout/reset calls without accepting private scores. It preserves the initial anonymous transition and emits the event needed for Mixpanel Simplified ID Merge.
 - Server TypeScript and native Elixir exports now include optional account/workspace context and opaque verified subject/actor IDs. Groups are opt-in and attached per event. Server agents can export credential attribution without browser/risk fields. Unknown actors are never converted to humans from a low risk score.
 - **204 TypeScript tests across twelve files** and **51 native Elixir tests against local Postgres** pass. Typecheck and lint pass. The real `posthog-js` 1.434.10 and `mixpanel-browser` 2.83.0 SDKs run in Chromium with all analytics traffic intercepted locally: anonymous identity links, second-device login, two users sharing a browser, duplicate auth callbacks, logout and private-score exclusion are checked. Native HTTP export/group/profile payloads use mocked transport. These SDKs are test dependencies only.
-- The [integration guide](ANALYTICS.md) includes Phoenix code, browser lifecycle/UX, distinct-actor report definitions, PostHog SQL, Mixpanel report steps and prompts for analytics assistants. Live provider ingestion, profile merging and dashboard queries have not been validated, and Open Calls has not been integrated. The v0.7.0 GitHub release packages these changes; registry publication and application integration are tracked separately.
+- The [integration guide](../ANALYTICS.md) includes Phoenix code, browser lifecycle/UX, distinct-actor report definitions, PostHog SQL, Mixpanel report steps and prompts for analytics assistants. Live provider ingestion, profile merging and dashboard queries have not been validated, and Open Calls has not been integrated. The v0.7.0 GitHub release packages these changes; registry publication and application integration are tracked separately.
 
 ## v0.7.0 capacity work — 2026-09-23
 
@@ -55,7 +57,7 @@
 
 ## Earlier v0.7.0 abuse controls and evidence — 2026-09-23
 
-The current checkout adds the [shared protection and trusted evidence APIs](HARDENING.md). These changes ship in v0.7.0 GitHub artifacts and have not been integrated into Open Calls. Validation is local and uses mocked external inference.
+The current checkout adds the [shared protection and trusted evidence APIs](../HARDENING.md). These changes ship in v0.7.0 GitHub artifacts and have not been integrated into Open Calls. Validation is local and uses mocked external inference.
 
 - `pnpm typecheck`, `pnpm test` and `pnpm lint` pass: **191 TypeScript tests across ten files**, including 20 shared-protection and 19 trusted-evidence cases on real Postgres SQL (PGlite) and D1 (Miniflare).
 - Native Elixir: **45 tests pass against fresh Postgres 17**, including concurrent quotas, shared inference budgets, one recovery probe, timeout fallback, cookie-history protection, event idempotency, provenance/revocation and cross-language HMAC vectors. `mix format --check-formatted` passes.
@@ -114,7 +116,7 @@ Example boot commands and environment variables are in each example's README and
 - Result receipts use authenticated JWE encryption. Tests reject tampering, wrong keys, legacy readable JWTs, expired tokens, action/operation mismatches and replay; plaintext scores do not appear in decoded token segments.
 - Both SQL backends retrieve older strong candidates through crowded coarse buckets, load bounded histories in a batch, and abstain when all matching probes are saturated. The core also abstains when an evaluator tries to erase an identical deterministic competitor.
 - Native Elixir passes 31 tests against Postgres; Phoenix passes its endpoint test. New expression indexes apply on fresh databases and through an idempotent upgrade migration. Cleanup tests exercise bounded pages and expiry.
-- A separate local benchmark completed with 2 million visitors / 2 million observations and again with 2 million visitors / 6 million observations. The latter candidate lookup p95 was 6.46 ms. Its deliberately older target was retrieved in 100/100 probes, but the engine abstained on the selected ambiguous example. This is query-scale evidence, **not identity accuracy or a production throughput SLA**. A 10-million-observation attempt exhausted the Docker disk allocation and is not counted as a pass. See [methodology, raw results and plans](SCALING.md).
+- A separate local benchmark completed with 2 million visitors / 2 million observations and again with 2 million visitors / 6 million observations. The latter candidate lookup p95 was 6.46 ms. Its deliberately older target was retrieved in 100/100 probes, but the engine abstained on the selected ambiguous example. This is query-scale evidence, **not identity accuracy or a production throughput SLA**. A 10-million-observation attempt exhausted the Docker disk allocation and is not counted as a pass. See [methodology, raw results and plans](../SCALING.md).
 - No production database was migrated. Cloudflare can now compose the same Postgres storage with Workers AI, and the adapter is tested locally with mocked AI. Real inference, network reputation and account-takeover detection remain unmeasured.
 - The public v0.6 bundle installs in fresh consumers using pnpm, npm and Bun. Imports pass in all three; migration exports and an encrypted-receipt round trip pass in the pnpm consumer. The downloaded GitHub bundle matches the tested local SHA256. Registry publication is separate from these artifact installation checks.
 
@@ -124,7 +126,7 @@ Example boot commands and environment variables are in each example's README and
 
 ## Controlled browser dataset
 
-The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](./BENCHMARKS.md). These historical measurements are separate from the current unit/integration and browser tests; no risk accuracy or Jev inference is claimed.
+The v0.2 run generated 30 real-browser observations and replayed 78 identity trials using Chromium, Firefox, WebKit and the production Postgres adapter. It measured both successful continuity and a known identical-profile false-match case. See [the complete methodology and results](BENCHMARKS.md). These historical measurements are separate from the current unit/integration and browser tests; no risk accuracy or Jev inference is claimed.
 
 ## Identity directory and delegation
 
@@ -136,7 +138,7 @@ These are functional and trust-boundary tests. They do not establish that a cred
 
 The v0.4 preview adds 26 real-SQL learning cases across D1 and Postgres: explicit configuration and server permission, strict rejection of client consent claims, pre-login snapshots, frozen verified labels, separation from fuzzy browser restoration, unknown/family/agent exclusions, conflicting account confirmations, consent withdrawal, application scopes, shadow-only outputs, cold starts, malformed/unknown predictions, timeouts, bounded retention and cascading erasure. Risk availability and slow-body deadline coverage are included in the core/browser/HTTP cases above.
 
-These tests use synthetic sessions and verified-context fixtures. No anonymous cross-device accuracy, physical-user identity, real bot detection or automatic Jev training has been measured. The [learning guide](LEARNING.md) describes the evaluation still needed; the [review](REVIEW.md) records the remaining gaps and comparison sources.
+These tests use synthetic sessions and verified-context fixtures. No anonymous cross-device accuracy, physical-user identity, real bot detection or automatic Jev training has been measured. The [learning guide](../LEARNING.md) describes the evaluation still needed; the [review](REVIEW.md) records the remaining gaps and comparison sources.
 
 ## v0.5 native Elixir and integration validation
 

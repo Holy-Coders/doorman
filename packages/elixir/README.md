@@ -12,7 +12,7 @@ Add this to `deps` in `mix.exs`:
 {:doorman_identity, "~> 0.13.0"}
 ```
 
-Until then, clone the repository beside your app and use `{:doorman_identity, path: "../doorman/packages/elixir"}`. Run `mix deps.get`. Requires Elixir 1.17+, Ecto SQL 3.14+, Plug and Postgres.
+Run `mix deps.get`. Requires Elixir 1.17+, Ecto SQL 3.14+, Plug and Postgres.
 
 Generate a secret with `openssl rand -hex 32` and store it as `DOORMAN_IDENTITY_SECRET` in your server environment. Keep the same value across restarts and app instances.
 

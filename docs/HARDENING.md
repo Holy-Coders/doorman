@@ -1,232 +1,73 @@
-# Request limits and trusted events
+# Request limits and AI budgets
 
-Once Doorman is running, you may want to limit how much work its endpoint can start, especially when AI evaluation costs money. You may also want to record facts your server already knows, such as a failed login or a successful passkey check.
+The recommended `createDoorman` handler includes database-backed limits so browser measurements cannot start unlimited Jev calls. These controls protect the measurement endpoint. Your existing authentication, gateway limits and application policy still protect business actions.
 
-This guide covers those optional features. **Protection** limits measurement requests and evaluator calls. **Evidence storage** records verified application events and device associations. They use your existing database and can be enabled separately.
+## Defaults
 
-Start with [basic setup](GETTING-STARTED.md) and [private assessments](SECURITY.md). Evidence storage also needs the [identity directory](AGENTIC-IDENTITY.md). None of these features decides whether to allow a login or payment; your app still owns those decisions.
+The TypeScript `createDoorman` flow starts with:
 
-## Limit requests and AI calls
+| Control                     | Default                                                                           |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| Measurement requests        | 600 per minute globally, 60 per supplied account and 30 per supplied session.     |
+| Provider calls              | 60 reserved calls per minute across instances sharing the database and namespace. |
+| Provider concurrency        | Four reserved calls at once.                                                      |
+| Repeated provider failures  | Pause after three failures; try recovery after 30 seconds.                        |
+| Measurements in one handler | 64 in flight; reuse the handler to make this limit effective.                     |
 
-Node and Vercel use Postgres; Cloudflare supports D1 or Postgres. Apply `0005_protection.sql` and `0006_evidence.sql` after the existing migrations. Protection and event storage are optional and create no tables at runtime.
+An identity/risk evaluation reserves two provider calls. Optional cross-device and API activity evaluation share the same budget. This is a call-count limit, not a guaranteed dollar cap. Provider timeouts may still incur charges.
+
+## Adjust the limits
 
 ```ts
-const visitor = createNodeVisitor({
+import { createDoorman } from "@aarondovturkel/doorman-adapters/node";
+
+const secret = process.env.DOORMAN_IDENTITY_SECRET!;
+const namespace = "my-app";
+const doorman = createDoorman({
   db,
+  secret,
+  namespace,
   evaluator: { apiKey: process.env.JEV_API_KEY! },
+  evaluatorTimeoutMs: 1200,
+  maxInFlightRequests: 32,
   protection: {
-    secret: process.env.DOORMAN_PROTECTION_SECRET!, // Dedicated random server secret, at least 32 characters.
-    namespace: "my-app",
+    secret,
+    namespace,
     requests: { global: 600, account: 60, session: 30, windowMs: 60_000 },
-    evaluator: {
-      maxCalls: 120,
-      windowMs: 60_000,
-      maxConcurrent: 4,
-      failureThreshold: 3,
-      cooldownMs: 30_000,
-    },
-    onEvent: ({ kind, reason }) =>
-      metrics.increment(`doorman.${kind}.${reason}`),
-  },
-  identity: {
-    secret: process.env.DOORMAN_IDENTITY_SECRET!,
-    namespace: "my-app",
-  },
-  evidence: {
-    eventRetentionDays: 7,
-    linkRetentionDays: 90,
-    maxEventsPerQuery: 1000,
+    evaluator: { maxCalls: 60, windowMs: 60_000, maxConcurrent: 4 },
   },
 });
 ```
 
-`db`, `metrics` and authenticated session management belong to your application. Use identical secrets, namespaces, limits and synchronized server clocks across replicas. A changed protection secret/namespace starts a new budget; it is not a routine way to rotate a busy limiter. Use separate database/schema installations for unrelated applications.
+These are example operating limits, not throughput targets. Use the same configuration across replicas. Tables are created automatically. No separate protection service or migration is required.
 
-| Control                    | Behavior                                                                                                                                                                                                                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Measurement request limits | Database-atomic fixed windows. Global limit always applies when protection is configured; account/session limits apply only when supplied in trusted server context. Earlier counters count attempts denied by a later counter too. Fixed windows can admit bursts across a boundary. |
-| Call budget                | Counts reserved provider calls, including failures. Identity/risk pairs reserve two calls atomically. Shared across adapter instances and native Elixir with matching configuration. It is a call-count limit, not a currency-denominated billing guarantee.                          |
-| Concurrency                | At most the configured number of reserved provider calls in unexpired leases. Reservation updates use compare-and-swap, with eight bounded attempts. Contention or storage failure skips inference.                                                                                   |
-| Circuit breaker            | Repeated failures open the circuit. After cooldown, one recovery probe may run. A completion from an older circuit generation cannot close the new circuit.                                                                                                                           |
-| Timeout/crash              | Timed-out calls retain their lease until the provider deadline plus five seconds. Abandoned leases expire; there is no worker or scheduler. This cannot guarantee that a remote provider or arbitrary custom evaluator stopped running or billing.                                    |
-| History protection         | A cookie-bearing observation is saved only when retained history has sufficient, non-contradictory deterministic evidence. Sparse or contradictory submissions leave useful history intact; cookie continuity remains separate from authentication.                                   |
-
-The example limits above are illustrative, not recommended values for every application. Request windows and evaluator budget windows accept 1 second to 1 hour; concurrency is 1–32. Protected evaluator deadlines are 1–5,000 ms. The engine allows one additional second for the guard to persist its outcome before its outer fallback deadline. Configure database pool/statement timeouts in the application: these controls do not cancel arbitrary storage queries.
-
-### Limit work inside each server instance
-
-The TypeScript HTTP adapters also enforce `maxInFlightRequests` (default 64, range 1–1,024) per reusable handler instance, returning 503 with `Retry-After: 1` before database work when full. `onOverload` is an optional payload-free callback. Reuse the adapter across requests; configure framework and database timeouts independently. This gate covers measurement HTTP calls, not direct core/evidence management calls or other application endpoints. Native Phoenix uses the application's HTTP admission and DBConnection pool/queue controls.
-
-For native Node HTTP servers, use `createNodeRequestListener` from `@aarondovturkel/doorman-adapters/node/http`. It checks capacity **before** allocating Web Requests or reading bodies. It bounds body size and request duration, preserves multiple response cookies, and keeps a timed-out handler's slot until the underlying work settles. Register framework admission before its body parser; the Fastify example uses this listener in `onRequest`.
+Supply trusted account/session keys when those limits should apply:
 
 ```ts
-import { createServer } from "node:http";
-import { createNodeRequestListener } from "@aarondovturkel/doorman-adapters/node/http";
-
-const server = createServer(
-  createNodeRequestListener(visitor, {
-    origin: "https://your-app.example", // trusted application configuration
-    maxInFlightRequests: 64,
-    maxBodyBytes: 16_384,
-    requestTimeoutMs: 5000,
-  }),
-);
-server.requestTimeout = 5000;
-server.headersTimeout = 5000;
-server.listen(3000);
-```
-
-Connection limits, TLS and socket memory still belong to your server/proxy. A small database pool or request gate cannot make hundreds of thousands of sockets fit into too little memory. The [capacity reruns](CAPACITY.md) record the limits and measured memory separately from successful identity throughput.
-
-### Spread a shared quota across rows
-
-For higher request volumes, `requests.shards` (default 1, maximum 128) divides the global allowance across database rows with epoch-aligned windows. Per-shard limits sum to the global maximum; there is no borrowing, so uneven traffic may be denied early. All replicas must agree on configuration. Changing the shard count changes counter keys: drain the old configuration and wait out its window before switching. Elixir supports the same `shards` option and HMAC keys. See [measured capacity, configuration and limits](CAPACITY.md).
-
-### Handle denied or unavailable measurements
-
-A measurement quota denial returns sanitized **429** and `Retry-After`, without identity or cookie creation. A protection-store request failure returns **503**. Inference denial, provider failure, malformed output and timeout preserve deterministic matching and return zero risk with `riskStatus: "unavailable"`. A successful evaluated zero is different from unavailable risk. Never treat unavailable risk as affirmative proof of safety; the application's sensitive-action policy chooses its existing verification path.
-
-The endpoint limiter does not protect your login/payment endpoints or absorb a network flood. Keep gateway and application admission controls in front of the database. A global quota protects resources but can itself be exhausted by an attacker; unavailable measurement must not grant permissions. Account/session limiter keys must come from authenticated accounts and application-issued sessions, not request body fields, arbitrary headers, or Doorman's fuzzy visitor ID. No raw IP address is collected.
-
-## Add facts your server has verified
-
-```ts
-const { response, identity, evidence } = await visitor.assess(request, {
+const result = await doorman.assess(request, {
+  auth: currentUser ? { userId: String(currentUser.id) } : undefined,
   admission: {
-    account: authenticatedUser?.id,
+    account: currentAccount ? String(currentAccount.id) : undefined,
     session: serverSession.id,
   },
-  evidence: {
-    authentication: authenticatedUser
-      ? { method: "passkey", verifiedAt: serverSession.verifiedAt }
-      : undefined,
-    action: "payment",
-  },
 });
-// identity?.risk and evidence remain in server memory.
-// Use them in your application's policy; return only the measurement response.
-return response;
+return result.response;
 ```
 
-The returned `evidence` object keeps browser measurements, authenticated session facts, trusted edge-provider assessments and application actions separate. Browser measurements always carry `authenticated: false`; that describes the measurements, not whether the session has an authenticated account. All browser payload fields purporting to be trusted evidence are rejected. Missing evidence stays missing, never a manufactured low-risk probability.
+The application owns `currentUser`, `currentAccount` and `serverSession`. Never use an arbitrary header, browser JSON value or guessed person ID as a trusted limiter key. Configure database pool and query deadlines separately.
 
-This evidence is returned separately by `assess()` and is **never included in `handle()` JSON**, even with `exposeClientScores: true`. It is not added to browser histories or sent to Jev. Jev's narrow technical risk questions and deterministic identity matching remain unchanged. Activity and edge judgments are independent inputs for application policy, not unexplained adjustments to identity confidence. Application code must also keep them out of hydration props, browser analytics and logs.
+Native Phoenix uses its application's HTTP/DBConnection admission controls and the configured evaluator protection. Its limits use snake-case options; see the [native setup](../packages/elixir/README.md).
 
-For selected API routes, the separate [API activity middleware](API-ACTIVITY.md) can record aggregate request patterns and send bounded summaries to its own Jev risk questions. It reuses inference protection, has its own cache and never changes browser identity confidence or automatically grants access.
+## Handle limits and failures
 
-### Cloudflare evidence
+- A measurement request quota returns `429` with `Retry-After`.
+- A full TypeScript handler or unavailable protection/database storage returns a controlled `503`.
+- An exhausted AI budget, timeout or provider failure keeps browser measurement working where storage is available, with `riskStatus: "unavailable"`.
 
-```ts
-import {
-  createCloudflareVisitor,
-  cloudflareRequestEvidence,
-} from "@aarondovturkel/doorman-adapters/cloudflare";
+Catch measurement failures in your client so analytics cannot break a successful login. An unavailable zero score does not mean a request is safe. Doorman does not automatically block your checkout, challenge users or show a CAPTCHA.
 
-const visitor = createCloudflareVisitor({ db: env.VISITORS, ai: env.AI });
-const assessment = await visitor.assess(request, {
-  evidence: { edge: cloudflareRequestEvidence(request) },
-});
-return assessment.response;
-```
+## Add facts your application knows
 
-The helper accepts the **original inbound Worker Request**. It allowlists `request.cf.botManagement.score`, `verifiedBot` and `signedAgent`, according to the [official Workers variables](https://developers.cloudflare.com/bots/reference/bot-management-variables/). It ignores headers, IPs, location, JA3/JA4 and other metadata. Missing or malformed fields are omitted. The raw Cloudflare score remains on its 1–99 scale; it is not converted into a calibrated Doorman probability. A signed-agent flag is provider evidence, not a user's delegation grant or a Doorman implementation of Web Bot Auth.
+Pass bounded server counters through `riskEvidence`, or configure [API activity](API-ACTIVITY.md) for selected route templates. Trusted edge metadata and optional network reputation are described in [identity context](IDENTITY-CONTEXT.md). Risk evidence is kept separate from identity matching.
 
-Do not reconstruct `request.cf` from incoming headers. If a Node/Phoenix origin receives evidence through a proxy, the application must authenticate that hop and prevent direct-origin/header spoofing before creating trusted context. No automatic header trust is installed. Edge evidence expires after 60 seconds, with five seconds of clock skew; session verification timestamps must be within 30 days. Adjust the application's actual authentication/step-up freshness policy independently.
-
-## Count login and action events
-
-Use event storage to answer questions such as “How many failed logins has this account had in the last 15 minutes?” Record an event only after your application observes the outcome:
-
-```ts
-await visitor.evidence!.record({
-  id: loginAttempt.id, // Stable application event ID for retries.
-  type: "login-failure",
-  action: "sign-in",
-  subjectId: knownDoormanSubject.id, // Omit if the account is unknown.
-  sessionId: serverSession.id,
-});
-
-const activity = await visitor.evidence!.velocity({
-  subjectId: knownDoormanSubject.id,
-  action: "sign-in",
-  windowMs: 15 * 60_000,
-});
-// { source: "application", observedAt, windowMs, action, counts, total, saturated }
-```
-
-Event categories: `login-attempt`, `login-success`, `login-failure`, `verification-success`, `verification-failure`, `recovery-requested`, `recovery-completed`, `sensitive-action`, `action-denied`. Optional action categories: `sign-in`, `recovery`, `payment`, `profile-update`, `read`, `other`.
-
-Recording requires at least one subject, actor or application session. Subject/actor references must exist in the identity directory; an optional visitor reference must exist in visitor storage. Event/session references are application-scoped HMAC labels at rest. No URLs, form fields, credentials, arbitrary event properties, raw IPs or user-supplied timestamps are accepted. An event's time is the server ingestion time. Recording a verification event does not authenticate its contents or automatically train the learning module.
-
-A repeated event ID with the same semantic fields is idempotent, including concurrent delivery. Reusing it for different data throws an error. Deduplication lasts while the event is retained; after erasure/expiry cleanup, the application must prevent unwanted replay from its source system. There is no public ingestion endpoint or automatic forwarding to analytics vendors.
-
-`velocity()` is a count over a recent time window. Select exactly one subject, session or actor, and optionally an action. The window is 1 second to 24 hours, default 15 minutes. Indexed reads return at most `maxEventsPerQuery + 1` rows. When `saturated: true`, reported counts and `total` are **lower bounds**, not exact totals; do not interpret the cap as low activity. This bounds the returned data, not every physical database read. The [capacity report](CAPACITY.md) includes one million synthetic application events on local Postgres; a production event workload is still unmeasured.
-
-## Record a verified device association
-
-After a successful login or approved pairing flow, you can record how a browser was linked to a user. Doorman stores the verification source and expiry so the association can be reviewed or revoked later. This is a historical association, not a new login credential.
-
-```ts
-const link = await visitor.evidence!.linkDevice({
-  subjectId: subject.id,
-  visitorId: identity.visitorId,
-  verification: {
-    method: "passkey",
-    issuer: "my-auth",
-    eventId: verifiedAuthenticationEvent.id,
-    verifiedAt: verifiedAuthenticationEvent.occurredAt,
-  },
-  expiresAt: Date.now() + 30 * 86_400_000,
-});
-
-const association = await visitor.evidence!.assessDevice({
-  id: link.id,
-  subjectId: subject.id,
-  visitorId: identity.visitorId,
-});
-
-await visitor.evidence!.revokeDevice(link.id, {
-  reason: "compromised",
-  issuer: "my-auth",
-  eventId: securityReview.id,
-});
-```
-
-Only call `linkDevice` after the application verifies the credential or explicit device-approval proof and binds it to this account/session. Doorman records provenance; it does not perform the password/passkey/OAuth ceremony. Methods are `password`, `passkey`, `mfa`, `oauth`, `email-link`, `recovery`, `admin-review`. Device-link verification must be at most five minutes old, with five seconds of clock skew, and the association expires within 90 days.
-
-The same issuer/event proof cannot be reused for another account/device association. Repeated matching calls preserve the original record and revocation. Revocation records its issuer, hashed event reference, reason and time; it cannot be undone by replaying the original proof. Reverification needs a new independently verified event. Supported reasons are `logout`, `device-removed`, `compromised`, `account-recovery`. `listDevices(subjectId, limit)` returns up to 100 recent associations, including retained revoked/expired records for review.
-
-A shared browser can have separately verified associations with multiple accounts. Those accounts are not merged. An association is historical evidence, **not a device-bound credential, physical-device proof or authorization**. Copying a cookie plus an account reference cannot become account access. Require actual authentication/delegation; a fuzzy-restored visitor ID never creates or reinstates a verified link. The same browser's past anonymous activity is not retroactively assigned to a person.
-
-## Native Elixir / Phoenix
-
-```elixir
-config = Doorman.new(
-  repo: MyApp.Repo,
-  protection: [secret: System.fetch_env!("DOORMAN_PROTECTION_SECRET"), namespace: "my-app"],
-  identity: [secret: System.fetch_env!("DOORMAN_IDENTITY_SECRET"), namespace: "my-app"],
-  evidence: [event_retention_days: 7, link_retention_days: 90, max_events_per_query: 1000]
-)
-
-Doorman.Evidence.record(config, %{
-  id: attempt.id, type: "login-failure", action: "sign-in",
-  subject_id: subject["id"], session_id: server_session.id
-})
-activity = Doorman.Evidence.velocity(config, %{subject_id: subject["id"], window_ms: 900_000})
-{:ok, assessment} = Doorman.assess(config, payload, %{
-  admission: %{account: authenticated_user.id, session: server_session.id},
-  evidence: %{action: "payment"}
-})
-```
-
-`Doorman.handle` stores private results in `conn.assigns.doorman_identity` and `conn.assigns.doorman_evidence`. Its measurement response is already sent: make sensitive-action decisions in your own action flow. `Doorman.Evidence.link_device`, `assess_device`, `list_devices`, `revoke_device`, `delete_session`, and `delete_subject_events` use atom input keys in snake_case and the same string-valued categories. Stored records and summaries use the same wire keys and HMAC scheme as TypeScript. Protection options use `window_ms`, `max_calls`, `max_concurrent`, `failure_threshold`, `cooldown_ms`, and `on_event`.
-
-Existing Ecto installations add a migration calling `Doorman.Migration.upgrade_security()` with their configured prefix. Fresh `Doorman.Migration.up()` includes both migrations. The example apps apply them automatically through their documented migration commands. The new tables index their foreign keys so related records can be found efficiently during erasure.
-
-## Retention, erasure and operational limits
-
-`visitor.cleanup()` / `Doorman.cleanup(config)` also delete one bounded page of expired quota/control rows and, when enabled, up to 100 expired events and 100 retired device links per call. Event retention defaults to seven days (1–30); link cleanup defaults to 90 days (1–365) after expiry or first revocation. Subject/visitor erasure, including expired-visitor cleanup, can remove related evidence earlier through cascading deletion. Repeat maintenance periodically; there is no scheduler. Evidence cleanup respects its namespace and configured retention. Existing optional learning/delegation cleanup retains its separately documented behavior.
-
-`deleteSession` removes a session's event records; `deleteSubjectEvents` removes events involving a subject as principal or actor. Deleting a subject or visitor through existing erasure APIs cascades its related events/links. Aggregate summaries are computed from retained events, so erased events immediately disappear from summaries. Hashed references and verified associations remain personal/linkable data. The implementer owns disclosure, collection policy and erasure authorization.
-
-Regression tests exercise real Postgres and D1 SQL, shared admission across instances, malformed providers, timeout/circuit recovery, stale completions, duplicate delivery, proof reuse, shared devices, spoofed headers/body fields, retention and erasure. They do not establish fraud-detection accuracy, independently audit cryptography, or test an attack against another service. Copied compatible signals, gradual poisoning and credential theft remain possible; independent authentication, production monitoring and real-world calibration remain necessary.
+Use your own observability for request counts, latency, errors and budget denials. Do not log full browser payloads, raw IPs, credentials or private candidate identities. [Deployment and scale](SCALING.md) explains what to measure before increasing limits.

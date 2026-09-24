@@ -1,5 +1,7 @@
 # Understand who operates an account
 
+> **Historical research / advanced API archive.** This is not a setup guide for Doorman 0.13. It may describe retired configuration, separate experiments, or manual migrations. Start with the [current documentation](https://doorman.holycoders.io/docs/introduction/).
+
 An account can be used by a person, an assistant, a scheduled script, or several of them. Doorman can now attach scored labels to short stretches of activity and compare those stretches within your account. Your server can send the results to PostHog, Mixpanel or a warehouse.
 
 This is an **experimental, server-only feature**. Its scores have not been calibrated for operator identity. The implementation is tested; reliable human headcounts and agent-brand recognition are not yet demonstrated. It does not change login identities, merge analytics profiles, authorize actions, or block anyone.
@@ -47,7 +49,7 @@ const doorman = createNodeVisitor({
 });
 ```
 
-For Cloudflare, use `createCloudflareVisitor({ db: env.VISITORS, ai: env.AI, identity, operators: {} })`. Vercel uses `createVercelVisitor` with the Node options. No API route is automatically exposed. The feature is currently available in the TypeScript service; Phoenix, Python and Go applications can feed a private application-owned TypeScript service. Their existing native APIs have not acquired an `operators` method. The language-neutral input shapes are in [the protocol schema](../protocol/operators.schema.json).
+For Cloudflare, use `createCloudflareVisitor({ db: env.VISITORS, ai: env.AI, identity, operators: {} })`. Vercel uses `createVercelVisitor` with the Node options. No API route is automatically exposed. The feature is currently available in the TypeScript service; Phoenix, Python and Go applications can feed a private application-owned TypeScript service. Their existing native APIs have not acquired an `operators` method. The language-neutral input shapes are in [the protocol schema](../../protocol/operators.schema.json).
 
 ## Close an activity window
 
@@ -178,4 +180,4 @@ Additional runtime, cursor, focus and decoy ideas are tracked in the [detection 
 
 ## Configurable scoring and activity features
 
-See [scoring configuration](SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.
+See [scoring configuration](../SCORING.md) for server-side identity weights and operator thresholds, and [agent classification](../AGENT-CLASSIFICATION.md) for optional aggregate movement/timing evidence. These are current TypeScript source features; defaults and private-score behavior are retained.
